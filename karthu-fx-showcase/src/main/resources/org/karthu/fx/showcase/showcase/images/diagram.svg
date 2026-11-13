@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- An SVG file in the Markdown page's sample: the view cannot decode SVG and shows the unsupported box. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="80" viewBox="0 0 360 80">
+  <rect width="360" height="80" fill="#24273c"/>
+  <g font-family="sans-serif" font-size="13" fill="#d6d9e6" text-anchor="middle">
+    <rect x="10" y="24" width="90" height="32" rx="4" fill="none" stroke="#7b8cff"/>
+    <text x="55" y="45">Markdown</text>
+    <rect x="135" y="24" width="90" height="32" rx="4" fill="none" stroke="#7b8cff"/>
+    <text x="180" y="45">Loader</text>
+    <rect x="260" y="24" width="90" height="32" rx="4" fill="none" stroke="#7b8cff"/>
+    <text x="305" y="45">View</text>
+  </g>
+  <g stroke="#8a90a8" stroke-width="2">
+    <line x1="100" y1="40" x2="135" y2="40"/>
+    <line x1="225" y1="40" x2="260" y2="40"/>
+  </g>
+</svg>

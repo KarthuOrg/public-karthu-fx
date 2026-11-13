@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- The editable combo input's page in the group Form inputs. Each card is filled by its own method of the controller. -->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.EditableComboInputShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Editable Combo Input" styleClass="showcase-page-title"/>
+    <Label text="EditableComboInput, free text with suggestions on the form collection's shell (see the Overview): an editable combo box without its own arrow and frame, then a divider and a chevron before the {} icon. The user types freely; typing opens the list with the suggestions that contain the text, ignoring case. Enter or a click makes a suggestion the text, Escape closes the list and keeps what was typed, and no suggestion is ever filled in by itself. The chevron and Alt+Down open the full list. A {} icon (or Ctrl+Space) binds the field to a variable, shown as a chip."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- States side by side -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="States" styleClass="showcase-card-title"/>
+        <Label text="Each field sits in a form row: its label above, the messages under it. An error colours the border red, a warning amber. A disabled field is greyed out with its divider and chevron. A read-only field shows its text to select and copy, without divider, chevron and {}. Bound, the chip stands in place of the text and the chevron is dimmed."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <GridPane fx:id="statesGrid" hgap="12" vgap="8"/>
+    </VBox>
+
+    <!-- Beside a text field and a combo input -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Beside a text field and a combo input" styleClass="showcase-card-title"/>
+        <Label text="An editable combo input has the size and colours of a text field and the chevron of a combo input, after a divider: all three are exactly as high, also read-only and disabled."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <GridPane fx:id="comparisonGrid" hgap="12" vgap="8"/>
+    </VBox>
+
+    <!-- Try it out -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Try it out" styleClass="showcase-card-title"/>
+        <Label text="Switch the field's states on and off. Type to see the matching suggestions (try utf, iso or 125), Up and Down to move through them, Enter or a click to take one, Escape to close the list and keep your text. The chevron or Alt+Down shows every suggestion. Suggestions takes the list away, so the field is a plain text field with a chevron. Bindable offers three sample variables: bind with the {} icon or Ctrl+Space, unbind with the chip's ×, Backspace or Remove binding, and the text comes back."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <FlowPane fx:id="tryOutSwitches" hgap="16" vgap="8"/>
+        <VBox fx:id="tryOutContainer" spacing="8"/>
+    </VBox>
+
+</VBox>

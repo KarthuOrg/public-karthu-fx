@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Spinner?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.SpinnerShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Spinner" styleClass="showcase-page-title"/>
+    <Label text="Spinners allow users to choose a value from an ordered set."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- Types -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Types" styleClass="showcase-card-title"/>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Integer:"/>
+            <Spinner fx:id="intSpinner" prefWidth="100"/>
+            <Label text="Double:"/>
+            <Spinner fx:id="doubleSpinner" prefWidth="100"/>
+            <Label text="Editable:"/>
+            <Spinner fx:id="editableSpinner" editable="true" prefWidth="100"/>
+            <Label text="Disabled:"/>
+            <Spinner fx:id="disabledSpinner" disable="true" prefWidth="100"/>
+        </HBox>
+    </VBox>
+
+</VBox>

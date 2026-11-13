@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.ContextMenuShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Context Menu" styleClass="showcase-page-title"/>
+    <Label text="Context menus provide contextual actions on right-click."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- Right-Click Area -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Right-Click Area" styleClass="showcase-card-title"/>
+        <Label text="Right-click here to open context menu"
+               style="-fx-text-fill: -fx-text-secondary-color;"/>
+        <Region fx:id="contextArea" minWidth="300" minHeight="80" prefWidth="300" prefHeight="80"
+                style="-fx-background-color: -fx-surface-color; -fx-border-color: -fx-control-border; -fx-border-width: 1;"/>
+    </VBox>
+
+</VBox>

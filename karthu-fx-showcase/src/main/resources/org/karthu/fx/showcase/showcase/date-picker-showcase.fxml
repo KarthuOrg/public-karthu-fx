@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.DatePickerShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="DatePicker" styleClass="showcase-page-title"/>
+    <Label text="Date pickers let users select a date from a calendar popup."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- States -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="States" styleClass="showcase-card-title"/>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Normal:"/>
+            <DatePicker fx:id="normalDate" prefWidth="160"/>
+            <Label text="Empty:"/>
+            <DatePicker fx:id="emptyDate" promptText="Select date..." prefWidth="160"/>
+            <Label text="Editable:"/>
+            <DatePicker fx:id="editableDate" editable="true" prefWidth="160"/>
+            <Label text="Disabled:"/>
+            <DatePicker fx:id="disabledDate" disable="true" prefWidth="160"/>
+        </HBox>
+    </VBox>
+
+</VBox>

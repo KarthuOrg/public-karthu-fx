@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- The cron input's page in the group Form inputs. Each card is filled by its own method of the controller. -->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.CronInputShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Cron Input" styleClass="showcase-page-title"/>
+    <Label text="CronInput, a schedule as a Unix or Quartz cron expression, on the single-line frame of the form collection's shell (see the Overview): the expression in a monospace font, then a small format selector (Unix or Quartz) and the {} icon. Under the field the input reports what the expression means in plain English, or, once the error is due (leaving the field, Enter, choosing a format, a value set by the application), the message of the first rule it breaks. The value is the expression exactly as typed; the format is a property of its own, Quartz by default, which the application can fix. A {} icon (or Ctrl+Space) binds the expression to a variable, shown as a chip; the format stays selectable."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- States side by side -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="States" styleClass="showcase-card-title"/>
+        <Label text="The cron input's own six states first, then the others. Each field sits in a form row: its label above, its info line under it, the plain text muted or the error in red with a red border. A disabled row is dimmed as a whole. Bound, the chip stands in place of the expression and the info line is empty. Read-only and with a fixed format, the format shows as plain text without chevron."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <GridPane fx:id="statesGrid" hgap="12" vgap="8"/>
+    </VBox>
+
+    <!-- Beside other fields -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Beside other fields" styleClass="showcase-card-title"/>
+        <Label text="A cron input has the height and colours of a plain text field and of a combo input, also read-only and disabled; its expression is in a monospace font, the format selector a small box of its own."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <GridPane fx:id="comparisonGrid" hgap="12" vgap="8"/>
+    </VBox>
+
+    <!-- Try it out -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Try it out" styleClass="showcase-card-title"/>
+        <Label text="Type an expression: the plain text appears at once while it is valid; an error shows when you leave the field or press Enter, then follows your typing. Click the format selector, or press Alt+Down in the text, to choose the format: a valid expression is converted when nothing is lost, its weekdays written as names, and switching back converts it back; anything else stays as typed and is checked against the new format at once. Format selectable off fixes the format. The lines under the field read the input's value, format, problem and description as an application would, and what the last format change made of the text. Bindable offers three sample variables: bind with the {} icon or Ctrl+Space, unbind with the chip's ×, Backspace or Remove binding, and the expression comes back."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <FlowPane fx:id="tryOutSwitches" hgap="16" vgap="8"/>
+        <VBox fx:id="tryOutContainer" spacing="8"/>
+    </VBox>
+
+</VBox>

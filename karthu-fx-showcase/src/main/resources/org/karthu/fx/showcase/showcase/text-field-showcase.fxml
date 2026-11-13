@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.TextFieldShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Text Field" styleClass="showcase-page-title"/>
+    <Label text="Text fields let users enter and edit text."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- States -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="States" styleClass="showcase-card-title"/>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Normal:"/>
+            <TextField text="Normal text" prefWidth="150"/>
+            <Label text="Placeholder:"/>
+            <TextField promptText="Placeholder..." prefWidth="150"/>
+            <Label text="Disabled:"/>
+            <TextField text="Disabled" disable="true" prefWidth="150"/>
+            <Label text="Read-only:"/>
+            <TextField text="Read only" editable="false" prefWidth="150"/>
+        </HBox>
+    </VBox>
+
+    <!-- Password Field -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Password Field" styleClass="showcase-card-title"/>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Normal:"/>
+            <PasswordField text="secret123" prefWidth="150"/>
+            <Label text="Placeholder:"/>
+            <PasswordField promptText="Enter password..." prefWidth="150"/>
+            <Label text="Disabled:"/>
+            <PasswordField text="disabled" disable="true" prefWidth="150"/>
+        </HBox>
+    </VBox>
+
+</VBox>

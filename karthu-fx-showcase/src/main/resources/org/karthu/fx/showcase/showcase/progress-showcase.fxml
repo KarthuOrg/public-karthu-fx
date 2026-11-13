@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
+<?import javafx.scene.control.ProgressIndicator?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.ProgressShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Progress" styleClass="showcase-page-title"/>
+    <Label text="Progress indicators inform users about the status of ongoing processes."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- ProgressBar -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="ProgressBar" styleClass="showcase-card-title"/>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="0%"/>
+            <ProgressBar progress="0" prefWidth="150"/>
+            <Label text="50%"/>
+            <ProgressBar progress="0.5" prefWidth="150"/>
+            <Label text="100%"/>
+            <ProgressBar progress="1.0" prefWidth="150"/>
+            <Label text="Indeterminate"/>
+            <ProgressBar progress="-1" prefWidth="150"/>
+            <Label text="Animated"/>
+            <ProgressBar fx:id="animatedBar" progress="0" prefWidth="150"/>
+        </HBox>
+    </VBox>
+
+    <!-- ProgressIndicator -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="ProgressIndicator" styleClass="showcase-card-title"/>
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <Label text="0%"/>
+            <ProgressIndicator progress="0" minWidth="64" minHeight="64" prefWidth="64" prefHeight="64" maxWidth="64" maxHeight="64"/>
+            <Label text="50%"/>
+            <ProgressIndicator progress="0.5" minWidth="64" minHeight="64" prefWidth="64" prefHeight="64" maxWidth="64" maxHeight="64"/>
+            <Label text="100%"/>
+            <ProgressIndicator progress="1.0" minWidth="64" minHeight="64" prefWidth="64" prefHeight="64" maxWidth="64" maxHeight="64"/>
+            <Label text="Indeterminate"/>
+            <ProgressIndicator progress="-1" minWidth="64" minHeight="64" prefWidth="64" prefHeight="64" maxWidth="64" maxHeight="64"/>
+            <Label text="Animated"/>
+            <ProgressIndicator fx:id="animatedIndicator" progress="0" minWidth="64" minHeight="64" prefWidth="64" prefHeight="64" maxWidth="64" maxHeight="64"/>
+        </HBox>
+    </VBox>
+
+</VBox>

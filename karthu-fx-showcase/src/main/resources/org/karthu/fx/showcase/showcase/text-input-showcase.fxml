@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- The text input's page in the group Form inputs. Each card is filled by its own method of the controller, so a later
+     state, comparison or switch is added there without touching the others. -->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.TextInputShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Text Input" styleClass="showcase-page-title"/>
+    <Label text="TextInput, a single line of text such as a name or a title, on the single-line frame (FieldFrame) of the form collection's shell (see the Overview). The value is the text exactly as typed, never trimmed; the empty text is no value. The prompt text is the application's, empty by default. A {} icon (or Ctrl+Space) binds the field to a variable, shown as a chip in place of the text, which comes back after unbinding. A text input has no choice to open, so Alt+Down does nothing. Each field sits in a form row (FormField): the label above the input, an asterisk while required, the description as the label's tooltip and the messages under the input, which set the input's state."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- States side by side -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="States" styleClass="showcase-card-title"/>
+        <Label text="Each field sits in a form row: its label above (hover it for the description), an asterisk while the field is required, and the messages under the field in their colour. An error colours the field's border red, a warning amber; an info leaves it as it is. A disabled field is greyed out, text and icons. A read-only field shows its text to select and copy, without the {} icon; bound, its chip has no ×."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <GridPane fx:id="statesGrid" hgap="12" vgap="8"/>
+    </VBox>
+
+    <!-- Beside a text field -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Beside a text field" styleClass="showcase-card-title"/>
+        <Label text="A text input has the size and colours of a plain text field: both are exactly as high, the text and the prompt text in the same place, also read-only and disabled."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <GridPane fx:id="comparisonGrid" hgap="12" vgap="8"/>
+    </VBox>
+
+    <!-- Try it out -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Try it out" styleClass="showcase-card-title"/>
+        <Label text="Switch the field's states on and off and type into it: the value line shows the text in quotes, spaces included. Bindable offers three sample variables: bind with the {} icon or Ctrl+Space, unbind with the chip's ×, Backspace or Remove binding, and the text comes back."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <FlowPane fx:id="tryOutSwitches" hgap="16" vgap="8"/>
+        <VBox fx:id="tryOutContainer" spacing="8"/>
+    </VBox>
+
+</VBox>

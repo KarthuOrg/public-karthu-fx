@@ -1,0 +1,306 @@
+Batch Planner
+
+Runs a few lines of Java you write, once over the whole order book, and makes the day's baking plan from it: keep the orders a rule with three branches accepts, split an order into several batches, add up the loaves per bread, keep the newest order per customer, or make a plan from nothing — a baking calendar, a test plan — without any order. Your code writes the loop over the orders itself, reads their values by column name, and calls addLine() for every line it wants.
+
+For work order by order — one plan line per order — the Quick Rule is the simpler tool.
+
+The code is compiled when the planner runs, by the Java compiler of the JDK the bakery app runs on, so it can use every language feature that JDK knows.
+
+Trust: your code is a program
+
+A batch plan is code of whoever wrote it, like a script. It runs inside the bakery app with all the rights the app has: it can read and write any file you can, open network connections and start programs. There is no sandbox, and Java offers none any more. Open an order book with batch plans only when you trust whoever wrote them, as you would a script.
+
+Orders in
+
+- orders — optional: the order book the code reads. Without one, the code reads no orders and makes its plan.
+
+Plan out
+
+- plan — exactly the columns of the Plan table, in their order, and the lines addLine() wrote, in the order it wrote them. The order book's columns are not carried over: write the ones you want to keep.
+- Kitchen values — one per kitchen value out, for every tool that follows, once the planner has run to its end.
+
+Settings
+
+- Plan — the columns of the plan, at least one, and the kitchen values out:
+  - Target — Column or Kitchen value (see Kitchen values).
+  - Name — the column's or the kitchen value's name, used by one plan column, or one kitchen value, only; a column and a kitchen value may share one.
+  - Kind — a column's kind, any of the order book's (see Kinds), which gives the field its Java type. WHOLE and REAL are a kitchen value's own kinds: a column takes COUNT64 or REAL64. A kitchen value's kind: TEXT, WHOLE, REAL or FLAG, its field a String, Long, Double or Boolean.
+  - Scale — a money column's number of fraction digits, 0 to 18; disabled for every other kind.
+  - Field — the Java field your code sets before addLine(), by habit out_ and the name, such as out_bread. It must be a Java identifier and not a keyword, used once in the table.
+- Custom imports — import declarations for your code, such as import java.util.Map;.
+- Custom fields — fields, methods and nested classes of the generated class.
+- Code — the code run once over the whole order book; empty until you write some, which runs and writes no line. When you open the code editor of a new plan, its code starts with a loop over orders() in comments, which shows the shape of the code: uncomment it and name your columns. Apply saves it like any code you write.
+- Additional libraries — JARs your code compiles and runs against, in their order: see Additional libraries.
+
+The code
+
+Your code is the body of one method. It loops over the day's orders itself and writes the plan lines it wants:
+
+for (Order o : orders()) {
+    if (o.isMissing("loaves")) continue;
+    if (o.get("loaves", tLong) > 10) {
+        out_bread = o.get("bread", tString);
+        out_loaves = o.get("loaves", tLong);
+        addLine();
+    }
+}
+- orders() — the book's orders, in their order, for one loop. They are streamed: read as the loop asks for them, so a book of millions of orders takes little memory. So the book is read once: a second call of orders(), or a second loop over what it returned, stops the planner with orders() streams the book once: it cannot be read a second time; call allOrders() instead to have every order in memory. Without a book, and for an empty one, there are no orders.
+- allOrders() — every order of the book in a list in memory, to sort, to index and to read twice (see Streaming and memory).
+- o.get("loaves", tLong) — the order's value of a column, read with the type token of the column's Java type: tInt for COUNT32, tLong for COUNT64, tString for TEXT, tBigDecimal for money — every kind's in Kinds. Nothing is converted: a column the book does not have throws a ColumnException, a token of another type a KindException. A missing value is null.
+- o.isMissing("loaves") — whether the order's value of a column is missing.
+- o.text("loaves") — the order's value of a column as text, for every kind, with no token: the text the order book shows — ISO-8601 for a date or a time (2027-03-14, 06:30:00, 2027-03-14T05:30:00Z), money at its column's scale (12.50), a list as a JSON array ([1, null, 3], ["rye", "spelt"]), bytes in Base64, a file with / between its names. A missing value is null, a column the book does not have throws a ColumnException.
+- o.get(1, tLong), o.isMissing(1), o.text(1) — the same by the column's index in columns(), from 0 (see Book values).
+- o.index() — the order's index in the book, from 0.
+- addLine() — writes the plan fields as one line, an unset field — null — as a missing value, and then sets every plan field back to null, so no value slips into the next line unnoticed. Call it any number of times: none for an order you drop, several for an order you split, and after the loop for a sum per bread. A value its column cannot take is refused at once (see Kinds).
+
+An order stays valid after the loop has moved on, so you may keep orders in a list of your own. You may stop early with break or return: the planner then reads no more of the book.
+
+The loop is yours, and so is the order of the lines: to group, keep a map among the custom fields and write its entries after the loop.
+
+// Custom imports: import java.util.Map; import java.util.TreeMap;
+// Custom fields: private final Map<String, Long> totals = new TreeMap<>();
+for (Order o : orders()) {
+    long loaves = o.isMissing("loaves") ? 0 : o.get("loaves", tLong);
+    totals.put(o.get("customer", tString), totals.getOrDefault(o.get("customer", tString), 0L) + loaves);
+}
+for (Map.Entry<String, Long> total : totals.entrySet()) {
+    out_customer = total.getKey();
+    out_total = total.getValue();
+    addLine();
+}
+
+orders(), allOrders() and addLine() belong to the code while it runs: called from a custom field's initialiser, or from a thread your code starts, they fail.
+
+Streaming and memory
+
+orders() streams: the loop gets one order after the other as the planner reads them, and an order your code does not keep is gone once the loop has moved on, so a book of millions of orders takes the memory of a few. Most plans need nothing else: filter, split, add up per bread, keep the newest order per customer in a map.
+
+A plan that needs every order at once — sort them, look one up by its position, read them twice — calls allOrders(): every order of the book in a list, read into memory before the call returns.
+
+// The three largest orders, a missing count last.
+List<Order> sorted = new java.util.ArrayList<>(allOrders());
+sorted.sort(java.util.Comparator.comparing((Order o) -> o.get("loaves", tLong),
+        java.util.Comparator.nullsLast(java.util.Comparator.reverseOrder())));
+for (Order o : sorted.subList(0, Math.min(3, sorted.size()))) {
+    out_bread = o.get("bread", tString);
+    out_loaves = o.get("loaves", tLong);
+    addLine();
+}
+- The list is unmodifiable, and a second call returns the same list: copy it to sort it, as above.
+- The whole book must fit into memory. As Java objects, a million orders of ten columns take several hundred MB. For thousands of orders that is nothing; for millions, prefer orders() and keep only what you need.
+- orders() and allOrders() exclude each other. After allOrders(), orders() fails with orders() cannot follow allOrders(), which has read every order into memory already: loop over allOrders() again. Once orders() was called — whether its loop has started or not — allOrders() fails with allOrders() cannot follow orders(), which streams the book once: call allOrders() instead of orders() to have every order in memory.
+- Once your code has called allOrders(), an error names no order: your code holds every order, so the order read last says nothing about the one it worked on. Name the order in your own message where it helps: throw new Stop("No loaves in order " + o.index()).
+
+Book values
+
+- ORDERCOUNT — the book's number of orders, a long, known before the first order is read: it is already set when the custom fields initialise, so private final long orders = ORDERCOUNT; among them works. 0 without a book.
+- columns() — the book's columns in their order, each a Column with its name() and its kind() as the column's badge shows it: COUNT32, TEXT, money, day, list-text. For an empty book they are its columns all the same; without a book the list is empty.
+- By index — o.get(0, tString), o.isMissing(0) and o.text(0) read a value by its column's index in columns(), from 0; an index beyond the columns throws a ColumnException.
+
+With them your code works on any order book, such as turning every column into key/value lines. o.text(i) reads a value of any kind as its text, so generic code needs no token — the example Columns to key/value lines is this one:
+
+for (Order o : orders()) {
+    for (int i = 0; i < columns().size(); i++) {
+        Column c = columns().get(i);
+        out_order = o.index();
+        out_key = c.name();
+        out_value = o.text(i);
+        addLine();
+    }
+}
+
+To work with a value of its own type, choose the token by kind(): if (c.kind().equals("COUNT64")) { long n = o.get(i, tLong); … }.
+
+The generated class
+
+Your three regions are placed in a class the planner generates from the Plan table; this is the text the compiler sees, so the line numbers in every message are its lines:
+
+// planner imports
+import com.example.bakery.planner.BatchPlan;
+import com.example.bakery.planner.Column;
+import com.example.bakery.planner.ColumnException;
+import com.example.bakery.planner.KindException;
+import com.example.bakery.planner.Order;
+import com.example.bakery.planner.Stop;
+
+import java.math.BigDecimal;
+import java.nio.file.Path;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.List;
+import java.util.UUID;
+
+// Your custom imports:
+import java.util.Map;
+
+// planner fields
+public class Plan extends BatchPlan {
+  // Fields for plan columns
+  /** Plan column: "bread" */
+  public String out_bread;
+
+// Your custom fields:
+private final Map<String, Long> totals = new java.util.TreeMap<>();
+
+// your code starts
+    public void plan() throws KindException, ColumnException, Stop {
+// Enter your code here:
+for (Order o : orders()) {
+    ...
+}
+
+// your code ends
+    }
+}
+
+Editor
+
+The planner's panel shows a summary of the Plan table — one line per row, such as out_total → column total · COUNT64 or out_count → kitchen value count · WHOLE, with what is marked on it below —, the code, and whether it compiles. Open code editor … opens the code editor, a large window:
+
+- Left: the book's columns, each with a badge of its kind, and the kitchen values — both empty until the book has been read once —, each list with a search field that shows only the names containing what you type, ignoring case.
+- Right: the whole generated class, with line numbers and Java highlighting. Only the custom imports, the custom fields and the code can be edited there; the rest follows from the Plan table, and the cursor skips it. About half a second after you stop typing the window compiles the class and marks each error at its line, the line a message names; a double-click on an error in the list below goes there.
+- Below: the Plan table, with Add, ↑, ↓ and ✕ to add, move and remove its rows — their order is the order of the plan's columns. Name is the name of the column or kitchen value the row makes: the field follows it, out_ and the name, while you have not written the field yourself. Kind offers a column's kinds, or a kitchen value's four; Scale shows beside it for money. Every change of the table rewrites the class around your code, which stays as it is, the cursor in it. There is no table for the book: your code reads the values by name.
+
+A double-click on a column or a kitchen value, or Enter, puts its read at the cursor, in place of the selection, so you never look up a token or misspell a name:
+
+Double-clicked	Inserted
+a column, inside for (Order order : orders()) { … }	order.get("loaves", tLong)
+a column, outside every loop over the orders	o.get("loaves", tLong)
+a kitchen value	getKitchenValue("ovens", tLong)
+
+The token is the column's or the value's kind's (see Kinds). The order variable is that of the innermost enhanced for over orders() or allOrders() — or over any Orders, such as for (Order kept : newest.values()) — the cursor is in, found even while the code does not compile; outside every such loop it is o. The name is a Java string literal, a quote or a backslash in it escaped: o.get("Customer \"Name\"", tString). A column of a kind no token reads, a blob, inserts nothing.
+
+Once the book has been read and its columns are known, the editor also warns, in yellow, beside the compile errors: at a column name in x.get("name", …), x.isMissing("name") or x.text("name") on an order variable — a loop's over the orders, or any variable declared an Order — that the book has no column of, and at a token in x.get("name", tLong) that does not read the column's kind, naming the token that does. Warnings never stop the planner, so code for a column that appears only later still runs. Dynamic accesses — a name in a variable, an index, a token in a variable — are not checked. A double-click on an error or a warning in the list moves the cursor to it.
+
+What the editor marks before anything runs, in the table: a field that is no Java identifier or is a keyword, a field used twice, an empty name, two plan columns or two kitchen values of one name, a kitchen value of a column's kind, a column of a kitchen value's own kind — and, below the table, a table without a column.
+
+The window has two more tabs: Additional Libraries, the JARs, in their order, with Add JAR …, Link instead of copy and Remove (see Additional libraries) — the compiler's marks follow the JARs listed there —, and Saved plans, your own and the examples (see Saved plans and examples).
+
+Apply writes your edits — the table, the code and the libraries — into the planner's settings and saves them; Cancel drops them. Enter commits a table's cell and never applies the window. On the shop's tablet the panel and the window show the message the planner stops with there instead of whether the code compiles (see Where it runs).
+
+Saved plans and examples
+
+The editor's tab Saved plans keeps whole set-ups of the planner — the Plan table, the custom imports, the custom fields, the code, the additional libraries and the planner version — under a name, a category and a description:
+
+- Create from current … saves what the editor shows, its edits included. A saved plan of the same category and name is replaced after a confirmation.
+- Apply loads the selected plan into the editor, after a confirmation: every setting is replaced. The editor's Apply writes it into the planner, its Cancel keeps the planner as it was.
+- Delete removes a plan of yours; Export … writes one into a file to share, by mail for example, and Import … reads such a file.
+
+Your saved plans live in the folder batch-plans of the app's user data directory, one file each, format batch-plan, version 1. A file is read strictly: one written for a planner version this app does not know, with a setting the planner does not have, a value of the wrong kind or a choice that is none of the setting's options is refused, and the editor says why. An app that names no user data directory keeps no plans of yours: it lists the examples alone.
+
+The category Examples comes with the app. Its plans can be applied and exported, but not deleted or replaced, and none of yours is saved into it, whatever the case of its letters. Each one is commented: apply it and read the code; its description names the columns it reads, which you rename for your book.
+
+Example	Input	What it shows
+Loaves per bread	bread, loaves	one pass over orders() into a map of breads among the custom fields, then one line per bread after the loop; an order without a count counted but not added up
+Toppings into lines	order, toppings (list-text)	one line per topping of an order, with its position; an empty or missing list writes no line
+Newest order per customer	customer, phone, placed	duplicates removed through allOrders(), read twice: the newest order per customer, in the book's order
+Top N per bread	bread, customer, loaves	the N largest orders per bread in one streamed pass, a PriorityQueue per bread, ranked; N the kitchen value topN or 3
+Baking calendar	none	a plan made without a book: one line per day from the kitchen values from to to, with the ISO week; the kitchen value days out; Stop for a range the wrong way round
+Columns to key/value lines	any order book	generic code over columns(): every value as a line of its own, read through o.text(i)
+
+How a run goes
+
+The planner compiles the class once: running an unchanged plan again, on every till of the shop, uses the class compiled the first time, so only the first run pays for the compiler. A change to the code, the custom imports or fields, the Plan table, an additional library or the planner version compiles anew. For each run the planner makes one instance of the class and runs your code once, over the whole book.
+
+A field among the custom fields starts afresh in every run, since every run has an instance of its own. A static field belongs to the compiled class instead: the runs of an unchanged plan share it, also those on several tills at the same time, and it starts afresh when the plan changes or after many other plans ran — the app keeps the classes of the 32 plans used last and loads an older one anew without compiling it. Keep a run's state in ordinary fields.
+
+Kinds
+
+Every kind of the order book, each with its Java type and its type token; a missing value is null:
+
+Kind	Java type	Token	Read	Plan column
+COUNT8 · COUNT16 · COUNT32 · COUNT64	Byte · Short · Integer · Long	tByte · tShort · tInt · tLong	yes	yes
+REAL32 · REAL64	Float · Double	tFloat · tDouble	yes	yes
+FLAG · TEXT	Boolean · String	tBoolean · tString	yes	yes
+BYTES	byte[]	tBytes	yes	yes
+money	BigDecimal	tBigDecimal	yes, of any scale	yes, of its Scale
+id · id-compact	UUID	tUUID	yes	yes
+moment · moment-micros · moment-nanos	Instant	tInstant	yes	yes
+day	LocalDate	tLocalDate	yes	yes
+day-time · day-time-micros · day-time-nanos	LocalDateTime	tLocalDateTime	yes	yes
+clock	LocalTime	tLocalTime	yes	yes
+file · json	Path · String	tPath · tString	yes	yes
+list-count · list-real · list-flag	List<Long> · List<Double> · List<Boolean>	tListLong · tListDouble · tListBoolean	yes	yes
+list-text · list-json	List<String>	tListString	yes	yes
+blob	—	—	no	no
+- Lists arrive as lists you cannot change, null elements kept as they are in the book. A plan field takes any List of the element's type — List.of(…), an ArrayList your code fills — and is written with its null elements as such; null is a missing value, and an empty list stays the empty list.
+- A byte[] that o.get returns is your own copy: changing it changes neither the order nor the next read.
+- What addLine() writes is what the fields hold when it is called: a list or a byte array your code changes afterwards does not change the line written.
+- A money value is written exactly at its Scale: 1.5 in a column of scale 2 is 1.50.
+- Digits finer than a time kind keeps — below the millisecond in moment and day-time, below the microsecond in their -micros kinds — are cut off as the plan stores them.
+- json is a String the planner writes as it is, unchecked: your code makes it valid JSON.
+- blob columns have no Java type: no token reads them, and no plan column has the kind.
+
+A value its column cannot take is refused by addLine() at once:
+
+- a money value that would need rounding to the column's scale, such as 1.555 in a column of scale 2;
+- a value beyond what the column stores, such as a day whose count leaves a 32-bit number;
+- a list element of another type, which only a raw List lets in.
+
+addLine() then throws a java.lang.IllegalArgumentException at its line that names the column, the value, the field and the reason: The column 'price' (money(2)) cannot take the value 1.555 of the field out_price: 1.555 has more than 2 fraction digits and would need rounding to the column's scale. Your code may catch it: then no line is written, and the fields keep their values, so you may fix them and call addLine() again. Uncaught, it stops the planner like any exception (see Errors).
+
+Kitchen values
+
+A kitchen value is TEXT, WHOLE, REAL or FLAG. Your code reads the kitchen values of the shop through the planner's methods, and hands results on through kitchen values out.
+
+Reading — the kitchen's settings steer your code, here the number of ovens:
+
+long ovens = getKitchenValue("ovens", tLong);
+for (Order o : orders()) {
+    if (o.index() >= ovens * 12) break;
+    ...
+}
+- getKitchenValue("ovens", tLong) — the value of a kitchen value, read as every tool of the app reads one: TEXT with tString, WHOLE with tLong, REAL with tDouble, FLAG with tBoolean; a WHOLE also with tDouble as its Double, and with tInt as an Integer when its value fits one — else a KindException. Another token throws a KindException, a value the kitchen does not have a KitchenValueException; either stops the planner unless your code catches it.
+- getKitchenValues(tString) — every kitchen value the token reads, by name, sorted by name.
+- kitchenValueExists("ovens"), isKitchenValueOfKind("ovens", tInt) — the latter whether getKitchenValue would read the value with the token.
+
+They work among the custom fields too, so private final long ovens = getKitchenValue("ovens", tLong); there works.
+
+Kitchen values out — a row of the Plan table with the target Kitchen value gives your code a field, by habit out_ and the name, listed in the generated class under // Fields for kitchen values out, after the columns' fields:
+
+out_total = 0L;
+out_orders = 0L;
+for (Order o : orders()) {
+    out_orders++;
+    if (!o.isMissing("loaves")) out_total += o.get("loaves", tLong);
+}
+- addLine() never resets a kitchen value's field, unlike a column's: it keeps what your code assigned, so it adds up over the run.
+- The value the field holds when your code ends — when its method returns — is the kitchen value. A kitchen value cannot be missing, so a field that is null then stops the planner: The kitchen value 'total' has no value: its field out_total is null at the end of the run, and a kitchen value cannot be missing. Give it a start value, in the code or among the custom fields.
+- Tools that follow see the kitchen values out only once the planner has run to its end: a failed or stopped run hands on none. A kitchen value out replaces the kitchen's value of the same name for every tool that follows, so out_ovens = getKitchenValue("ovens", tLong) - 1; with the kitchen value ovens out takes an oven away.
+
+Log
+
+logDebug, logInfo, logWarn, logError and logFatal, each with any object — written as String.valueOf gives it — or an object and a throwable, whose class, message and line the log adds: logWarn("caught", e). They go to the planner's log at their levels, logFatal as ERROR, in the order your code wrote them, those of the custom fields' initialisers first. A run writes at most 1000 lines of the plan's log, then one line that counts the rest — also when the run fails. System.out and System.err are not redirected: what the plan prints goes to the app's own output, not to the planner's log.
+
+Errors
+
+- An exception out of your code stops the planner and names the order your code read last, counted from 0, and the line of the class where it was thrown: Order 3: the code threw java.lang.ArithmeticException: / by zero (line 35). Before your code read an order, without a book, and once it has called allOrders(), the message names no order. There is no setting to tolerate errors: catch what you want to tolerate with try/catch in your loop.
+- throw new Stop("…") stops the planner with your message: Order 3: ….
+- A value its column cannot take, when your code does not catch what addLine() throws, stops the planner so, at the addLine() line: Order 1: the code threw java.lang.IllegalArgumentException: The column 'price' (money(2)) cannot take the value 1.555 of the field out_price: … (line 35).
+- Code that does not compile stops the planner and names the first five errors with their line and column in the generated class, and counts the rest.
+- An exception in a custom field's initialiser stops the planner before the code runs — a static one's at every run, as an ordinary one's.
+- A kitchen value out whose field is null at the end stops the planner, naming the value and its field.
+- An additional library that does not exist, or is no JAR, stops the planner and names it: The additional library …/plans/lib/rules.jar does not exist.
+
+Stopping
+
+Your code runs on a thread of its own. Stopping the planner interrupts that thread, so a Thread.sleep, a blocking call or a check of Thread.interrupted() ends at once, and from then on orders(), allOrders() and addLine() throw a java.util.concurrent.CancellationException, so a loop over the orders ends even when your code swallows the interrupt. What your code throws after the stop is no error: the planner ends stopped. Code that loops forever and never checks for the interrupt cannot be stopped: the app gives up on the run after its grace period (5 seconds), the planner ends stopped, and the code's thread goes on running. Until that thread returns, the planner cannot run again — a run is refused with BP-0028 —, and only restarting the app ends it. Threads your code starts itself are its own business.
+
+What your code sees
+
+Your code sees the JDK the app runs on — java.net.http, java.sql, java.xml and the other standard modules —, the planner's API, the package of BatchPlan, and its additional libraries. It does not see the app itself: neither its order book nor its tills nor its screens, so a new version of the app does not break a plan. Nor does it see the JDK's tools, the compiler among them, which the JDK keeps apart from its standard modules.
+
+Additional libraries
+
+Your code can use the classes of the JARs the setting Additional libraries lists, such as a JDBC driver or a library of your own. They are on the plan's class path, in their order, when it compiles and when it runs, after the JDK and the planner's API: a class or package the JDK or the planner's API has is always theirs, never a JAR's, and of two JARs with a class of one name the first one listed wins. A JAR needs no module descriptor — most have none —; a multi-release JAR shows the classes for the JDK the app runs on. A JAR's classes see the JDK, the planner's API and the other JARs, never the app. While your code runs, the thread's context class loader is the plan's, so a library that finds its parts through it, as ServiceLoader.load(type) does, finds them in its JAR.
+
+- A copied JAR lies in the order book's folder, in plans/lib/, and is listed by its path relative to the book, such as plans/lib/commons-text.jar. The JAR then travels with the book: a backup carries it, and another till finds it where the book is.
+- A linked JAR is listed by its absolute path, for a shared installation. Another computer may not have that path: a backup lists it as a finding you confirm, and the planner's settings carry it as a warning.
+
+The plan is compiled anew when a JAR changes — its content, or where it lies —, so it never runs against a JAR it was not compiled with. The app reads a JAR into memory when it compiles or loads the plan and keeps no file open, so you can replace a JAR while the app runs; its next run compiles against the new one.
+
+Where it runs
+
+The planner runs in the bakery app on the office computer and on every till. The shop's tablet cannot load code at run time: there you open and set up the planner as anywhere, but it stops at once when it runs, with Batch Planner runs only on the office computer or a till; this tablet cannot load code at run time.

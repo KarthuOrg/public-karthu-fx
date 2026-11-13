@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.MenuBarShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Menu Bar" styleClass="showcase-page-title"/>
+    <Label text="Menu bars provide a set of menus for application-level navigation."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- Application Menu -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Application Menu" styleClass="showcase-card-title"/>
+        <VBox fx:id="menuBarContainer"/>
+    </VBox>
+
+</VBox>

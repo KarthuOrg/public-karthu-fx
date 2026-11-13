@@ -1,0 +1,4010 @@
+/*
+ * Base stylesheet - structure, density, and component rules.
+ * Color token values are defined in dark.css (Nebula Dark).
+ */
+
+/* Root and typography */
+.root {
+    -fx-font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif;
+    -fx-font-size: 13px;
+}
+
+/* Main application label */
+.app-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-color;
+}
+
+/* Email list styles */
+.email-list {
+    -fx-background-color: -fx-surface-color;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 0 1 0 0;
+}
+
+.email-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 4 8;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+.email-list .list-cell:hover {
+    -fx-background-color: -fx-hover-color;
+}
+
+.email-list .list-cell:selected {
+    -fx-background-color: -fx-selection-color;
+}
+
+.email-list .list-cell:selected .label {
+    -fx-text-fill: -fx-selection-text-color;
+}
+
+.email-list-item {
+    -fx-spacing: 4;
+}
+
+.email-list-item .sender {
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-color;
+}
+
+.email-list-item .subject {
+    -fx-text-fill: -fx-text-color;
+}
+
+.email-list-item .date {
+    -fx-font-size: 12px;
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+.email-list-item .preview {
+    -fx-font-size: 12px;
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+/* Email detail view */
+.email-detail {
+    -fx-background-color: -fx-surface-color;
+    -fx-padding: 8;
+}
+
+.email-detail .subject-label {
+    -fx-font-size: 20px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-color;
+}
+
+.email-detail .header-row {
+    -fx-spacing: 4;
+}
+
+.email-detail .header-label {
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-min-width: 60;
+}
+
+.email-detail .header-value {
+    -fx-text-fill: -fx-text-color;
+}
+
+.email-detail .body {
+    -fx-background-color: -fx-surface-color;
+    -fx-padding: 8;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 0;
+    -fx-background-radius: 0;
+}
+
+/* Buttons - compact, slightly rounded corners */
+.button {
+    -fx-background-color: -fx-control-border, -fx-button-color;
+    -fx-text-fill: -fx-text-color;
+    -fx-padding: 4 8;
+    -fx-background-radius: 3;
+    -fx-background-insets: 0, 1;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: -fx-control-border, -fx-button-hover-color;
+}
+
+.button:pressed {
+    -fx-background-color: -fx-control-border, -fx-button-pressed-color;
+}
+
+.primary-button {
+    -fx-background-color: -fx-control-border, -fx-accent-color;
+    -fx-text-fill: -fx-accent-text-color;
+    -fx-padding: 4 8;
+    -fx-background-radius: 3;
+    -fx-background-insets: 0, 1;
+    -fx-cursor: hand;
+}
+
+.primary-button:hover {
+    -fx-background-color: -fx-control-border, -fx-accent-hover-color;
+}
+
+.primary-button:pressed {
+    -fx-background-color: -fx-control-border, -fx-accent-pressed-color;
+}
+
+.icon-button {
+    -fx-background-color: transparent;
+    -fx-padding: 4;
+    -fx-background-radius: 3;
+    -fx-background-insets: 0;
+    -fx-cursor: hand;
+}
+
+.icon-button:hover {
+    -fx-background-color: -fx-hover-color;
+}
+
+/* Semantic status buttons — filled with the status tokens, dark text */
+.success-button,
+.running-button,
+.warning-button,
+.danger-button,
+.info-button {
+    -fx-text-fill: -fx-status-button-text-color;
+    -fx-padding: 4 8;
+    -fx-background-radius: 3;
+    -fx-background-insets: 0, 1;
+    -fx-cursor: hand;
+}
+
+.success-button         { -fx-background-color: -fx-control-border, -fx-status-normal; }
+.success-button:hover   { -fx-background-color: -fx-control-border, derive(-fx-status-normal, 15%); }
+.success-button:pressed { -fx-background-color: -fx-control-border, derive(-fx-status-normal, -12%); }
+
+.running-button         { -fx-background-color: -fx-control-border, -fx-status-running; }
+.running-button:hover   { -fx-background-color: -fx-control-border, derive(-fx-status-running, 15%); }
+.running-button:pressed { -fx-background-color: -fx-control-border, derive(-fx-status-running, -12%); }
+
+.warning-button         { -fx-background-color: -fx-control-border, -fx-status-paused; }
+.warning-button:hover   { -fx-background-color: -fx-control-border, derive(-fx-status-paused, 15%); }
+.warning-button:pressed { -fx-background-color: -fx-control-border, derive(-fx-status-paused, -12%); }
+
+.danger-button          { -fx-background-color: -fx-control-border, -fx-status-error; }
+.danger-button:hover    { -fx-background-color: -fx-control-border, derive(-fx-status-error, 15%); }
+.danger-button:pressed  { -fx-background-color: -fx-control-border, derive(-fx-status-error, -12%); }
+
+.info-button            { -fx-background-color: -fx-control-border, -fx-status-info; }
+.info-button:hover      { -fx-background-color: -fx-control-border, derive(-fx-status-info, 15%); }
+.info-button:pressed    { -fx-background-color: -fx-control-border, derive(-fx-status-info, -12%); }
+
+/* Toolbar */
+.tool-bar {
+    -fx-background-color: -fx-surface-color;
+    -fx-padding: 4;
+    -fx-spacing: 4;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* Menu bar */
+.menu-bar {
+    -fx-background-color: -fx-surface-color;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+.menu-bar .menu {
+    -fx-background-color: transparent;
+}
+
+.menu-bar .menu:hover,
+.menu-bar .menu:showing {
+    -fx-background-color: -fx-hover-color;
+}
+
+.menu-bar .label {
+    -fx-text-fill: -fx-text-color;
+}
+
+.context-menu {
+    -fx-background-color: -fx-surface-color;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 8, 0, 0, 2);
+}
+
+.menu-item {
+    -fx-background-color: transparent;
+    -fx-padding: 4 8;
+}
+
+.menu-item:hover,
+.menu-item:focused {
+    -fx-background-color: -fx-hover-color;
+}
+
+.menu-item .label {
+    -fx-text-fill: -fx-text-color;
+}
+
+/* Scroll bars */
+.scroll-bar {
+    -fx-background-color: transparent;
+}
+
+/* Without an explicit breadth the bars collapse: the arrow buttons are
+   shaped away (-fx-shape: "") with zero padding, so nothing else gives
+   the bar a size. */
+.scroll-bar:vertical {
+    -fx-pref-width: 12;
+}
+
+.scroll-bar:horizontal {
+    -fx-pref-height: 12;
+}
+
+.scroll-bar .track {
+    /* Darker than -fx-surface-color so the channel stays visible on
+       surface-colored content like tables and lists. */
+    -fx-background-color: -fx-scrollbar-track-color;
+    -fx-border-color: transparent;
+    -fx-background-radius: 0;
+}
+
+.scroll-bar .thumb {
+    -fx-background-color: -fx-scrollbar-color;
+    -fx-background-radius: 0;
+    -fx-background-insets: 2;
+}
+
+/* ScrollBarSkin derives both its own breadth and the minimum thumb length
+   (1.5 x breadth) from the arrow buttons' cross-axis pref size. With the
+   arrows shaped away that becomes 0, so on huge virtualized lists the thumb
+   (proportional to visible/total) collapses to under a pixel. Padding only
+   the cross axis restores the breadth without re-adding end caps. */
+.scroll-bar:vertical > .increment-button,
+.scroll-bar:vertical > .decrement-button {
+    -fx-padding: 0 6 0 6;
+}
+
+.scroll-bar:horizontal > .increment-button,
+.scroll-bar:horizontal > .decrement-button {
+    -fx-padding: 6 0 6 0;
+}
+
+.scroll-bar .thumb:hover {
+    -fx-background-color: -fx-scrollbar-hover-color;
+}
+
+.scroll-bar .increment-button,
+.scroll-bar .decrement-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.scroll-bar .increment-arrow,
+.scroll-bar .decrement-arrow {
+    -fx-shape: "";
+    -fx-padding: 0;
+}
+
+/* Split pane */
+.split-pane {
+    -fx-background-color: -fx-surface-color;
+    -fx-padding: 0;
+}
+
+.split-pane > .split-pane-divider {
+    -fx-background-color: -fx-control-border;
+    -fx-padding: 0 0.5;
+}
+
+/* Text fields. A form frame (form-frame, "Form fields" below) shares
+ * these rules, so a change here carries over to it: the frame takes the
+ * text field's border, background, radius, focus border, read-only
+ * background and disabled look, and its borderless inner text field
+ * keeps the text field's padding. The frame's own padding (the room
+ * after its icons) is set in its section, which follows. The text
+ * properties do not apply to the frame, a region. */
+.text-field,
+.form-frame {
+    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3;
+    -fx-padding: 4;
+    -fx-text-fill: -fx-text-color;
+    -fx-prompt-text-fill: -fx-text-secondary-color;
+}
+
+/* The frame's focus border shows while anything inside it has the
+ * focus (:focus-within), around text and icons together. */
+.text-field:focused,
+.form-frame:focus-within {
+    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+}
+
+.text-field:readonly,
+.form-frame:readonly {
+    -fx-background-color: -fx-control-border, -fx-readonly-bg;
+    -fx-background-insets: 0, 1;
+    -fx-cursor: default;
+}
+
+/* Disabled: dimmed as a disabled button (password fields too; Modena's
+ * 0.4 before). A form frame keeps its inner text field and icons at
+ * full opacity, see "Form fields" below. */
+.text-field:disabled,
+.form-frame:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: default;
+}
+
+/* Password field - inherits from text-field */
+.password-field {
+    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3;
+    -fx-padding: 4;
+    -fx-text-fill: -fx-text-color;
+}
+
+.password-field:focused {
+    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+}
+
+/* ComboBox */
+.combo-box {
+    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3;
+    -fx-cursor: hand;
+}
+
+.combo-box:hover {
+    -fx-background-color: -fx-control-border, -fx-button-hover-color;
+    -fx-background-insets: 0, 1;
+}
+
+.combo-box:focused {
+    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+}
+
+.combo-box .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-color;
+    -fx-padding: 4;
+}
+
+/* Editor of an editable combo box — keep it transparent so the combo reads
+   as one field; the border is painted by the .combo-box control itself. */
+.combo-box > .text-field,
+.combo-box > .text-field:focused {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 4;
+    -fx-text-fill: -fx-text-color;
+}
+
+.combo-box .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 4 6;
+}
+
+.combo-box .arrow {
+    -fx-background-color: -fx-text-color;
+    -fx-padding: 3;
+    -fx-shape: "M0 0 L4 4 L8 0 Z";
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3;
+    -fx-padding: 0;
+}
+
+.combo-box-popup .list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-color;
+    -fx-padding: 4 8;
+}
+
+.combo-box-popup .list-view .list-cell:hover {
+    -fx-background-color: -fx-hover-color;
+}
+
+.combo-box-popup .list-view .list-cell:selected {
+    -fx-background-color: -fx-selection-color;
+    -fx-text-fill: -fx-selection-text-color;
+}
+
+.combo-box:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: default;
+}
+
+/* ChoiceBox */
+.choice-box {
+    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3;
+    -fx-cursor: hand;
+}
+
+.choice-box:hover {
+    -fx-background-color: -fx-control-border, -fx-button-hover-color;
+    -fx-background-insets: 0, 1;
+}
+
+.choice-box:focused {
+    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+}
+
+.choice-box > .label {
+    -fx-text-fill: -fx-text-color;
+    -fx-padding: 4;
+}
+
+.choice-box > .open-button {
+    -fx-background-color: transparent;
+    -fx-padding: 4 6;
+}
+
+.choice-box > .open-button > .arrow {
+    -fx-background-color: -fx-text-color;
+    -fx-padding: 3;
+    -fx-shape: "M0 0 L4 4 L8 0 Z";
+}
+
+.choice-box .context-menu {
+    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3;
+    -fx-padding: 0;
+}
+
+.choice-box .menu-item {
+    -fx-background-color: transparent;
+    -fx-padding: 4 8;
+}
+
+.choice-box .menu-item:hover,
+.choice-box .menu-item:focused {
+    -fx-background-color: -fx-selection-color;
+}
+
+.choice-box:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: default;
+}
+
+/* DatePicker */
+.date-picker {
+    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3;
+}
+
+.date-picker:focused {
+    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+}
+
+.date-picker .text-field {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 4;
+    -fx-text-fill: -fx-text-color;
+}
+
+.date-picker .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 4 6;
+    -fx-cursor: hand;
+}
+
+.date-picker .arrow-button .arrow {
+    -fx-background-color: -fx-text-color;
+    -fx-padding: 5;
+    -fx-shape: "M2 0 L2 1 L0 1 L0 8 L10 8 L10 1 L8 1 L8 0 L6 0 L6 1 L4 1 L4 0 Z M1 3 L9 3 L9 7 L1 7 Z";
+}
+
+.date-picker:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: default;
+}
+
+/* DatePicker popup */
+.date-picker-popup {
+    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3;
+}
+
+.date-picker-popup > .month-year-pane {
+    -fx-background-color: -fx-surface-color;
+    -fx-padding: 6;
+}
+
+.date-picker-popup > .month-year-pane > .spinner {
+    -fx-background-color: transparent;
+}
+
+.date-picker-popup > .month-year-pane > .spinner > .label {
+    -fx-text-fill: -fx-text-color;
+    -fx-font-weight: bold;
+}
+
+.date-picker-popup > .month-year-pane > .spinner > .button {
+    -fx-background-color: transparent;
+    -fx-padding: 4;
+    -fx-cursor: hand;
+}
+
+.date-picker-popup > .month-year-pane > .spinner > .button:hover {
+    -fx-background-color: -fx-hover-color;
+}
+
+.date-picker-popup > .month-year-pane > .spinner > .button > .left-arrow,
+.date-picker-popup > .month-year-pane > .spinner > .button > .right-arrow {
+    -fx-background-color: -fx-text-color;
+    -fx-padding: 3;
+}
+
+.date-picker-popup > .month-year-pane > .spinner > .button > .left-arrow {
+    -fx-shape: "M4 0 L0 4 L4 8 Z";
+}
+
+.date-picker-popup > .month-year-pane > .spinner > .button > .right-arrow {
+    -fx-shape: "M0 0 L4 4 L0 8 Z";
+}
+
+/* Calendar grid */
+.date-picker-popup > .calendar-grid {
+    -fx-background-color: -fx-surface-color;
+    -fx-padding: 4;
+}
+
+.date-picker-popup > .calendar-grid > .week-number-cell {
+    -fx-background-color: -fx-button-color;
+    -fx-background-insets: 1;
+    -fx-background-radius: 6;
+    /* modena draws a border and unpadded fill on week-number cells */
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 4;
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-font-size: 11px;
+}
+
+.date-picker-popup > .calendar-grid > .day-name-cell {
+    -fx-padding: 4;
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.date-picker-popup > .calendar-grid > .day-cell {
+    -fx-background-color: transparent;
+    -fx-background-insets: 1;
+    -fx-background-radius: 6;
+    /* modena draws a grid border on every .date-cell — remove it */
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 4 8;
+    -fx-text-fill: -fx-text-color;
+    -fx-cursor: hand;
+}
+
+.date-picker-popup > .calendar-grid > .day-cell:hover {
+    -fx-background-color: -fx-hover-color;
+}
+
+.date-picker-popup > .calendar-grid > .day-cell:focused {
+    -fx-background-color: -fx-hover-color;
+}
+
+/* Selected day cell — Modena marks selection with the "selected" style class */
+.date-picker-popup > .calendar-grid > .day-cell.selected {
+    -fx-background-color: -fx-accent-color;
+    -fx-text-fill: -fx-accent-text-color;
+}
+
+.date-picker-popup > .calendar-grid > .day-cell.selected > .text {
+    -fx-fill: -fx-accent-text-color;
+}
+
+/* Today's date — rounded outline chip, fill stays free for hover/selected */
+.date-picker-popup > .calendar-grid > .today {
+    -fx-background-color: transparent;
+    -fx-border-color: -fx-accent-color;
+    -fx-border-width: 1;
+    -fx-border-radius: 6;
+    -fx-border-insets: 1;
+}
+
+/* Today + selected */
+.date-picker-popup > .calendar-grid > .today.selected {
+    -fx-background-color: -fx-accent-color;
+    -fx-text-fill: -fx-accent-text-color;
+}
+
+.date-picker-popup > .calendar-grid > .today.selected > .text {
+    -fx-fill: -fx-accent-text-color;
+}
+
+.date-picker-popup > .calendar-grid > .previous-month,
+.date-picker-popup > .calendar-grid > .next-month {
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+/* TableView */
+.table-view {
+    -fx-background-color: -fx-surface-color;
+    -fx-table-cell-border-color: -fx-control-border;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+    -fx-control-inner-background: -fx-surface-color;
+    -fx-control-inner-background-alt: -fx-table-row-odd;
+    -fx-padding: 0;
+}
+
+.table-view:focused {
+    -fx-border-color: -fx-control-border;
+}
+
+.table-view .column-header-background {
+    -fx-background-color: -fx-button-color;
+}
+
+.table-view .column-header {
+    -fx-background-color: -fx-button-color;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 0 1 1 0;
+}
+
+.table-view .column-header:hover {
+    -fx-background-color: -fx-button-hover-color;
+}
+
+.table-view .column-header .label {
+    -fx-text-fill: -fx-text-color;
+    -fx-font-weight: bold;
+    -fx-alignment: CENTER_LEFT;
+}
+
+.table-view .column-header .arrow {
+    -fx-background-color: -fx-text-color;
+}
+
+.table-view .filler {
+    -fx-background-color: -fx-button-color;
+}
+
+.table-view .corner {
+    -fx-background-color: -fx-surface-color;
+}
+
+/* The header's menu button (setTableMenuButtonVisible(true)): the corner at
+ * the header row's right end, as wide as a vertical scroll bar, that opens
+ * the theme's context menu of the columns to show and hide (check items).
+ * Flat like a column header, its plus sign in the secondary text colour,
+ * brighter on hover. The line that shows where a dragged column header
+ * will drop takes the accent colour. */
+.table-view > .column-header-background > .show-hide-columns-button {
+    -fx-background-color: -fx-button-color;
+    -fx-background-insets: 0;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 0 0 1 1;
+    -fx-padding: 0;
+    -fx-cursor: hand;
+}
+
+.table-view > .column-header-background > .show-hide-columns-button:hover {
+    -fx-background-color: -fx-button-hover-color;
+}
+
+.table-view .show-hide-column-image {
+    -fx-background-color: -fx-text-secondary-color;
+}
+
+.table-view > .column-header-background > .show-hide-columns-button:hover .show-hide-column-image {
+    -fx-background-color: -fx-text-color;
+}
+
+.table-view .column-resize-line {
+    -fx-background-color: -fx-accent-color;
+}
+
+.table-row-cell {
+    -fx-background-color: -fx-surface-color;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 0 0 1 0;
+    -fx-padding: 0;
+    -fx-cell-size: 20px;
+    -fx-font-size: 11.5px;
+    -fx-text-fill: -fx-text-color;
+}
+
+.table-row-cell .text {
+    -fx-fill: -fx-text-color;
+}
+
+.table-row-cell:odd {
+    -fx-background-color: -fx-table-row-odd;
+}
+
+.table-row-cell:hover {
+    -fx-background-color: -fx-hover-color;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: -fx-selection-color;
+}
+
+.table-row-cell:selected:hover {
+    -fx-background-color: -fx-selection-hover-color;
+}
+
+.table-row-cell:selected .text {
+    -fx-fill: -fx-selection-text-color;
+}
+
+.table-row-cell:selected .table-cell {
+    -fx-text-fill: -fx-selection-text-color;
+}
+
+.table-cell {
+    -fx-padding: 1 6;
+    -fx-text-fill: -fx-text-color;
+    -fx-alignment: center-left;
+}
+
+/* Cell selection (setCellSelectionEnabled(true)): a selected cell looks like a
+ * selected row. A TableCell is :selected only in cell selection, so these rules
+ * never touch a row-selection table. They weigh no more than the row rules
+ * above, so a component's own text colours win on a selected cell as they do
+ * on a selected row. The focused cell (the keyboard's position) carries a 1px
+ * accent frame drawn as a background layer, which leaves the text in place. */
+.table-row-cell .table-cell:selected {
+    -fx-background-color: -fx-selection-color;
+    -fx-background-insets: 0;
+    -fx-text-fill: -fx-selection-text-color;
+}
+
+.table-row-cell .table-cell:selected:hover {
+    -fx-background-color: -fx-selection-hover-color;
+}
+
+.table-cell:selected .text {
+    -fx-fill: -fx-selection-text-color;
+}
+
+.table-view:focused:cell-selection .table-row-cell .table-cell:focused {
+    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+}
+
+.table-view:focused:cell-selection .table-row-cell .table-cell:focused:selected {
+    -fx-background-color: -fx-accent-color, -fx-selection-color;
+}
+
+.table-view:focused:cell-selection .table-row-cell .table-cell:focused:selected:hover {
+    -fx-background-color: -fx-accent-color, -fx-selection-hover-color;
+}
+
+/* Semantic state text classes (wire to job State column) */
+.state-normal  { -fx-text-fill: -fx-status-normal;  -fx-font-weight: bold; }
+.state-running { -fx-text-fill: -fx-status-running; -fx-font-weight: bold; }
+.state-paused  { -fx-text-fill: -fx-status-paused;  -fx-font-weight: bold; }
+.state-blocked { -fx-text-fill: -fx-status-blocked; -fx-font-weight: bold; }
+.state-error   { -fx-text-fill: -fx-status-error;   -fx-font-weight: bold; }
+.state-idle    { -fx-text-fill: -fx-status-idle; }
+
+/* Text-node fills so state colors win over the generic table/list text rules */
+.state-normal  .text { -fx-fill: -fx-status-normal; }
+.state-running .text { -fx-fill: -fx-status-running; }
+.state-paused  .text { -fx-fill: -fx-status-paused; }
+.state-blocked .text { -fx-fill: -fx-status-blocked; }
+.state-error   .text { -fx-fill: -fx-status-error; }
+.state-idle    .text { -fx-fill: -fx-status-idle; }
+
+/* Semantic status colors for Ikonli font icons.
+   Use these classes instead of an inline style — FontIcon keeps its icon
+   font in the node's inline style, so setting style="" would wipe it. */
+.icon-normal  { -fx-icon-color: -fx-status-normal; }
+.icon-running { -fx-icon-color: -fx-status-running; }
+.icon-paused  { -fx-icon-color: -fx-status-paused; }
+.icon-blocked { -fx-icon-color: -fx-status-blocked; }
+.icon-error   { -fx-icon-color: -fx-status-error; }
+.icon-info    { -fx-icon-color: -fx-status-info; }
+.icon-idle    { -fx-icon-color: -fx-status-idle; }
+.icon-muted   { -fx-icon-color: -fx-text-secondary-color; }
+
+.table-view .virtual-flow .scroll-bar:vertical {
+    -fx-background-color: transparent;
+}
+
+.table-view .virtual-flow .scroll-bar:horizontal {
+    -fx-background-color: transparent;
+}
+
+.table-view .placeholder .label {
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+/* ListView */
+.list-view {
+    -fx-background-color: -fx-surface-color;
+    -fx-background-radius: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-border-radius: 0;
+    -fx-padding: 0;
+}
+
+.list-view:focused {
+    -fx-border-color: transparent;
+}
+
+.list-view .list-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-color;
+    -fx-padding: 2 4;
+}
+
+.list-view .list-cell:hover:filled {
+    -fx-background-color: -fx-hover-color;
+}
+
+.list-view .list-cell:selected {
+    -fx-background-color: -fx-selection-color;
+}
+
+.list-view .list-cell:selected .text {
+    -fx-fill: -fx-selection-text-color;
+}
+
+.list-view .list-cell .text {
+    -fx-fill: -fx-text-color;
+}
+
+.list-view .placeholder .label {
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+/* TreeView */
+.tree-view {
+    -fx-background-color: -fx-surface-color;
+    -fx-control-inner-background: -fx-surface-color;
+    -fx-background-radius: 3;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+    -fx-padding: 0;
+}
+
+.tree-view:focused {
+    -fx-border-color: -fx-control-border;
+}
+
+.tree-view .tree-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-color;
+    -fx-padding: 2 4;
+    -fx-alignment: center-left;
+}
+
+.tree-view .tree-cell:hover:filled {
+    -fx-background-color: -fx-hover-color;
+}
+
+.tree-view .tree-cell:selected {
+    -fx-background-color: -fx-selection-color;
+}
+
+.tree-view .tree-cell:selected .text {
+    -fx-fill: -fx-selection-text-color;
+}
+
+.tree-view .tree-cell .text {
+    -fx-fill: -fx-text-color;
+}
+
+.tree-view .tree-cell .tree-disclosure-node {
+    -fx-padding: 0 4 0 0;
+}
+
+.tree-view .tree-cell .tree-disclosure-node .arrow {
+    -fx-background-color: -fx-text-color;
+    -fx-padding: 3;
+    -fx-shape: "M0 0 L6 4 L0 8 Z";
+    -fx-translate-y: 6;
+    -fx-rotate: 0;
+}
+
+.tree-view .tree-cell:selected .tree-disclosure-node .arrow {
+    -fx-background-color: -fx-text-color;
+}
+
+.tree-view .tree-cell:expanded .tree-disclosure-node .arrow {
+    -fx-rotate: 90;
+}
+
+.tree-view .placeholder .label {
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+/* ProgressBar - Windows 10 style */
+.progress-bar {
+    -fx-indeterminate-bar-length: 60;
+    -fx-indeterminate-bar-escape: true;
+    -fx-indeterminate-bar-flip: true;
+    -fx-indeterminate-bar-animation-time: 2;
+}
+
+.progress-bar > .track {
+    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3;
+    -fx-pref-height: 6;
+}
+
+.progress-bar > .bar {
+    -fx-background-color: -fx-accent-color;
+    -fx-background-insets: 0;
+    -fx-background-radius: 3;
+    -fx-padding: 3;
+}
+
+.progress-bar:indeterminate > .bar {
+    -fx-background-color: -fx-accent-color;
+}
+
+.progress-bar:disabled {
+    -fx-opacity: 0.5;
+}
+
+/* ProgressIndicator - Windows 10 style */
+.progress-indicator {
+    -fx-indeterminate-segment-count: 12;
+    -fx-spin-enabled: true;
+    -fx-progress-color: -fx-accent-color;
+}
+
+/* Determinate indicator */
+.progress-indicator > .determinate-indicator > .indicator {
+    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+}
+
+.progress-indicator > .determinate-indicator > .progress {
+    -fx-background-color: -fx-accent-color;
+}
+
+.progress-indicator > .determinate-indicator > .percentage {
+    -fx-fill: -fx-text-color;
+    -fx-font-size: 10px;
+}
+
+.progress-indicator > .determinate-indicator > .tick {
+    -fx-background-color: -fx-accent-color;
+    -fx-shape: "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z";
+    -fx-scale-shape: true;
+    -fx-padding: 6;
+}
+
+/* Indeterminate state */
+.progress-indicator:indeterminate .segment {
+    -fx-background-color: -fx-accent-color;
+}
+
+/* The indeterminate indicator's container has the "spinner" style class —
+   undo the Spinner control's bordered background leaking onto it */
+.progress-indicator:indeterminate > .spinner {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.progress-indicator:disabled {
+    -fx-opacity: 0.5;
+}
+
+/* Slider - Windows 10 style */
+.slider {
+    -fx-padding: 4 0;
+    -fx-show-tick-labels: true;
+    -fx-show-tick-marks: true;
+}
+
+.slider > .track {
+    -fx-background-color: -fx-control-border;
+    -fx-background-insets: 0;
+    -fx-background-radius: 2;
+    -fx-pref-height: 4;
+}
+
+.slider > .thumb {
+    -fx-background-color: -fx-accent-color;
+    -fx-background-insets: 0;
+    -fx-background-radius: 50%;
+    -fx-pref-width: 16;
+    -fx-pref-height: 16;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 2, 0, 0, 1);
+}
+
+.slider > .thumb:hover {
+    -fx-background-color: -fx-accent-hover-color;
+}
+
+.slider > .thumb:pressed {
+    -fx-background-color: -fx-accent-pressed-color;
+}
+
+.slider:focused > .thumb {
+    -fx-background-color: -fx-accent-color;
+    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 4, 0, 0, 1);
+}
+
+.slider > .axis {
+    -fx-tick-label-fill: -fx-text-secondary-color;
+    -fx-tick-label-font-size: 10px;
+}
+
+.slider > .axis > .axis-tick-mark {
+    -fx-stroke: -fx-control-border;
+}
+
+.slider > .axis > .axis-minor-tick-mark {
+    -fx-stroke: -fx-control-border;
+}
+
+.slider:disabled {
+    -fx-opacity: 0.5;
+}
+
+/* Pagination - Windows 10 style */
+.pagination {
+    -fx-padding: 4;
+    -fx-page-information-visible: false;
+}
+
+.pagination > .page {
+    -fx-background-color: transparent;
+}
+
+.pagination > .pagination-control {
+    -fx-background-color: transparent;
+}
+
+.pagination > .pagination-control > .control-box {
+    -fx-spacing: 4;
+    -fx-alignment: center;
+}
+
+.pagination > .pagination-control > .control-box > .left-arrow-button,
+.pagination > .pagination-control > .control-box > .right-arrow-button,
+.pagination > .pagination-control > .control-box > .bullet-button,
+.pagination > .pagination-control > .control-box > .number-button {
+    -fx-background-color: -fx-control-border, -fx-button-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 6, 5;
+    -fx-padding: 8 12;
+    -fx-min-width: 34;
+    -fx-min-height: 32;
+    -fx-pref-height: 32;
+    -fx-cursor: hand;
+}
+
+.pagination > .pagination-control > .control-box > .left-arrow-button:hover,
+.pagination > .pagination-control > .control-box > .right-arrow-button:hover,
+.pagination > .pagination-control > .control-box > .bullet-button:hover,
+.pagination > .pagination-control > .control-box > .number-button:hover {
+    -fx-background-color: -fx-control-border, -fx-button-hover-color;
+}
+
+.pagination > .pagination-control > .control-box > .left-arrow-button:pressed,
+.pagination > .pagination-control > .control-box > .right-arrow-button:pressed {
+    -fx-background-color: -fx-control-border, -fx-button-pressed-color;
+}
+
+.pagination > .pagination-control > .control-box > .left-arrow-button:disabled,
+.pagination > .pagination-control > .control-box > .right-arrow-button:disabled {
+    -fx-opacity: 0.4;
+    -fx-cursor: default;
+}
+
+.pagination > .pagination-control > .control-box > .left-arrow-button > .left-arrow,
+.pagination > .pagination-control > .control-box > .right-arrow-button > .right-arrow {
+    -fx-background-color: -fx-text-color;
+    -fx-padding: 3.5 2.5;
+}
+
+.pagination > .pagination-control > .control-box > .left-arrow-button > .left-arrow {
+    -fx-shape: "M 3 0 L 4 1 L 2 3 L 4 5 L 3 6 L 0 3 Z";
+}
+
+.pagination > .pagination-control > .control-box > .right-arrow-button > .right-arrow {
+    -fx-shape: "M 1 0 L 4 3 L 1 6 L 0 5 L 2 3 L 0 1 Z";
+}
+
+.pagination > .pagination-control > .control-box > .bullet-button:selected,
+.pagination > .pagination-control > .control-box > .number-button:selected {
+    -fx-background-color: -fx-accent-color, -fx-selection-color;
+    -fx-font-weight: bold;
+}
+
+.pagination > .pagination-control > .control-box > .bullet-button > .bullet {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.pagination > .pagination-control > .control-box > .number-button > .text {
+    -fx-fill: -fx-text-color;
+}
+
+.pagination > .pagination-control > .control-box > .number-button:selected > .text {
+    -fx-fill: -fx-selection-text-color;
+}
+
+.pagination > .pagination-control > .page-information {
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-padding: 0 8;
+}
+
+.pagination:disabled {
+    -fx-opacity: 0.5;
+}
+
+/* Text area */
+.text-area {
+    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3;
+    -fx-prompt-text-fill: -fx-text-secondary-color;
+}
+
+.text-area .content {
+    -fx-background-color: -fx-surface-color;
+    -fx-text-fill: -fx-text-color;
+}
+
+.text-area:focused {
+    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+}
+
+.text-area:readonly {
+    -fx-background-color: -fx-control-border, -fx-readonly-bg;
+    -fx-background-insets: 0, 1;
+}
+
+.text-area:readonly .content {
+    -fx-background-color: -fx-readonly-bg;
+}
+
+/* Accordion and TitledPane - Windows 10 style */
+.accordion {
+    -fx-background-color: transparent;
+}
+
+.titled-pane {
+    -fx-animated: false;
+}
+
+.accordion > .titled-pane > .title {
+    -fx-background-color: -fx-button-color;
+    -fx-background-insets: 0;
+    -fx-background-radius: 3;
+    -fx-padding: 6 8;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1;
+}
+
+.accordion > .titled-pane:expanded > .title {
+    -fx-background-color: -fx-button-hover-color;
+}
+
+.accordion > .titled-pane > .title:hover {
+    -fx-background-color: -fx-button-hover-color;
+}
+
+.accordion > .titled-pane > .title > .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 4 0 0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.accordion > .titled-pane > .title > .arrow-button:focused {
+    -fx-background-color: transparent;
+}
+
+.accordion > .titled-pane > .title > .arrow-button > .arrow {
+    -fx-background-color: -fx-text-color;
+    -fx-shape: "M0,0 L4,4 L8,0 Z";
+    -fx-scale-shape: true;
+    -fx-padding: 4;
+    -fx-rotate: -90;
+}
+
+.accordion > .titled-pane:expanded > .title > .arrow-button > .arrow {
+    -fx-rotate: 0;
+}
+
+.accordion > .titled-pane > .title > .text {
+    -fx-fill: -fx-text-color;
+}
+
+.accordion > .titled-pane > .content {
+    -fx-background-color: -fx-surface-color;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 0 1 1 1;
+    -fx-padding: 8;
+}
+
+.accordion > .titled-pane:disabled > .title {
+    -fx-opacity: 0.5;
+}
+
+/* Standalone TitledPane */
+.titled-pane > .title {
+    -fx-background-color: -fx-button-color;
+    -fx-background-insets: 0;
+    -fx-background-radius: 3;
+    -fx-padding: 6 8;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1;
+}
+
+.titled-pane > .title:hover {
+    -fx-background-color: -fx-button-hover-color;
+}
+
+.titled-pane:expanded > .title {
+    -fx-background-color: -fx-button-hover-color;
+    -fx-border-width: 1 1 0 1;
+}
+
+.titled-pane > .title > .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 4 0 0;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.titled-pane > .title > .arrow-button:focused {
+    -fx-background-color: transparent;
+}
+
+.titled-pane > .title > .arrow-button > .arrow {
+    -fx-background-color: -fx-text-color;
+    -fx-shape: "M0,0 L4,4 L8,0 Z";
+    -fx-scale-shape: true;
+    -fx-padding: 4;
+    -fx-rotate: -90;
+}
+
+.titled-pane:expanded > .title > .arrow-button > .arrow {
+    -fx-rotate: 0;
+}
+
+.titled-pane > .title > .text {
+    -fx-fill: -fx-text-color;
+}
+
+.titled-pane > .content {
+    -fx-background-color: -fx-surface-color;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1;
+    -fx-padding: 8;
+}
+
+.titled-pane:expanded > .content {
+    -fx-border-width: 0 1 1 1;
+}
+
+.titled-pane:disabled {
+    -fx-opacity: 0.5;
+}
+
+/* Labels */
+.label {
+    -fx-text-fill: -fx-text-color;
+}
+
+/* Text rendering for all text nodes: LCD (subpixel) smoothing instead of JavaFX's default gray. The property belongs
+   to Text alone and is not inherited, so it is set on the text nodes themselves: ".text" reaches the text inside
+   labels, buttons and text inputs, the type selector "Text" every plain Text, such as the runs of a TextFlow. JavaFX
+   draws gray by itself where LCD cannot work, on a transparent background. */
+.text,
+Text {
+    -fx-font-smoothing-type: lcd;
+}
+
+/* Icons (Ikonli) */
+.icon {
+    -fx-icon-color: -fx-text-color;
+    -fx-fill: -fx-text-color;
+}
+
+.ikonli-font-icon {
+    -fx-icon-color: -fx-text-color;
+    -fx-fill: -fx-text-color;
+}
+
+/* Context Menu */
+.context-menu {
+    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3;
+    -fx-padding: 0;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 8, 0, 0, 2);
+}
+
+.context-menu .separator,
+.menu .separator {
+    -fx-padding: 0;
+}
+
+.context-menu .separator > .line,
+.menu .separator > .line {
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1 0 0 0;
+    -fx-border-insets: 0;
+}
+
+.menu-item {
+    -fx-background-color: transparent;
+    -fx-padding: 4 12;
+    -fx-background-insets: 0;
+    -fx-cursor: hand;
+}
+
+.menu-item:hover,
+.menu-item:focused {
+    -fx-background-color: -fx-hover-color;
+}
+
+.menu-item:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: default;
+}
+
+.menu-item > .label {
+    -fx-text-fill: -fx-text-color;
+    -fx-padding: 0 0 0 8;
+}
+
+.menu-item:disabled > .label {
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+/* Keyboard shortcut hints */
+.menu-item > .accelerator-text {
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+/* Destructive actions (e.g. Delete) — add the "destructive" style class */
+.menu-item.destructive > .label {
+    -fx-text-fill: -fx-status-error;
+}
+
+.menu-item.destructive > .graphic-container .ikonli-font-icon {
+    -fx-icon-color: -fx-status-error;
+    -fx-fill: -fx-status-error;
+}
+
+.menu-item > .graphic-container {
+    -fx-padding: 0;
+}
+
+.menu-item > .graphic-container .ikonli-font-icon {
+    -fx-icon-size: 14;
+}
+
+/* Sub-menu (Menu with children) */
+.menu {
+    -fx-background-color: transparent;
+    -fx-padding: 4 12;
+    -fx-background-insets: 0;
+    -fx-cursor: hand;
+}
+
+.menu:hover,
+.menu:focused,
+.menu:showing {
+    -fx-background-color: -fx-hover-color;
+}
+
+.menu > .label {
+    -fx-text-fill: -fx-text-color;
+    -fx-padding: 0 0 0 8;
+}
+
+.menu > .arrow-button {
+    -fx-padding: 0 0 0 8;
+}
+
+.menu > .arrow-button > .arrow {
+    -fx-background-color: -fx-text-color;
+    -fx-shape: "M0,0 L4,4 L0,8 Z";
+    -fx-scale-shape: true;
+    -fx-padding: 3;
+}
+
+/* Menu Bar - Windows 10 style */
+.menu-bar {
+    -fx-background-color: -fx-surface-color;
+    -fx-padding: 0;
+    -fx-background-radius: 0;
+}
+
+.menu-bar > .container > .menu-button {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-padding: 4 8;
+}
+
+.menu-bar > .container > .menu-button:hover,
+.menu-bar > .container > .menu-button:focused,
+.menu-bar > .container > .menu-button:showing {
+    -fx-background-color: -fx-hover-color;
+}
+
+.menu-bar > .container > .menu-button > .label {
+    -fx-text-fill: -fx-text-color;
+}
+
+.menu-bar > .container > .menu-button > .arrow-button {
+    -fx-padding: 0;
+}
+
+.menu-bar > .container > .menu-button > .arrow-button > .arrow {
+    -fx-padding: 0;
+    -fx-shape: null;
+    -fx-background-color: transparent;
+}
+
+/* Check menu item */
+.check-menu-item {
+    -fx-background-color: transparent;
+    -fx-padding: 4 12;
+    -fx-background-insets: 0;
+    -fx-cursor: hand;
+}
+
+.check-menu-item:hover,
+.check-menu-item:focused {
+    -fx-background-color: -fx-hover-color;
+}
+
+.check-menu-item > .label {
+    -fx-text-fill: -fx-text-color;
+    -fx-padding: 0 0 0 8;
+}
+
+.check-menu-item > .left-container {
+    -fx-padding: 0;
+}
+
+.check-menu-item:checked > .left-container > .check {
+    -fx-background-color: -fx-text-color;
+    -fx-shape: "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z";
+    -fx-scale-shape: true;
+    -fx-padding: 3;
+}
+
+/* Radio menu item */
+.radio-menu-item {
+    -fx-background-color: transparent;
+    -fx-padding: 4 12;
+    -fx-background-insets: 0;
+    -fx-cursor: hand;
+}
+
+.radio-menu-item:hover,
+.radio-menu-item:focused {
+    -fx-background-color: -fx-hover-color;
+}
+
+.radio-menu-item > .label {
+    -fx-text-fill: -fx-text-color;
+    -fx-padding: 0 0 0 8;
+}
+
+.radio-menu-item > .left-container {
+    -fx-padding: 0;
+}
+
+.radio-menu-item:checked > .left-container > .radio {
+    -fx-background-color: -fx-text-color;
+    -fx-shape: "M8 4a4 4 0 1 0 0 8 4 4 0 0 0 0-8z";
+    -fx-scale-shape: true;
+    -fx-padding: 3;
+}
+
+/* Dialog styles */
+.dialog-pane {
+    -fx-background-color: -fx-surface-color;
+}
+
+.dialog-pane .header-panel {
+    -fx-background-color: -fx-surface-color;
+}
+
+.dialog-pane .button-bar {
+    -fx-background-color: -fx-surface-color;
+    -fx-padding: 8;
+}
+
+/* Custom Dialog System */
+.custom-dialog {
+    -fx-background-color: -fx-surface-color;
+}
+
+.custom-dialog-header {
+    -fx-background-color: -fx-surface-color;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+.custom-dialog-icon {
+    -fx-icon-size: 24px;
+}
+
+.custom-dialog-icon-information {
+    -fx-icon-color: -fx-accent-color;
+}
+
+.custom-dialog-icon-confirmation {
+    -fx-icon-color: -fx-accent-color;
+}
+
+.custom-dialog-icon-warning {
+    -fx-icon-color: -fx-status-paused;
+}
+
+.custom-dialog-icon-error {
+    -fx-icon-color: -fx-status-error;
+}
+
+.custom-dialog-icon-input {
+    -fx-icon-color: -fx-accent-color;
+}
+
+.custom-dialog-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-color;
+}
+
+.custom-dialog-content {
+    -fx-background-color: -fx-surface-color;
+}
+
+.custom-dialog-header-text {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-color;
+}
+
+.custom-dialog-content-text {
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+.custom-dialog-selectable-content {
+    -fx-font-size: 13px;
+}
+
+.custom-dialog-input {
+    -fx-font-size: 13px;
+}
+
+.custom-dialog-button-bar {
+    -fx-background-color: -fx-surface-color;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1 0 0 0;
+}
+
+.custom-dialog-button {
+    -fx-min-width: 80px;
+    -fx-padding: 4 8;
+}
+
+/* Tab pane */
+.tab-pane {
+    -fx-tab-min-height: 24;
+    -fx-tab-max-height: 24;
+}
+
+.tab-pane .tab-header-area {
+    -fx-background-color: -fx-surface-color;
+    -fx-padding: 0;
+}
+
+.tab-pane .tab-header-area .tab-header-background {
+    -fx-background-color: -fx-surface-color;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+.tab-pane .tab-header-area .headers-region {
+    -fx-padding: 0;
+}
+
+/* Tabs are borderless — selection is a 2px accent underline only.
+   The transparent 2px border reserves the slot so labels don't shift. */
+.tab-pane .tab {
+    -fx-background-color: transparent;
+    -fx-background-radius: 0;
+    -fx-background-insets: 0;
+    -fx-padding: 2 12;
+    -fx-border-color: transparent;
+    -fx-border-width: 0 0 2 0;
+    -fx-border-radius: 0;
+    -fx-cursor: hand;
+    -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+.tab-pane .tab:selected {
+    -fx-border-color: transparent transparent -fx-accent-color transparent;
+}
+
+.tab-pane .tab .tab-label {
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-font-size: 13px;
+}
+
+.tab-pane .tab:hover .tab-label {
+    -fx-text-fill: -fx-text-color;
+}
+
+.tab-pane .tab:selected .tab-label {
+    -fx-text-fill: -fx-text-color;
+    -fx-font-weight: bold;
+}
+
+.tab-pane .tab:disabled .tab-label {
+    -fx-opacity: 0.4;
+}
+
+/* Tab close button */
+.tab-pane .tab .tab-close-button {
+    -fx-background-color: -fx-text-secondary-color;
+    -fx-shape: "M 0,0 H1 L 4,3 7,0 H8 V1 L 5,4 8,7 V8 H7 L 4,5 1,8 H0 V7 L 3,4 0,1 Z";
+    -fx-padding: 0 4 0 4;
+    -fx-cursor: hand;
+}
+
+.tab-pane .tab .tab-close-button:hover {
+    -fx-background-color: -fx-text-color;
+}
+
+/* Tab content area — no box; only the header divider separates it */
+.tab-pane .tab-content-area {
+    -fx-background-color: -fx-surface-color;
+    -fx-border-width: 0;
+}
+
+/* Bottom side tabs — divider moves to the header's top edge */
+.tab-pane:bottom .tab-header-area .tab-header-background {
+    -fx-border-width: 1 0 0 0;
+}
+
+/* Left side tabs */
+.tab-pane:left .tab-header-area {
+    -fx-padding: 4 0 0 0;
+}
+
+.tab-pane:left .tab-header-area .tab-header-background {
+    -fx-border-width: 0 1 0 0;
+}
+
+/* Right side tabs */
+.tab-pane:right .tab-header-area {
+    -fx-padding: 4 0 0 0;
+}
+
+.tab-pane:right .tab-header-area .tab-header-background {
+    -fx-border-width: 0 0 0 1;
+}
+
+/* Floating style - no content border */
+.tab-pane.floating .tab-content-area {
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-background-color: transparent;
+}
+
+.tab-pane.floating .tab-header-area .tab-header-background {
+    -fx-background-color: transparent;
+}
+
+/* Tab overflow menu button */
+.tab-pane .control-buttons-tab {
+    -fx-background-color: -fx-surface-color;
+}
+
+.tab-pane .tab-down-button {
+    -fx-background-color: -fx-button-color;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1;
+    -fx-padding: 4;
+    -fx-cursor: hand;
+}
+
+.tab-pane .tab-down-button:hover {
+    -fx-background-color: -fx-button-hover-color;
+}
+
+.tab-pane .tab-down-button .arrow {
+    -fx-background-color: -fx-text-color;
+}
+
+/* Status bar */
+.status-bar {
+    -fx-background-color: -fx-surface-color;
+    -fx-padding: 4 8;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1 0 0 0;
+}
+
+.status-bar .label {
+    -fx-font-size: 12px;
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+/* Section labels for showcase */
+.section-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-padding: 4 0 2 0;
+}
+
+/* Toggle button */
+.toggle-button {
+    -fx-background-color: -fx-button-color;
+    -fx-text-fill: -fx-text-color;
+    -fx-padding: 4 8;
+    -fx-background-radius: 3;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+    -fx-cursor: hand;
+}
+
+.toggle-button:hover {
+    -fx-background-color: -fx-button-hover-color;
+}
+
+.toggle-button:selected {
+    -fx-background-color: -fx-accent-color;
+    -fx-text-fill: -fx-accent-text-color;
+}
+
+.toggle-button:selected:hover {
+    -fx-background-color: -fx-accent-hover-color;
+}
+
+/* Disabled states */
+.button:disabled,
+.primary-button:disabled,
+.icon-button:disabled,
+.success-button:disabled,
+.running-button:disabled,
+.warning-button:disabled,
+.danger-button:disabled,
+.info-button:disabled,
+.toggle-button:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: default;
+}
+
+/* Scroll pane. The theme's skin is JavaFX's own without the bitmap cache of the viewport: JavaFX draws text into that
+   bitmap in gray where nothing opaque lies behind it, whatever its -fx-font-smoothing-type says, and the viewport below
+   is transparent, so text inside scroll panes lost the LCD smoothing above. A scroll pane that needs a skin of its own
+   names it in a rule of its own. */
+.scroll-pane {
+    -fx-skin: "org.karthu.fx.theme.skin.UncachedScrollPaneSkin";
+    -fx-background: -fx-base;
+}
+
+.scroll-pane > .viewport {
+    -fx-background-color: transparent;
+}
+
+/* Separator */
+.separator {
+    -fx-background-color: transparent;
+    -fx-padding: 4 0;
+}
+
+.separator > .line {
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1 0 0 0;
+}
+
+.separator:vertical {
+    -fx-padding: 0 4;
+}
+
+.separator:vertical > .line {
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 0 0 0 1;
+}
+
+/* Checkbox - Windows 10 style */
+.check-box {
+    -fx-cursor: hand;
+}
+
+.check-box .box {
+    -fx-background-color: -fx-checkbox-bg;
+    -fx-background-insets: 0;
+    -fx-border-color: -fx-checkbox-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+    -fx-border-insets: 0;
+    -fx-background-radius: 3;
+    -fx-padding: 1;
+    -fx-pref-width: 14;
+    -fx-pref-height: 14;
+    -fx-min-width: 14;
+    -fx-min-height: 14;
+    -fx-max-width: 14;
+    -fx-max-height: 14;
+}
+
+.check-box:hover .box {
+    -fx-border-color: -fx-checkbox-border-hover;
+}
+
+.check-box:focused .box {
+    -fx-border-color: -fx-accent-color;
+}
+
+.check-box:selected .box {
+    -fx-background-color: -fx-accent-color;
+    -fx-background-insets: 0;
+    -fx-border-color: -fx-accent-color;
+    -fx-border-width: 1;
+    -fx-border-insets: 0;
+}
+
+.check-box:selected:hover .box {
+    -fx-background-color: -fx-accent-hover-color;
+    -fx-border-color: -fx-accent-hover-color;
+}
+
+.check-box .mark {
+    -fx-background-color: transparent;
+    -fx-shape: "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z";
+    -fx-pref-width: 10;
+    -fx-pref-height: 10;
+    -fx-min-width: 10;
+    -fx-min-height: 10;
+    -fx-max-width: 10;
+    -fx-max-height: 10;
+    -fx-padding: 0;
+    -fx-translate-y: -1;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: -fx-checkbox-mark;
+}
+
+.check-box:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: default;
+}
+
+.check-box .text {
+    -fx-fill: -fx-text-color;
+}
+
+/* Radio Button - Windows 10 style */
+.radio-button {
+    -fx-cursor: hand;
+}
+
+.radio-button .radio {
+    -fx-background-color: -fx-checkbox-bg;
+    -fx-background-insets: 0;
+    -fx-border-color: -fx-checkbox-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 7;
+    -fx-border-insets: 0;
+    -fx-background-radius: 7;
+    -fx-padding: 2;
+    -fx-pref-width: 14;
+    -fx-pref-height: 14;
+    -fx-min-width: 14;
+    -fx-min-height: 14;
+    -fx-max-width: 14;
+    -fx-max-height: 14;
+}
+
+.radio-button:hover .radio {
+    -fx-border-color: -fx-checkbox-border-hover;
+}
+
+.radio-button:focused .radio {
+    -fx-border-color: -fx-accent-color;
+}
+
+.radio-button:selected .radio {
+    -fx-background-color: -fx-accent-color;
+    -fx-background-insets: 0;
+    -fx-border-color: -fx-accent-color;
+    -fx-border-width: 1;
+    -fx-border-insets: 0;
+}
+
+.radio-button:selected:hover .radio {
+    -fx-background-color: -fx-accent-hover-color;
+    -fx-border-color: -fx-accent-hover-color;
+}
+
+.radio-button .dot {
+    -fx-background-color: transparent;
+    -fx-background-radius: 3;
+    -fx-pref-width: 6;
+    -fx-pref-height: 6;
+    -fx-min-width: 6;
+    -fx-min-height: 6;
+    -fx-max-width: 6;
+    -fx-max-height: 6;
+    -fx-padding: 0;
+    -fx-translate-y: -1;
+}
+
+.radio-button:selected .dot {
+    -fx-background-color: -fx-checkbox-mark;
+}
+
+.radio-button:disabled {
+    -fx-opacity: 0.5;
+    -fx-cursor: default;
+}
+
+.radio-button .text {
+    -fx-fill: -fx-text-color;
+}
+
+/* Spinner */
+.spinner {
+    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3, 2;
+}
+
+.spinner:focus-within {
+    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+}
+
+.spinner .text-field {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 4;
+}
+
+.spinner .increment-arrow-button,
+.spinner .decrement-arrow-button {
+    -fx-background-color: -fx-button-color;
+    -fx-padding: 4;
+    -fx-cursor: hand;
+}
+
+.spinner .increment-arrow-button {
+    -fx-background-insets: 2 2 0 0;
+    -fx-background-radius: 2 2 0 0;
+}
+
+.spinner .decrement-arrow-button {
+    -fx-background-insets: 0 2 2 0;
+    -fx-background-radius: 0 0 2 2;
+}
+
+.spinner .increment-arrow-button:hover,
+.spinner .decrement-arrow-button:hover {
+    -fx-background-color: -fx-button-hover-color;
+}
+
+.spinner .increment-arrow-button:pressed,
+.spinner .decrement-arrow-button:pressed {
+    -fx-background-color: -fx-button-pressed-color;
+}
+
+.spinner .increment-arrow-button .increment-arrow,
+.spinner .decrement-arrow-button .decrement-arrow {
+    -fx-background-color: -fx-text-color;
+    -fx-padding: 2 3;
+}
+
+.spinner .increment-arrow-button .increment-arrow {
+    -fx-shape: "M 0 3 L 3 0 L 6 3 L 5 4 L 3 2 L 1 4 Z";
+}
+
+.spinner .decrement-arrow-button .decrement-arrow {
+    -fx-shape: "M 0 1 L 1 0 L 3 2 L 5 0 L 6 1 L 3 4 Z";
+}
+
+.spinner:disabled {
+    -fx-opacity: 0.5;
+}
+
+/* Toggle Switch - modern switch style */
+.toggle-switch {
+    -fx-cursor: hand;
+    -fx-min-width: 36;
+    -fx-max-width: 36;
+    -fx-min-height: 18;
+    -fx-max-height: 18;
+    -fx-alignment: center-left;
+}
+
+.toggle-switch-track {
+    -fx-min-width: 36;
+    -fx-max-width: 36;
+    -fx-min-height: 18;
+    -fx-max-height: 18;
+    -fx-background-color: -fx-switch-track-off;
+    -fx-background-radius: 9;
+}
+
+.toggle-switch-track:selected {
+    -fx-background-color: -fx-switch-track-on;
+}
+
+.toggle-switch-thumb {
+    -fx-min-width: 12;
+    -fx-max-width: 12;
+    -fx-min-height: 12;
+    -fx-max-height: 12;
+    -fx-background-color: -fx-switch-thumb-off;
+    -fx-background-radius: 6;
+}
+
+.toggle-switch-thumb:selected {
+    -fx-background-color: -fx-switch-thumb-on;
+}
+
+/* Twin Column Selector — dual-list picker (TwinColumnSelector) */
+.twin-column {
+    -fx-hgap: 10;
+    -fx-vgap: 6;
+}
+
+.twin-column .twin-header {
+    -fx-padding: 0 0 0 2;
+}
+
+.twin-column .twin-header .twin-header-caption {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+.twin-column .twin-header .twin-header-count {
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+/* Filter fields inherit the theme's .text-field two-layer idiom. */
+.twin-column .twin-filter {
+    -fx-font-size: 11.5px;
+}
+
+/* List container: surface bg + 1px border + radius 6, painted with the
+ * two-layer background idiom (outer radius 6, inner 5 keeps the 1px border
+ * even). Two classes beat the single-class .list-view rule. */
+.twin-column .twin-list {
+    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 6, 5;
+    -fx-padding: 2;
+}
+
+/* Rows: compact ~26px, no wrapping; hover/selected colors inherit from the
+ * generic .list-view rules. */
+.twin-column .twin-list .list-cell {
+    -fx-cell-size: 26px;
+    -fx-font-size: 11.5px;
+    -fx-padding: 0 8 0 8;
+    -fx-wrap-text: false;
+}
+
+/* Move buttons: keep the .button theme layers, square them up. */
+.twin-column .twin-move-button {
+    -fx-min-width: 30;
+    -fx-pref-width: 30;
+    -fx-max-width: 30;
+    -fx-min-height: 30;
+    -fx-pref-height: 30;
+    -fx-max-height: 30;
+    -fx-padding: 0;
+}
+
+.twin-column .twin-move-button .ikonli-font-icon {
+    -fx-icon-size: 12;
+}
+
+/* Key-value editor (KeyValueEditor): a title, one row per pair (CheckBox,
+ * key, value, lock, delete) and an add button. Colours are theme tokens; the
+ * fields and the CheckBox keep the theme's own rules. */
+.key-value-editor {
+    -fx-spacing: 6;
+}
+
+.key-value-editor .key-value-title {
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-color;
+}
+
+.key-value-editor .key-value-rows {
+    -fx-spacing: 4;
+}
+
+.key-value-editor .key-value-row {
+    -fx-spacing: 6;
+}
+
+.key-value-editor .key-value-key,
+.key-value-editor .key-value-value {
+    -fx-pref-width: 160;
+}
+
+/* A switched-off pair: its fields are dimmed but stay editable; the
+ * CheckBox keeps full strength, so it reads as the way back. */
+.key-value-editor .key-value-row-inactive .key-value-key,
+.key-value-editor .key-value-row-inactive .key-value-value {
+    -fx-opacity: 0.5;
+}
+
+/* Delete: the theme's icon button, the X quiet at rest and in the error
+ * colour under the pointer (it removes the row without confirmation). */
+.key-value-editor .key-value-delete .ikonli-font-icon {
+    -fx-icon-size: 16;
+    -fx-icon-color: -fx-text-secondary-color;
+}
+
+.key-value-editor .key-value-delete:hover .ikonli-font-icon {
+    -fx-icon-color: -fx-status-error;
+}
+
+/* Lock: a toggle drawn as the theme's icon button (flat, no frame, no
+ * accent fill when selected); the open lock quiet, the closed lock in the
+ * accent colour, so a masked row is recognisable at a glance. */
+.key-value-editor .key-value-lock,
+.key-value-editor .key-value-lock:selected {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 4;
+    -fx-background-radius: 3;
+    -fx-background-insets: 0;
+    -fx-cursor: hand;
+}
+
+.key-value-editor .key-value-lock:hover,
+.key-value-editor .key-value-lock:selected:hover {
+    -fx-background-color: -fx-hover-color;
+}
+
+.key-value-editor .key-value-lock .ikonli-font-icon {
+    -fx-icon-size: 14;
+    -fx-icon-color: -fx-text-secondary-color;
+}
+
+.key-value-editor .key-value-lock:selected .ikonli-font-icon {
+    -fx-icon-color: -fx-accent-color;
+}
+
+/* Marks on a key field (never a refusal): a key missing in an active row
+ * with a value, or a forbidden duplicate. The border turns the error
+ * colour and stays so while the field has the focus (this rule comes
+ * after .text-field:focused and is as specific). */
+.key-value-editor .key-value-key-missing,
+.key-value-editor .key-value-key-duplicate {
+    -fx-background-color: -fx-status-error, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+}
+
+.key-value-editor .key-value-add .ikonli-font-icon {
+    -fx-icon-size: 14;
+    -fx-icon-color: -fx-text-color;
+}
+
+/* ===================================================================
+ * Form fields (package org.karthu.fx.form) — the shell of every input
+ * (FieldShell, style class form-frame), the single-line text frame on
+ * it (FieldFrame) and the inputs built on them. The style classes and
+ * pseudo-classes are a documented contract (STYLEGUIDE.md, the classes'
+ * JavaDoc); colours are tokens from dark.css, sizes come from the text
+ * field above. Sections: the frame, its trailing icons, the type's own
+ * controls, its leading graphic, its states (warning and error, drop
+ * target, read-only), one section per input (text, password, number and
+ * its spinner arrows, combo, editable combo, text area, path, cron), the
+ * search input and the suggestion input, then the binding and the row.
+ * =================================================================== */
+
+/* --- Frame (FieldShell, FieldFrame) ---------------------------------
+ * Every shell carries form-frame and looks like a text field: it shares
+ * the text field's rules ("Text fields" above: border, background,
+ * radius, focus border, read-only background, disabled look) and draws
+ * them around its content (form-shell-content, the control a type
+ * wraps) and the trailing icons. A frame's borderless inner text field
+ * keeps the text field's padding from those rules, so the frame is
+ * exactly as high as a plain text field. The shell's own padding is the
+ * room after the last trailing node (icon, own control or {}), in every
+ * state: the shell lays the content out without it while there is
+ * none, so the text then reaches the border, as in a read-only frame
+ * without icons (a right-aligned number ends at the same place in
+ * both), and an own control that stays while read-only (the password's
+ * eye, the text area's grip) keeps the room after it. */
+.form-frame {
+    -fx-padding: 0 3 0 0;
+}
+
+.form-frame .form-frame-text,
+.form-frame .form-frame-text:focused {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+}
+
+/* --- Frame: trailing icons (form-frame-icon, also icon-button) ------
+ * The theme's icon button (transparent, hover background, hand cursor)
+ * with less padding, so an icon never makes the frame higher; the icon
+ * muted at rest and in the text colour under the pointer. */
+.form-frame .form-frame-icon {
+    -fx-padding: 3;
+}
+
+.form-frame .form-frame-icon .ikonli-font-icon {
+    -fx-icon-size: 14;
+    -fx-icon-color: -fx-text-secondary-color;
+}
+
+.form-frame .form-frame-icon:hover .ikonli-font-icon {
+    -fx-icon-color: -fx-text-color;
+}
+
+/* --- Frame: the type's own controls (form-shell-divider) ------------
+ * A field type's own controls sit between the trailing icons and the
+ * {} icon; the type styles them (a chevron or an eye as a trailing
+ * icon). The shell's divider, before a chevron or stacked arrows, is a
+ * 1px line in the control border colour over the content's height,
+ * from the frame's top border to its bottom border. */
+.form-frame .form-shell-divider {
+    -fx-min-width: 1;
+    -fx-pref-width: 1;
+    -fx-max-width: 1;
+    -fx-background-color: -fx-control-border;
+    -fx-background-insets: 1 0 1 0;
+}
+
+/* --- Frame: leading graphic (form-shell-leading) ---------------------
+ * A type's one graphic left of the content (the search input's
+ * magnifier), a region holding an icon: the icon as large and as muted
+ * as a trailing icon at rest, without hover (it is no control). Its
+ * padding is the room around it: 6px from the frame's outer edge to
+ * the icon, as far as a trailing icon ends from the right edge (the
+ * frame's 3, the icon's 3), and 3px after it, which the content's own
+ * padding (a text field's 4) makes the same gap to the text as from
+ * the text to a trailing icon. A shell without one is unchanged. */
+.form-frame .form-shell-leading {
+    -fx-padding: 0 3 0 6;
+}
+
+.form-frame .form-shell-leading .ikonli-font-icon {
+    -fx-icon-size: 14;
+    -fx-icon-color: -fx-text-secondary-color;
+}
+
+/* --- Frame: states ---------------------------------------------------
+ * Disabled: the frame is dimmed as a disabled button (its opacity from
+ * "Text fields" above). Opacity multiplies down the scene graph, so the
+ * content (a frame's inner text field), the leading graphic and the
+ * icons, disabled with it, keep full opacity: dimmed once, not twice. */
+.form-frame:disabled .form-shell-content,
+.form-frame:disabled .form-frame-text,
+.form-frame:disabled .form-shell-leading,
+.form-frame:disabled .form-frame-icon {
+    -fx-opacity: 1;
+}
+
+/* --- Frame: warning and error (FieldState) ---------------------------
+ * The state's border in the warning or the error colour replaces the
+ * normal border, and the focus border too: the :focus-within selectors
+ * outrank the focus rule above, so a focused field keeps its state's
+ * colour. */
+.form-frame:warning,
+.form-frame:warning:focus-within {
+    -fx-background-color: -fx-status-paused, -fx-surface-color;
+}
+
+.form-frame:error,
+.form-frame:error:focus-within {
+    -fx-background-color: -fx-status-error, -fx-surface-color;
+}
+
+/* --- Frame: drop target ----------------------------------------------
+ * While a drag the input accepts hovers over it (the path input sets
+ * :drop-target), the frame shows the focus border's accent colour around
+ * text and icons. A refused drag shows nothing. During the drag the
+ * accent replaces the warning and error borders, also while focused:
+ * each selector outranks its state's rule above. */
+.form-frame:drop-target,
+.form-frame:warning:drop-target,
+.form-frame:warning:drop-target:focus-within,
+.form-frame:error:drop-target,
+.form-frame:error:drop-target:focus-within {
+    -fx-background-color: -fx-accent-color, -fx-surface-color;
+}
+
+/* --- Frame: read-only -------------------------------------------------
+ * A read-only frame (:readonly) lies on the read-only background of a
+ * read-only text field, -fx-readonly-bg, from the rule it shares with
+ * the text field ("Text fields" above). It shows no icons, so the shell
+ * leaves out the room after them (the frame's padding above), and the
+ * text sits as in a plain text field. Its borders stay: the focus
+ * border while the user selects its text, and the warning and error
+ * borders of its state (each selector outranks the matching rule
+ * above). A read-only input takes no drop, so there is no read-only
+ * drop target. The chip's read-only rules are in "Frame: binding"
+ * below. */
+.form-frame:readonly:focus-within {
+    -fx-background-color: -fx-accent-color, -fx-readonly-bg;
+}
+
+.form-frame:readonly:warning,
+.form-frame:readonly:warning:focus-within {
+    -fx-background-color: -fx-status-paused, -fx-readonly-bg;
+}
+
+.form-frame:readonly:error,
+.form-frame:readonly:error:focus-within {
+    -fx-background-color: -fx-status-error, -fx-readonly-bg;
+}
+
+/* --- Text input (TextInput) ------------------------------------------
+ * A frame (form-text-input) around its text field (form-frame-text),
+ * without icons of its own: the frame's rules draw it, so it is exactly
+ * a text field with the {} icon, the chip and the state's border. No
+ * rule of its own, and no pseudo-class of its own. */
+
+/* --- Password input (PasswordInput) ---------------------------------
+ * A shell (form-password-input) around a masked and a plain field, one
+ * shown at a time, each a borderless inner text field of the frame
+ * (form-frame-text, drawn by the frame's rules above; the masked one
+ * also form-password-masked, the plain one form-password-plain). The
+ * eye (form-password-reveal) is a trailing icon; while the text is
+ * revealed (:revealed) it keeps the hover background, its icon in the
+ * text colour. The eye stays while read-only and keeps the room after
+ * it there too, by the frame's padding. */
+.form-frame .form-password-reveal:revealed {
+    -fx-background-color: -fx-hover-color;
+}
+
+.form-frame .form-password-reveal:revealed .ikonli-font-icon {
+    -fx-icon-color: -fx-text-color;
+}
+
+/* --- Number input (NumberInput) --------------------------------------
+ * A frame (form-number-input) without trailing icons of its own (its
+ * spinner arrows, below, are its own controls); the frame's rules draw
+ * it. Its text is right-aligned, so numbers read as numbers,
+ * the prompt text too. While bound, the chip lies where it lies in
+ * every input, at the left. */
+.form-number-input .form-frame-text {
+    -fx-alignment: center-right;
+}
+
+/* --- Number input: spinner arrows ------------------------------------
+ * While its arrows show (:spinner), the field's own controls are the
+ * shell's divider and a box (form-number-arrows) of two stacked icon
+ * buttons, the up arrow (form-number-up) above the down arrow
+ * (form-number-down). The box spans the content's height and each arrow
+ * takes half of it, so the spinner is exactly as high as a text field:
+ * a small chevron, no vertical padding, each arrow with its own hover
+ * background (the icon button's -fx-hover-color) over its half. Bound,
+ * the arrows are disabled and dimmed as disabled icons; read-only, the
+ * divider and the arrows are gone. */
+.form-number-input .form-number-up,
+.form-number-input .form-number-down {
+    -fx-padding: 0 4;
+    -fx-alignment: center;
+    -fx-background-radius: 2;
+}
+
+.form-number-input .form-number-up .ikonli-font-icon,
+.form-number-input .form-number-down .ikonli-font-icon {
+    -fx-icon-size: 10;
+}
+
+/* --- Combo input (ComboInput) ----------------------------------------
+ * A shell (form-combo-input) around a non-editable combo box, its
+ * content. A combo box that is a shell's content (form-shell-content)
+ * loses its own frame, background, padding, arrow and focus look, also
+ * under the pointer, focused or while its list shows: the shell draws
+ * the frame, and the chevron (form-combo-chevron, styled as a trailing
+ * icon, so the frame's icon rules draw it) stands for the arrow. These
+ * rules hold for every combo box in a shell. The cell that shows the
+ * value (form-combo-display, the combo box's button cell) keeps the
+ * combo box's cell padding, so its text sits where a text field's
+ * does; without a value it shows the prompt text (:prompt) in the
+ * prompt colour of a text field. The whole field opens the list, so
+ * the pointer is a hand over it, and the default one while bound
+ * (read-only and disabled get it from the frame's rules). Read-only, a
+ * text field (form-combo-text) shows the display text in place of the
+ * combo box: no border, no background, a text field's padding, as a
+ * frame's inner text field, by one rule for both combo inputs (the
+ * editable one shows it while bound too). Disabled, the cell keeps
+ * full opacity: the shell is dimmed once, not twice (JavaFX's own
+ * stylesheet dims a disabled list cell that shows a chosen entry once
+ * more). */
+.form-frame > .combo-box.form-shell-content,
+.form-frame > .combo-box.form-shell-content:hover,
+.form-frame > .combo-box.form-shell-content:focused,
+.form-frame > .combo-box.form-shell-content:showing {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 0;
+}
+
+.form-frame > .combo-box.form-shell-content > .arrow-button,
+.form-frame > .combo-box.form-shell-content > .arrow-button > .arrow {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.form-combo-input {
+    -fx-cursor: hand;
+}
+
+.form-combo-input:bound {
+    -fx-cursor: default;
+}
+
+.form-combo-input .form-combo-display:prompt {
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+.form-frame:disabled > .combo-box.form-shell-content > .list-cell {
+    -fx-opacity: 1;
+}
+
+.form-frame .form-combo-text,
+.form-frame .form-combo-text:focused {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+}
+
+/* --- Editable combo input (EditableComboInput) ----------------------
+ * A shell (form-editable-combo-input) around an editable combo box, its
+ * content, which loses its own frame and arrow by the combo input's
+ * rules above (every combo box in a shell). Its editor keeps the look of
+ * an editable combo box's editor ("ComboBox" above: transparent, a text
+ * field's padding), so the text sits where a text field's does. The
+ * divider (form-shell-divider) and the combo input's chevron
+ * (form-combo-chevron) are its own controls, drawn by the frame's rules.
+ * Disabled, the editor keeps full opacity: the shell is dimmed once, not
+ * twice (the editor is a text field, which the text field's rule would
+ * dim again). Read-only or bound, a text field (form-combo-text) stands
+ * in for the combo box, drawn by the combo input's rule above. */
+.form-frame:disabled > .combo-box.form-shell-content > .text-field {
+    -fx-opacity: 1;
+}
+
+/* --- Text area input (TextAreaInput) ---------------------------------
+ * A shell (form-text-area-input) around a text area
+ * (form-text-area-text, also form-shell-content) without a frame of its
+ * own: no border, no background, no padding, also while focused or
+ * read-only, so the shell's border, focus border, state borders and
+ * read-only background show around it. Its text sits 4px in, where a
+ * text field's sits; its scroll bars stay, inside the shell. The {}
+ * icon sits at the top right, the grip (form-text-area-grip) at the
+ * bottom right, in a column of their own beside the text. The grip
+ * stays while read-only, and keeps the room after it there too, by the
+ * frame's padding. */
+.form-text-area-input .form-text-area-text,
+.form-text-area-input .form-text-area-text:focused,
+.form-text-area-input .form-text-area-text:readonly,
+.form-text-area-input .form-text-area-text:readonly:focused {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 0;
+}
+
+.form-text-area-input .form-text-area-text > .scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.form-text-area-input .form-text-area-text > .scroll-pane > .viewport,
+.form-text-area-input .form-text-area-text .content,
+.form-text-area-input .form-text-area-text:focused .content,
+.form-text-area-input .form-text-area-text:readonly .content {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+}
+
+.form-text-area-input .form-text-area-text .content {
+    -fx-padding: 4;
+}
+
+/* The grip: a muted icon (Bootstrap grip-horizontal, turned to the
+ * corner's diagonal) with the resize cursor, in the text colour under
+ * the pointer; the size and padding of a trailing icon, so the column
+ * is as wide with {} as without. Disabled, it is dimmed once with the
+ * shell and shows no resize cursor. */
+.form-frame .form-text-area-grip {
+    -fx-padding: 3;
+    -fx-cursor: se-resize;
+}
+
+.form-frame .form-text-area-grip .ikonli-font-icon {
+    -fx-icon-size: 14;
+    -fx-icon-color: -fx-text-secondary-color;
+    -fx-rotate: -45;
+}
+
+.form-frame .form-text-area-grip:hover .ikonli-font-icon {
+    -fx-icon-color: -fx-text-color;
+}
+
+.form-frame:disabled .form-text-area-grip {
+    -fx-opacity: 1;
+    -fx-cursor: default;
+}
+
+/* --- Path input (PathInput) ------------------------------------------
+ * A frame (form-path-input) with the browse icon (form-path-browse) as
+ * its trailing icon; the frame's rules draw it. Its mode shows as
+ * :open, :save or :directory for rules that need it. */
+
+/* --- Cron input (CronInput) ------------------------------------------
+ * A frame (form-cron-input) whose text field (form-frame-text) shows
+ * the expression in the monospace family, which the input sets inline
+ * (the family only: the size stays the frame's). After the text, before
+ * {}, without a divider, the format selector (form-cron-format), an own
+ * control of the shell: a small combo box without JavaFX's frame and
+ * arrow, on the button background (-fx-button-color; under the pointer
+ * -fx-button-hover-color, while its list shows -fx-button-pressed-color),
+ * radius 3, the format's name in the text colour, then a small chevron
+ * in the muted icon colour (the text colour under the pointer). Its cell
+ * has 1px above and below, so the selector is lower than the frame,
+ * which the shell centres it in. While the format is fixed or the input
+ * read-only, the format's name as plain text (form-cron-format-text)
+ * stands in its place: muted, no background, no chevron, no hover.
+ * Disabled, the selector and its cell keep full opacity: the frame is
+ * dimmed once, not twice. */
+.form-frame .form-cron-format,
+.form-frame .form-cron-format:focused {
+    -fx-background-color: -fx-button-color;
+    -fx-background-insets: 0;
+    -fx-background-radius: 3;
+    -fx-padding: 0;
+}
+
+.form-frame .form-cron-format:hover {
+    -fx-background-color: -fx-button-hover-color;
+}
+
+.form-frame .form-cron-format:showing {
+    -fx-background-color: -fx-button-pressed-color;
+}
+
+.form-frame .form-cron-format > .arrow-button,
+.form-frame .form-cron-format > .arrow-button > .arrow {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+.form-frame .form-cron-format > .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 1 5 1 6;
+}
+
+.form-frame .form-cron-format > .list-cell .label {
+    -fx-text-fill: -fx-text-color;
+}
+
+.form-frame .form-cron-format .ikonli-font-icon {
+    -fx-icon-size: 10;
+    -fx-icon-color: -fx-text-secondary-color;
+}
+
+.form-frame .form-cron-format:hover .ikonli-font-icon {
+    -fx-icon-color: -fx-text-color;
+}
+
+.form-frame .form-cron-format-text {
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-padding: 0 6;
+}
+
+.form-frame:disabled .form-cron-format,
+.form-frame:disabled .form-cron-format > .list-cell,
+.form-frame:disabled .form-cron-format > .list-cell .label,
+.form-frame:disabled .form-cron-format-text {
+    -fx-opacity: 1;
+}
+
+/* --- Search input (SearchInput) --------------------------------------
+ * A frame (form-search-input) with the magnifier (form-search-icon) as
+ * the shell's leading graphic, drawn by its rules above, and the clear
+ * button (form-search-clear) as its own control at the right end, a
+ * trailing icon (form-frame-icon) shown while there is text and the
+ * field is neither disabled nor read-only. Before the clear button, the
+ * counter (form-search-count, a Label), an own control shown while a
+ * list is connected and there is text: muted, the text's size, 4px on
+ * either side; with no match (:no-match) in the warning colour.
+ * Disabled, it keeps full opacity: the frame is dimmed once, not twice.
+ * The frame's rules draw the rest; no token of its own. */
+.form-frame .form-search-count {
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-padding: 0 4 0 4;
+}
+
+.form-frame .form-search-count:no-match {
+    -fx-text-fill: -fx-status-paused;
+}
+
+.form-frame:disabled .form-search-count {
+    -fx-opacity: 1;
+}
+
+/* The marks in an application's cells: the highlight node
+ * (search-highlight, a TextFlow from SearchInput.highlight) wherever it
+ * stands. Its runs (search-text, plain Text nodes) in the text colour;
+ * the fill does not inherit, so each run sets it. A marked run
+ * (search-match) bold in the accent colour: the look of a mark in a
+ * list row of the application. A suggestion popup draws its marks in a
+ * look of its own, by rules that follow and outrank these. */
+.search-highlight .search-text {
+    -fx-fill: -fx-text-color;
+}
+
+.search-highlight .search-match {
+    -fx-fill: -fx-accent-color;
+    -fx-font-weight: bold;
+}
+
+/* A highlight node the application shows bold (search-strong beside
+ * search-highlight), such as the name on a card of a suggestion: its
+ * runs bold, and its marks underlined, as a bold mark would not show in
+ * a bold run. Wherever it stands: in a suggestion popup these add to
+ * the popup's rules below (the marks there bold in the text colour, on
+ * the preselected row in the selection text colour). No colour. */
+.search-highlight.search-strong .search-text {
+    -fx-font-weight: bold;
+}
+
+.search-highlight.search-strong .search-match {
+    -fx-underline: true;
+}
+
+/* --- Suggestion input (SuggestionInput) ------------------------------
+ * A search input (form-suggestion-input) with a popup of suggestions
+ * under it, drawn by the search input's rules. The popup's content
+ * (form-suggestion-popup, a VBox) draws the popup's frame as a combo
+ * box's list does: a 1px border in the control border colour around
+ * the surface, radius 3. Inside it the list (form-suggestion-list, a
+ * ListView) without a frame or a background of its own, its rows as a
+ * combo box's list rows: padding 4 8, the hover colour under the
+ * pointer, the preselected row (:selected) in the selection colour. In
+ * the list's place when nothing matches, the line
+ * (form-suggestion-empty, a Label), muted, padded as a row. The marks
+ * of a row (search-match in a search-highlight inside the popup) are
+ * bold in the text colour, on the preselected row in the selection
+ * text colour like the rest of the row: these rules follow and outrank
+ * the marks' look in an application's cells. No token of its own. */
+.form-suggestion-popup {
+    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3;
+    -fx-padding: 1;
+}
+
+.form-suggestion-popup .form-suggestion-list {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.form-suggestion-popup .form-suggestion-list .list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 4 8 4 8;
+}
+
+.form-suggestion-popup .form-suggestion-list .list-cell:hover:filled {
+    -fx-background-color: -fx-hover-color;
+}
+
+.form-suggestion-popup .form-suggestion-list .list-cell:selected {
+    -fx-background-color: -fx-selection-color;
+}
+
+.form-suggestion-popup .form-suggestion-empty {
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-padding: 4 8 4 8;
+}
+
+.form-suggestion-popup .search-highlight .search-match {
+    -fx-fill: -fx-text-color;
+    -fx-font-weight: bold;
+}
+
+.form-suggestion-popup .list-cell:selected .search-highlight .search-text {
+    -fx-fill: -fx-selection-text-color;
+}
+
+/* The footer (form-suggestion-footer, an HBox), shown where the
+ * application turns it on: under the rows, a 1px line in the control
+ * border colour above it, padded as a row; the count
+ * (form-suggestion-footer-count) on the left and the key hints
+ * (form-suggestion-footer-hint) on the right, both muted at 12px, as a
+ * form field's message. */
+.form-suggestion-popup .form-suggestion-footer {
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 4 8 4 8;
+    -fx-spacing: 12;
+}
+
+.form-suggestion-popup .form-suggestion-footer-count,
+.form-suggestion-popup .form-suggestion-footer-hint {
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-font-size: 12px;
+}
+
+/* --- Frame: binding (FieldBinding) -----------------------------------
+ * The {} icon (form-frame-bind) is the frame's last trailing icon.
+ * While bound (:bound) it takes the bound look, the accent colour on
+ * the accent tint, the input disables its own icons that act on the
+ * value, and the chip (form-chip, a Label) lies over the hidden content
+ * where its text starts: the bound name in the accent colour on the
+ * accent tint, its small x (form-chip-remove, also icon-button) as its
+ * graphic. The shell keeps the chip within its band (on one line the
+ * content's height). A binding whose
+ * variable is missing (:missing) draws the chip outlined in the error
+ * colour. */
+.form-frame:bound .form-frame-bind {
+    -fx-background-color: -fx-accent-tint-color;
+}
+
+.form-frame:bound .form-frame-bind:hover {
+    -fx-background-color: -fx-accent-tint-color, -fx-hover-color;
+}
+
+.form-frame:bound .form-frame-bind .ikonli-font-icon,
+.form-frame:bound .form-frame-bind:hover .ikonli-font-icon {
+    -fx-icon-color: -fx-accent-color;
+}
+
+.form-frame .form-chip {
+    -fx-background-color: -fx-accent-tint-color;
+    -fx-background-insets: 0;
+    -fx-background-radius: 3;
+    -fx-padding: 0 1 0 6;
+    -fx-graphic-text-gap: 2;
+    -fx-text-fill: -fx-accent-color;
+}
+
+.form-frame .form-chip-remove {
+    -fx-padding: 0 1;
+    -fx-background-radius: 2;
+}
+
+.form-frame .form-chip-remove .ikonli-font-icon {
+    -fx-icon-size: 12;
+    -fx-icon-color: -fx-accent-color;
+}
+
+.form-frame .form-chip:missing {
+    -fx-background-color: -fx-status-error, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+    -fx-text-fill: -fx-status-error;
+}
+
+.form-frame .form-chip:missing .form-chip-remove .ikonli-font-icon {
+    -fx-icon-color: -fx-status-error;
+}
+
+/* Read-only: the chip has no x, so its right padding matches its
+ * left; a missing chip is outlined on the read-only background. */
+.form-frame:readonly .form-chip {
+    -fx-padding: 0 6 0 6;
+}
+
+.form-frame:readonly .form-chip:missing {
+    -fx-background-color: -fx-status-error, -fx-readonly-bg;
+}
+
+/* Disabled: the chip and its x are dimmed with the frame, once. */
+.form-frame:disabled .form-chip,
+.form-frame:disabled .form-chip-remove {
+    -fx-opacity: 1;
+}
+
+/* The binding list (form-binding-menu), a context menu under the {}
+ * icon. A candidate's entry (form-binding-candidate, a check menu item
+ * whose graphic holds the texts) shows the name (form-binding-name),
+ * then its detail muted (form-binding-detail); the current one is
+ * checked. Remove binding (form-binding-remove) follows a separator
+ * while bound; without candidates the list holds the disabled No
+ * variable fits (form-binding-empty), drawn as a disabled menu item. */
+.form-binding-menu .form-binding-candidate > .graphic-container {
+    -fx-padding: 0 0 0 8;
+}
+
+.form-binding-menu .form-binding-candidate .form-binding-name {
+    -fx-text-fill: -fx-text-color;
+}
+
+.form-binding-menu .form-binding-candidate .form-binding-detail {
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-padding: 0 0 0 12;
+}
+
+/* --- Row (FormField) -------------------------------------------------
+ * The label line above the input, the messages under it, 4px apart.
+ * The label in the secondary text colour, the required asterisk 2px
+ * after it in the error colour. The messages one under the other, 2px
+ * apart, a size smaller than the text: errors in the error colour,
+ * warnings in the warning colour, info in the secondary text colour. */
+.form-field {
+    -fx-spacing: 4;
+}
+
+.form-field .form-field-label {
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+.form-field .form-field-required {
+    -fx-text-fill: -fx-status-error;
+    -fx-padding: 0 0 0 2;
+}
+
+.form-field .form-field-messages {
+    -fx-spacing: 2;
+}
+
+.form-field .form-field-message {
+    -fx-font-size: 12px;
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+.form-field .form-field-message:error {
+    -fx-text-fill: -fx-status-error;
+}
+
+.form-field .form-field-message:warning {
+    -fx-text-fill: -fx-status-paused;
+}
+
+.form-field .form-field-message:info {
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+/* Disabled input (:input-disabled on the row, while the input's node is
+ * disabled, also through a parent): the label, the asterisk and every
+ * message, the input's own and the application's, are dimmed as the
+ * input is, as a disabled button (the opacity of "Text fields" above),
+ * each once. The texts are not disabled themselves, so they stay
+ * selectable and copyable and keep their text cursor. */
+.form-field:input-disabled .form-field-label,
+.form-field:input-disabled .form-field-required,
+.form-field:input-disabled .form-field-message {
+    -fx-opacity: 0.5;
+}
+
+/* --- Row: selectable texts -------------------------------------------
+ * The label and the messages are read-only text areas
+ * (form-selectable-text) that look like labels: no frame, no
+ * background, no padding, no scroll bars, also while focused or
+ * read-only. Their height is measured on these zero insets, so a
+ * padding here would cut off the last line. */
+.text-area.form-selectable-text,
+.text-area.form-selectable-text:focused,
+.text-area.form-selectable-text:readonly,
+.text-area.form-selectable-text:readonly:focused {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+.text-area.form-selectable-text .scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+    -fx-hbar-policy: never;
+    -fx-vbar-policy: never;
+}
+
+.text-area.form-selectable-text .scroll-pane > .viewport,
+.text-area.form-selectable-text .content,
+.text-area.form-selectable-text:readonly .content {
+    -fx-background-color: transparent;
+    -fx-padding: 0;
+}
+
+/* ===================================================================
+ * Markdown view (MarkdownView) — sizes, spacing and fonts. The style
+ * classes are a documented contract (STYLEGUIDE.md, MarkdownView's
+ * JavaDoc); colours are tokens from dark.css.
+ * =================================================================== */
+
+/* The view frames itself like a text area: surface bg + 1px border. */
+.markdown-view {
+    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3, 2;
+    -fx-padding: 1;
+}
+
+/* The view's own scroll pane shows the view's background. */
+.markdown-view > .scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+/* The content box inside the scroll pane: margins and block spacing. */
+.markdown-view .markdown-document {
+    -fx-padding: 6 14 14 14;
+    -fx-spacing: 8;
+}
+
+/* Every text run; the fill does not inherit, so each run sets it. */
+.markdown-view .markdown-text {
+    -fx-fill: -fx-text-color;
+}
+
+.markdown-view .markdown-paragraph {
+    -fx-line-spacing: 2;
+}
+
+/* Headings: bold, 20 / 16 / 14 / 13px; levels 1 and 2 get a thin
+ * line underneath (a border, not a node). The runs inherit the font
+ * from their text flow. */
+.markdown-view .markdown-heading {
+    -fx-font-weight: bold;
+    -fx-padding: 8 0 0 0;
+}
+
+.markdown-view .markdown-heading-1 {
+    -fx-font-size: 20px;
+    -fx-padding: 6 0 4 0;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+.markdown-view .markdown-heading-2 {
+    -fx-font-size: 16px;
+    -fx-padding: 10 0 3 0;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+.markdown-view .markdown-heading-3 {
+    -fx-font-size: 14px;
+}
+
+.markdown-view .markdown-heading-4,
+.markdown-view .markdown-heading-5,
+.markdown-view .markdown-heading-6 {
+    -fx-font-size: 13px;
+}
+
+.markdown-view .markdown-strong {
+    -fx-font-weight: bold;
+}
+
+.markdown-view .markdown-emphasis {
+    -fx-font-style: italic;
+}
+
+/* Inline code: monospace in its own colour. A Text node has no
+ * background, so inline code has no box behind it. The font family
+ * is not set here: JavaFX CSS reads only the first family of a list,
+ * so the view sets the first installed of "JetBrains Mono NL",
+ * "Cascadia Mono", "Consolas" (else Monospaced), all without
+ * ligatures, on the run itself. */
+.markdown-view .markdown-code {
+    -fx-fill: -fx-code-text-color;
+}
+
+/* Links: the accent colour, underlined while the pointer is over
+ * them; the view sets the hand cursor and the address tooltip. After
+ * the code rule, so code in a link takes the link's colour (and keeps
+ * its monospace font). */
+.markdown-view .markdown-link {
+    -fx-fill: -fx-accent-color;
+}
+
+.markdown-view .markdown-link:hover {
+    -fx-underline: true;
+}
+
+/* Lists: a box of item rows, 3px apart. A row indents the item's
+ * blocks by its left padding, 18px (24px in an ordered list, whose
+ * numbers are wider); the view lays the marker into that padding,
+ * right-aligned against the blocks with the marker's 6px right
+ * padding as the gap, on the baseline of the first line. A nested
+ * list sits in its parent's row, so each level indents further. */
+.markdown-view .markdown-bullet-list,
+.markdown-view .markdown-ordered-list {
+    -fx-spacing: 3;
+}
+
+.markdown-view .markdown-list-item {
+    -fx-padding: 0 0 0 18;
+    -fx-spacing: 3;
+}
+
+.markdown-view .markdown-ordered-list > .markdown-list-item {
+    -fx-padding: 0 0 0 24;
+}
+
+/* A loose list (blank lines between its items in the source) spaces
+ * its items and their blocks like paragraphs. */
+.markdown-view .markdown-bullet-list:loose,
+.markdown-view .markdown-ordered-list:loose,
+.markdown-view .markdown-bullet-list:loose > .markdown-list-item,
+.markdown-view .markdown-ordered-list:loose > .markdown-list-item {
+    -fx-spacing: 8;
+}
+
+.markdown-view .markdown-list-marker {
+    -fx-padding: 0 6 0 0;
+    -fx-text-fill: -fx-text-color;
+}
+
+/* Block quotes: a 3px accent bar on the left (a border), the quote's
+ * blocks 12px beyond it and spaced like the document's, the text and
+ * list markers in the secondary colour. Code and links keep their own
+ * colours: these rules outweigh the general ones, so a run style that
+ * has a colour of its own needs a quote rule too. */
+.markdown-view .markdown-quote {
+    -fx-border-color: -fx-accent-color;
+    -fx-border-width: 0 0 0 3;
+    -fx-padding: 2 0 2 12;
+    -fx-spacing: 8;
+}
+
+.markdown-view .markdown-quote .markdown-text {
+    -fx-fill: -fx-text-secondary-color;
+}
+
+.markdown-view .markdown-quote .markdown-code {
+    -fx-fill: -fx-code-text-color;
+}
+
+.markdown-view .markdown-quote .markdown-link {
+    -fx-fill: -fx-accent-color;
+}
+
+.markdown-view .markdown-quote .markdown-list-marker {
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+/* A thematic break: the theme's separator line, with room around it
+ * on top of the spacing between blocks. */
+.markdown-view .markdown-separator {
+    -fx-padding: 4 0;
+}
+
+/* Code blocks: the code on its own background, its lines whole. The
+ * block holds a scroll pane of its own, transparent, whose content, a
+ * text flow (markdown-block-content), pads the text, so the text
+ * scrolls sideways through the padding and the horizontal bar, shown
+ * only for a line wider than the block, sits at the block's bottom
+ * edge, its thumb on the block's background. The code is a flow of
+ * markdown-code runs: code colour, and the family set on each run
+ * (see inline code). Source blocks (what the view does not render,
+ * HTML blocks first of all) are the same box; their text is a plain
+ * markdown-text run, so it keeps the text colour and reads as source, not as code. */
+.markdown-view .markdown-code-block,
+.markdown-view .markdown-source-block {
+    -fx-background-color: -fx-code-background-color;
+    -fx-background-radius: 4;
+}
+
+.markdown-view .markdown-code-block > .scroll-pane,
+.markdown-view .markdown-code-block > .scroll-pane > .viewport,
+.markdown-view .markdown-source-block > .scroll-pane,
+.markdown-view .markdown-source-block > .scroll-pane > .viewport {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 0;
+}
+
+.markdown-view .markdown-code-block .scroll-bar .track,
+.markdown-view .markdown-source-block .scroll-bar .track {
+    -fx-background-color: transparent;
+}
+
+.markdown-view .markdown-block-content {
+    -fx-padding: 8 12 8 12;
+}
+
+/* Code coloured by its language: each run of a piece carries the
+ * code- class of its category and of every category its fallback chain
+ * passes (an annotation code-annotation and code-keyword). Each class
+ * takes its fill from its variable (dark.css). The base classes come
+ * first and the fine ones after them, a fine class after the one it
+ * falls back to, so the finest class of a run wins. Three classes in
+ * each selector and their place after the quote rules: a coloured block
+ * inside a quote keeps its colours. Colour only, no weight or style:
+ * an application's own rule on a class may add them. */
+.markdown-view .markdown-code-block .code-comment {
+    -fx-fill: -fx-code-comment-color;
+}
+
+.markdown-view .markdown-code-block .code-keyword {
+    -fx-fill: -fx-code-keyword-color;
+}
+
+.markdown-view .markdown-code-block .code-string {
+    -fx-fill: -fx-code-string-color;
+}
+
+.markdown-view .markdown-code-block .code-number {
+    -fx-fill: -fx-code-number-color;
+}
+
+.markdown-view .markdown-code-block .code-type {
+    -fx-fill: -fx-code-type-color;
+}
+
+.markdown-view .markdown-code-block .code-function {
+    -fx-fill: -fx-code-function-color;
+}
+
+.markdown-view .markdown-code-block .code-variable {
+    -fx-fill: -fx-code-variable-color;
+}
+
+.markdown-view .markdown-code-block .code-property {
+    -fx-fill: -fx-code-property-color;
+}
+
+.markdown-view .markdown-code-block .code-tag {
+    -fx-fill: -fx-code-tag-color;
+}
+
+.markdown-view .markdown-code-block .code-doc {
+    -fx-fill: -fx-code-doc-color;
+}
+
+.markdown-view .markdown-code-block .code-annotation {
+    -fx-fill: -fx-code-annotation-color;
+}
+
+.markdown-view .markdown-code-block .code-literal {
+    -fx-fill: -fx-code-literal-color;
+}
+
+.markdown-view .markdown-code-block .code-constant {
+    -fx-fill: -fx-code-constant-color;
+}
+
+.markdown-view .markdown-code-block .code-escape {
+    -fx-fill: -fx-code-escape-color;
+}
+
+.markdown-view .markdown-code-block .code-attribute {
+    -fx-fill: -fx-code-attribute-color;
+}
+
+.markdown-view .markdown-code-block .code-operator {
+    -fx-fill: -fx-code-operator-color;
+}
+
+.markdown-view .markdown-code-block .code-punctuation {
+    -fx-fill: -fx-code-punctuation-color;
+}
+
+.markdown-view .markdown-code-block .code-heading {
+    -fx-fill: -fx-code-heading-color;
+}
+
+.markdown-view .markdown-code-block .code-link {
+    -fx-fill: -fx-code-link-color;
+}
+
+.markdown-view .markdown-code-block .code-code {
+    -fx-fill: -fx-code-code-color;
+}
+
+.markdown-view .markdown-code-block .code-list {
+    -fx-fill: -fx-code-list-color;
+}
+
+.markdown-view .markdown-code-block .code-quote {
+    -fx-fill: -fx-code-quote-color;
+}
+
+.markdown-view .markdown-code-block .code-emphasis {
+    -fx-fill: -fx-code-emphasis-color;
+}
+
+/* A selection in a heading, a paragraph, a code or a source block: a
+ * highlight (markdown-selection, a Path in a layer the view lays over
+ * the text's runs) in the theme's selection colour, and the selected
+ * characters, shown again on it, in the selection's text colour. A
+ * Text has no CSS property for that colour, so the highlight carries
+ * it as -fx-highlight-text-fill, a text field's name for it, and the
+ * view hands it to the characters shown on it. */
+.markdown-view .markdown-selection {
+    -fx-fill: -fx-selection-color;
+    -fx-highlight-text-fill: -fx-selection-text-color;
+}
+
+/* A code block's copy button: the theme's icon button (.icon-button:
+ * padding 4, radius 3, hand cursor) laid over the block's top right
+ * corner, 4px from its edges (set by the view: a StackPane margin is
+ * no CSS property). It stays there when the code scrolls sideways.
+ * Its background is the code's, so the end of a long first line does
+ * not show through the icon; the hover tint lies on top of it. The
+ * icon is quiet at rest and takes the text colour under the pointer. */
+.markdown-view .markdown-code-copy {
+    -fx-background-color: -fx-code-background-color;
+}
+
+.markdown-view .markdown-code-copy:hover {
+    -fx-background-color: -fx-code-background-color, -fx-hover-color;
+}
+
+.markdown-view .markdown-code-copy:pressed {
+    -fx-background-color: -fx-code-background-color, -fx-button-pressed-color;
+}
+
+.markdown-view .markdown-code-copy .ikonli-font-icon {
+    -fx-icon-size: 14;
+    -fx-icon-color: -fx-text-secondary-color;
+    -fx-fill: -fx-text-secondary-color;
+}
+
+.markdown-view .markdown-code-copy:hover .ikonli-font-icon {
+    -fx-icon-color: -fx-text-color;
+    -fx-fill: -fx-text-color;
+}
+
+/* Images: an image alone in its paragraph is a block
+ * (markdown-image-block) that shows its picture (markdown-image, an
+ * ImageView the view sizes) at its top left. Until the picture is
+ * decoded the block shows a placeholder (a Label: an image icon and
+ * the alt text), if it cannot be shown an error box (an HBox: a
+ * missing-image icon, the alt text and a note). Both are one quiet
+ * line on the code background, as wide as their content. */
+.markdown-view .markdown-image-placeholder,
+.markdown-view .markdown-image-error {
+    -fx-background-color: -fx-code-background-color;
+    -fx-background-radius: 4;
+    -fx-padding: 4 8;
+}
+
+.markdown-view .markdown-image-placeholder {
+    -fx-graphic-text-gap: 6;
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+.markdown-view .markdown-image-error {
+    -fx-spacing: 6;
+    -fx-alignment: center-left;
+}
+
+.markdown-view .markdown-image-error .label {
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+.markdown-view .markdown-image-placeholder .ikonli-font-icon,
+.markdown-view .markdown-image-error .ikonli-font-icon {
+    -fx-icon-size: 14;
+    -fx-icon-color: -fx-text-secondary-color;
+    -fx-fill: -fx-text-secondary-color;
+}
+
+/* An image inside a sentence (markdown-image-inline) sits in its line
+ * on the baseline. Its placeholder (a Label: the image icon) and its
+ * error box (a Label: the missing-image icon and the alt text) look
+ * like a block image's, small enough to keep the line's height. */
+.markdown-view .markdown-image-inline .markdown-image-placeholder,
+.markdown-view .markdown-image-inline .markdown-image-error {
+    -fx-background-radius: 3;
+    -fx-padding: 0 3;
+    -fx-graphic-text-gap: 4;
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+/* A selected image, block or inline: the selection's highlight
+ * (markdown-selection) lies over its picture, placeholder or error
+ * box, half see-through, so what the image shows stays visible
+ * under the selection colour. */
+.markdown-view .markdown-image-block .markdown-selection,
+.markdown-view .markdown-image-inline .markdown-selection {
+    -fx-opacity: 0.5;
+}
+
+/* An image in a table cell is text, never a picture: an image icon
+ * (a FontIcon) and the alt text (a markdown-text run), both
+ * markdown-image-cell, in the link's colour, in a quote too. In a
+ * selected cell or a table selected whole the icon takes the
+ * selection's text colour, as the runs do. */
+.markdown-view .markdown-image-cell,
+.markdown-view .markdown-quote .markdown-image-cell {
+    -fx-fill: -fx-accent-color;
+}
+
+.markdown-view .ikonli-font-icon.markdown-image-cell {
+    -fx-icon-size: 13;
+    -fx-icon-color: -fx-accent-color;
+}
+
+.markdown-view .markdown-table .table-cell:selected .ikonli-font-icon.markdown-image-cell,
+.markdown-view .markdown-table:selected-whole .ikonli-font-icon.markdown-image-cell {
+    -fx-icon-color: -fx-selection-text-color;
+    -fx-fill: -fx-selection-text-color;
+}
+
+/* A click on a cell's image opens it at full size, as a link's text
+ * follows its link, so it underlines under the pointer like a link. */
+.markdown-view .markdown-image-cell:hover {
+    -fx-underline: true;
+}
+
+/* A block image's open button (markdown-image-open): the theme's icon
+ * button with a fullscreen icon over the image's top right corner, 4px
+ * from its edges (set by the view), shown while the pointer is over
+ * the image. Like a code block's copy button it has the code's
+ * background, so the image does not show through the icon, the hover
+ * tint on top, the icon quiet at rest and in the text colour under the
+ * pointer. */
+.markdown-view .markdown-image-open {
+    -fx-background-color: -fx-code-background-color;
+}
+
+.markdown-view .markdown-image-open:hover {
+    -fx-background-color: -fx-code-background-color, -fx-hover-color;
+}
+
+.markdown-view .markdown-image-open:pressed {
+    -fx-background-color: -fx-code-background-color, -fx-button-pressed-color;
+}
+
+.markdown-view .markdown-image-open .ikonli-font-icon {
+    -fx-icon-size: 14;
+    -fx-icon-color: -fx-text-secondary-color;
+    -fx-fill: -fx-text-secondary-color;
+}
+
+.markdown-view .markdown-image-open:hover .ikonli-font-icon {
+    -fx-icon-color: -fx-text-color;
+    -fx-fill: -fx-text-color;
+}
+
+/* The full size window (markdown-image-window, the root of its
+ * scene): a bar on top with the density and the line of the view's
+ * zoom bar (Fit, 100 %, the zoom in percent, Copy image and Save as,
+ * markdown-image-bar),
+ * the image area below it (markdown-image-viewer) on the canvas
+ * colour, and a quiet note in the area's middle where no image can
+ * show (markdown-image-note). */
+.markdown-image-window {
+    -fx-background-color: -fx-canvas-color;
+}
+
+.markdown-image-window > .markdown-image-bar {
+    -fx-background-color: -fx-surface-color;
+    -fx-padding: 4;
+    -fx-spacing: 4;
+    -fx-alignment: center-left;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+.markdown-image-window .markdown-image-zoom {
+    -fx-padding: 0 4;
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+.markdown-image-window .markdown-image-viewer {
+    -fx-background-color: -fx-canvas-color;
+}
+
+.markdown-image-window .markdown-image-note {
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+/* Tables (markdown-table): a TableView with the theme's table rules
+ * (header, hover, selection, sort arrow), and these on top, inside
+ * the view only. The rows take the document's 13px (the theme's
+ * rows are 11.5px); the odd rows take the view's own token
+ * -fx-markdown-table-row-odd in place of the theme's odd-row token
+ * (dark.css makes it the surface: no zebra stripes). A row is as
+ * tall as its tallest cell, the cell's
+ * text wrapped to the column's width; -fx-cell-size is only the
+ * floor of a row's height (below 24px JavaFX would give every row
+ * exactly that height). A cell holds its text at the top, aligned
+ * in the column as the delimiter row says. A header's label shows
+ * the header's formatted text (the column's graphic) in place of
+ * the column's plain text. */
+.markdown-view .markdown-table {
+    -fx-table-row-odd: -fx-markdown-table-row-odd;
+}
+
+.markdown-view .markdown-table .table-row-cell {
+    -fx-font-size: 13px;
+    -fx-cell-size: 24px;
+}
+
+.markdown-view .markdown-table .table-cell {
+    -fx-padding: 4 8 4 8;
+    -fx-alignment: top-left;
+}
+
+.markdown-view .markdown-table .column-header .label {
+    -fx-padding: 4 8 4 8;
+    -fx-content-display: graphic-only;
+}
+
+/* A selected cell takes the theme's cell selection rules (selection
+ * colour, the focused cell's accent frame); its text runs, which have
+ * no .text class, take the selection's text colour here, code and
+ * links too, as the selected characters of a code block do. */
+.markdown-view .markdown-table .table-cell:selected .markdown-text {
+    -fx-fill: -fx-selection-text-color;
+}
+
+/* A table the text selection across the document passes over is
+ * selected whole (:selected-whole): every body cell and column header
+ * in the selection colour, all its runs in the selection's text
+ * colour, as the selected characters around it. The table's own
+ * selection of cells stays empty meanwhile. */
+.markdown-view .markdown-table:selected-whole .table-row-cell .table-cell,
+.markdown-view .markdown-table:selected-whole .column-header {
+    -fx-background-color: -fx-selection-color;
+    -fx-background-insets: 0;
+}
+
+.markdown-view .markdown-table:selected-whole .markdown-text {
+    -fx-fill: -fx-selection-text-color;
+}
+
+/* The zoom bar (markdown-zoom-bar) on top of the view, outside its
+ * scroll pane: the tool bar's density (padding 4, 4px between its
+ * parts), transparent on the view's background, a 1px line in the
+ * control border colour below it. From the left the zoom group, the
+ * slider and Reset, each as high as a text field. */
+.markdown-view > .markdown-zoom-bar {
+    -fx-background-color: transparent;
+    -fx-padding: 4;
+    -fx-spacing: 4;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 0 0 1 0;
+}
+
+/* The zoom group: one frame drawn as a text field's (border, surface,
+ * radius 3) around minus, the percent field with its chevron and plus.
+ * Its 1px padding keeps the parts inside the frame, and the field's
+ * vertical padding is 1px less than a text field's, so the group is
+ * exactly as high as a text field. The focus border shows while the
+ * field has the focus or the list of zoom levels is open (the bar
+ * sets :focus-within for the open list too). */
+.markdown-zoom-bar .markdown-zoom-group {
+    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3, 2;
+    -fx-padding: 1;
+}
+
+.markdown-zoom-bar .markdown-zoom-group:focus-within {
+    -fx-background-color: -fx-accent-color, -fx-surface-color;
+}
+
+/* The percent field: borderless and transparent inside the frame,
+ * its text in the theme's UI font, right-aligned against the
+ * chevron. */
+.markdown-zoom-bar .markdown-zoom-field,
+.markdown-zoom-bar .markdown-zoom-field:focused {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-background-radius: 0;
+    -fx-padding: 3 1 3 6;
+    -fx-alignment: center-right;
+}
+
+/* Minus, the chevron and plus: the theme's icon buttons as high as
+ * the group's inside, the hover and pressed backgrounds inside the
+ * frame. The dividers are 1px borders in the control border colour:
+ * right of minus, left of plus; the chevron sits in the field's cell,
+ * without a divider. Disabled (minus at 50 %, plus at 200 %) only the
+ * icon is dimmed, by a disabled icon button's 0.5: dimming the whole
+ * button would fade its border, the group's divider, too. */
+.markdown-zoom-bar .markdown-zoom-out,
+.markdown-zoom-bar .markdown-zoom-in {
+    -fx-padding: 0 6;
+    -fx-alignment: center;
+    -fx-border-color: -fx-control-border;
+}
+
+.markdown-zoom-bar .markdown-zoom-out {
+    -fx-background-radius: 2 0 0 2;
+    -fx-border-width: 0 1 0 0;
+}
+
+.markdown-zoom-bar .markdown-zoom-in {
+    -fx-background-radius: 0 2 2 0;
+    -fx-border-width: 0 0 0 1;
+}
+
+.markdown-zoom-bar .markdown-zoom-out:disabled,
+.markdown-zoom-bar .markdown-zoom-in:disabled {
+    -fx-opacity: 1;
+}
+
+.markdown-zoom-bar .markdown-zoom-out:disabled .ikonli-font-icon,
+.markdown-zoom-bar .markdown-zoom-in:disabled .ikonli-font-icon {
+    -fx-opacity: 0.5;
+}
+
+.markdown-zoom-bar .markdown-zoom-levels {
+    -fx-padding: 0 5 0 3;
+    -fx-alignment: center;
+    -fx-background-radius: 0;
+}
+
+.markdown-zoom-bar .markdown-zoom-out:pressed,
+.markdown-zoom-bar .markdown-zoom-in:pressed,
+.markdown-zoom-bar .markdown-zoom-levels:pressed {
+    -fx-background-color: -fx-button-pressed-color;
+}
+
+.markdown-zoom-bar .markdown-zoom-out .ikonli-font-icon,
+.markdown-zoom-bar .markdown-zoom-in .ikonli-font-icon {
+    -fx-icon-size: 14;
+    -fx-icon-color: -fx-text-color;
+}
+
+.markdown-zoom-bar .markdown-zoom-levels .ikonli-font-icon {
+    -fx-icon-size: 10;
+    -fx-icon-color: -fx-text-secondary-color;
+}
+
+.markdown-zoom-bar .markdown-zoom-levels:hover .ikonli-font-icon {
+    -fx-icon-color: -fx-text-color;
+}
+
+/* The slider: compact, no tick marks and no labels, 120px wide where
+ * the bar has room, down to 60px before the bar hides it. The track
+ * keeps the theme's look and is filled in the accent colour from its
+ * left end to the middle of the thumb (track-fill, a region the
+ * slider lays into its track). */
+.markdown-zoom-bar .markdown-zoom-slider {
+    -fx-show-tick-marks: false;
+    -fx-show-tick-labels: false;
+    -fx-padding: 0;
+    -fx-pref-width: 120px;
+    -fx-min-width: 60px;
+}
+
+.markdown-zoom-bar .markdown-zoom-slider .track-fill {
+    -fx-background-color: -fx-accent-color;
+    -fx-background-radius: 2;
+}
+
+/* Reset: a flat text button, no frame and no background at rest, the
+ * hover and pressed backgrounds of an icon button; disabled at 100 %,
+ * dimmed as every disabled button. */
+.markdown-zoom-bar .markdown-zoom-reset {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-padding: 4 8;
+}
+
+.markdown-zoom-bar .markdown-zoom-reset:hover {
+    -fx-background-color: -fx-hover-color;
+}
+
+.markdown-zoom-bar .markdown-zoom-reset:pressed {
+    -fx-background-color: -fx-button-pressed-color;
+}
+
+/* ===================================================================
+ * Showcase Layout — toolbar, sidebar, content area, cards
+ * =================================================================== */
+
+.showcase-root {
+    -fx-background-color: -fx-surface-color;
+}
+
+.showcase-toolbar {
+    -fx-padding: 12 16 12 16;
+    -fx-background-color: -fx-surface-color;
+    -fx-border-color: transparent transparent -fx-control-border transparent;
+    -fx-border-width: 0 0 1 0;
+    -fx-alignment: center-left;
+    -fx-spacing: 8;
+}
+
+.showcase-title {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-color;
+}
+
+.showcase-sidebar {
+    -fx-background-color: -fx-surface-color;
+    -fx-border-color: transparent -fx-control-border transparent transparent;
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 8 0 0 0;
+}
+
+.showcase-sidebar-header {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-padding: 8 16 8 16;
+}
+
+.showcase-sidebar .list-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.showcase-sidebar .list-cell {
+    -fx-padding: 8 16 8 16;
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-color;
+    -fx-font-size: 13px;
+}
+
+.showcase-sidebar .list-cell:hover {
+    -fx-background-color: -fx-hover-color;
+}
+
+.showcase-sidebar .list-cell:selected {
+    -fx-background-color: -fx-accent-color, -fx-selection-color;
+    -fx-background-insets: 0, 0 0 0 2;
+    -fx-text-fill: -fx-accent-color;
+    -fx-font-weight: bold;
+}
+
+.showcase-sidebar .list-cell .category-header {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-padding: 6 0 4 0;
+    -fx-background-color: transparent;
+}
+
+.showcase-sidebar .list-cell .sidebar-item-icon {
+    -fx-icon-color: -fx-text-secondary-color;
+    -fx-fill: -fx-text-secondary-color;
+}
+
+.showcase-sidebar .list-cell:selected .sidebar-item-label {
+    -fx-text-fill: -fx-accent-color;
+}
+
+/* Text-node fills — win over the generic .list-view :selected .text rule */
+.showcase-sidebar .list-cell:selected .sidebar-item-label .text {
+    -fx-fill: -fx-accent-color;
+}
+
+.showcase-sidebar .list-cell .category-header .text {
+    -fx-fill: -fx-text-secondary-color;
+}
+
+.showcase-sidebar .list-cell:selected .sidebar-item-icon {
+    -fx-icon-color: -fx-accent-color;
+    -fx-fill: -fx-accent-color;
+}
+
+.showcase-sidebar .list-cell:selected .category-header {
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+.showcase-content {
+    -fx-padding: 24;
+    -fx-background-color: -fx-canvas-color;
+    -fx-alignment: top-left;
+}
+
+.showcase-page {
+    -fx-spacing: 16;
+}
+
+.showcase-page-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-color;
+}
+
+.showcase-page-description {
+    -fx-font-size: 14px;
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-wrap-text: true;
+    -fx-padding: 0 0 8 0;
+}
+
+.showcase-card {
+    -fx-padding: 16;
+    -fx-background-color: -fx-surface-color;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+    -fx-spacing: 12;
+}
+
+.showcase-card-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-padding: 0 0 4 0;
+}
+
+/* The initials avatar of the showcase's person cards (Search Input page),
+ * a Label of 32px: the accent's tint as the circle, which shows on a
+ * plain row and on the preselected one, the initials bold in the text
+ * colour. A rule, not an inline style: a popup's first CSS pass runs
+ * before it has an owner, where an inline token cannot be resolved. */
+.showcase-person-avatar {
+    -fx-background-color: -fx-accent-tint-color;
+    -fx-background-radius: 16;
+    -fx-text-fill: -fx-text-color;
+    -fx-font-weight: bold;
+}
+
+/* ColorPicker */
+.color-picker {
+    -fx-background-color: -fx-control-border, -fx-button-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3;
+    -fx-padding: 4 8;
+    -fx-cursor: hand;
+}
+
+.color-picker:hover {
+    -fx-background-color: -fx-control-border, -fx-button-hover-color;
+    -fx-background-insets: 0, 1;
+}
+
+.color-picker:focused {
+    -fx-background-color: -fx-focus-color, -fx-button-color;
+    -fx-background-insets: 0, 1;
+}
+
+.color-picker:disabled {
+    -fx-opacity: 0.5;
+}
+
+.color-picker .color-picker-label .text {
+    -fx-fill: -fx-text-color;
+}
+
+.color-picker .arrow-button {
+    -fx-background-color: transparent;
+    -fx-padding: 0 0 0 4;
+}
+
+.color-picker .arrow {
+    -fx-background-color: -fx-text-color;
+}
+
+/* Hyperlink */
+.hyperlink {
+    -fx-text-fill: -fx-accent-color;
+    -fx-border-color: transparent;
+    -fx-padding: 2 0;
+    -fx-cursor: hand;
+}
+
+.hyperlink:hover {
+    -fx-text-fill: -fx-accent-hover-color;
+    -fx-underline: true;
+}
+
+.hyperlink:visited {
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+.hyperlink:disabled {
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-opacity: 0.5;
+}
+
+.hyperlink:focused {
+    -fx-border-color: -fx-focus-color;
+    -fx-border-width: 1;
+}
+
+/* TreeTableView */
+.tree-table-view {
+    -fx-background-color: -fx-surface-color;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+}
+
+.tree-table-view .column-header {
+    -fx-background-color: -fx-button-color;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 0 1 1 0;
+    -fx-padding: 4 8;
+}
+
+.tree-table-view .column-header .label {
+    -fx-text-fill: -fx-text-color;
+    -fx-font-weight: bold;
+    -fx-font-size: 13px;
+}
+
+.tree-table-view .column-header:hover {
+    -fx-background-color: -fx-button-hover-color;
+}
+
+.tree-table-view .column-header-background {
+    -fx-background-color: -fx-button-color;
+}
+
+.tree-table-row-cell {
+    -fx-background-color: transparent;
+    -fx-text-fill: -fx-text-color;
+    -fx-padding: 0;
+    -fx-indent: 10;
+}
+
+.tree-table-row-cell:odd {
+    -fx-background-color: -fx-table-row-odd;
+}
+
+.tree-table-row-cell:hover {
+    -fx-background-color: -fx-hover-color;
+}
+
+.tree-table-row-cell:selected {
+    -fx-background-color: -fx-selection-color;
+}
+
+.tree-table-row-cell:selected .text {
+    -fx-fill: -fx-selection-text-color;
+}
+
+.tree-table-row-cell .text {
+    -fx-fill: -fx-text-color;
+}
+
+.tree-table-cell {
+    -fx-text-fill: -fx-text-color;
+    -fx-padding: 2 4;
+    -fx-alignment: center-left;
+}
+
+.tree-table-row-cell .tree-disclosure-node {
+    -fx-padding: 4 4 0 0;
+    -fx-alignment: center;
+}
+
+.tree-table-row-cell .tree-disclosure-node .arrow {
+    -fx-background-color: -fx-text-color;
+    -fx-padding: 3;
+    -fx-shape: "M0 0 L6 4 L0 8 Z";
+    -fx-rotate: 0;
+}
+
+.tree-table-row-cell:expanded .tree-disclosure-node .arrow {
+    -fx-rotate: 90;
+}
+
+/* SplitPane demo region */
+.split-pane-demo-region {
+    -fx-background-color: -fx-surface-color;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 0.5;
+    -fx-border-style: dashed;
+}
+
+/* ============================================================
+   Settings Dialog
+   ============================================================ */
+
+.settings-dialog {
+    -fx-background-color: -fx-background-color;
+}
+
+.settings-tree-view {
+    -fx-border-color: transparent -fx-control-border transparent transparent;
+    -fx-border-width: 0 1 0 0;
+    -fx-background-color: -fx-surface-color;
+}
+
+.settings-right-pane {
+    -fx-background-color: -fx-background-color;
+}
+
+.settings-breadcrumb {
+    -fx-background-color: -fx-surface-color;
+    -fx-padding: 8 12 8 12;
+}
+
+.settings-breadcrumb-segment {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-color;
+}
+
+.settings-breadcrumb-separator {
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-padding: 0 2 0 2;
+}
+
+.settings-scroll-pane {
+    -fx-background-color: transparent;
+    -fx-background: transparent;
+}
+
+.settings-content {
+    -fx-background-color: -fx-background-color;
+}
+
+.settings-group-title {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+    -fx-text-fill: -fx-text-color;
+    -fx-padding: 8 0 2 0;
+}
+
+.settings-group-separator {
+    -fx-padding: 0 0 4 0;
+}
+
+.settings-entry-label {
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text-color;
+    -fx-padding: 4 0 0 0;
+}
+
+.settings-entry-description {
+    -fx-font-size: 11px;
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-padding: 0 0 4 0;
+}
+
+.settings-button-bar {
+    -fx-background-color: -fx-surface-color;
+    -fx-border-color: -fx-control-border transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-padding: 8 15 8 15;
+}
+
+.settings-button {
+    -fx-min-width: 80;
+}

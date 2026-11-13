@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ColorPicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.paint.Color?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.ColorPickerShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="ColorPicker" styleClass="showcase-page-title"/>
+    <Label text="Color pickers allow users to select a color from a palette or enter a custom value."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- Default states -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="States" styleClass="showcase-card-title"/>
+        <HBox spacing="16" alignment="CENTER_LEFT">
+            <VBox spacing="4">
+                <Label text="Default"/>
+                <ColorPicker/>
+            </VBox>
+            <VBox spacing="4">
+                <Label text="Preselected"/>
+                <ColorPicker>
+                    <value><Color red="0.1" green="0.46" blue="0.82" opacity="1.0"/></value>
+                </ColorPicker>
+            </VBox>
+            <VBox spacing="4">
+                <Label text="Disabled"/>
+                <ColorPicker disable="true">
+                    <value><Color red="0.56" green="0.79" blue="0.98" opacity="1.0"/></value>
+                </ColorPicker>
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <!-- Various colors -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Custom Colors" styleClass="showcase-card-title"/>
+        <HBox spacing="16" alignment="CENTER_LEFT">
+            <VBox spacing="4">
+                <Label text="Red"/>
+                <ColorPicker>
+                    <value><Color red="0.9" green="0.2" blue="0.2" opacity="1.0"/></value>
+                </ColorPicker>
+            </VBox>
+            <VBox spacing="4">
+                <Label text="Green"/>
+                <ColorPicker>
+                    <value><Color red="0.2" green="0.7" blue="0.3" opacity="1.0"/></value>
+                </ColorPicker>
+            </VBox>
+            <VBox spacing="4">
+                <Label text="Orange"/>
+                <ColorPicker>
+                    <value><Color red="1.0" green="0.6" blue="0.0" opacity="1.0"/></value>
+                </ColorPicker>
+            </VBox>
+            <VBox spacing="4">
+                <Label text="Purple"/>
+                <ColorPicker>
+                    <value><Color red="0.6" green="0.2" blue="0.8" opacity="1.0"/></value>
+                </ColorPicker>
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <!-- Color label display -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="With Label" styleClass="showcase-card-title"/>
+        <HBox spacing="16" alignment="CENTER_LEFT">
+            <ColorPicker fx:id="labelPicker">
+                <value><Color red="0.1" green="0.46" blue="0.82" opacity="1.0"/></value>
+            </ColorPicker>
+            <Label fx:id="colorLabel" text="Selected: #1976D2"/>
+        </HBox>
+    </VBox>
+
+</VBox>

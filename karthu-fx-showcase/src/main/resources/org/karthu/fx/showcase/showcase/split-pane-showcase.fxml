@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.geometry.Orientation?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.SplitPane?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.SplitPaneShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="SplitPane" styleClass="showcase-page-title"/>
+    <Label text="Split panes divide an area into two or more resizable regions separated by draggable dividers."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- Horizontal split -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Horizontal (default)" styleClass="showcase-card-title"/>
+        <SplitPane dividerPositions="0.4" minHeight="180" maxWidth="500">
+            <StackPane minWidth="80" styleClass="split-pane-demo-region">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                <Label text="Left Pane"/>
+            </StackPane>
+            <StackPane minWidth="80" styleClass="split-pane-demo-region">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                <Label text="Right Pane"/>
+            </StackPane>
+        </SplitPane>
+    </VBox>
+
+    <!-- Vertical split -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Vertical" styleClass="showcase-card-title"/>
+        <SplitPane orientation="VERTICAL" dividerPositions="0.4" minHeight="220" maxWidth="500">
+            <StackPane minHeight="60" styleClass="split-pane-demo-region">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                <Label text="Top Pane"/>
+            </StackPane>
+            <StackPane minHeight="60" styleClass="split-pane-demo-region">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                <Label text="Bottom Pane"/>
+            </StackPane>
+        </SplitPane>
+    </VBox>
+
+    <!-- Three-way split -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Multiple Dividers" styleClass="showcase-card-title"/>
+        <SplitPane dividerPositions="0.33, 0.66" minHeight="180" maxWidth="500">
+            <StackPane minWidth="60" styleClass="split-pane-demo-region">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                <Label text="Panel 1"/>
+            </StackPane>
+            <StackPane minWidth="60" styleClass="split-pane-demo-region">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                <Label text="Panel 2"/>
+            </StackPane>
+            <StackPane minWidth="60" styleClass="split-pane-demo-region">
+                <padding><Insets top="16" right="16" bottom="16" left="16"/></padding>
+                <Label text="Panel 3"/>
+            </StackPane>
+        </SplitPane>
+    </VBox>
+
+</VBox>

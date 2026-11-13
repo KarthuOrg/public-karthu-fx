@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.ListViewShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="ListView" styleClass="showcase-page-title"/>
+    <Label text="List views display a scrollable list of items."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- Sample List -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Sample List" styleClass="showcase-card-title"/>
+        <ListView fx:id="listView" prefHeight="200" prefWidth="250"/>
+    </VBox>
+
+</VBox>

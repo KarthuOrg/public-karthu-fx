@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- The path input's page in the group Form inputs (formerly the Form Fields page). Each card is filled by its own
+     method of the controller, so later parts of the collection add a state row, a comparison or a switch there without
+     touching the others. -->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.PathInputShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Path Input" styleClass="showcase-page-title"/>
+    <Label text="PathInput, a single-line frame (FieldFrame) on the form collection's shell (see the Overview): a browse icon (or Alt+Down) opens the file or directory dialog, which starts in the folder of the path in the field, else in the folder used last (kept across restarts of the showcase), else in the base directory, else in the home folder. A chosen path below the base directory is entered relative to it with /, any other absolute. What you type stays as typed. A {} icon (or Ctrl+Space) binds the field to a variable, shown as a chip. Each field sits in a form row (FormField): the label above the input, an asterisk while required, the description as the label's tooltip and the messages under the input, which set the input's state."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- States side by side -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="States" styleClass="showcase-card-title"/>
+        <Label text="Each field sits in a form row: its label above (hover it for the description), an asterisk while the field is required, and the messages under the field in their colour. An error colours the field's border red, a warning amber; an info leaves it as it is. A disabled field is greyed out, text and icons. A read-only field shows its path to select and copy, without icons; bound, its chip has no ×."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <GridPane fx:id="statesGrid" hgap="12" vgap="8"/>
+    </VBox>
+
+    <!-- Beside a text field -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Beside a text field" styleClass="showcase-card-title"/>
+        <Label text="A path input has the size and colours of a text field: both are exactly as high, also read-only and disabled."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <GridPane fx:id="comparisonGrid" hgap="12" vgap="8"/>
+    </VBox>
+
+    <!-- Try it out -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Try it out" styleClass="showcase-card-title"/>
+        <Label text="Switch the field's states on and off. Drag a file from the file manager onto the field (in the directory mode a folder): the border shows the accent colour while the field accepts it, and the drop is entered like a choice. A path copied with the Explorer's Copy as path is pasted without its quotes. A long path shows its file name while the field is not focused, and the whole path as the tooltip. Bindable offers three sample variables: bind with the {} icon or Ctrl+Space, unbind with the chip's ×, Backspace or Remove binding, and the path comes back."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <FlowPane fx:id="tryOutSwitches" hgap="16" vgap="8"/>
+        <VBox fx:id="tryOutContainer" spacing="8"/>
+    </VBox>
+
+</VBox>

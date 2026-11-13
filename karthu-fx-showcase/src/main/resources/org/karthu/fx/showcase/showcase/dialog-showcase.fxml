@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.DialogShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Dialog / Alert" styleClass="showcase-page-title"/>
+    <Label text="Dialogs and alerts display modal messages to the user for information, warnings, errors, or confirmations."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- Alert types -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Alert Types" styleClass="showcase-card-title"/>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Button fx:id="infoBtn" text="Information"/>
+            <Button fx:id="warningBtn" text="Warning"/>
+            <Button fx:id="errorBtn" text="Error"/>
+            <Button fx:id="confirmBtn" text="Confirmation"/>
+        </HBox>
+        <Label fx:id="resultLabel" text="Click a button to open a dialog."
+               styleClass="section-label"/>
+    </VBox>
+
+    <!-- Custom dialog -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Text Input Dialog" styleClass="showcase-card-title"/>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Button fx:id="inputBtn" text="Open Input Dialog"/>
+            <Label fx:id="inputResultLabel" text="" styleClass="section-label"/>
+        </HBox>
+    </VBox>
+
+</VBox>

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.ButtonShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Buttons" styleClass="showcase-page-title"/>
+    <Label text="Buttons allow users to take actions and make choices with a single tap."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- Default -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Default" styleClass="showcase-card-title"/>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Button text="Default"/>
+            <Button text="Hover Me"/>
+            <Button text="Disabled" disable="true"/>
+        </HBox>
+    </VBox>
+
+    <!-- Primary -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Primary" styleClass="showcase-card-title"/>
+        <HBox spacing="8">
+            <Button text="OK" styleClass="primary-button"/>
+            <Button text="Save" styleClass="primary-button"/>
+            <Button text="Apply" styleClass="primary-button"/>
+            <Button text="Disabled" styleClass="primary-button" disable="true"/>
+        </HBox>
+    </VBox>
+
+    <!-- Semantic -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Semantic" styleClass="showcase-card-title"/>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Button text="Success" styleClass="success-button"/>
+            <Button text="Run" styleClass="running-button"/>
+            <Button text="Pause" styleClass="warning-button"/>
+            <Button text="Stop" styleClass="danger-button"/>
+            <Button text="Info" styleClass="info-button"/>
+            <Button text="Disabled" styleClass="danger-button" disable="true"/>
+        </HBox>
+    </VBox>
+
+    <!-- Icon Buttons -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Icon Buttons" styleClass="showcase-card-title"/>
+        <HBox fx:id="iconButtonsContainer" spacing="8" alignment="CENTER_LEFT"/>
+    </VBox>
+
+</VBox>

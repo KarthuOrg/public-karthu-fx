@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.KeyValueEditorShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Key-Value Editor" styleClass="showcase-page-title"/>
+    <Label text="An editor for key-value pairs such as request headers: the CheckBox switches a pair on or off (an inactive row is dimmed but stays editable), X removes a row at once, the add button appends an empty row and focuses its key. Fully empty rows are left out of the snapshot."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- Request Header -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Request Header" styleClass="showcase-card-title"/>
+        <VBox fx:id="requestHeaderContainer" spacing="12"/>
+    </VBox>
+
+    <!-- Options -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Options: reveal, columns, key rules, editable" styleClass="showcase-card-title"/>
+        <Label text="Close a lock to mask the value; without 'reveal allowed', opening it clears the value. With duplicates forbidden, active rows sharing a key are marked; an active row with a value but no key is always marked."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <VBox fx:id="optionsContainer" spacing="12"/>
+    </VBox>
+
+    <!-- Without title -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Without title, with placeholders" styleClass="showcase-card-title"/>
+        <VBox fx:id="untitledContainer"/>
+    </VBox>
+
+</VBox>

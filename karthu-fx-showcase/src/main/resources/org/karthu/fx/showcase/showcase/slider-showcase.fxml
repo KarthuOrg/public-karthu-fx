@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Orientation?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.SliderShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Slider" styleClass="showcase-page-title"/>
+    <Label text="Sliders allow users to select a value from a continuous or discrete range."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- Horizontal -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Horizontal" styleClass="showcase-card-title"/>
+        <HBox spacing="16" alignment="CENTER_LEFT">
+            <VBox>
+                <Label text="Default"/>
+                <Slider min="0" max="100" value="50" prefWidth="200"/>
+            </VBox>
+            <VBox>
+                <Label text="With Ticks"/>
+                <Slider min="0" max="100" value="30" showTickLabels="true" showTickMarks="true"
+                        majorTickUnit="25" minorTickCount="4" prefWidth="200"/>
+            </VBox>
+            <VBox>
+                <Label text="Disabled"/>
+                <Slider min="0" max="100" value="70" disable="true" prefWidth="200"/>
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <!-- Vertical -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Vertical" styleClass="showcase-card-title"/>
+        <HBox spacing="24" alignment="BOTTOM_LEFT">
+            <VBox>
+                <Label text="Default"/>
+                <Slider min="0" max="100" value="50" orientation="VERTICAL" prefHeight="100"/>
+            </VBox>
+            <VBox>
+                <Label text="With Ticks"/>
+                <Slider min="0" max="100" value="30" orientation="VERTICAL" showTickLabels="true"
+                        showTickMarks="true" majorTickUnit="25" minorTickCount="4" prefHeight="100"/>
+            </VBox>
+            <VBox>
+                <Label text="Disabled"/>
+                <Slider min="0" max="100" value="70" orientation="VERTICAL" disable="true" prefHeight="100"/>
+            </VBox>
+        </HBox>
+    </VBox>
+
+</VBox>

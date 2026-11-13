@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- The number input's page in the group Form inputs. Each card is filled by its own method of the controller; the
+     spinner's states, comparison row and switches are added there in methods of their own. -->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.NumberInputShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Number Input" styleClass="showcase-page-title"/>
+    <Label text="NumberInput, a single-line frame (FieldFrame) on the form collection's shell (see the Overview) for a number, right-aligned. What you type stays as typed, also when it is no number: the application reads the text with toNumber(), which is empty for no number, and reports it. A number is written as it is stored: a dot as the decimal separator, no grouping, an exponent as in 1.0E21. Whole numbers take only a sign and digits. Minimum, maximum and step never limit typing. With its arrows on, the field is a spinner: the stacked arrows and Up and Down step the number within the range, a held arrow repeats, the mouse wheel never steps. A {} icon (or Ctrl+Space) binds the field to a variable, shown as a chip. On this page the showcase plays the application: it reports a text that is no number as an error and a number outside the range as a warning."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- States side by side -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="States" styleClass="showcase-card-title"/>
+        <Label text="Each field sits in a form row: its label above, an asterisk while the field is required, and the application's messages under the field in their colour. An error colours the field's border red, a warning amber. A disabled field is greyed out. A read-only field shows its number to select and copy, without {}; bound, its chip has no ×. The spinners (range 0 to 100) show their arrows; bound they are dimmed, read-only they are gone."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <GridPane fx:id="statesGrid" hgap="12" vgap="8"/>
+    </VBox>
+
+    <!-- Beside other fields -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Beside other fields" styleClass="showcase-card-title"/>
+        <Label text="A number input has the size and colours of a text field and of the path input: all three are exactly as high, also read-only and disabled, and so is the spinner with its arrows. Only the number is right-aligned."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <GridPane fx:id="comparisonGrid" hgap="12" vgap="8"/>
+    </VBox>
+
+    <!-- Try it out -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Try it out" styleClass="showcase-card-title"/>
+        <Label text="Type a number, or anything else: the text stays as typed, and the showcase reports what is no number. Whole numbers refuses 12.5 and 1e3. Range 0 to 100 sets minimum and maximum (and a prompt text): a number outside stays as typed, with a warning. Bindable offers three sample variables: bind with the {} icon or Ctrl+Space, unbind with the chip's ×, Backspace or Remove binding, and the number comes back. Arrows makes the field a spinner: click or hold an arrow, or press Up and Down in the field; Step 0.25 steps by a quarter."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <FlowPane fx:id="tryOutSwitches" hgap="16" vgap="8"/>
+        <VBox fx:id="tryOutContainer" spacing="8"/>
+    </VBox>
+
+</VBox>

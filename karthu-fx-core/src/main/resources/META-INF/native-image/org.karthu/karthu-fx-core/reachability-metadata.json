@@ -1,0 +1,15 @@
+{
+  "reflection": [
+    {
+      "type": "org.karthu.fx.theme.skin.UncachedScrollPaneSkin",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": [
+            "javafx.scene.control.ScrollPane"
+          ]
+        }
+      ]
+    }
+  ]
+}

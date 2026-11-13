@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.CheckboxShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Checkbox" styleClass="showcase-page-title"/>
+    <Label text="Checkboxes allow users to select one or more items from a set."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- States -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="States" styleClass="showcase-card-title"/>
+        <HBox spacing="12" alignment="CENTER_LEFT">
+            <CheckBox text="Unchecked"/>
+            <CheckBox text="Checked" selected="true"/>
+            <CheckBox text="Indeterminate" indeterminate="true" allowIndeterminate="true"/>
+            <CheckBox text="Disabled" disable="true"/>
+            <CheckBox text="Disabled Checked" selected="true" disable="true"/>
+        </HBox>
+    </VBox>
+
+</VBox>

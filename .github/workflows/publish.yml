@@ -1,0 +1,89 @@
+# Publishes karthu-fx to Maven Central and drafts its release on GitHub (docs/releasing.md).
+#
+# Runs on a release tag vX.Y.Z (or vX.Y.Z-RCn) that names the reactor version. It uploads the parent POM
+# karthu-fx and karthu-fx-core, with its -sources and -javadoc jars, signed, as one deployment to the
+# Central Portal. karthu-fx-showcase is built, not published. Nothing is uploaded unless the whole reactor
+# builds and its tests pass. The deployment is not released by itself (autoPublish off): it waits in the
+# portal until someone checks it and presses "Publish".
+#
+# The release on GitHub takes its text from CHANGELOG.md, the section of the tag's version; a tag whose
+# version has no section there is refused before anything is built. The release is made as a draft, as the
+# deployment waits in the portal: someone publishes it once the version is on Maven Central.
+#
+# Secrets of the repository:
+#   CENTRAL_USERNAME, CENTRAL_TOKEN  the user token of the Central Portal (Account, Generate User Token)
+#   GPG_PRIVATE_KEY                  the armored private signing key (gpg --armor --export-secret-keys)
+#   GPG_PASSPHRASE                   its passphrase
+# The release on GitHub needs none: it uses the token of the run.
+name: Publish karthu-fx
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  # Write: the run drafts the release on GitHub.
+  contents: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Set up Temurin 25
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+          # Writes ~/.m2/settings.xml with the server "central" of the central-publishing-maven-plugin,
+          # its user and password read from the two environment variables named here.
+          server-id: central
+          server-username: CENTRAL_USERNAME
+          server-password: CENTRAL_TOKEN
+
+      - name: Check that the tag names the reactor version
+        run: |
+          version=$(mvn -B -q -N help:evaluate -Dexpression=project.version -DforceStdout)
+          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME does not name the reactor version $version"
+            exit 1
+          fi
+
+      - name: Read the version's section of the changelog
+        # The lines between the heading "## [X.Y.Z]" (a date may follow it) and the next "## [" heading.
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          awk -v heading="## [$version]" '
+            /^## \[/ { inside = index($0, heading) == 1; next }
+            inside { print }
+          ' CHANGELOG.md > "$RUNNER_TEMP/release-notes.md"
+          if ! grep -q '[^[:space:]]' "$RUNNER_TEMP/release-notes.md"; then
+            echo "::error::CHANGELOG.md has no section \"## [$version]\", or the section is empty"
+            exit 1
+          fi
+
+      - name: Build, test, sign and upload
+        # xvfb: the tests start the JavaFX toolkit. The profile "release" signs with the key from
+        # MAVEN_GPG_KEY (BouncyCastle signer, no gpg agent needed).
+        run: xvfb-run -a mvn -B -Prelease deploy
+        env:
+          CENTRAL_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
+          CENTRAL_TOKEN: ${{ secrets.CENTRAL_TOKEN }}
+          MAVEN_GPG_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Draft the release on GitHub
+        # A release candidate (X.Y.Z-RCn) is marked as a pre-release.
+        run: |
+          prerelease=""
+          case "$GITHUB_REF_NAME" in
+            *-RC*) prerelease="--prerelease" ;;
+          esac
+          gh release create "$GITHUB_REF_NAME" --draft $prerelease --verify-tag \
+            --title "karthu-fx ${GITHUB_REF_NAME#v}" --notes-file "$RUNNER_TEMP/release-notes.md"
+        env:
+          GH_TOKEN: ${{ github.token }}

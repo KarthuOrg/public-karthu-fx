@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- The overview of the group Form inputs: every input type in a row, the states in columns. Each type adds its row
+     with one call in the controller's buildRows(). -->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.FormInputsOverviewShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Form Inputs" styleClass="showcase-page-title"/>
+    <Label text="The form collection (package org.karthu.fx.form). Every input implements FormInput: its value, its binding to a variable, read-only and its state. Every input type sits in one shell (FieldShell): one border around the JavaFX control it wraps, its small icons and its own controls, with the {} icon last, the chip in place of the value while bound, and the error, warning, read-only and disabled looks. Single-line text inputs are built on the frame (FieldFrame), the shell around one text field, exactly as high as a text field. A form row (FormField) shows the label above any input and the messages under it. The pages that follow show each type with every state and a field to try out."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- Every type by state -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="All inputs" styleClass="showcase-card-title"/>
+        <Label text="One row per input type, one column per state. Every field is bindable, so the {} icon shows in each column but the read-only one. The Focused column shows the focus border without the focus, since only one field of a page can have it: click a field in another column to see the real one. The last row, the search input, is no form input: it sits in the same shell, so it shows the same states, but offers no binding, and its Bound cell stays empty."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <GridPane fx:id="overviewGrid" hgap="12" vgap="8"/>
+    </VBox>
+
+</VBox>

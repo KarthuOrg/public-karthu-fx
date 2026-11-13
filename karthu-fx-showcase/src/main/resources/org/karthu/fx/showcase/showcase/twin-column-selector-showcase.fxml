@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.TwinColumnSelectorShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Twin Column Selector" styleClass="showcase-page-title"/>
+    <Label text="A dual-list picker for choosing a subset from a set: filter each list, move the selection with the chevron buttons (double-chevrons move all currently filtered items), double-click or press Enter to move a row. Header counts follow the full lists, not the filtered views."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- Basic -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Basic" styleClass="showcase-card-title"/>
+        <VBox fx:id="basicContainer" prefHeight="280"/>
+    </VBox>
+
+    <!-- Reorderable -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Reorderable with custom headers" styleClass="showcase-card-title"/>
+        <VBox fx:id="reorderableContainer" prefHeight="280"/>
+    </VBox>
+
+</VBox>

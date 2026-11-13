@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TreeView?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.TreeViewShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="TreeView" styleClass="showcase-page-title"/>
+    <Label text="Tree views display hierarchical data in an expandable tree structure."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- File Browser -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="File Browser" styleClass="showcase-card-title"/>
+        <TreeView fx:id="treeView" prefHeight="250" prefWidth="300"/>
+    </VBox>
+
+</VBox>

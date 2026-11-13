@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.ScrollPaneShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="ScrollPane" styleClass="showcase-page-title"/>
+    <Label text="Scroll panes provide a scrollable view of content that exceeds the available display area."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- Vertical scroll -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Vertical Scrolling" styleClass="showcase-card-title"/>
+        <ScrollPane prefHeight="180" maxWidth="400" fitToWidth="true">
+            <VBox fx:id="verticalContent" spacing="8">
+                <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+            </VBox>
+        </ScrollPane>
+    </VBox>
+
+    <!-- Horizontal scroll -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Horizontal Scrolling" styleClass="showcase-card-title"/>
+        <ScrollPane prefHeight="80" maxWidth="400" fitToHeight="true"
+                    hbarPolicy="ALWAYS" vbarPolicy="NEVER">
+            <VBox fx:id="horizontalContent">
+                <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+            </VBox>
+        </ScrollPane>
+    </VBox>
+
+    <!-- Both directions -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Both Directions" styleClass="showcase-card-title"/>
+        <ScrollPane prefHeight="200" maxWidth="400">
+            <VBox fx:id="bothContent" spacing="8">
+                <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+            </VBox>
+        </ScrollPane>
+    </VBox>
+
+    <!-- Fit to width -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Fit to Width" styleClass="showcase-card-title"/>
+        <ScrollPane prefHeight="150" maxWidth="400" fitToWidth="true">
+            <VBox spacing="8">
+                <padding><Insets top="12" right="12" bottom="12" left="12"/></padding>
+                <Label text="This content stretches to fill the full width of the scroll pane. The fitToWidth property ensures the content node is resized to match the viewport width, which is useful for text-heavy layouts."
+                       wrapText="true"/>
+                <Label text="When fitToWidth is enabled, horizontal scrolling is unnecessary because the content automatically adjusts. Only vertical scrolling remains when the content exceeds the viewport height."
+                       wrapText="true"/>
+                <Label text="This is particularly useful for forms, settings panels, and document views where the content should flow naturally within the available width."
+                       wrapText="true"/>
+            </VBox>
+        </ScrollPane>
+    </VBox>
+
+</VBox>

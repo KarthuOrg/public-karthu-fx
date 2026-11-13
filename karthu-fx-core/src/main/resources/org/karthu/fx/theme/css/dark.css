@@ -1,0 +1,125 @@
+/*
+ * Dark theme - Nebula Dark palette (purple/blue-tinted, compact IDE)
+ * Surfaces lifted +50% brightness; accents/status kept.
+ */
+
+.root {
+    /* Background colors */
+    -fx-background-color: #1b1d30;
+    -fx-background-color-selected: rgba(18, 19, 32, 0.78);
+    -fx-canvas-color: #1b1d30;
+    -fx-surface-color: #24273c;
+    -fx-readonly-bg: #1e202f;
+
+    /* Text colors */
+    -fx-text-color: #d6d9e6;
+    -fx-text-secondary-color: #8a90a8;
+
+    /* Accent colors (indigo) */
+    -fx-accent-color: #7b8cff;
+    -fx-accent-hover-color: #8f9dff;
+    -fx-accent-pressed-color: #6675ff;
+    -fx-accent-text-color: #ffffff;
+    /* An accent tint behind accent text: the binding chip and the bound {} icon of the form fields */
+    -fx-accent-tint-color: rgba(123, 140, 255, 0.16);
+
+    /* Border colors */
+    -fx-control-border: #42486e;
+
+    /* Button colors */
+    -fx-button-color: #2d334d;
+    -fx-button-hover-color: #394160;
+    -fx-button-pressed-color: #475078;
+
+    /* Selection colors (blue-tint) */
+    -fx-selection-color: #33488a;
+    -fx-selection-hover-color: #3f57a4;
+    -fx-selection-text-color: #eef1fb;
+
+    /* Table colors */
+    -fx-table-row-odd: #2a2d41;
+
+    /* Hover color (subtle blue tint, not white) */
+    -fx-hover-color: rgba(139, 152, 255, 0.09);
+
+    /* Scrollbar colors */
+    -fx-scrollbar-color: #4a5078;
+    -fx-scrollbar-hover-color: #6871ae;
+    -fx-scrollbar-track-color: #1b1d30;
+
+    /* Checkbox colors */
+    -fx-checkbox-bg: #1b1d2d;
+    -fx-checkbox-border: #575f90;
+    -fx-checkbox-border-hover: #6f78b0;
+    -fx-checkbox-mark: #ffffff;
+
+    /* Toggle switch colors */
+    -fx-switch-track-off: #42486e;
+    -fx-switch-track-on: #6675ff;
+    -fx-switch-thumb-off: #8a90a8;
+    -fx-switch-thumb-on: #ffffff;
+
+    /* Semantic status colors */
+    -fx-status-normal: #4cd38a;
+    -fx-status-running: #3fd0a0;
+    -fx-status-paused: #e0a84c;
+    -fx-status-blocked: #c88bff;
+    -fx-status-error: #e56a86;
+    -fx-status-info: #5d9bff;
+    -fx-status-idle: #6b7192;
+    -fx-status-button-text-color: #1b1d2d;
+
+    /* Warning colors */
+    -fx-warning-bg: #362f24;
+    -fx-warning-text: #e0a84c;
+
+    /* Markdown view colors: code, and the odd rows of tables (the surface: no zebra stripes) */
+    -fx-code-text-color: #8fd6c8;
+    -fx-code-background-color: #1d1f33;
+    -fx-markdown-table-row-odd: -fx-surface-color;
+
+    /* Markdown view: the colours of code blocks coloured by their language, one per category
+     * (CodeCategory). The nine base categories have colours of their own, each readable on
+     * -fx-code-background-color (contrast 5.1:1 or more). The fourteen fine ones refer to the
+     * variable they fall back to, which JavaFX resolves at the coloured node, so a base colour
+     * set on one view also changes the fine ones there that still fall back to it. */
+    -fx-code-comment-color: #8a90a8;
+    -fx-code-keyword-color: #c88bff;
+    -fx-code-string-color: #e0a84c;
+    -fx-code-number-color: #ff9e64;
+    -fx-code-type-color: #4cd38a;
+    -fx-code-function-color: #5d9bff;
+    -fx-code-variable-color: #ff8fa3;
+    -fx-code-property-color: #7b8cff;
+    -fx-code-tag-color: #ff8fa3;
+    -fx-code-doc-color: -fx-code-comment-color;
+    -fx-code-annotation-color: -fx-code-keyword-color;
+    -fx-code-literal-color: -fx-code-number-color;
+    -fx-code-constant-color: -fx-code-literal-color;
+    -fx-code-escape-color: -fx-code-string-color;
+    -fx-code-attribute-color: -fx-code-number-color;
+    -fx-code-operator-color: -fx-code-text-color;
+    -fx-code-punctuation-color: -fx-code-text-color;
+    -fx-code-heading-color: -fx-code-function-color;
+    -fx-code-link-color: -fx-code-property-color;
+    -fx-code-code-color: -fx-code-string-color;
+    -fx-code-list-color: -fx-code-keyword-color;
+    -fx-code-quote-color: -fx-code-comment-color;
+    -fx-code-emphasis-color: -fx-code-text-color;
+
+    /* Base color for JavaFX default styling */
+    -fx-base: #24273c;
+    -fx-control-inner-background: #1b1d30;
+    -fx-focus-color: #7b8cff;
+    -fx-faint-focus-color: rgba(123, 140, 255, 0.22);
+    -fx-mark-color: #d6d9e6;
+    -fx-mark-highlight-color: #d6d9e6;
+    -fx-selection-bar: #33488a;
+    -fx-selection-bar-non-focused: #394160;
+}
+
+/* Production Badge - dark override */
+.detail-prod-badge {
+    -fx-background-color: #362f24;
+    -fx-text-fill: #e0a84c;
+}

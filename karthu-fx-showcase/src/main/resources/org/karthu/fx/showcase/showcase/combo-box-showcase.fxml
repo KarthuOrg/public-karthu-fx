@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.ComboBoxShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="ComboBox" styleClass="showcase-page-title"/>
+    <Label text="Combo boxes allow users to select from a dropdown list of options."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- States -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="States" styleClass="showcase-card-title"/>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Normal:"/>
+            <ComboBox fx:id="normalCombo" prefWidth="150"/>
+            <Label text="Unselected:"/>
+            <ComboBox fx:id="unselectedCombo" prefWidth="150"/>
+            <Label text="Editable:"/>
+            <ComboBox fx:id="editableCombo" prefWidth="150"/>
+            <Label text="Disabled:"/>
+            <ComboBox fx:id="disabledCombo" prefWidth="150" disable="true"/>
+        </HBox>
+    </VBox>
+
+</VBox>

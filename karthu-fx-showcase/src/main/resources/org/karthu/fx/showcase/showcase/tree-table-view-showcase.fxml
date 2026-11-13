@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TreeTableColumn?>
+<?import javafx.scene.control.TreeTableView?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.TreeTableViewShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="TreeTableView" styleClass="showcase-page-title"/>
+    <Label text="Tree table views combine hierarchical tree structure with tabular columns for displaying structured data."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- File browser -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="File Browser" styleClass="showcase-card-title"/>
+        <TreeTableView fx:id="treeTable" minHeight="350" maxWidth="500" showRoot="false">
+            <columns>
+                <TreeTableColumn fx:id="nameCol" text="Name" prefWidth="220"/>
+                <TreeTableColumn fx:id="sizeCol" text="Size" prefWidth="100"/>
+                <TreeTableColumn fx:id="typeCol" text="Type" prefWidth="120"/>
+            </columns>
+        </TreeTableView>
+    </VBox>
+
+</VBox>

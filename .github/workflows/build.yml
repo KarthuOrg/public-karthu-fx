@@ -1,0 +1,32 @@
+# Builds and tests the whole reactor on every push to main and on every pull request.
+#
+# The javadoc of karthu-fx-core runs in package with every doclint group and fails on any warning, so
+# verify also catches a gap in the JavaDoc. Nothing is signed or published here: that is publish.yml.
+name: Build karthu-fx
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v7
+
+      - name: Set up Temurin 25
+        uses: actions/setup-java@v6
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Build and test
+        # xvfb: the tests start the JavaFX toolkit.
+        run: xvfb-run -a mvn -B verify

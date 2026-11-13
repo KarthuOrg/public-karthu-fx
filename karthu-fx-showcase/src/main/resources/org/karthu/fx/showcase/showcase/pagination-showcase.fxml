@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.lang.String?>
+<?import javafx.collections.FXCollections?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Pagination?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.PaginationShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Pagination" styleClass="showcase-page-title"/>
+    <Label text="Pagination controls allow navigation through paged content."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- Table pagination bar, as used under a data table -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Table Pagination Bar" styleClass="showcase-card-title"/>
+        <HBox spacing="16" alignment="CENTER_LEFT">
+            <Pagination pageCount="14" currentPageIndex="0" maxPageIndicatorCount="3"
+                        maxHeight="48" prefHeight="48"/>
+            <Separator orientation="VERTICAL"/>
+            <Label text="1-25 of 342"
+                   style="-fx-font-family: 'Monospaced'; -fx-text-fill: -fx-text-secondary-color;"/>
+            <Separator orientation="VERTICAL"/>
+            <Label text="Rows per page" style="-fx-text-fill: -fx-text-secondary-color;"/>
+            <ComboBox value="25">
+                <items>
+                    <FXCollections fx:factory="observableArrayList">
+                        <String fx:value="10"/>
+                        <String fx:value="25"/>
+                        <String fx:value="50"/>
+                        <String fx:value="100"/>
+                    </FXCollections>
+                </items>
+            </ComboBox>
+        </HBox>
+    </VBox>
+
+    <!-- Page Navigation -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Page Navigation" styleClass="showcase-card-title"/>
+        <HBox spacing="16" alignment="CENTER_LEFT">
+            <VBox>
+                <Label text="10 Pages"/>
+                <Pagination pageCount="10" currentPageIndex="0" maxPageIndicatorCount="5"/>
+            </VBox>
+            <VBox>
+                <Label text="50 Pages"/>
+                <Pagination pageCount="50" currentPageIndex="0" maxPageIndicatorCount="7"/>
+            </VBox>
+            <VBox>
+                <Label text="Disabled"/>
+                <Pagination pageCount="10" currentPageIndex="3" maxPageIndicatorCount="5" disable="true"/>
+            </VBox>
+        </HBox>
+    </VBox>
+
+</VBox>

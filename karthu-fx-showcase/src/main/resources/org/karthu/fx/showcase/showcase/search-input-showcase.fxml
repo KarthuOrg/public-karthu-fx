@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- The search input's page in the group Form inputs. Each card is filled by its own method of the controller. -->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.SearchInputShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Search Input" styleClass="showcase-page-title"/>
+    <Label text="SearchInput, a search field in the look of the form fields, on the single-line frame of the form collection's shell (see the Overview), but no form input: no value in the form sense, no label row, no messages, no binding. A magnifier on the left, the placeholder Search, and a clear button (×) on the right as soon as there is text; Escape empties the field. An entry matches when every word typed occurs in one of its texts, ignoring case and accents. With one call the field filters a list as the user types, counts the matches in the field and hands out highlight nodes that mark them in the application's own rows. SuggestionInput adds a popup of suggestions: the application's own objects, the typed parts in bold, chosen with the arrows and Enter or a click, the chosen entry as an event and a property. An application may draw its own rows, such as the person cards below, and turn on a footer."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- States -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="States" styleClass="showcase-card-title"/>
+        <Label text="Three states, then read-only: empty with the placeholder; with text and the focus border, the clear button at the right end; disabled, greyed out with the magnifier; read-only, the text selectable, without the clear button."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <GridPane fx:id="statesGrid" hgap="12" vgap="8"/>
+    </VBox>
+
+    <!-- List filter -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Filtering a list" styleClass="showcase-card-title"/>
+        <Label text="A search field over a list of workflows, connected with one call: the list keeps the workflows that match as you type, the counter in the field says how many of how many, in the warning colour when none matches, and each row marks where the search was found, in bold in the accent colour. Escape or the clear button lifts the filter."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <VBox fx:id="listFilterContainer" spacing="8"/>
+    </VBox>
+
+    <!-- Suggestions -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Suggestions" styleClass="showcase-card-title"/>
+        <Label text="Type into a field (an, for example): a popup of suggestions opens under it, as wide as the field, the first one preselected. On the left one line per name, the typed parts bold, a name too long for the row ending in an ellipsis. On the right the showcase's person cards, drawn by a cell factory of this page from the public API: an avatar with the initials, the name bold with its marks underlined, role and department, address and e-mail, each line marking the search, and a footer with the count and the keys. No row is ever wider than the popup: a card wraps its long lines."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <HBox fx:id="suggestionsRow" spacing="24"/>
+    </VBox>
+
+    <!-- Try it out -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Try it out" styleClass="showcase-card-title"/>
+        <Label text="A suggestion input over the names, which also filters them, so that its counter shows. The lines under it read the field as an application would: its text, its counter as it shows it, the chosen entry (null again as soon as you edit the text) and the last choice its handler heard."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <FlowPane fx:id="tryOutSwitches" hgap="16" vgap="8"/>
+        <VBox fx:id="tryOutContainer" spacing="8"/>
+    </VBox>
+
+</VBox>

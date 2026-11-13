@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Accordion?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TitledPane?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.AccordionShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Accordion" styleClass="showcase-page-title"/>
+    <Label text="Accordions organize content into collapsible sections."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- Accordion (one at a time) -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Accordion (one at a time)" styleClass="showcase-card-title"/>
+        <Accordion fx:id="accordion" prefWidth="350">
+            <panes>
+                <TitledPane fx:id="pane1" text="Section 1">
+                    <Label text="Content of section 1.&#10;This is some example text."/>
+                </TitledPane>
+                <TitledPane text="Section 2">
+                    <VBox spacing="4">
+                        <Label text="Content of section 2."/>
+                        <Button text="A Button"/>
+                        <CheckBox text="A Checkbox"/>
+                    </VBox>
+                </TitledPane>
+                <TitledPane text="Section 3 (Disabled)" disable="true">
+                    <Label text="This section is disabled."/>
+                </TitledPane>
+                <TitledPane text="Section 4">
+                    <Label text="Content of section 4.&#10;More example content here."/>
+                </TitledPane>
+            </panes>
+        </Accordion>
+    </VBox>
+
+    <!-- Independent (multi-open) -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Independent (multi-open)" styleClass="showcase-card-title"/>
+        <VBox spacing="0">
+            <TitledPane text="Independent Pane 1" expanded="true" prefWidth="350">
+                <Label text="This pane can be open&#10;while others are also open."/>
+            </TitledPane>
+            <TitledPane text="Independent Pane 2" expanded="true" prefWidth="350">
+                <Label text="Multiple panes can be&#10;expanded simultaneously."/>
+            </TitledPane>
+            <TitledPane text="Independent Pane 3" expanded="false" prefWidth="350">
+                <Label text="Click to expand/collapse&#10;independently from others."/>
+            </TitledPane>
+        </VBox>
+    </VBox>
+
+</VBox>

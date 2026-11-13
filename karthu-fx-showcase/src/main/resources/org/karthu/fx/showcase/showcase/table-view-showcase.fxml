@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.TableViewShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="TableView" styleClass="showcase-page-title"/>
+    <Label text="Tables display sets of data organized in rows and columns."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- Sample Data -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Sample Data" styleClass="showcase-card-title"/>
+        <CheckBox fx:id="cellSelectionCheck" text="Cell selection (Ctrl+click, Shift+click)"/>
+        <TableView fx:id="table" prefHeight="400" prefWidth="500">
+            <columns>
+                <TableColumn fx:id="nameCol" text="Name" prefWidth="150"/>
+                <TableColumn fx:id="emailCol" text="Email" prefWidth="200"/>
+                <TableColumn fx:id="statusCol" text="State" prefWidth="100"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+</VBox>

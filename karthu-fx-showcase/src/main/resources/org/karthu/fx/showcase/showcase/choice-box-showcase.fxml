@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.ChoiceBoxShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="ChoiceBox" styleClass="showcase-page-title"/>
+    <Label text="Choice boxes provide a compact dropdown for selecting a single value."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- States -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="States" styleClass="showcase-card-title"/>
+        <HBox spacing="8" alignment="CENTER_LEFT">
+            <Label text="Normal:"/>
+            <ChoiceBox fx:id="normalChoice" prefWidth="150"/>
+            <Label text="Unselected:"/>
+            <ChoiceBox fx:id="unselectedChoice" prefWidth="150"/>
+            <Label text="Disabled:"/>
+            <ChoiceBox fx:id="disabledChoice" prefWidth="150" disable="true"/>
+        </HBox>
+    </VBox>
+
+</VBox>

@@ -1,0 +1,280 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
+         child.project.url.inherit.append.path="false">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.karthu</groupId>
+    <artifactId>karthu-fx</artifactId>
+    <version>1.1.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Karthu FX</name>
+    <description>Standalone JavaFX component library: theming, settings, dialogs, custom controls</description>
+
+    <!-- What Maven Central requires of every published POM. Each module names itself, since
+         Maven does not inherit <name>; the URLs stay those of the repository in every module. -->
+    <url>https://github.com/KarthuOrg/public-karthu-fx</url>
+    <licenses>
+        <license>
+            <name>MIT-0</name>
+            <url>https://spdx.org/licenses/MIT-0.html</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>The karthu-fx authors</name>
+            <url>https://github.com/KarthuOrg</url>
+        </developer>
+    </developers>
+    <scm child.scm.connection.inherit.append.path="false" child.scm.url.inherit.append.path="false">
+        <url>https://github.com/KarthuOrg/public-karthu-fx</url>
+        <connection>scm:git:https://github.com/KarthuOrg/public-karthu-fx.git</connection>
+    </scm>
+
+    <modules>
+        <module>karthu-fx-core</module>
+        <module>karthu-fx-showcase</module>
+    </modules>
+
+    <properties>
+        <java.version>25</java.version>
+        <!-- Encoding -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <!-- Plugin versions -->
+        <maven.clean.plugin.version>3.5.0</maven.clean.plugin.version>
+        <maven.compiler.plugin.version>3.16.0</maven.compiler.plugin.version>
+        <central.publishing.plugin.version>0.12.0</central.publishing.plugin.version>
+        <maven.gpg.plugin.version>3.2.8</maven.gpg.plugin.version>
+        <maven.source.plugin.version>3.4.0</maven.source.plugin.version>
+        <maven.javadoc.plugin.version>3.12.0</maven.javadoc.plugin.version>
+        <!-- Dependency versions -->
+        <javafx.version>25.0.5</javafx.version>
+        <javafx.maven.plugin.version>0.0.8</javafx.maven.plugin.version>
+        <ikonli.version>12.4.0</ikonli.version>
+        <slf4j.version>2.0.20</slf4j.version>
+        <log4j.version>2.26.1</log4j.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.junit.jupiter</groupId>
+                <artifactId>junit-jupiter</artifactId>
+                <version>6.1.3</version>
+                <scope>test</scope>
+            </dependency>
+            <!-- JavaFX -->
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-controls</artifactId>
+                <version>${javafx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-fxml</artifactId>
+                <version>${javafx.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-graphics</artifactId>
+                <version>${javafx.version}</version>
+            </dependency>
+            <!-- Ikonli -->
+            <dependency>
+                <groupId>org.kordamp.ikonli</groupId>
+                <artifactId>ikonli-javafx</artifactId>
+                <version>${ikonli.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.kordamp.ikonli</groupId>
+                <artifactId>ikonli-bootstrapicons-pack</artifactId>
+                <version>${ikonli.version}</version>
+            </dependency>
+            <!-- Logging -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j2-impl</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-api</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-clean-plugin</artifactId>
+                    <version>${maven.clean.plugin.version}</version>
+                    <executions>
+                        <!-- The javadoc plugin skips a run whose command line and file list it has
+                             seen before (its stale data); in module mode an edited source changes
+                             neither, so a JavaDoc broken since the last run would pass unchecked
+                             without "clean". This execution deletes the stale data. It is bound to
+                             no phase here, since the clean plugin runs in every module;
+                             karthu-fx-core binds it to prepare-package, so its javadoc always runs. -->
+                        <execution>
+                            <id>javadoc-stale-data</id>
+                            <phase>none</phase>
+                            <goals>
+                                <goal>clean</goal>
+                            </goals>
+                            <configuration>
+                                <excludeDefaultDirectories>true</excludeDefaultDirectories>
+                                <filesets>
+                                    <fileset>
+                                        <directory>${project.build.directory}</directory>
+                                        <includes>
+                                            <include>maven-javadoc-plugin-stale-data.txt</include>
+                                        </includes>
+                                    </fileset>
+                                </filesets>
+                            </configuration>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <version>${maven.compiler.plugin.version}</version>
+                    <configuration>
+                        <release>${java.version}</release>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>3.6.1</version>
+                    <configuration>
+                        <systemPropertyVariables>
+                            <!-- Tests show no window: the Markdown view's full size image window refuses
+                                 to open while this is true, so a test that forgot the view's window switch
+                                 fails loudly instead of showing one. -->
+                            <karthu.fx.test.noWindows>true</karthu.fx.test.noWindows>
+                        </systemPropertyVariables>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.openjfx</groupId>
+                    <artifactId>javafx-maven-plugin</artifactId>
+                    <version>${javafx.maven.plugin.version}</version>
+                </plugin>
+                <!-- The published karthu-fx-core also builds and publishes a -sources and a -javadoc
+                     jar, as Maven Central requires. The executions are bound here, in package, and run
+                     only in the modules that name the two plugins; "clean test" never reaches package.
+                     No profile: a release build cannot forget them. -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-source-plugin</artifactId>
+                    <version>${maven.source.plugin.version}</version>
+                    <executions>
+                        <execution>
+                            <id>attach-sources</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>jar-no-fork</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>${maven.javadoc.plugin.version}</version>
+                    <configuration>
+                        <!-- Every doclint group, missing comments included (JavaDoc on every
+                             exported type and member: CLAUDE.md), and a warning fails the build:
+                             a finding is fixed in the JavaDoc, never silenced. -->
+                        <doclint>all</doclint>
+                        <failOnWarnings>true</failOnWarnings>
+                        <quiet>true</quiet>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <id>attach-javadocs</id>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+            </plugin>
+            <!-- deploy uploads to the Central Portal (server "central", docs/releasing.md): the parent
+                 POM and karthu-fx-core as one deployment, after every module of the run has built and
+                 passed its tests. It waits there until someone presses Publish (autoPublish off). The
+                 showcase is never published. -->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>${central.publishing.plugin.version}</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <autoPublish>false</autoPublish>
+                    <excludeArtifacts>
+                        <artifact>karthu-fx-showcase</artifact>
+                    </excludeArtifacts>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <!-- Signs every artifact for Maven Central. Only the publish workflow turns it on, so a local
+             build needs no key. The BouncyCastle signer reads the armored key from MAVEN_GPG_KEY and
+             its passphrase from MAVEN_GPG_PASSPHRASE, no gpg installation or agent needed. -->
+        <profile>
+            <id>release</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-gpg-plugin</artifactId>
+                        <version>${maven.gpg.plugin.version}</version>
+                        <configuration>
+                            <signer>bc</signer>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>sign-artifacts</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>sign</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
+
+</project>

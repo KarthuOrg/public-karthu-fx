@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.TextAreaShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Text Area" styleClass="showcase-page-title"/>
+    <Label text="Text areas let users enter multiline text."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- States -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="States" styleClass="showcase-card-title"/>
+        <HBox spacing="16" alignment="CENTER_LEFT">
+            <VBox>
+                <Label text="Normal"/>
+                <TextArea text="This is a text area.&#10;It supports multiple lines." prefWidth="200" prefHeight="200"/>
+            </VBox>
+            <VBox>
+                <Label text="Placeholder"/>
+                <TextArea promptText="Enter text here..." prefWidth="200" prefHeight="200"/>
+            </VBox>
+            <VBox>
+                <Label text="Disabled"/>
+                <TextArea text="Disabled text area" disable="true" prefWidth="200" prefHeight="200"/>
+            </VBox>
+            <VBox>
+                <Label text="Read-only"/>
+                <TextArea text="Read-only text area" editable="false" prefWidth="200" prefHeight="200"/>
+            </VBox>
+        </HBox>
+    </VBox>
+
+</VBox>

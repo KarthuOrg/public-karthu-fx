@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.IconsShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Icons (Bootstrap)" styleClass="showcase-page-title"/>
+    <Label text="Icon font glyphs from the Bootstrap Icons set via Ikonli."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- Common -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Common" styleClass="showcase-card-title"/>
+        <HBox fx:id="commonIconsContainer" spacing="8" alignment="CENTER_LEFT"/>
+    </VBox>
+
+    <!-- Actions -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="Actions" styleClass="showcase-card-title"/>
+        <HBox fx:id="actionIconsContainer" spacing="8" alignment="CENTER_LEFT"/>
+    </VBox>
+
+</VBox>

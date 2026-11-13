@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.HyperlinkShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Hyperlink" styleClass="showcase-page-title"/>
+    <Label text="Hyperlinks are clickable text elements that trigger an action, typically navigation."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- States -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="States" styleClass="showcase-card-title"/>
+        <HBox spacing="16" alignment="CENTER_LEFT">
+            <VBox spacing="4">
+                <Label text="Default"/>
+                <Hyperlink text="Click me"/>
+            </VBox>
+            <VBox spacing="4">
+                <Label text="Visited"/>
+                <Hyperlink fx:id="visitedLink" text="Already visited"/>
+            </VBox>
+            <VBox spacing="4">
+                <Label text="Disabled"/>
+                <Hyperlink text="Not available" disable="true"/>
+            </VBox>
+        </HBox>
+    </VBox>
+
+    <!-- With icons -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="With Icons" styleClass="showcase-card-title"/>
+        <HBox fx:id="iconLinksContainer" spacing="16" alignment="CENTER_LEFT"/>
+    </VBox>
+
+    <!-- In context -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="In Context" styleClass="showcase-card-title"/>
+        <HBox spacing="0" alignment="CENTER_LEFT">
+            <Label text="Read our "/>
+            <Hyperlink text="documentation"/>
+            <Label text=" for more details."/>
+        </HBox>
+        <HBox spacing="0" alignment="CENTER_LEFT">
+            <Label text="Visit the "/>
+            <Hyperlink text="project homepage"/>
+            <Label text=" or contact "/>
+            <Hyperlink text="support"/>
+            <Label text="."/>
+        </HBox>
+    </VBox>
+
+</VBox>
