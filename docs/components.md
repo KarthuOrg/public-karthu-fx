@@ -47,7 +47,12 @@ stores nothing: an application reads the values from the entries, or all at once
 ## Markdown view
 
 `MarkdownView` (package `org.karthu.fx.markdown`, from 1.1.0) shows a Markdown text as a
-scrollable, themed document of standard JavaFX nodes, without `WebView`.
+scrollable, themed document of standard JavaFX nodes, without `WebView`: the module does not
+require `javafx.web`, so no browser engine ships with the application.
+
+<img src="images/markdown-code.png" alt="Markdown code blocks with coloured Java code" width="75%">
+
+<img src="images/markdown-tables.png" alt="Markdown tables, the second one sorted by its first column" width="75%">
 
 - **What it renders.** Headings, paragraphs, bold, italic, inline code, nested lists, block quotes,
   fenced code blocks with a copy button, links and bare URLs (a click goes to the application's
@@ -105,6 +110,8 @@ behave alike: text, password, number (with spinner arrows), combo, editable comb
 and cron, each in the same shell (same height, same frame, the same icons in the same places, the
 same error, bound, read-only and disabled looks), and the form row that holds any of them. No new
 dependency.
+
+<img src="images/form-inputs.png" alt="The form inputs, one row per type and one column per state" width="75%">
 
 ### The contract and the shell
 

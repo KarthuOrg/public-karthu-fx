@@ -27,6 +27,36 @@ JavaFX components with a dark theme of their own, and a showcase application tha
 - **Not supported.** No issues, no pull requests, no answers, and no promise that the work goes on.
 - **Not a general toolkit.** One dark theme and no light one, and it needs JDK 25 and JavaFX 25.
 
+## Highlights
+
+### Form inputs that look and behave alike
+
+Text, password, number, combo, text area, path and cron inputs sit in one shell: the same height
+and frame, and the same focused, disabled, error, bound and read-only looks.
+
+- **Variables.** Every input takes a variable in place of a value: the `{}` icon, or Ctrl+Space,
+  lists the variables the application offers, and the bound one shows as a chip in the field.
+- **States and messages.** A form row shows the label above the input and errors, warnings and
+  hints under it. The library only displays them; the application validates.
+- **Types with their own help.** A password field with an eye to reveal it, a number field with a
+  range and spinner arrows, a path field with a file dialog and drag and drop, and a cron field
+  that says in plain English what the expression means.
+
+<img src="docs/images/form-inputs.png" alt="The form inputs, one row per type and one column per state" width="75%">
+
+### A Markdown view without a browser
+
+`MarkdownView` shows Markdown as plain JavaFX nodes. It needs no `WebView` and no `javafx.web`
+module, so no browser engine ships with the application. Code blocks are coloured for seven
+languages, and the reader selects, copies and zooms as in a browser.
+
+<img src="docs/images/markdown-code.png" alt="Markdown code blocks with coloured Java code" width="75%">
+
+Its tables are real tables: click a header to sort, drag a header to move or resize its column,
+show and hide columns, and select cells to copy them into a spreadsheet.
+
+<img src="docs/images/markdown-tables.png" alt="Markdown tables, the second one sorted by its first column" width="75%">
+
 ## Have a look
 
 With JDK 25 and Maven 3.9 or newer:
