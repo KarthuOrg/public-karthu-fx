@@ -6,6 +6,8 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 
 ## [Unreleased]
 
+## [1.1.0-RC1] - 2026-11-14
+
 The first version published to Maven Central.
 
 ### Added
