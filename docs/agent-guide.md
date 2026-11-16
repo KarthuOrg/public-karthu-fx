@@ -74,6 +74,15 @@ Keep these; most mistakes come from breaking one of them.
 10. **JavaFX Application Thread only**, as with every JavaFX control.
 11. **Create the components in code.** The showcase builds them in its controllers; that is the
     tested way.
+12. **Search a Markdown view through a `SearchInput`** connected with `search(view)`, in the
+    application's own bar beside the view. The field and the view's search text then stay equal,
+    and the field counts the matches and goes through them; do not bind the view's search text
+    yourself as well. The view takes no keys for its search: Ctrl+F and F3 are the application's
+    to add, if it wants them.
+13. **A new version of the shown Markdown text goes through `updateMarkdown`.** `setMarkdown`, and
+    a binding of `markdownProperty()`, show another document, from the top. `updateMarkdown` keeps
+    the reader's place and the pictures, as wanted when a changed file is read again; it throws
+    while the text property is bound.
 
 ## 3. Which component for what
 
@@ -90,6 +99,7 @@ Keep these; most mistakes come from breaking one of them.
 | Label, required mark, description and messages around any of the above | `FormField` |
 | A field that filters a list as the user types | `SearchInput` |
 | A field that proposes entries in a popup | `SuggestionInput<T>` |
+| A field that searches the text of a `MarkdownView` | `SearchInput`, connected with `search(view)` |
 | A value that comes from a variable instead of being typed | the input's `FieldBinding` |
 | Rendered Markdown (help texts, release notes, documentation) | `MarkdownView` |
 | A message, a question, a one-line text prompt | `CustomDialog` |
@@ -258,6 +268,8 @@ city.setOnItemChosen(chosen::add);
   not go into a `FormField`.
 - `SuggestionInput<T>`: `setItemText` is what goes into the field, `setSearchTexts` what is
   searched, `setOnItemChosen` what happens on Enter or a click.
+- A `SearchInput` searches a Markdown view instead of a list with `search(view)`, see
+  *Search in a Markdown view* below. A field filters a list or searches a view, one at a time.
 
 ### Markdown
 
@@ -277,6 +289,7 @@ view.getCodeLanguages().put("todo", code -> {
     return pieces;
 });
 view.setZoom(1.25);
+view.updateMarkdown("# Release notes\n\nNow with search.\n\nSee [the guide](https://example.com/guide).");
 ```
 
 - The view opens no link by itself: without `setOnLinkAction` a click does nothing. The handler
@@ -285,9 +298,44 @@ view.setZoom(1.25);
   after `setRemoteImages(true)`.
 - Java, JSON, YAML, SQL, XML/HTML, Bash and Markdown are coloured without any setup. An own
   language is a `CodeLexer` in `getCodeLanguages()` under the name used after the fence.
+- `setMarkdown` shows another document, from the top. `updateMarkdown` sets a new version of the
+  shown one, such as a file read again after it changed, and keeps the reader's place and the
+  pictures of images whose address stays. It throws while `markdownProperty()` is bound.
 - The view scrolls by itself: do not put it into a `ScrollPane`. Give it the room it may grow into
   (`VBox.setVgrow(view, Priority.ALWAYS)`).
 - It renders a subset of CommonMark with GFM tables; raw HTML shows as source.
+
+### Search in a Markdown view
+
+```java
+MarkdownView document = new MarkdownView("# Offices\n\nZürich and Bern.\n\nThe office in Zurich opens at nine.");
+SearchInput searchField = new SearchInput();
+searchField.search(document);
+HBox.setHgrow(searchField, Priority.ALWAYS);
+VBox reader = new VBox(8, new HBox(8, searchField), document);
+VBox.setVgrow(document, Priority.ALWAYS);
+
+MenuItem findNext = new MenuItem("Find next");
+findNext.setAccelerator(new KeyCodeCombination(KeyCode.F3));
+findNext.setOnAction(event -> document.nextSearchMatch());
+CheckMenuItem upwards = new CheckMenuItem("Search upwards");
+upwards.selectedProperty().addListener((observable, wasOn, isOn) ->
+        document.setSearchDirection(isOn ? SearchDirection.BACKWARD : SearchDirection.FORWARD));
+```
+
+- From 1.1.0-RC2 on. `search(view)` is the one call: the field's text becomes the view's search,
+  the view marks every match and scrolls to the current one, and the field counts them (*zurich*
+  typed, it shows *1 of 2*), goes to the next and the previous match with Enter and Shift+Enter
+  and has arrows for the mouse. `search(null)` disconnects; the view keeps its search.
+- The search ignores case and accents and takes the text as one piece: *the office* finds the two
+  words together, not every *the*. It finds the text of headings, paragraphs, lists, quotes, code
+  blocks and tables, never link addresses, list markers or the alt text of pictures.
+- For the application's own controls the view has `getSearchMatchCount()`,
+  `getSearchMatchIndex()` (from 0, -1 without a match), `nextSearchMatch()`,
+  `previousSearchMatch()`, `clearSearch()` and the direction, `FORWARD` by default. The field
+  follows a search set or cleared on the view.
+- Translate the arrows' tooltips with `setPreviousMatchText` and `setNextMatchText`, the counter
+  with `setMatchCountFormat` (*{0} of {1}*, as for a list).
 
 ### Controls
 

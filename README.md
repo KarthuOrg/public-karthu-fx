@@ -48,7 +48,8 @@ and frame, and the same focused, disabled, error, bound and read-only looks.
 
 `MarkdownView` shows Markdown as plain JavaFX nodes. It needs no `WebView` and no `javafx.web`
 module, so no browser engine ships with the application. Code blocks are coloured for seven
-languages, and the reader selects, copies and zooms as in a browser.
+languages, the reader selects, copies and zooms as in a browser, and a search field connected to
+the view marks every match and goes from one to the next.
 
 <img src="docs/images/markdown-code.png" alt="Markdown code blocks with coloured Java code" width="75%">
 

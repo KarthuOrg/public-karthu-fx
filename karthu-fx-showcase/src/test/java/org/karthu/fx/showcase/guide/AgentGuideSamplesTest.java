@@ -1,12 +1,19 @@
 package org.karthu.fx.showcase.guide;
 
 import javafx.application.Platform;
+import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.Scene;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.MenuItem;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -40,6 +47,7 @@ import org.karthu.fx.form.TextInput;
 import org.karthu.fx.markdown.CodeCategory;
 import org.karthu.fx.markdown.CodePiece;
 import org.karthu.fx.markdown.MarkdownView;
+import org.karthu.fx.markdown.SearchDirection;
 import org.karthu.fx.settings.SettingCategory;
 import org.karthu.fx.settings.SettingEntry;
 import org.karthu.fx.settings.SettingGroup;
@@ -62,6 +70,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
@@ -273,9 +282,49 @@ class AgentGuideSamplesTest {
             return pieces;
         });
         view.setZoom(1.25);
+        view.updateMarkdown("# Release notes\n\nNow with search.\n\nSee [the guide](https://example.com/guide).");
 
         assertTrue(view.getCodeLanguages().containsKey("java"));
         assertEquals(1.25, view.getZoom(), 0.001);
+        assertEquals("# Release notes\n\nNow with search.\n\nSee [the guide](https://example.com/guide).",
+                view.getMarkdown());
+        view.markdownProperty().bind(new SimpleStringProperty("# Bound"));
+        assertThrows(RuntimeException.class, () -> view.updateMarkdown("# Another version"),
+                "updateMarkdown throws while the text is bound");
+    }
+
+    @Test
+    @DisplayName("Search in a Markdown view: a search field connected to the view, a menu item for F3 and the"
+            + " direction")
+    void markdownSearch() {
+        MarkdownView document = new MarkdownView("# Offices\n\nZürich and Bern.\n\nThe office in Zurich opens at nine.");
+        SearchInput searchField = new SearchInput();
+        searchField.search(document);
+        HBox.setHgrow(searchField, Priority.ALWAYS);
+        VBox reader = new VBox(8, new HBox(8, searchField), document);
+        VBox.setVgrow(document, Priority.ALWAYS);
+
+        MenuItem findNext = new MenuItem("Find next");
+        findNext.setAccelerator(new KeyCodeCombination(KeyCode.F3));
+        findNext.setOnAction(event -> document.nextSearchMatch());
+        CheckMenuItem upwards = new CheckMenuItem("Search upwards");
+        upwards.selectedProperty().addListener((observable, wasOn, isOn) ->
+                document.setSearchDirection(isOn ? SearchDirection.BACKWARD : SearchDirection.FORWARD));
+
+        searchField.setText("zurich");
+        assertEquals("zurich", document.getSearchText());
+        assertEquals(2, document.getSearchMatchCount(), "Zürich and Zurich");
+        assertEquals(0, document.getSearchMatchIndex());
+        findNext.fire();
+        assertEquals(1, document.getSearchMatchIndex());
+        upwards.setSelected(true);
+        findNext.fire();
+        assertEquals(0, document.getSearchMatchIndex(), "upwards, the match above");
+
+        document.clearSearch();
+        assertEquals("", searchField.getText(), "the field follows the view");
+        assertEquals(-1, document.getSearchMatchIndex());
+        assertEquals(2, reader.getChildren().size());
     }
 
     @Test

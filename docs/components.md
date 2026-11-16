@@ -91,17 +91,42 @@ require `javafx.web`, so no browser engine ships with the application.
   missing image or one in another format shows a box with its alt text, and a button, a click or
   the context menu opens any image in a window at full size that zooms, copies the image and saves
   its file.
+- **Search** (from 1.1.0-RC2). The view searches its text for controls of the application's own:
+  it takes a search text (`searchTextProperty()`), tells the number of matches and the current
+  one, counted from 0 from the top of the document (`searchMatchCountProperty()`,
+  `searchMatchIndexProperty()`), goes to the next and the previous match in a `SearchDirection`,
+  forward from the first match down or backward from the last one up, and clears the search. It
+  finds what the reader sees: the text of headings, paragraphs, lists, quotes, code and source
+  blocks and of a table's header and cells, also in rows never drawn, in the order the table
+  shows them, following the reader's sort and moved, hidden or shown columns. Case and accents
+  are ignored as in the search fields' list filter, but the search is one piece, its words next
+  to each other, a space matching any run of whitespace. Every match is marked in a muted amber,
+  the current one in amber behind dark text, both below the selection, and the view scrolls to
+  the current match when it is not fully visible, sideways too in a wide code block or table, at
+  every zoom. The view brings no search field and takes no keys for it: a `SearchInput` connected
+  with `search(view)` (see [Search fields](#search-fields-in-the-same-look)) goes into the
+  application's own bar, and Ctrl+F or F3 are the application's to add.
+- **Text updates** (from 1.1.0-RC2). `updateMarkdown` sets a new version of the shown text, such
+  as a file read again after it changed, and keeps the reader's place: the paragraph at the top
+  edge stays there, also when text above it was added or removed, images keep showing their
+  pictures until their files have been read again, so nothing flashes or jumps, and a search goes
+  on from its current match. `setMarkdown` and the text property show another document, from the
+  top.
 - **Texts.** The labels of the copy button and the context menu (*Copy*, *Copy with header*,
   *Select column*, *Copy Markdown*), the zoom bar's texts (*Zoom out*, *Zoom in*, *Zoom levels*,
   *Reset*) and the texts of images (*Open image*, the window's buttons, the boxes' notes) are
   properties with English defaults.
 - **Styling.** Its style classes (a table is `markdown-table`, the zoom bar `markdown-zoom-bar`,
-  coloured code `code-keyword` and its siblings, a block image `markdown-image-block`) and tokens
-  are listed in [`STYLEGUIDE.md`](../STYLEGUIDE.md).
+  coloured code `code-keyword` and its siblings, a block image `markdown-image-block`, the
+  search's marks `markdown-search-match` and `markdown-search-current`) and tokens (the marks'
+  colours are `-fx-markdown-search-color` and its siblings) are listed in
+  [`STYLEGUIDE.md`](../STYLEGUIDE.md).
 - **In the showcase.** The *Markdown* page is a live editor with a *Zoom bar* switch, a read-out of
-  the zoom, a block of every built-in language, images of every kind with the switches *Play
-  animations* and *Images from the internet*, and a *Code colours* card whose CSS recolours the view
-  as it is typed.
+  the zoom, a block of every built-in language, tables, images of every kind with the switches
+  *Play animations* and *Images from the internet*, a search field connected to the view with the
+  choice of its direction above it, an *Insert a line at the top* button that gives the view a new
+  version of its text through `updateMarkdown`, and a *Code colours* card whose CSS recolours the
+  view as it is typed.
 
 ## Form fields
 
@@ -204,7 +229,12 @@ dependency.
   finds *Zürich*). One call, `filter(FilteredList, Function)`, filters an application's list as
   the user types and keeps a counter such as *1 of 2* in the field, in the warning colour when
   nothing matches; `highlight(String)` hands out a text building block for the application's own
-  rows that marks every match and follows the search by itself.
+  rows that marks every match and follows the search by itself. Another call, `search(view)` (from
+  1.1.0-RC2), connects the field to a `MarkdownView` instead: the field's text and the view's
+  search stay equal both ways, the counter shows the current match and the number of matches
+  (*3 of 12*), Enter and Shift+Enter go to the next and the previous match, and two arrows in the
+  field go to the match above and the one below, their tooltips (*Previous match*, *Next match*)
+  following the view's direction. A field filters a list or searches a view, one at a time.
 - `SuggestionInput<T>`, the search field with a popup of suggestions: the application's own
   objects as entries, with the text that goes into the field and the texts that are searched.
   Typing opens the popup under the field, as wide as the field, each suggestion one line with the
@@ -230,7 +260,7 @@ The showcase's group *Form Inputs* starts with an *Overview* of every input type
 one page per type (*Text Input*, *Password Input*, *Number Input*, *Combo Input*, *Editable Combo
 Input*, *Text Area Input*, *Path Input*, *Cron Input*, *Search Input*) with every state and a field
 to try out; the *Search Input* page also filters a list and shows person cards built from the
-public API.
+public API. A search field connected to a Markdown view is on the *Markdown* page.
 
 ## Icons
 
