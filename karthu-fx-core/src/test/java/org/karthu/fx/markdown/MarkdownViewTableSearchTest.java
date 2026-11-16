@@ -412,6 +412,33 @@ class MarkdownViewTableSearchTest {
         assertEquals(cellFlow(table, 1, 1), flowWithCurrent(table));
     }
 
+    // --- Text updates -----------------------------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("after updateMarkdown the current match in a table the reader sorted and hid a column of stays on its"
+            + " cell's text, though the new table starts unsorted with every column")
+    void updateKeepsTheCurrentMatchInARearrangedTable() {
+        MarkdownView view = layOut(new MarkdownView(TABLE));
+        TableView<?> table = table(view);
+        view.setSearchText("anna");
+        sortBy(table, 0, SortType.DESCENDING);
+        table.getColumns().get(0).setVisible(false);
+        relayOut(view);
+        // Shown now: Name; rows "z anna" and "anna".
+        view.nextSearchMatch();
+        relayOut(view);
+        assertEquals("z anna", textOf(flowWithCurrent(table)));
+
+        view.updateMarkdown("A paragraph inserted at the top.\n\n" + TABLE);
+        relayOut(view);
+
+        TableView<?> updated = table(view);
+        assertEquals(6, view.getSearchMatchCount());
+        assertEquals(4, view.getSearchMatchIndex(), "z anna, the second row's second cell of the unsorted table");
+        assertEquals(cellFlow(updated, 1, 1), flowWithCurrent(updated));
+        assertEquals("z anna", textOf(flowWithCurrent(updated)));
+    }
+
     // --- Scrolling --------------------------------------------------------------------------------------------------
 
     /**

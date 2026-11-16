@@ -1098,7 +1098,8 @@ public class MarkdownView extends BaseComponent {
      *
      * <p>A search goes on: it runs on the new text, and the first match at or after the old current match's place, its
      * block found again as the reader's place is found, becomes current, in the search's direction and wrapping around;
-     * the view does not scroll to it. Everything else is as after {@code setMarkdown}: the selection is cleared, tables
+     * in a table the place lies in the same cell as the source has it, however the reader had sorted or rearranged the
+     * table. The view does not scroll to it. Everything else is as after {@code setMarkdown}: the selection is cleared, tables
      * start unsorted with all columns shown at their fitted widths, the context menu forgets its block, and the zoom
      * stays.
      *

@@ -206,6 +206,14 @@ final class TableBlock extends Region implements Searchable {
     }
 
     /**
+     * The text of a cell and stretch, see {@link MarkdownTable#searchTextNumber(Object)}.
+     */
+    @Override
+    public int searchTextNumber(Object key) {
+        return table.searchTextNumber(key);
+    }
+
+    /**
      * Runs the code whenever the reader sorts the table, moves its columns, hides or shows one.
      */
     @Override

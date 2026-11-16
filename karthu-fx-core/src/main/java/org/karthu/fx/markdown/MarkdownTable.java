@@ -311,6 +311,23 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
     }
 
     /**
+     * The number of the text of a cell and stretch among the texts of the last {@link #searchTexts()}: a key names the
+     * same cell in another rendering of the same table, so the search finds its current match's text again in a new
+     * version of the document, whose table starts unsorted with every column.
+     *
+     * @param key what names a text, as {@link #searchTextKey(int)} gives it, of this table or another
+     * @return the text's number, -1 if no text of the table has that key
+     */
+    int searchTextNumber(Object key) {
+        for (int text = 0; text < searchTexts.size(); text++) {
+            if (searchTexts.get(text).key().equals(key)) {
+                return text;
+            }
+        }
+        return -1;
+    }
+
+    /**
      * Consumes a press or release of a button other than the primary one on a column header, see the constructor.
      */
     private void keepFromHeaders(MouseEvent event) {

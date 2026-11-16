@@ -109,7 +109,8 @@ final class DocumentSearch {
 
     /**
      * Where the current match lies, noted in the shown document for a new version of its text: its segment, to be
-     * found again in the new document ({@link NotedSegment}), and its place in the segment.
+     * found again in the new document ({@link NotedSegment}), what names its text there across a new order of the
+     * texts ({@link Searchable#searchTextKey(int)}), and its place in the segment.
      *
      * @return the place, {@code null} without a current match
      */
@@ -119,7 +120,9 @@ final class DocumentSearch {
             return null;
         }
         List<Segment> segments = selection.segments();
-        return new Place(NotedSegment.of(segments, segments.get(current.order())), current.match());
+        Searchable segment = parts.get(current.part()).segment();
+        return new Place(NotedSegment.of(segments, segments.get(current.order())),
+                segment.searchTextKey(current.match().text()), current.match());
     }
 
     /**
@@ -142,7 +145,10 @@ final class DocumentSearch {
 
     /**
      * Where the search goes on from the place of an old current match in a new version of the text: its segment found
-     * again, the match's place in it.
+     * again, the match's text found again in it by what names it, the match's place in that text. A new table starts
+     * unsorted with every column, so the number of the text in a table the reader sorted or rearranged names another
+     * cell there; the number counts only where the key names no text of the new segment, as a table edited itself may
+     * lack the cell.
      *
      * @return the index of the new current match, -1 without matches
      */
@@ -156,8 +162,13 @@ final class DocumentSearch {
         while (segments.get(order) != segment) {
             order++;
         }
+        Searchable.Match match = place.match();
+        int text = segment instanceof Searchable searchable ? searchable.searchTextNumber(place.textKey()) : -1;
+        if (text >= 0) {
+            match = new Searchable.Match(text, match.start(), match.end());
+        }
         // A match of no segment with matches: only its order and its range count for where it starts.
-        return nearestInDirection(new Found(-1, order, place.match()));
+        return nearestInDirection(new Found(-1, order, match));
     }
 
     /**
@@ -516,9 +527,11 @@ final class DocumentSearch {
      * Where a current match lies, for a new version of the text.
      *
      * @param segment its segment, noted to be found again
+     * @param textKey what names its text in the segment across a new order of the texts
+     *                ({@link Searchable#searchTextKey(int)})
      * @param match   where it lies in the segment
      */
-    record Place(NotedSegment segment, Searchable.Match match) {
+    record Place(NotedSegment segment, Object textKey, Searchable.Match match) {
     }
 
     /**

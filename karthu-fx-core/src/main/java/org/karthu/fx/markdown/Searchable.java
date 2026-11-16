@@ -41,6 +41,19 @@ interface Searchable extends Segment {
     }
 
     /**
+     * The number of the text a key names ({@link #searchTextKey(int)}) among the texts of the segment's last
+     * {@link #searchTexts()}: so the search finds the text of its current match again in the segment that takes an old
+     * one's place in a new version of the document, as a new table, unsorted with every column, takes the place of
+     * one the reader sorted or rearranged.
+     *
+     * @param key what names a text, as this segment or the one it takes the place of named it
+     * @return the text's number; by default the key itself where it is a number, -1 where it is none
+     */
+    default int searchTextNumber(Object key) {
+        return key instanceof Integer number ? number : -1;
+    }
+
+    /**
      * Has the segment run code whenever its texts change their order or come and go after the search ran through
      * them, as a table's do; a later call replaces the code. A segment whose texts never change does nothing.
      *
