@@ -369,7 +369,7 @@ final class MonospaceBlock extends StackPane implements Searchable {
             // A value set here, not in the theme: an application's stylesheet may still set -fx-tab-size.
             setTabSize(TAB_SIZE);
             getChildren().addAll(runs);
-            layer = new HighlightLayer(this, "markdown-selection");
+            layer = new HighlightLayer(this, HighlightPath.SELECTION);
             getChildren().add(layer);
         }
 

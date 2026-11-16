@@ -58,8 +58,8 @@ final class SearchMarks {
             if (matches.isEmpty()) {
                 return;
             }
-            matchLayer = new HighlightLayer(flow, "markdown-search-match");
-            currentLayer = new HighlightLayer(flow, "markdown-search-current");
+            matchLayer = new HighlightLayer(flow, HighlightPath.SEARCH_MATCH);
+            currentLayer = new HighlightLayer(flow, HighlightPath.SEARCH_CURRENT);
             int index = below == null ? flow.getChildren().size() : flow.getChildren().indexOf(below);
             flow.getChildren().addAll(index, List.of(matchLayer, currentLayer));
             if (flow.getScene() != null) {

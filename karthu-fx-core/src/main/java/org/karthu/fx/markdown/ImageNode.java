@@ -522,7 +522,7 @@ abstract sealed class ImageNode extends Region permits ImageBlock, InlineImage {
      */
     final void showSelected(boolean selected) {
         if (selected && selectionHighlight == null) {
-            selectionHighlight = new HighlightPath("markdown-selection");
+            selectionHighlight = new HighlightPath(HighlightPath.SELECTION);
             getChildren().add(selectionHighlight);
         }
         if (selectionHighlight != null) {

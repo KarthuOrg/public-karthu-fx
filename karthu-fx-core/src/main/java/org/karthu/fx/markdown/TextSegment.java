@@ -118,7 +118,7 @@ final class TextSegment extends TextFlow implements Searchable {
     public void select(int start, int end) {
         if (start < end && layer == null) {
             // The last child, so it lies over the runs.
-            layer = new HighlightLayer(this, "markdown-selection");
+            layer = new HighlightLayer(this, HighlightPath.SELECTION);
             getChildren().add(layer);
         }
         if (layer != null) {
