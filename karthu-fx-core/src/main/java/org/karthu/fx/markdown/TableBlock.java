@@ -31,12 +31,6 @@ import java.util.List;
  */
 final class TableBlock extends Region implements Searchable {
 
-    /**
-     * The room beside a match the search scrolls the table sideways to, in the document's pixels: as a code block
-     * leaves it, about four characters, beyond the cell's padding.
-     */
-    private static final double SIDEWAYS_MARGIN = 32;
-
     private final MarkdownTable table;
     private final ScrollBar bar = new ScrollBar();
     private final List<BlockContainer> containers;
@@ -246,9 +240,9 @@ final class TableBlock extends Region implements Searchable {
     }
 
     /**
-     * Moves the bar, if the table is wider than the block and the match does not show whole: so that the match shows
-     * whole with a margin on the side it came in from, its start if it is wider than the block. The block shows the
-     * table from the bar's value on, so the table's coordinates are the bar's.
+     * Moves the bar, if the table is wider than the block and the match does not show whole, as
+     * {@link SidewaysReveal} has it. The block shows the table from the bar's value on, so the table's coordinates are
+     * the bar's.
      */
     @Override
     public void revealSideways(Match match) {
@@ -258,14 +252,9 @@ final class TableBlock extends Region implements Searchable {
         double visibleWidth = getWidth() - snappedLeftInset() - snappedRightInset();
         Bounds bounds = table.sceneToLocal(table.searchMatchBounds(match));
         double offset = bar.getValue();
-        if (bounds.getMinX() >= offset && bounds.getMaxX() <= offset + visibleWidth) {
+        double wanted = SidewaysReveal.offset(bounds, offset, visibleWidth);
+        if (wanted == offset) {
             return;
-        }
-        double wanted;
-        if (bounds.getMinX() < offset || bounds.getWidth() + 2 * SIDEWAYS_MARGIN > visibleWidth) {
-            wanted = bounds.getMinX() - SIDEWAYS_MARGIN;
-        } else {
-            wanted = bounds.getMaxX() + SIDEWAYS_MARGIN - visibleWidth;
         }
         bar.setValue(Math.clamp(wanted, 0, bar.getMax()));
     }

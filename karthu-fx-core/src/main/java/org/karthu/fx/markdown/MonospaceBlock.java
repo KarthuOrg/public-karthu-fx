@@ -73,13 +73,6 @@ final class MonospaceBlock extends StackPane implements Searchable {
     private static final KeyCombination SELECT_ALL = new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN);
 
     /**
-     * The room beside a match the search scrolls the block sideways to, in the document's pixels: about four
-     * characters of code, and enough to keep a match at the end of the first line clear of the copy button over the
-     * block's top right corner.
-     */
-    private static final double SIDEWAYS_MARGIN = 32;
-
-    /**
      * The block's text, which its runs hold in order.
      */
     private final String text;
@@ -280,9 +273,9 @@ final class MonospaceBlock extends StackPane implements Searchable {
     }
 
     /**
-     * Scrolls the block sideways, if its text is wider than the block and the match does not show whole: so that the
-     * match shows whole with a margin on the side it came in from, its start if it is wider than the block. The
-     * scroll pane's content is the flow, so the flow's coordinates are the content's.
+     * Scrolls the block sideways, if its text is wider than the block and the match does not show whole, as
+     * {@link SidewaysReveal} has it. The scroll pane's content is the flow, so the flow's coordinates are the
+     * content's.
      */
     @Override
     public void revealSideways(Match match) {
@@ -294,14 +287,9 @@ final class MonospaceBlock extends StackPane implements Searchable {
         }
         Bounds bounds = SearchMarks.boundsOf(flow, new Range(match.start(), match.end()));
         double offset = (scrollPane.getHvalue() - scrollPane.getHmin()) / span * range;
-        if (bounds.getMinX() >= offset && bounds.getMaxX() <= offset + visibleWidth) {
+        double wanted = SidewaysReveal.offset(bounds, offset, visibleWidth);
+        if (wanted == offset) {
             return;
-        }
-        double wanted;
-        if (bounds.getMinX() < offset || bounds.getWidth() + 2 * SIDEWAYS_MARGIN > visibleWidth) {
-            wanted = bounds.getMinX() - SIDEWAYS_MARGIN;
-        } else {
-            wanted = bounds.getMaxX() + SIDEWAYS_MARGIN - visibleWidth;
         }
         scrollPane.setHvalue(scrollPane.getHmin() + Math.clamp(wanted / range, 0, 1) * span);
     }
