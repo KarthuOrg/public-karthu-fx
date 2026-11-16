@@ -12,8 +12,10 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
@@ -49,6 +51,12 @@ import java.util.function.Consumer;
  * shows the results of its latest load only: an older load's result that arrives later is dropped, a decode of it
  * that still waits does nothing, and so does a recompute of a bitmap while a newer load is under way. A new result
  * above the top edge keeps the reader's place as an image that arrives does.
+ *
+ * <p><b>A new version of the text.</b> For the view's text update, {@link #forget(boolean)} notes what each old node
+ * showed, its picture or its error box, by the image's address as written, and every node the renderer creates next
+ * starts with what the old one of its address showed ({@link ImageNode#startWith}), then loads as any new node does:
+ * its first result replaces that in place, as a reload's does. The notes go once the text is rendered
+ * ({@link #rendered()}), so no old picture outlives the rendering but in a node that shows it.
  *
  * <p><b>Limits.</b> A change of the output scale, the visible height or the zoom asks every node for a new layout,
  * which computes its shown size anew and scales its last bitmap to it. A node whose bitmap no longer has the size in
@@ -101,6 +109,12 @@ final class DocumentImages {
      * The nodes whose bitmap no longer has the size in screen pixels, in the order they were noted.
      */
     private final Set<ImageNode> outdated = new LinkedHashSet<>();
+
+    /**
+     * What the old text's nodes showed, by their address as written, while the view renders a new version of the
+     * text ({@link #forget(boolean)}); empty otherwise, so the old pictures are not kept beyond the rendering.
+     */
+    private Map<String, ImageNode.Shown> shownBefore = Map.of();
 
     /**
      * Where the work runs: in the background, or at once in the view's tests.
@@ -403,10 +417,15 @@ final class DocumentImages {
     }
 
     /**
-     * Keeps a new node of an image among those of the shown document and starts its work.
+     * Keeps a new node of an image among those of the shown document and starts its work, showing first what the old
+     * text's node of its address showed, if the new text is a new version of the old one.
      */
     private void add(ImageNode node) {
         nodes.add(node);
+        ImageNode.Shown before = shownBefore.get(node.address());
+        if (before != null) {
+            node.startWith(before);
+        }
         start(node);
     }
 
@@ -422,14 +441,30 @@ final class DocumentImages {
 
     /**
      * Forgets the nodes of the shown document, before the view renders a new one: their work does nothing from now
-     * on.
+     * on. For a new version of the same text, the nodes created next, until {@link #rendered()}, start with what the
+     * old text's node of their address showed: the first of that address that showed its picture or its error box.
+     *
+     * @param newVersion whether the next text is a new version of the shown one, whose images keep what they show
      */
-    void forget() {
+    void forget(boolean newVersion) {
+        Map<String, ImageNode.Shown> shown = new HashMap<>();
         for (ImageNode node : nodes) {
+            ImageNode.Shown nodeShows = newVersion ? node.shown() : null;
+            if (nodeShows != null) {
+                shown.putIfAbsent(node.address(), nodeShows);
+            }
             node.discard();
         }
         nodes.clear();
         outdated.clear();
+        shownBefore = shown;
+    }
+
+    /**
+     * Notes that the new text is rendered, all its nodes created: lets go what the old text's nodes showed.
+     */
+    void rendered() {
+        shownBefore = Map.of();
     }
 
     /**
