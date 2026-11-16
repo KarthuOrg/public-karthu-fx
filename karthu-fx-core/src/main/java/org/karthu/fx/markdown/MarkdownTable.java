@@ -566,7 +566,9 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
         if (searchMatches.isEmpty() || !(getSkin() instanceof TableSkin skin)) {
             return;
         }
-        for (int index = firstRowReaching(skin, area); index < getItems().size(); index++) {
+        // The rows lie one below the other in the shown order; one not laid out counts as reaching the area.
+        int first = area.firstReaching(getItems().size(), row -> skin.visibleRow(row));
+        for (int index = first; index < getItems().size(); index++) {
             TableRow<Row> row = skin.visibleRow(index);
             if (row == null) {
                 continue;
@@ -579,25 +581,6 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
                 showRowMatches(row);
             }
         }
-    }
-
-    /**
-     * The first row in the shown order that reaches down into an area, found by halving; a row not laid out counts as
-     * reaching it.
-     */
-    private int firstRowReaching(TableSkin skin, NearArea area) {
-        int low = 0;
-        int high = getItems().size();
-        while (low < high) {
-            int middle = (low + high) >>> 1;
-            TableRow<Row> row = skin.visibleRow(middle);
-            if (row != null && area.boundsOf(row).getMaxY() < area.top()) {
-                low = middle + 1;
-            } else {
-                high = middle;
-            }
-        }
-        return low;
     }
 
     /**

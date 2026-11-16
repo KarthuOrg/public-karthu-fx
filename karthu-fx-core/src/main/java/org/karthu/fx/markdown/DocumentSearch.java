@@ -459,7 +459,9 @@ final class DocumentSearch {
         if (area == null) {
             return;
         }
-        for (int i = firstReaching(area); i < parts.size(); i++) {
+        // The segments with matches lie one below the other in document order.
+        int first = area.firstReaching(parts.size(), part -> parts.get(part).segment().node());
+        for (int i = first; i < parts.size(); i++) {
             Searchable segment = parts.get(i).segment();
             if (area.boundsOf(segment.node()).getMinY() > area.bottom()) {
                 break;
@@ -470,24 +472,6 @@ final class DocumentSearch {
             // A long table marks the rows near the area only, more as the view scrolls.
             segment.showSearchMatchesNear(area);
         }
-    }
-
-    /**
-     * The first segment with matches that reaches down into the area, found by halving: the segments lie one below
-     * the other.
-     */
-    private int firstReaching(NearArea area) {
-        int low = 0;
-        int high = parts.size();
-        while (low < high) {
-            int middle = (low + high) >>> 1;
-            if (area.boundsOf(parts.get(middle).segment().node()).getMaxY() < area.top()) {
-                low = middle + 1;
-            } else {
-                high = middle;
-            }
-        }
-        return low;
     }
 
     /**
