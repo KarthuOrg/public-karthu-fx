@@ -12,6 +12,9 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   matches and the current match, goes to the next and the previous match in a `SearchDirection`
   and clears the search. Every match is marked, the current one apart, and the view scrolls to it.
   Tables are not searched yet.
+- `MarkdownView.updateMarkdown` sets a new version of the shown text and keeps the reading
+  position: the paragraph at the top stays there, also when text above it was added or removed,
+  and a search goes on from its current match. `setMarkdown` still starts at the top.
 
 ### Fixed
 
