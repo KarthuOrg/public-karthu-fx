@@ -36,6 +36,11 @@ import java.util.function.Consumer;
  * it knows which load what it shows comes from ({@link #shows(Object)}), so a new bitmap of the same load is a
  * recompute at the same size, and a result of a newer load replaces what it shows.
  *
+ * <p><b>A new version of the text.</b> A node of the view's text update may start with what the node of the same image
+ * in the old text showed ({@link #shown()}, {@link #startWith(Shown)}) instead of its placeholder: the same bitmap at
+ * the size its pixel size and the new node's limits give, or a new error box with the same note. It counts as from a
+ * load that is no load of the node, so the node's first result replaces it as a reload's result does.
+ *
  * <p><b>Selection.</b> While the view's selection includes the image, the node shows the selection's highlight over
  * what it shows ({@link #showSelected(boolean)}), whatever that is and however it changes.
  */
@@ -60,6 +65,12 @@ abstract sealed class ImageNode extends Region permits ImageBlock, InlineImage {
      * cannot be shown; {@code null} while it shows the image.
      */
     private Node box;
+
+    /**
+     * Why the image cannot be shown while the node shows its error box; {@code null} while it shows the placeholder or
+     * the image.
+     */
+    private ObservableValue<String> errorNote;
 
     /**
      * The image's node, {@code null} until it is decoded. Unmanaged: the node sizes it in its layout, and a new size
@@ -420,11 +431,48 @@ abstract sealed class ImageNode extends Region permits ImageBlock, InlineImage {
         }
         picture = view;
         box = null;
+        errorNote = null;
         shownLoad = result;
         followsLink(view);
         showContent(view);
         pictureShown();
         requestLayout();
+    }
+
+    /**
+     * What the node shows from a load, for the node of the same image in a new version of the text
+     * ({@link #startWith(Shown)}).
+     *
+     * @return its picture or its error box; {@code null} while it shows its placeholder
+     */
+    final Shown shown() {
+        if (picture != null) {
+            return new ShownPicture(picture.getImage(), pixelWidth, pixelHeight, playing, loaded);
+        }
+        if (errorNote != null) {
+            return new ShownErrorBox(errorNote);
+        }
+        return null;
+    }
+
+    /**
+     * Starts by showing what the node of the same image showed in the old version of the text, instead of the
+     * placeholder, before the node's first load: as from a load of its own, which no load of the node is, so the
+     * node's first result replaces it in place, as a reload's result does.
+     *
+     * @param before what the old node showed
+     */
+    final void startWith(Shown before) {
+        Object shownBefore = new Object();
+        switch (before) {
+            case ShownPicture shownPicture -> {
+                // The bytes come along, so the picture opens at full size until the new load returns its own.
+                loaded = shownPicture.loaded();
+                showBitmap(shownPicture.bitmap(), shownPicture.pixelWidth(), shownPicture.pixelHeight(), shownBefore,
+                        shownPicture.playing());
+            }
+            case ShownErrorBox shownError -> showError(shownError.note(), shownBefore);
+        }
     }
 
     /**
@@ -444,6 +492,7 @@ abstract sealed class ImageNode extends Region permits ImageBlock, InlineImage {
         Node error = errorBox(note);
         picture = null;
         box = error;
+        errorNote = note;
         shownLoad = result;
         followsLink(error);
         showContent(error);
@@ -562,5 +611,32 @@ abstract sealed class ImageNode extends Region permits ImageBlock, InlineImage {
      *                 background with the load, so the JavaFX Application Thread never walks the file
      */
     record Loaded(Object load, byte[] bytes, boolean animated) {
+    }
+
+    /**
+     * What a node shows from a load, which the node of the same image in a new version of the text starts with.
+     */
+    sealed interface Shown permits ShownPicture, ShownErrorBox {
+    }
+
+    /**
+     * A picture as a node shows it.
+     *
+     * @param bitmap      the bitmap, or a playing animated GIF as JavaFX decoded it
+     * @param pixelWidth  the image's width in pixels
+     * @param pixelHeight the image's height in pixels
+     * @param playing     whether the bitmap is a playing animated GIF
+     * @param loaded      the bytes the bitmap was decoded from, with their load
+     */
+    record ShownPicture(Image bitmap, int pixelWidth, int pixelHeight, boolean playing, Loaded loaded)
+            implements Shown {
+    }
+
+    /**
+     * An error box as a node shows it.
+     *
+     * @param note why the image cannot be shown, a text property of the view
+     */
+    record ShownErrorBox(ObservableValue<String> note) implements Shown {
     }
 }

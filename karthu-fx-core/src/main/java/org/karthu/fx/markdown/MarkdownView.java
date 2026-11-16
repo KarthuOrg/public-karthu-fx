@@ -167,10 +167,10 @@ import java.util.function.Consumer;
  * document and in the window.
  *
  * <p><b>Reading position.</b> An image that arrives above the line at the top edge of the visible area keeps that line
- * in place, and so does one that a reload changes there. One in or below the visible area pushes the text below it
- * down. Only an image whose top lies above that line keeps it, so the first image of a document read from its top
- * pushes the text down as it arrives. A block image is no reading anchor itself: a zoom or an arriving image keeps the
- * place of the text around it.
+ * in place, and so does one that a reload or a {@link #updateMarkdown(String) text update} changes there. One in or
+ * below the visible area pushes the text below it down. Only an image whose top lies above that line keeps it, so the
+ * first image of a document read from its top pushes the text down as it arrives. A block image is no reading anchor
+ * itself: a zoom or an arriving image keeps the place of the text around it.
  *
  * <p><b>Loading.</b> The text shows at once: the view loads and decodes its images in the background and shows a
  * placeholder ({@code markdown-image-placeholder}), an image icon and the alt text on one line, until an image is
@@ -179,7 +179,13 @@ import java.util.function.Consumer;
  * the view cannot decode, such as an SVG or WebP file, with {@link #imageUnsupportedTextProperty() its own note}. A
  * loader that throws a runtime exception is reported as a warning with the address through SLF4J, a missing or
  * undecodable image at debug level. A loader that returns {@code null} or an empty array counts as missing too. The
- * loader runs on at most four background threads at once, for all views together.
+ * loader runs on at most four background threads at once, for all views together. A new version of the text set by
+ * {@link #updateMarkdown(String)} shows no placeholder for an image whose address, as written, the shown text has: it
+ * starts with what the shown image of that address showed (the first of them that showed one, where the address
+ * occurs several times), its picture at its size, an animated GIF playing, or its error box, loads its file again and
+ * shows the new result in place once it arrives, as a reload does (see <em>Sources</em>), so a changed file shows its
+ * new picture and a missing one its error box. An image of an address whose images all still showed their
+ * placeholders, and one of a new address, start with the placeholder.
  *
  * <p><b>Sources.</b> The image loader is at first the view's own: a relative address resolves against
  * {@link #imageBaseProperty() the base address}, as a browser resolves it against a page. Absolute {@code file:}
@@ -569,10 +575,11 @@ import java.util.function.Consumer;
  * sets it with {@link #updateMarkdown(String)}: the view stays at the paragraph the reader was reading, also when text
  * above it was added or removed. The line at the top edge of the visible area is found again in the new text by its
  * block, the block of the same kind with the same text nearest to its old number, else the block with its old number,
- * and stays at the top, cut as far down as before. A search goes on from its current match's place, without
- * scrolling. Everything else starts fresh as with a new text: the selection, the tables' sorting, columns and widths,
- * the context menu; the zoom stays. {@link #setMarkdown(String)} and the text property show another document, from
- * the top.
+ * and stays at the top, cut as far down as before. Images keep showing what they showed until their files have been
+ * loaded again, so nothing flashes and the text does not jump (see <em>Images</em>, <em>Loading</em>). A search goes
+ * on from its current match's place, without scrolling. Everything else starts fresh as with a new text: the
+ * selection, the tables' sorting, columns and widths, the context menu; the zoom stays. {@link #setMarkdown(String)}
+ * and the text property show another document, from the top.
  *
  * <h2>Search</h2>
  *
@@ -1065,6 +1072,13 @@ public class MarkdownView extends BaseComponent {
      * height. The next layout scrolls there, as far as the scroll range allows, and leaves the sideways scroll position
      * as it is. An image that arrives later above the place keeps it, as always.
      *
+     * <p>An image of the new text whose address, as written, an image of the shown text has starts with what that
+     * image showed, its picture at its size, an animated GIF playing, or its error box, the first of them that showed
+     * one where the address occurs several times, instead of its placeholder. Every image of the new text is loaded
+     * again through the loader of that moment and replaced in place when its result arrives, as a reload replaces it,
+     * so nothing flashes and the text does not jump while the pictures arrive. See <em>Images</em>, <em>Loading</em>
+     * in the class description.
+     *
      * <p>A search goes on: it runs on the new text, and the first match at or after the old current match's place, its
      * block found again as the reader's place is found, becomes current, in the search's direction and wrapping around;
      * the view does not scroll to it. Everything else is as after {@code setMarkdown}: the selection is cleared, tables
@@ -1072,7 +1086,8 @@ public class MarkdownView extends BaseComponent {
      * stays.
      *
      * <p>The same text changes nothing, as setting the same value does. Before the view is laid out, and where the
-     * shown or the new text has no block but block images, it behaves as {@code setMarkdown}.
+     * shown or the new text has no block but block images, it shows the new text from the top, as {@code setMarkdown}
+     * does; its images keep what they showed all the same.
      *
      * @param markdown the new version of the Markdown text; {@code null} gives an empty view
      * @throws RuntimeException while the text property is bound, as {@code setMarkdown} throws then
@@ -2065,8 +2080,9 @@ public class MarkdownView extends BaseComponent {
      *
      * <p>For {@link #updateMarkdown(String)} it keeps the reader's place instead of scrolling: what the new document
      * takes over from the old one is noted first, in the old document's layout, before anything of it is dropped, and
-     * handed to the new one once it is rendered, its segments found again by {@link NotedSegment}. So far the reader's
-     * place and the search's current match.
+     * handed to the new one once it is rendered, its segments found again by {@link NotedSegment}: the reader's place
+     * and the search's current match. What the images showed is noted by their address as the old images are
+     * forgotten and handed to the new ones as the renderer creates them ({@link DocumentImages#forget(boolean)}).
      */
     private void rebuild() {
         // An update notes the reader's place in the shown document's layout, before anything of it goes.
@@ -2077,8 +2093,10 @@ public class MarkdownView extends BaseComponent {
         selectionHolder = null;
         documentZoom.forgetReadingPosition();
         documentSelection.reset();
-        images.forget();
+        // An update's images start with what the old document's images of their address showed, then load again.
+        images.forget(updating);
         document.getChildren().setAll(renderer.render(MarkdownParser.parse(markdown.get())));
+        images.rendered();
         documentSearch.documentChanged(searchPlace);
         Segment found = placeSegment == null ? null : placeSegment.findIn(documentSelection.segments());
         if (found != null) {
