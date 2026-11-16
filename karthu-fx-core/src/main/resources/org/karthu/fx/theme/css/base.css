@@ -2657,11 +2657,12 @@ Text {
  * trailing icon (form-frame-icon) shown while there is text and the
  * field is neither disabled nor read-only. Before the clear button, the
  * counter (form-search-count, a Label), an own control shown while a
- * list or a view is connected and there is text: muted, the text's
- * size, 4px on either side; with no match (:no-match) in the warning
- * colour. Disabled, it keeps full opacity: the frame is dimmed once, not
- * twice. Between the counter and the clear button, while a view is
- * connected and there is text, the arrows (form-search-up and
+ * list is connected and there is text, or a view and there is text
+ * other than whitespace only: muted, the text's size, 4px on either
+ * side; with no match (:no-match) in the warning colour. Disabled, it
+ * keeps full opacity: the frame is dimmed once, not twice. Between the
+ * counter and the clear button, while a view is connected and there is
+ * text other than whitespace only, the arrows (form-search-up and
  * form-search-down), trailing icons like the clear button, dimmed as a
  * disabled icon button without matches. The frame's rules draw the rest;
  * no token of its own. */

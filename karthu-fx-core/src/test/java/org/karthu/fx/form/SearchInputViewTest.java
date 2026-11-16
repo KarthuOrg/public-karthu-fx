@@ -254,6 +254,32 @@ class SearchInputViewTest {
     }
 
     @Test
+    @DisplayName("whitespace only is no search for a view: no counter and no arrows, as in an empty field; a list still"
+            + " counts every entry")
+    void whitespaceOnly() {
+        input.search(view);
+        input.setText("anna");
+
+        input.setText(" \t ");
+
+        assertEquals(0, view.getSearchMatchCount(), "no search for the view");
+        assertFalse(isShown(counter()), "no counter");
+        assertFalse(hasPseudoClass(counter(), "no-match"));
+        assertFalse(isShown(upArrow()), "no arrows");
+        assertFalse(isShown(downArrow()));
+        assertTrue(isShown(clearButton()), "the text can be cleared");
+
+        input.setText(" anna ");
+        assertEquals("1 of 4", counter().getText());
+        assertTrue(isShown(upArrow()));
+
+        input.filter(new FilteredList<>(FXCollections.observableArrayList("Anna", "Ben")), Function.identity());
+        input.setText(" \t ");
+        assertTrue(isShown(counter()), "a list counts");
+        assertEquals("2 of 2", counter().getText());
+    }
+
+    @Test
     @DisplayName("disconnected, the counter hides")
     void counterAfterDisconnecting() {
         input.search(view);

@@ -21,6 +21,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.StringConverter;
 import org.karthu.fx.form.search.Mark;
+import org.karthu.fx.form.search.PhraseQuery;
 import org.karthu.fx.form.search.SearchQuery;
 import org.karthu.fx.markdown.MarkdownView;
 import org.karthu.fx.markdown.SearchDirection;
@@ -95,18 +96,20 @@ import java.util.function.Function;
  *       previous match and the down arrow to the next one, backward the other way round. Each one's tooltip and
  *       accessible text name what it does in the current direction, {@linkplain #previousMatchTextProperty()
  *       <i>Previous match</i>} or {@linkplain #nextMatchTextProperty() <i>Next match</i>}, following a change of the
- *       direction. They show while there is text, are disabled without matches and with the field, and work while it
- *       is read-only, as they change no text. Like the &times; they are not focus traversable, and a click leaves the
- *       focus where it is.</li>
+ *       direction. They show while there is text other than whitespace only, are disabled without matches and with
+ *       the field, and work while it is read-only, as they change no text. Like the &times; they are not focus
+ *       traversable, and a click leaves the focus where it is.</li>
  * </ul>
+ * Whitespace only is no search for the view, so the field shows neither the counter nor the arrows for it, as for an
+ * empty field.
  *
- * <p><b>Counter.</b> While a list or a view is connected and there is text, a counter between the text and the
- * &times; shows the state of the search through the {@linkplain #matchCountFormatProperty() format} <i>{0} of
- * {1}</i>: for a list how many entries match and how many there are, <i>1 of 2</i>, for a view the current match and
- * the number of matches, <i>3 of 12</i>. It follows the text and every change of the list and of the application's
- * list under it, or of the view's matches, and the application never computes it. With no match it carries the
- * pseudo-class {@code :no-match}, which the theme draws in the warning colour. It stays while read-only and disabled,
- * as it changes nothing.
+ * <p><b>Counter.</b> While a list is connected and there is text, or a view is connected and there is text other than
+ * whitespace only, a counter between the text and the &times; shows the state of the search through the
+ * {@linkplain #matchCountFormatProperty() format} <i>{0} of {1}</i>: for a list how many entries match and how many
+ * there are, <i>1 of 2</i>, for a view the current match and the number of matches, <i>3 of 12</i>. It follows the
+ * text and every change of the list and of the application's list under it, or of the view's matches, and the
+ * application never computes it. With no match it carries the pseudo-class {@code :no-match}, which the theme draws
+ * in the warning colour. It stays while read-only and disabled, as it changes nothing.
  *
  * <p><b>Marks in the application's cells.</b> {@link #highlight(String)} hands out a text building block for the
  * application's own cells, such as the rows of the filtered list: a node that shows a text with every occurrence of the
@@ -446,9 +449,9 @@ public class SearchInput extends FieldFrame {
     /**
      * Connects the field to a Markdown view, which it searches from now on: the view takes the field's text as its
      * search text at once, and from then on the field's text and the view's search text stay equal both ways, the empty
-     * field being the view's {@code null} search. While there is text the counter shows the current match and the
-     * number of matches, Enter and Shift+Enter go to the next and the previous match, and the arrows show (see
-     * <i>View search</i> in the class description).
+     * field being the view's {@code null} search. While there is text other than whitespace only, the counter shows the
+     * current match and the number of matches and the arrows show; while there is text, Enter and Shift+Enter go to
+     * the next and the previous match (see <i>View search</i> in the class description).
      *
      * <p>The field searches one view at a time and filters no list meanwhile: a second call replaces the first
      * connection, and the view connected before keeps its search but no longer follows the text; a call with null
@@ -626,11 +629,11 @@ public class SearchInput extends FieldFrame {
     }
 
     /**
-     * Shows the arrows while a view is connected and there is text, disabled without matches (and with the field), and
-     * names in each one's tooltip and accessible text what it does in the view's direction.
+     * Shows the arrows while the field searches a view, disabled without matches (and with the field), and names in
+     * each one's tooltip and accessible text what it does in the view's direction.
      */
     private void updateArrows() {
-        boolean stepping = searchedView != null && hasText();
+        boolean stepping = searchesView();
         updateOwnControl(up, stepping);
         updateOwnControl(down, stepping);
         if (stepping && searchedView.getSearchMatchCount() == 0) {
@@ -888,13 +891,13 @@ public class SearchInput extends FieldFrame {
     }
 
     /**
-     * Shows the own controls as the text, the connection and the state ask: the counter while a list or a view is
-     * connected and there is text, with the list's counts or the view's current match and matches, and
-     * {@code :no-match} at none; the arrows while a view is connected and there is text; the clear button while there
-     * is text and the field is neither disabled nor read-only.
+     * Shows the own controls as the text, the connection and the state ask: the counter while a list is connected and
+     * there is text, or while the field searches a view (text other than whitespace only), with the list's counts or
+     * the view's current match and matches, and {@code :no-match} at none; the arrows while the field searches a view;
+     * the clear button while there is text and the field is neither disabled nor read-only.
      */
     private void updateOwnControls() {
-        boolean counting = (listFilter != null || searchedView != null) && hasText();
+        boolean counting = (listFilter != null && hasText()) || searchesView();
         if (counting && searchedView != null) {
             // A view counts its current match from 0, -1 for none: shown from 1, and 0 without matches.
             int matches = searchedView.getSearchMatchCount();
@@ -916,5 +919,13 @@ public class SearchInput extends FieldFrame {
     private boolean hasText() {
         String text = getText();
         return text != null && !text.isEmpty();
+    }
+
+    /**
+     * Whether the field searches a view now: a view is connected and the text is a search for it. Whitespace only is
+     * none, as the view takes it, so the counter and the arrows hide as in an empty field.
+     */
+    private boolean searchesView() {
+        return searchedView != null && !PhraseQuery.of(getText()).isEmpty();
     }
 }
