@@ -12,6 +12,11 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   matches and the current match, goes to the next and the previous match in a `SearchDirection`
   and clears the search. Every match is marked, the current one apart, and the view scrolls to it.
   Tables are not searched yet.
+- `SearchInput` searches a `MarkdownView` with `search(view)`: the field's text is the view's search,
+  the counter shows the current match and the number of matches (*3 of 12*), Enter and Shift+Enter
+  go to the next and the previous match, and two arrows in the field go up and down through the
+  matches, their texts translatable with `previousMatchTextProperty()` and `nextMatchTextProperty()`.
+  A field searches a view or filters a list, one at a time.
 
 ### Fixed
 
