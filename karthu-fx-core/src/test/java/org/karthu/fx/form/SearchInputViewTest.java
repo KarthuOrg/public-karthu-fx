@@ -337,7 +337,8 @@ class SearchInputViewTest {
     }
 
     @Test
-    @DisplayName("Enter passes on in an empty field, in a field with no view, and with Control or Alt down")
+    @DisplayName("Enter passes on in an empty field, in one of whitespace only, in a field with no view, and with "
+            + "Control or Alt down")
     void enterPassesOn() {
         layOut(input);
         input.setText("anna");
@@ -346,6 +347,12 @@ class SearchInputViewTest {
         input.search(view);
         input.setText("");
         assertEquals(1, firesThrough(input, keyPressed(KeyCode.ENTER)).size(), "an empty field");
+        int shiftEnterInAnEmptyField = firesThrough(input, shiftKeyPressed(KeyCode.ENTER)).size();
+        input.setText(" \t ");
+        assertEquals(1, firesThrough(input, keyPressed(KeyCode.ENTER)).size(), "whitespace only");
+        assertEquals(shiftEnterInAnEmptyField, firesThrough(input, shiftKeyPressed(KeyCode.ENTER)).size(),
+                "Shift+Enter, whitespace only, as in an empty field");
+        assertEquals(-1, view.getSearchMatchIndex(), "no search, no match");
 
         input.setText("anna");
         assertEquals(1, firesThrough(input, controlKeyPressed(KeyCode.ENTER)).size(), "Control+Enter");

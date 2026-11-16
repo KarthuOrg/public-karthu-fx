@@ -57,8 +57,9 @@ import java.util.function.Function;
  * keys, and Escape (without a modifier), which empties a field with text and is consumed, so a connected list shows
  * every entry again and a connected view ends its search. In an empty field, and while the user may not change the
  * text (read-only), Escape changes nothing and passes on unconsumed, so a dialog around the field can still close on
- * it. While a view is connected and there is text, Enter goes to the view's next match and Shift+Enter to its previous
- * one (see <i>View search</i>). No other key: Control+F and F3 are left to the application.
+ * it. While a view is connected and the text is other than whitespace only, Enter goes to the view's next match and
+ * Shift+Enter to its previous one (see <i>View search</i>). No other key: Control+F and F3 are left to the
+ * application.
  *
  * <p><b>Matching.</b> The text is a search: split at any run of whitespace into words. An entry matches when every word
  * occurs, as a contiguous part, in its text, ignoring case and accents ({@code zurich} finds {@code Zürich}, and
@@ -88,7 +89,8 @@ import java.util.function.Function;
  *   <li>Enter goes to the view's {@linkplain MarkdownView#nextSearchMatch() next match}, Shift+Enter to its
  *       {@linkplain MarkdownView#previousSearchMatch() previous one}, in the view's
  *       {@linkplain MarkdownView#searchDirectionProperty() direction}. Both are consumed, also without matches, so a
- *       default button does not fire while the user searches. In a {@link SuggestionInput} Enter applies the
+ *       default button does not fire while the user searches. In a field of whitespace only, no search for the view,
+ *       they pass on as in an empty field. In a {@link SuggestionInput} Enter applies the
  *       preselected entry while the popup shows, as it does without a view.</li>
  *   <li>Two arrows between the counter and the &times; (Bootstrap {@code CHEVRON_UP} and {@code CHEVRON_DOWN}) go
  *       through the matches with the mouse: the up arrow to the match above, towards the document's start, the down
@@ -452,8 +454,8 @@ public class SearchInput extends FieldFrame {
      * Connects the field to a Markdown view, which it searches from now on: the view takes the field's text as its
      * search text at once, and from then on the field's text and the view's search text stay equal both ways, the empty
      * field being the view's {@code null} search. While there is text other than whitespace only, the counter shows the
-     * current match and the number of matches and the arrows show; while there is text, Enter and Shift+Enter go to
-     * the next and the previous match (see <i>View search</i> in the class description).
+     * current match and the number of matches and the arrows show, and Enter and Shift+Enter go to the next and the
+     * previous match (see <i>View search</i> in the class description).
      *
      * <p>The field searches one view at a time and filters no list meanwhile: a second call replaces the first
      * connection, and the view connected before keeps its search but no longer follows the text; a call with null
@@ -485,14 +487,15 @@ public class SearchInput extends FieldFrame {
     }
 
     /**
-     * Enter and Shift+Enter while a view is connected and the field holds text: the next and the previous match, the
-     * key consumed also without matches. With Control, Alt or the meta key down, and otherwise, the key passes on.
+     * Enter and Shift+Enter while the field searches a view: the next and the previous match, the key consumed also
+     * without matches. In a field of whitespace only, which is no search for the view, as in an empty field, with
+     * Control, Alt or the meta key down, and otherwise, the key passes on.
      */
     private void handleEnter(KeyEvent event) {
         if (event.getCode() != KeyCode.ENTER || event.isAltDown() || event.isControlDown() || event.isMetaDown()) {
             return;
         }
-        if (searchedView == null || !hasText()) {
+        if (!searchesView()) {
             return;
         }
         // While a popup shows, Enter is the popup's: it applies the preselected entry. The popup's own filter on this
