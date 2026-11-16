@@ -6,6 +6,11 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 
 ## [Unreleased]
 
+### Fixed
+
+- `SettingsDialog` no longer makes JavaFX log "Loop detected" warnings for its CSS: three rules of the
+  theme set the background colour to a lookup of itself. The dialog looks as before.
+
 ## [1.1.0-RC1] - 2026-11-14
 
 The first version published to Maven Central.
