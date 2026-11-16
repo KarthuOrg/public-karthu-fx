@@ -238,6 +238,11 @@ class SearchInputShowcaseTest {
         switchOf(root, "Read-only").setSelected(true);
         assertTrue(field.isReadOnly());
         switchOf(root, "Read-only").setSelected(false);
+        assertTrue(switchOf(root, "Chevron").isSelected(), "the try-out field starts with its chevron");
+        assertTrue(field.isChevronVisible());
+        switchOf(root, "Chevron").setSelected(false);
+        assertFalse(field.isChevronVisible());
+        switchOf(root, "Chevron").setSelected(true);
 
         assertEquals(List.of("text: \"\"", "counter: (not shown)", "chosen entry: null (none chosen)",
                 "last choice (handler): (none yet)"), readOut(container));

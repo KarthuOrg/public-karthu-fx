@@ -25,7 +25,7 @@ import static org.karthu.fx.showcase.controller.showcase.FormInputShowcaseSuppor
  * Showcase page for the search input and the suggestion input, in the group <i>Form inputs</i>: the search field's
  * states (empty with the placeholder, with text and the focus, disabled, read-only), a list filter over a sample list
  * of workflows whose rows mark the matches, simple suggestions over names, rich suggestions as person cards with the
- * footer, and a field to try out with a read-out of its text, its counter and its chosen entry.
+ * footer, and a field to try out, with its chevron, and a read-out of its text, its counter and its chosen entry.
  *
  * <p>The person cards are built here from the suggestion input's public API alone (a cell factory, highlight nodes,
  * {@code search-strong} and the footer), as an application builds its own: {@link Person} and {@link PersonCardCell}
@@ -199,9 +199,9 @@ public class SearchInputShowcaseController {
     // --- Try it out ----------------------------------------------------------------------------------
 
     /**
-     * The try-out field: a suggestion input over the names that also filters them, so that its counter shows, with the
-     * switches disabled and read-only, and under it the read-out of its text, its counter as it shows it, its chosen
-     * entry and the last choice its handler heard.
+     * The try-out field: a suggestion input over the names that also filters them, so that its counter shows, with its
+     * chevron, the switches disabled, read-only and chevron, and under it the read-out of its text, its counter as it
+     * shows it, its chosen entry and the last choice its handler heard.
      */
     private void buildTryOut() {
         SuggestionInput<String> field = new SuggestionInput<>();
@@ -213,7 +213,11 @@ public class SearchInputShowcaseController {
         disabled.selectedProperty().bindBidirectional(field.disableProperty());
         CheckBox readOnly = new CheckBox("Read-only");
         readOnly.selectedProperty().bindBidirectional(field.readOnlyProperty());
-        tryOutSwitches.getChildren().addAll(disabled, readOnly);
+        // The chevron, on at first: a click opens every name, or the matches of the text, and closes the open list.
+        field.setChevronVisible(true);
+        CheckBox chevron = new CheckBox("Chevron");
+        chevron.selectedProperty().bindBidirectional(field.chevronVisibleProperty());
+        tryOutSwitches.getChildren().addAll(disabled, readOnly, chevron);
 
         Label text = readOutLine();
         Label counter = readOutLine();

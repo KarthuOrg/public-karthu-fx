@@ -563,8 +563,8 @@ switch for each state:
   for its row, ending in an ellipsis) beside person cards with the footer (*{0} of {1} people*),
   drawn by the page's own cell factory from the public API (the person type, the initials avatar
   and the card are the showcase's, not karthu-fx's); a try-out suggestion input that also filters
-  its names, the switches *Disabled* and *Read-only*, and a read-out of its text, its counter, its
-  chosen entry and the last choice its handler heard.
+  its names, with its chevron, the switches *Disabled*, *Read-only* and *Chevron*, and a read-out of
+  its text, its counter, its chosen entry and the last choice its handler heard.
 
 *Shell* (`FieldShell`): its children, left to right, are the type's leading graphic, if it has one
 (the search input's magnifier), the content (the control the type wraps),

@@ -13,7 +13,7 @@
       styleClass="showcase-page" spacing="16">
 
     <Label text="Search Input" styleClass="showcase-page-title"/>
-    <Label text="SearchInput, a search field in the look of the form fields, on the single-line frame of the form collection's shell (see the Overview), but no form input: no value in the form sense, no label row, no messages, no binding. A magnifier on the left, the placeholder Search, and a clear button (×) on the right as soon as there is text; Escape empties the field. An entry matches when every word typed occurs in one of its texts, ignoring case and accents. With one call the field filters a list as the user types, counts the matches in the field and hands out highlight nodes that mark them in the application's own rows. SuggestionInput adds a popup of suggestions: the application's own objects, the typed parts in bold, chosen with the arrows and Enter or a click, the chosen entry as an event and a property. An application may draw its own rows, such as the person cards below, and turn on a footer."
+    <Label text="SearchInput, a search field in the look of the form fields, on the single-line frame of the form collection's shell (see the Overview), but no form input: no value in the form sense, no label row, no messages, no binding. A magnifier on the left, the placeholder Search, and a clear button (×) on the right as soon as there is text; Escape empties the field. An entry matches when every word typed occurs in one of its texts, ignoring case and accents. With one call the field filters a list as the user types, counts the matches in the field and hands out highlight nodes that mark them in the application's own rows. SuggestionInput adds a popup of suggestions: the application's own objects, the typed parts in bold, chosen with the arrows and Enter or a click, the chosen entry as an event and a property. An application may draw its own rows, such as the person cards below, and turn on a footer and a chevron that opens the list with the mouse."
            styleClass="showcase-page-description" wrapText="true"/>
 
     <!-- States -->
@@ -43,7 +43,7 @@
     <!-- Try it out -->
     <VBox styleClass="showcase-card" spacing="12">
         <Label text="Try it out" styleClass="showcase-card-title"/>
-        <Label text="A suggestion input over the names, which also filters them, so that its counter shows. The lines under it read the field as an application would: its text, its counter as it shows it, the chosen entry (null again as soon as you edit the text) and the last choice its handler heard."
+        <Label text="A suggestion input over the names, which also filters them, so that its counter shows. Its chevron at the right end (the switch Chevron turns it off) opens the list with the mouse: every name in the empty field, the matches when there is text, as Down does; a click on it while the list is open closes it. Disabled or read-only, the chevron is greyed out and a click does nothing. The lines under it read the field as an application would: its text, its counter as it shows it, the chosen entry (null again as soon as you edit the text) and the last choice its handler heard."
                styleClass="showcase-page-description" wrapText="true"/>
         <FlowPane fx:id="tryOutSwitches" hgap="16" vgap="8"/>
         <VBox fx:id="tryOutContainer" spacing="8"/>
