@@ -24,8 +24,18 @@ import java.util.List;
  * table whole: it has two positions, before and after the table. A selection that passes over it shows the table as
  * selected whole ({@link MarkdownTable#showSelectedWhole(boolean)}) and copies all of it
  * ({@link MarkdownTable#wholeText()}). The table keeps its own presses: a press on a cell selects cells.
+ *
+ * <p>The block is the table's segment of the view's search too ({@link Searchable}): it hands the search the table's
+ * texts and matches ({@link MarkdownTable}, <em>Search</em>) and scrolls the table sideways to the match the search
+ * goes to ({@link #revealSideways(Match)}).
  */
-final class TableBlock extends Region implements Segment {
+final class TableBlock extends Region implements Searchable {
+
+    /**
+     * The room beside a match the search scrolls the table sideways to, in the document's pixels: as a code block
+     * leaves it, about four characters, beyond the cell's padding.
+     */
+    private static final double SIDEWAYS_MARGIN = 32;
 
     private final MarkdownTable table;
     private final ScrollBar bar = new ScrollBar();
@@ -168,6 +178,79 @@ final class TableBlock extends Region implements Segment {
     @Override
     public String text(int start, int end) {
         return start < end ? table.wholeText() : "";
+    }
+
+    /**
+     * The table's texts in the order it shows them, see {@link MarkdownTable#searchTexts()}.
+     */
+    @Override
+    public List<String> searchTexts() {
+        return table.searchTexts();
+    }
+
+    /**
+     * The cell and stretch of a text, see {@link MarkdownTable#searchTextKey(int)}.
+     */
+    @Override
+    public Object searchTextKey(int text) {
+        return table.searchTextKey(text);
+    }
+
+    /**
+     * Runs the code whenever the reader sorts the table, moves its columns, hides or shows one.
+     */
+    @Override
+    public void onSearchTextsChanged(Runnable changed) {
+        table.onSearchTextsChanged(changed);
+    }
+
+    /**
+     * Shows the matches in the table's cells, see {@link MarkdownTable#showSearchMatches(List, int)}.
+     */
+    @Override
+    public void showSearchMatches(List<Match> matches, int current) {
+        table.showSearchMatches(matches, current);
+    }
+
+    /**
+     * Marks the rows near the area, see {@link MarkdownTable#showSearchMatchesNear(NearArea)}.
+     */
+    @Override
+    public void showSearchMatchesNear(NearArea area) {
+        table.showSearchMatchesNear(area);
+    }
+
+    /**
+     * The box around the match's characters in its cell, see {@link MarkdownTable#searchMatchBounds(Match)}.
+     */
+    @Override
+    public Bounds searchMatchBounds(Match match) {
+        return table.searchMatchBounds(match);
+    }
+
+    /**
+     * Moves the bar, if the table is wider than the block and the match does not show whole: so that the match shows
+     * whole with a margin on the side it came in from, its start if it is wider than the block. The block shows the
+     * table from the bar's value on, so the table's coordinates are the bar's.
+     */
+    @Override
+    public void revealSideways(Match match) {
+        if (!bar.isVisible()) {
+            return;
+        }
+        double visibleWidth = getWidth() - snappedLeftInset() - snappedRightInset();
+        Bounds bounds = table.sceneToLocal(table.searchMatchBounds(match));
+        double offset = bar.getValue();
+        if (bounds.getMinX() >= offset && bounds.getMaxX() <= offset + visibleWidth) {
+            return;
+        }
+        double wanted;
+        if (bounds.getMinX() < offset || bounds.getWidth() + 2 * SIDEWAYS_MARGIN > visibleWidth) {
+            wanted = bounds.getMinX() - SIDEWAYS_MARGIN;
+        } else {
+            wanted = bounds.getMaxX() + SIDEWAYS_MARGIN - visibleWidth;
+        }
+        bar.setValue(Math.clamp(wanted, 0, bar.getMax()));
     }
 
     @Override

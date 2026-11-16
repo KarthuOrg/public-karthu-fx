@@ -3265,7 +3265,8 @@ Text {
 }
 
 /* The marks of the search in a heading, a paragraph, a code or a source
- * block: highlights like the selection's, in two layers below it, every
+ * block or a table's cell (see the tables' rules for a selected cell):
+ * highlights like the selection's, in two layers below it, every
  * match but the current one (markdown-search-match) and above it the
  * current one (markdown-search-current), each match's characters shown
  * again on its highlight in the layer's text colour. */
@@ -3508,6 +3509,19 @@ Text {
 
 .markdown-view .markdown-table:selected-whole .markdown-text {
     -fx-fill: -fx-selection-text-color;
+}
+
+/* The search's marks in a selected cell or a table selected whole: the
+ * selection shows above them, as it lies above the marks in a
+ * paragraph. The highlights let the cell's selection colour through,
+ * and the matched characters on them take the selection's text
+ * colour, as the cell's other runs do. */
+.markdown-view .markdown-table .table-cell:selected .markdown-search-match,
+.markdown-view .markdown-table .table-cell:selected .markdown-search-current,
+.markdown-view .markdown-table:selected-whole .markdown-search-match,
+.markdown-view .markdown-table:selected-whole .markdown-search-current {
+    -fx-fill: transparent;
+    -fx-highlight-text-fill: -fx-selection-text-color;
 }
 
 /* The zoom bar (markdown-zoom-bar) on top of the view, outside its

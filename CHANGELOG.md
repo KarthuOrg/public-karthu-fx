@@ -11,7 +11,8 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 - `MarkdownView` searches its text: an application sets the search text, reads the number of
   matches and the current match, goes to the next and the previous match in a `SearchDirection`
   and clears the search. Every match is marked, the current one apart, and the view scrolls to it.
-  Tables are not searched yet.
+  Tables are searched too, header and cells in the order they show, and the search follows the
+  reader's sort and moved, hidden or shown columns.
 
 ### Fixed
 

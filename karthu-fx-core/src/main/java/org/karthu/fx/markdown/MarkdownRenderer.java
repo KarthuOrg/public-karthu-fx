@@ -425,10 +425,9 @@ final class MarkdownRenderer {
             icon.getStyleClass().add(RunStyle.LINK.styleClass());
         }
         List<Text> parts = new ArrayList<>(List.of(icon));
-        if (!image.alt().isEmpty()) {
-            // A no-break space: the alt text never wraps away from its icon, and the column's longest word, which
-            // ends at white space, is the icon and the alt text's first word together.
-            Text alt = textRun(NO_BREAK_SPACE + image.alt(), format);
+        String altText = cellAltText(image);
+        if (altText != null) {
+            Text alt = textRun(altText, format);
             alt.getStyleClass().add("markdown-image-cell");
             parts.add(alt);
         }
@@ -445,6 +444,48 @@ final class MarkdownRenderer {
             }
             flow.getChildren().add(part);
         }
+    }
+
+    /**
+     * The run of text an image of a table's cell shows after its icon: a no-break space and the alt text, so the alt
+     * text never wraps away from its icon, and the column's longest word, which ends at white space, is the icon and
+     * the alt text's first word together.
+     *
+     * @return the run's text, {@code null} for an image without alt text, which shows its icon alone
+     */
+    private static String cellAltText(Image image) {
+        return image.alt().isEmpty() ? null : NO_BREAK_SPACE + image.alt();
+    }
+
+    /**
+     * The texts the view's search runs through in a table's cell, header or body: the text the cell's flow shows,
+     * derived from its inlines as {@link #addCellRuns} builds the flow's runs, without building them, so a cell never
+     * drawn is searched too. An image's icon is a part of the flow no match takes, so the cell's text is split there:
+     * a cell without images is one text, and each image starts a new one with the text the flow shows after the icon,
+     * the no-break space and the alt text first. A position in a text counts the flow's characters from the cell's
+     * start, or from just after the icon before the text.
+     *
+     * @param content the cell's inlines
+     * @return the texts, one more than the cell has images, empty ones included
+     */
+    static List<String> cellSearchTexts(List<Inline> content) {
+        List<String> texts = new ArrayList<>();
+        StringBuilder text = new StringBuilder();
+        for (StyledRun run : styledRuns(content)) {
+            switch (run) {
+                case TextRun textRun -> text.append(textRun.text());
+                case ImageRun imageRun -> {
+                    texts.add(text.toString());
+                    text.setLength(0);
+                    String altText = cellAltText(imageRun.image());
+                    if (altText != null) {
+                        text.append(altText);
+                    }
+                }
+            }
+        }
+        texts.add(text.toString());
+        return texts;
     }
 
     /**

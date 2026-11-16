@@ -13,8 +13,9 @@ import java.util.List;
 
 /**
  * A layer that shows ranges of a text flow's characters highlighted: the paragraphs' and headings' flows
- * ({@link TextSegment}) and the flows of code and source blocks ({@link MonospaceBlock}). The selection shows in one,
- * the search's matches in two more, all matches and the current one, below it ({@link SearchMarks}).
+ * ({@link TextSegment}), the flows of code and source blocks ({@link MonospaceBlock}) and of a table's cells
+ * ({@link MarkdownTable}). The selection shows in one, the search's matches in two more, all matches and the current
+ * one, below it ({@link SearchMarks}); a table cell's flow has the search's alone.
  *
  * <p>The runs' own selection ({@code Text.selectionStart}) does not colour the characters of a run inside a text flow
  * (checked with JavaFX 25: a run's selection fill does not show there, at any offsets). So the flow lays this layer

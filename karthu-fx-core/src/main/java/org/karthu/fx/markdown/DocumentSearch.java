@@ -10,8 +10,10 @@ import org.karthu.fx.form.search.PhraseQuery;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -27,7 +29,12 @@ import java.util.Set;
  * segments near the visible area ({@link NearArea}) build their marks, at each layout of the view and each scroll: so a
  * one-letter search in a large document costs the scan of the text, not the shapes of tens of thousands of matches. A
  * segment that leaves the area keeps its marks until the search or the current match changes them. The segments lie
- * one below the other in document order, so the first one near the area is found by halving.
+ * one below the other in document order, so the first one near the area is found by halving. A long table marks only
+ * its rows near the area ({@link Searchable#showSearchMatchesNear(NearArea)}).
+ *
+ * <p><b>Table changes.</b> A table tells the search when the reader sorts it or moves, hides or shows a column
+ * ({@link Searchable#onSearchTextsChanged(Runnable)}): the search runs again and numbers the matches anew, and finds
+ * the current match again by what names its text across the change ({@link Searchable#searchTextKey(int)}).
  */
 final class DocumentSearch {
 
@@ -139,6 +146,89 @@ final class DocumentSearch {
     }
 
     /**
+     * Runs the search through the document again after a segment's texts changed their order or came and went: a
+     * table the reader sorted, whose columns the reader moved, hid or showed. The matches are numbered anew. The
+     * current match stays on its text if it is still there; else the first match after it in the old order that
+     * still is becomes current, backward the first before it, wrapping around. The view does not scroll: the reader
+     * changed the table, not the search.
+     *
+     * @param segment the segment whose texts changed
+     */
+    private void textsChanged(Searchable segment) {
+        if (query.isEmpty()) {
+            return;
+        }
+        int old = matchIndex.get();
+        Found oldCurrent = currentMatch();
+        // Named before the segment numbers its texts anew: it names them as it numbered them for these matches.
+        List<Place> before = new ArrayList<>(matches.size());
+        for (Found found : matches) {
+            before.add(placeOf(found));
+        }
+        Searchable oldSegment = oldCurrent == null ? null : parts.get(oldCurrent.part()).segment();
+        findAll();
+        publish(oldCurrent == null ? firstInDirection() : firstStillThere(before, old));
+        remarkSegment(segment);
+        if (oldSegment != null) {
+            remarkSegment(oldSegment);
+        }
+        Found current = currentMatch();
+        if (current != null) {
+            remarkSegment(parts.get(current.part()).segment());
+        }
+        markNear();
+    }
+
+    /**
+     * The first of the matches before a change, from the current one on in the direction and wrapping around, that
+     * is still there after it.
+     *
+     * @param before the places of the matches before the change, in their order then
+     * @param old    the index of the current match among them
+     * @return its index among the matches now; as for a new search if none is still there
+     */
+    private int firstStillThere(List<Place> before, int old) {
+        Map<Place, Integer> now = new HashMap<>();
+        for (int i = 0; i < matches.size(); i++) {
+            now.put(placeOf(matches.get(i)), i);
+        }
+        int step = forward() ? 1 : -1;
+        for (int k = 0; k < before.size(); k++) {
+            Integer index = now.get(before.get(Math.floorMod(old + k * step, before.size())));
+            if (index != null) {
+                return index;
+            }
+        }
+        return firstInDirection();
+    }
+
+    /**
+     * Where a match lies, named so that it stays the same across a change of its segment's texts.
+     */
+    private Place placeOf(Found found) {
+        Searchable segment = parts.get(found.part()).segment();
+        return new Place(found.order(), segment.searchTextKey(found.match().text()), found.match().start());
+    }
+
+    /**
+     * Has a segment that shows its marks show them anew: its matches, or the current match among them, changed. A
+     * segment left without matches takes its marks away.
+     */
+    private void remarkSegment(Searchable segment) {
+        if (!marked.contains(segment)) {
+            return;
+        }
+        for (int part = 0; part < parts.size(); part++) {
+            if (parts.get(part).segment() == segment) {
+                show(part);
+                return;
+            }
+        }
+        segment.showSearchMatches(List.of(), -1);
+        marked.remove(segment);
+    }
+
+    /**
      * The current match, {@code null} if there is none.
      */
     private Found currentMatch() {
@@ -236,6 +326,8 @@ final class DocumentSearch {
             if (!(segments.get(order) instanceof Searchable searchable)) {
                 continue;
             }
+            // A table tells when the reader reorders its texts; a later run replaces what it runs then.
+            searchable.onSearchTextsChanged(() -> textsChanged(searchable));
             int first = matches.size();
             List<String> texts = searchable.searchTexts();
             for (int text = 0; text < texts.size(); text++) {
@@ -317,6 +409,8 @@ final class DocumentSearch {
             if (!marked.contains(segment)) {
                 show(i);
             }
+            // A long table marks the rows near the area only, more as the view scrolls.
+            segment.showSearchMatchesNear(area);
         }
     }
 
@@ -379,6 +473,16 @@ final class DocumentSearch {
      * @param count   the number of its matches, at least one
      */
     private record Part(Searchable segment, int first, int count) {
+    }
+
+    /**
+     * Where a match lies, the same across a change of its segment's texts' order ({@link Searchable#searchTextKey}).
+     *
+     * @param order the segment's place in document order, among all segments
+     * @param text  what names the match's text in the segment
+     * @param start the match's first character in the text
+     */
+    private record Place(int order, Object text, int start) {
     }
 
     /**

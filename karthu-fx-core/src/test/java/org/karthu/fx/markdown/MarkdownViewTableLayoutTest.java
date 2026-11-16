@@ -43,14 +43,16 @@ class MarkdownViewTableLayoutTest {
         MarkdownTestSupport.initToolkit();
     }
 
-    @ParameterizedTest(name = "zoom {0}, zoom bar shown {1}")
-    @DisplayName("a document with many tables, taller than the view, comes to rest within a few layout passes")
-    @CsvSource({"1.0, true", "1.0, false", "1.25, true", "1.25, false"})
-    void manyTablesComeToRest(double zoom, boolean zoomBar) {
+    @ParameterizedTest(name = "zoom {0}, zoom bar shown {1}, search {2}")
+    @DisplayName("a document with many tables, taller than the view, comes to rest within a few layout passes, with"
+            + " the marks of a search in its cells too")
+    @CsvSource({"1.0, true,", "1.0, false,", "1.25, true,", "1.25, false,", "1.0, true, e", "1.25, false, e"})
+    void manyTablesComeToRest(double zoom, boolean zoomBar, String search) {
         MarkdownView view = new MarkdownView();
         view.setZoomBarVisible(zoomBar);
         view.setMarkdown(documentWithTables());
         view.setZoom(zoom);
+        view.setSearchText(search);
         StackPane root = new StackPane(view);
         Scene scene = new Scene(root, 1200, 800);
         ThemeManager.apply(scene);

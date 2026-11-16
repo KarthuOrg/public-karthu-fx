@@ -576,9 +576,11 @@ import java.util.function.Consumer;
  * The search works with the zoom bar hidden and needs none of the view's controls; the view takes no keys for it.
  *
  * <p><b>What is searched.</b> The text the reader sees in headings, paragraphs, list items and quotes at any depth,
- * and the text of code and source blocks as they show it. An inline image is a position no match takes. Not searched:
- * tables, block images, the alt text of images, list markers, link addresses, tooltips and buttons. A match never runs
- * from one heading, paragraph or block into the next.
+ * the text of code and source blocks as they show it, and the text of a table's header and body cells as they show
+ * it, also in rows never drawn. An inline image is a position no match takes; an image in a table cell shows its alt
+ * text, which is searched, after its icon, which no match takes. Not searched: a table's hidden columns, block images,
+ * the alt text of block and inline images, list markers, link addresses, tooltips and buttons. A match never runs
+ * from one heading, paragraph, block or table cell into the next.
  *
  * <p><b>Matching.</b> The search is one piece: its words in their order, next to each other, so {@code der Bericht}
  * finds the places where both stand together, not every {@code der}. Whitespace at its start and its end is dropped,
@@ -592,7 +594,9 @@ import java.util.function.Consumer;
  * next one starts after its end, so {@code aa} finds two matches in {@code aaaa}.
  *
  * <p><b>Order and direction.</b> The matches are numbered from 0 from the top of the document, whatever the
- * direction. With at least one match there is always a current one. A new search, after none or after one without
+ * direction; in a table its header first, then its rows in the order it shows them, each row's cells in the order of
+ * the shown columns, so <em>next</em> walks through a table as the reader reads it. With at least one match there is
+ * always a current one. A new search, after none or after one without
  * matches, makes the first match current, backward the last. A changed search keeps the current match while it still
  * matches: forward the first match that starts at or after the old current match's start becomes current, backward
  * the last one that starts at or before it, wrapping around to the first (backward the last). <em>Next</em> goes to the
@@ -601,21 +605,31 @@ import java.util.function.Consumer;
  * limit, keeps the search and runs it on the new text, the current match chosen as for a new search; the view does not
  * scroll to it.
  *
+ * <p><b>Table changes.</b> When the reader sorts a table, or moves, hides or shows one of its columns, the matches are
+ * numbered anew in the order the table shows now, and the current match stays on its text. If its column is hidden,
+ * the first match after it that is still there becomes current (backward the first before it), wrapping around; the
+ * view does not scroll for it. A column shown again has its matches counted again. A column resized changes nothing
+ * but the shapes of the marks.
+ *
  * <p><b>Scrolling.</b> After next, previous and a new or changed search, the view scrolls to the current match if it
  * is not fully visible: so that the match's middle is at the middle of the visible area, as far as the scroll range
- * allows, at every zoom. In a code or source block whose line is wider than the block, the block first scrolls
- * sideways so that the match shows whole, with a margin. A fully visible match scrolls nothing, so going through the
+ * allows, at every zoom, also to a table row the view has never shown. In a code or source block whose line is wider
+ * than the block, and in a table wider than the view, the block first scrolls sideways so that the match shows whole,
+ * with a margin. A fully visible match scrolls nothing, so going through the
  * matches on screen is calm. A search without matches leaves the view where it is. A search set before the view is
  * laid out scrolls at its first layout.
  *
  * <p><b>Marks.</b> Every match but the current one is marked in a muted amber ({@code markdown-search-match}), the
  * current one in amber behind a dark text ({@code markdown-search-current}): highlights like the selection's, in two
- * layers over the text of a heading, a paragraph or a code or source block, which show the matched characters again in
- * the highlight's text colour. The selection lies above both, so the search never hides it, and the search never
- * changes it. The marks stay on their characters when the view is resized, wraps its text anew or zooms, and go when
- * the search is cleared. The matches of the whole document are found at once, but only the blocks within one visible
- * height above or below the visible area build their marks, more as the view scrolls, so a one-letter search in a large
- * document stays quick.
+ * layers over the text of a heading, a paragraph, a code or source block or a table's header or body cell, which show
+ * the matched characters again in the highlight's text colour; in a table cell too only the matched characters. The
+ * selection lies above both, so the search never hides it, and the search never changes it: in a selected table cell
+ * and in a table the text selection passes over, the highlights let the selection colour through and the matched
+ * characters take the selection's text colour. The marks stay on their characters when the view is resized, wraps its
+ * text anew or zooms, when a table is sorted, which fills its cells anew, or its columns are resized, and go when the
+ * search is cleared. The matches of the whole document are found at once, but only the blocks, and in a table the
+ * rows, within one visible height above or below the visible area build their marks, more as the view scrolls, so a
+ * one-letter search in a large document stays quick.
  *
  * <h2>Style classes</h2>
  *
@@ -697,11 +711,13 @@ import java.util.function.Consumer;
  *       the selected characters. A selected image, block or inline, has one of its own, a {@code Path} over its
  *       picture, placeholder or error box, which the theme makes half see-through ({@code -fx-opacity})</td></tr>
  *   <tr><td>{@code markdown-search-match}</td><td>the highlight behind every match of the search but the current
- *       one, a {@code Path}, in a layer over the runs of a heading's, a paragraph's or a code or source block's flow
- *       (an unmanaged {@code TextFlow} child of the flow, clipped to the matches) that shows the matched characters
- *       again on the highlight, below the current match's layer and the selection's. Like {@code markdown-selection},
- *       its {@code -fx-fill} is the highlight's colour and its {@code -fx-highlight-text-fill} the colour of the
- *       characters on it</td></tr>
+ *       one, a {@code Path}, in a layer over the runs of a heading's, a paragraph's, a code or source block's or a
+ *       table's header or body cell's flow (an unmanaged {@code TextFlow} child of the flow, clipped to the matches)
+ *       that shows the matched characters again on the highlight, below the current match's layer and the
+ *       selection's. Like {@code markdown-selection}, its {@code -fx-fill} is the highlight's colour and its
+ *       {@code -fx-highlight-text-fill} the colour of the characters on it; in a selected table cell and a table
+ *       {@code :selected-whole} the theme makes the fill transparent and the characters the selection's text
+ *       colour</td></tr>
  *   <tr><td>{@code markdown-search-current}</td><td>the highlight behind the current match of the search, a
  *       {@code Path} in a layer of its own like the other matches', above theirs and below the selection's, with the
  *       same two properties</td></tr>

@@ -9,6 +9,7 @@ import javafx.css.CssMetaData;
 import javafx.css.PseudoClass;
 import javafx.css.Styleable;
 import javafx.event.EventTarget;
+import javafx.geometry.Bounds;
 import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
@@ -42,9 +43,12 @@ import javafx.stage.Window;
 import javafx.util.Callback;
 import org.karthu.fx.markdown.parser.Inline;
 import org.karthu.fx.markdown.parser.Table;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -113,6 +117,14 @@ import java.util.function.Consumer;
  * (its block, {@link TableBlock}, is the selection's segment): the table then looks selected whole
  * ({@link #showSelectedWhole(boolean)}) and copies as {@link #wholeText()}, while its own selection of cells stays
  * empty.
+ *
+ * <p><b>Search.</b> The view's search runs through the table's texts in the order it shows them
+ * ({@link #searchTexts()}), a cell's text derived from its inlines without drawing it. The table keeps the matches by
+ * their cells as the source has them, and the flows of the headers and of the body cells of the rows near the visible
+ * area show their cell's matches in the two layers of their {@link SearchMarks}
+ * ({@link #showSearchMatches(List, int)}, {@link #showSearchMatchesNear(NearArea)}). A sort and a moved, hidden or
+ * shown column call the search back ({@link #onSearchTextsChanged(Runnable)}), which numbers the matches anew; it finds
+ * its current match again by the cell as the source has it ({@link #searchTextKey(int)}).
  */
 final class MarkdownTable extends TableView<MarkdownTable.Row> implements SelectionHolder {
 
@@ -129,6 +141,11 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
      * {@link #rowHeight(TableRow, List, double[])}.
      */
     private static final double DEFAULT_CELL_SIZE = 24;
+
+    /**
+     * The row of the header among the search's texts ({@link TextKey}, {@link SearchText}): before every body row.
+     */
+    private static final int HEADER_ROW = -1;
 
     /**
      * The measure row, created on first use; it is a child of the table only while it measures.
@@ -154,6 +171,41 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
      * The reader's selection gestures, which also select a whole column for the view's context menu.
      */
     private final CellSelection cellSelection;
+
+    /**
+     * The header's cells, in the source's column order.
+     */
+    private final List<Table.Cell> header;
+
+    /**
+     * The columns in the source's order, whatever order the reader has moved them to: a column's place here is the
+     * index of its cells in the header and in each row.
+     */
+    private final List<TableColumn<Row, ?>> sourceColumns;
+
+    /**
+     * The texts of the table the view's search ran through last, in the order it numbered them, see
+     * {@link #searchTexts()}.
+     */
+    private List<SearchText> searchTexts = List.of();
+
+    /**
+     * The matches of the view's search the table shows, by their cells, each cell's in its order.
+     */
+    private final Map<SourceCell, List<CellMatch>> searchMatches = new HashMap<>();
+
+    /**
+     * The rows whose cells show the search's marks, by their place in the shown order: those that have come near the
+     * visible area since the matches were last emptied. A place, not a row: a sort fills the cells of a marked place
+     * anew, and they show the marks of the row they show then.
+     */
+    private final BitSet markedRows = new BitSet();
+
+    /**
+     * What runs when the search's texts change their order or come and go, {@code null} until the search watches the
+     * table.
+     */
+    private Runnable searchTextsChanged;
 
     /**
      * Creates a table.
@@ -204,6 +256,8 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
         for (int i = 0; i < table.header().size(); i++) {
             getColumns().add(column(i, table.header().get(i), table.alignments().get(i), runs));
         }
+        header = List.copyOf(table.header());
+        sourceColumns = List.copyOf(getColumns());
         List<Row> rows = new ArrayList<>();
         for (int i = 0; i < table.rows().size(); i++) {
             rows.add(new Row(i, table.rows().get(i)));
@@ -212,7 +266,42 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
         // A header's text flow wraps to what its column header leaves it, which shrinks when the sort arrow appears,
         // and in the last shown column by the menu button's corner.
         getSortOrder().addListener((ListChangeListener<TableColumn<Row, ?>>) change -> headersChanged());
-        getVisibleLeafColumns().addListener((ListChangeListener<TableColumn<Row, ?>>) change -> headersChanged());
+        // The search's texts follow the shown order: a sort moves the rows, a moved, hidden or shown column the cells.
+        getVisibleLeafColumns().addListener((ListChangeListener<TableColumn<Row, ?>>) change -> {
+            headersChanged();
+            searchTextsChanged();
+        });
+        getItems().addListener((ListChangeListener<Row>) change -> searchTextsChanged());
+    }
+
+    /**
+     * Has the table run code whenever the search's texts change their order or come and go: the reader sorts the
+     * table, moves a column, hides or shows one.
+     *
+     * @param changed the code; it replaces the code given before
+     */
+    void onSearchTextsChanged(Runnable changed) {
+        searchTextsChanged = changed;
+    }
+
+    /**
+     * Runs what the search asked to run when its texts change.
+     */
+    private void searchTextsChanged() {
+        if (searchTextsChanged != null) {
+            searchTextsChanged.run();
+        }
+    }
+
+    /**
+     * What names a text of the search across sorts and moved columns: its cell as the source has it, header or body,
+     * and its stretch in the cell.
+     *
+     * @param text the text's number among the texts of the last {@link #searchTexts()}
+     * @return what names it, equal for the same text whatever the order
+     */
+    Object searchTextKey(int text) {
+        return searchTexts.get(text).key();
     }
 
     /**
@@ -326,6 +415,209 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
             return "";
         }
         return rectangleText(new CellKey(0, 0), new CellKey(getItems().size() - 1, columns - 1), null, true);
+    }
+
+    /**
+     * The texts the view's search runs through, in the order the table shows them: the header's cells of the shown
+     * columns in their shown order, then the rows in their shown order, each row's cells in the shown columns' order. A
+     * hidden column is not searched. A cell's text is what its flow shows, derived from its inlines without drawing it
+     * ({@link MarkdownRenderer#cellSearchTexts(List)}), so a row never drawn is searched too; a cell with images gives
+     * a text per stretch between their icons. The table keeps the list: the search's matches name a text by its number
+     * in it, and {@link #searchTextKey(int)} names it across a sort or a moved column.
+     *
+     * @return the texts, in the order the table shows them
+     */
+    List<String> searchTexts() {
+        List<SearchText> found = new ArrayList<>();
+        List<TableColumn<Row, ?>> shown = getVisibleLeafColumns();
+        for (TableColumn<Row, ?> column : shown) {
+            int source = sourceColumns.indexOf(column);
+            addSearchTexts(found, HEADER_ROW, HEADER_ROW, source, header.get(source));
+        }
+        for (int index = 0; index < getItems().size(); index++) {
+            Row row = getItems().get(index);
+            for (TableColumn<Row, ?> column : shown) {
+                int source = sourceColumns.indexOf(column);
+                addSearchTexts(found, row.sourceIndex(), index, source, row.cells().get(source));
+            }
+        }
+        searchTexts = found;
+        List<String> texts = new ArrayList<>(found.size());
+        for (SearchText text : found) {
+            texts.add(text.text());
+        }
+        return texts;
+    }
+
+    /**
+     * Adds a cell's texts, one per stretch between its images' icons.
+     */
+    private static void addSearchTexts(List<SearchText> found, int sourceRow, int shownRow, int sourceColumn,
+                                       Table.Cell cell) {
+        List<String> stretches = MarkdownRenderer.cellSearchTexts(cell.content());
+        SourceCell sourceCell = new SourceCell(sourceRow, sourceColumn);
+        for (int stretch = 0; stretch < stretches.size(); stretch++) {
+            found.add(new SearchText(new TextKey(sourceCell, stretch), shownRow, stretches.get(stretch)));
+        }
+    }
+
+    /**
+     * Shows the search's matches in the table's cells: the headers and the body cells of the rows marked so far show
+     * those of their cells, the current one in its own colour, and a body cell of such a row filled later shows those
+     * of its cell then ({@link BodyCell#updateItem}). A row is marked when it comes near the visible area
+     * ({@link #showSearchMatchesNear(NearArea)}), so a one-letter search in a long table builds the marks of the rows
+     * near the area only. The matches are kept by their cells as the source has them, not by where the cells show, so
+     * a sort, which fills the cells anew, keeps the marks on their text. A cell whose matches stay as they were keeps
+     * its marks: the next match in a table changes the marks of two cells.
+     *
+     * @param matches the table's matches, their texts numbered as the table's last {@link #searchTexts()}; none to
+     *                show no marks, which unmarks every row
+     * @param current the index of the current match among them, -1 if it lies elsewhere or there is none
+     */
+    void showSearchMatches(List<Searchable.Match> matches, int current) {
+        searchMatches.clear();
+        for (int i = 0; i < matches.size(); i++) {
+            Searchable.Match match = matches.get(i);
+            TextKey key = searchTexts.get(match.text()).key();
+            List<CellMatch> inCell = searchMatches.get(key.cell());
+            if (inCell == null) {
+                inCell = new ArrayList<>();
+                searchMatches.put(key.cell(), inCell);
+            }
+            inCell.add(new CellMatch(key.stretch(), match.start(), match.end(), i == current));
+        }
+        for (TableColumn<Row, ?> column : sourceColumns) {
+            if (column.getGraphic() instanceof ColumnFlow flow) {
+                flow.showSearchMatches(cellMatches(HEADER_ROW, column));
+            }
+        }
+        if (getSkin() instanceof TableSkin skin) {
+            for (int index = markedRows.nextSetBit(0); index >= 0; index = markedRows.nextSetBit(index + 1)) {
+                showRowMatches(skin.visibleRow(index));
+            }
+        }
+        if (matches.isEmpty()) {
+            // The search changed or left the table: the rows are marked anew as they come near.
+            markedRows.clear();
+        }
+    }
+
+    /**
+     * Marks the rows near the visible area that are not marked yet: their cells show the search's matches from now on,
+     * until the matches are emptied. The rows lie one below the other in the shown order, so the first one near the
+     * area is found by halving.
+     *
+     * @param area the part of the document near the visible area
+     */
+    void showSearchMatchesNear(NearArea area) {
+        if (searchMatches.isEmpty() || !(getSkin() instanceof TableSkin skin)) {
+            return;
+        }
+        for (int index = firstRowReaching(skin, area); index < getItems().size(); index++) {
+            TableRow<Row> row = skin.visibleRow(index);
+            if (row == null) {
+                continue;
+            }
+            if (area.boundsOf(row).getMinY() > area.bottom()) {
+                break;
+            }
+            if (!markedRows.get(index)) {
+                markedRows.set(index);
+                showRowMatches(row);
+            }
+        }
+    }
+
+    /**
+     * The first row in the shown order that reaches down into an area, found by halving; a row not laid out counts as
+     * reaching it.
+     */
+    private int firstRowReaching(TableSkin skin, NearArea area) {
+        int low = 0;
+        int high = getItems().size();
+        while (low < high) {
+            int middle = (low + high) >>> 1;
+            TableRow<Row> row = skin.visibleRow(middle);
+            if (row != null && area.boundsOf(row).getMaxY() < area.top()) {
+                low = middle + 1;
+            } else {
+                high = middle;
+            }
+        }
+        return low;
+    }
+
+    /**
+     * Has the body cells of a row show the search's matches of their cells.
+     *
+     * @param row the row, {@code null} for none
+     */
+    private static void showRowMatches(TableRow<Row> row) {
+        if (row == null) {
+            return;
+        }
+        for (Node child : row.getChildrenUnmodifiable()) {
+            if (child instanceof BodyCell cell) {
+                cell.showSearchMatches();
+            }
+        }
+    }
+
+    /**
+     * Where a match lies in the scene as the table is laid out now: the box around its characters in its cell's flow.
+     * A body cell is found in its row as the table lays it out; the table lays out every row, so a row is found though
+     * the view has never shown it. Before that, the box is the table's.
+     *
+     * @param match one of the table's matches, its text numbered as the table's last {@link #searchTexts()}
+     * @return its bounds in the scene
+     */
+    Bounds searchMatchBounds(Searchable.Match match) {
+        SearchText text = searchTexts.get(match.text());
+        ColumnFlow flow = flowOf(text);
+        if (flow == null) {
+            return localToScene(getLayoutBounds());
+        }
+        return flow.localToScene(SearchMarks.boundsOf(flow, flow.rangeOf(text.key().stretch(), match.start(),
+                match.end())));
+    }
+
+    /**
+     * The flow that shows a text of the search: its column's header, or the body cell of its column in its row as the
+     * table shows the rows now.
+     *
+     * @return the flow, {@code null} if the table has not laid out the text's row yet
+     */
+    private ColumnFlow flowOf(SearchText text) {
+        TableColumn<Row, ?> column = sourceColumns.get(text.key().cell().column());
+        if (text.shownRow() == HEADER_ROW) {
+            return column.getGraphic() instanceof ColumnFlow header ? header : null;
+        }
+        if (!(getSkin() instanceof TableSkin skin)) {
+            return null;
+        }
+        TableRow<Row> row = skin.visibleRow(text.shownRow());
+        if (row == null) {
+            return null;
+        }
+        for (Node child : row.getChildrenUnmodifiable()) {
+            if (child instanceof BodyCell cell && cell.getTableColumn() == column
+                    && cell.getGraphic() instanceof ColumnFlow flow) {
+                return flow;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * The search's matches in a cell, in its order.
+     *
+     * @param sourceRow the cell's row as the source has it, {@link #HEADER_ROW} for the header
+     * @param column    the cell's column
+     * @return the matches, none if the cell has none
+     */
+    private List<CellMatch> cellMatches(int sourceRow, TableColumn<?, ?> column) {
+        List<CellMatch> inCell = searchMatches.get(new SourceCell(sourceRow, sourceColumns.indexOf(column)));
+        return inCell == null ? List.of() : inCell;
     }
 
     /**
@@ -771,6 +1063,46 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
     }
 
     /**
+     * A cell as the source has it, whatever the reader's sort and column order.
+     *
+     * @param row    the row's place in the source ({@link Row#sourceIndex()}), {@link #HEADER_ROW} for the header
+     * @param column the column's place in the source
+     */
+    private record SourceCell(int row, int column) {
+    }
+
+    /**
+     * What names a text of the search across sorts and moved columns: its cell as the source has it and its stretch
+     * in the cell.
+     *
+     * @param cell    the cell
+     * @param stretch the text's place among the cell's stretches between its images' icons, from 0
+     */
+    private record TextKey(SourceCell cell, int stretch) {
+    }
+
+    /**
+     * A match of the search in a cell.
+     *
+     * @param stretch the stretch of the cell's text between its images' icons it lies in, from 0
+     * @param start   its first character in the stretch
+     * @param end     the position after its last character in the stretch
+     * @param current whether it is the current match
+     */
+    private record CellMatch(int stretch, int start, int end, boolean current) {
+    }
+
+    /**
+     * A text of the search, see {@link #searchTexts()}.
+     *
+     * @param key      what names it across sorts and moved columns
+     * @param shownRow its row's place in the shown order when the search ran, {@link #HEADER_ROW} for the header
+     * @param text     the text
+     */
+    private record SearchText(TextKey key, int shownRow, String text) {
+    }
+
+    /**
      * A cell of the selection's bounding rectangle, see {@link #selectionText(boolean)}.
      *
      * @param row    the cell's row, in the shown order
@@ -926,6 +1258,23 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
                 CellFlow flow = new CellFlow(this, alignment);
                 runs.accept(flow, cell.content());
                 setGraphic(flow);
+                showSearchMatches();
+            }
+        }
+
+        /**
+         * Shows the search's matches of the cell in its flow, if its row is marked
+         * ({@link MarkdownTable#showSearchMatchesNear(NearArea)}): those of the cell its index and column name now.
+         * After a sort the cell may still show the text of its row before until it is filled anew in the next layout,
+         * which marks that flow again; a cell whose text the sort leaves the same is not filled anew, and its marks
+         * are right from here.
+         */
+        void showSearchMatches() {
+            int index = getIndex();
+            if (getGraphic() instanceof ColumnFlow flow && getTableView() instanceof MarkdownTable table
+                    && index >= 0 && index < table.getItems().size()) {
+                flow.showSearchMatches(table.markedRows.get(index)
+                        ? table.cellMatches(table.getItems().get(index).sourceIndex(), getTableColumn()) : List.of());
             }
         }
 
@@ -987,11 +1336,103 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
         private final RecentHeights heights = new RecentHeights();
         private HeightBasis heightBasis;
 
+        /**
+         * The search's marks, {@code null} until the first match.
+         */
+        private SearchMarks searchMarks;
+
+        /**
+         * The matches the marks show.
+         */
+        private List<CellMatch> shownMatches = List.of();
+
         ColumnFlow(TableColumnBase<?, ?> column, TextAlignment alignment) {
             this.column = column;
             setTextAlignment(alignment);
             // The cached sizes of the flow, and of the label or cell around it, depend on the column's width.
             column.widthProperty().addListener(new WeakInvalidationListener(columnWidthChanged));
+        }
+
+        /**
+         * Shows the search's matches of the flow's cell in the two layers of its marks ({@link SearchMarks}), each
+         * match's range of its stretch moved to the flow's positions; none hide the marks. The same matches as shown
+         * change nothing. A cell's flow has no selection layer of its own (the theme colours a selected cell), so the
+         * layers are its last children.
+         */
+        final void showSearchMatches(List<CellMatch> matches) {
+            if (matches.equals(shownMatches)) {
+                return;
+            }
+            shownMatches = matches;
+            if (searchMarks == null) {
+                if (matches.isEmpty()) {
+                    return;
+                }
+                searchMarks = new SearchMarks(this);
+            }
+            List<Integer> starts = stretchStarts();
+            List<Segment.Range> others = new ArrayList<>();
+            Segment.Range current = null;
+            for (CellMatch match : matches) {
+                if (match.stretch() >= starts.size()) {
+                    // A cell that shows another cell's text until the next layout fills it, see BodyCell.
+                    continue;
+                }
+                int start = starts.get(match.stretch());
+                Segment.Range range = new Segment.Range(start + match.start(), start + match.end());
+                if (match.current()) {
+                    current = range;
+                } else {
+                    others.add(range);
+                }
+            }
+            searchMarks.show(others, current, null);
+        }
+
+        /**
+         * A range of a stretch of the flow's text between its images' icons, among the flow's positions.
+         *
+         * @param stretch the stretch, from 0
+         * @param start   the range's start in the stretch
+         * @param end     the range's end in the stretch
+         * @return the range in the flow; at the flow's start for a stretch the flow does not have
+         */
+        final Segment.Range rangeOf(int stretch, int start, int end) {
+            List<Integer> starts = stretchStarts();
+            int offset = stretch < starts.size() ? starts.get(stretch) : 0;
+            return new Segment.Range(offset + start, offset + end);
+        }
+
+        /**
+         * Where the stretches of the flow's text between its images' icons start among its positions: the renderer
+         * shows an image in a cell as an icon, a {@link FontIcon} run, and the alt text after it, and the search's
+         * texts of a cell are those stretches ({@link MarkdownRenderer#cellSearchTexts(List)}).
+         */
+        private List<Integer> stretchStarts() {
+            List<Integer> starts = new ArrayList<>();
+            starts.add(0);
+            int position = 0;
+            for (Node child : getChildren()) {
+                if (child instanceof Text run) {
+                    position += run.getText().length();
+                    if (run instanceof FontIcon) {
+                        starts.add(position);
+                    }
+                }
+            }
+            return starts;
+        }
+
+        /**
+         * Lays out the runs, then the search's layers over them: a new column width wraps the text anew, and the marks'
+         * shapes with it.
+         */
+        @Override
+        protected void layoutChildren() {
+            super.layoutChildren();
+            if (searchMarks != null) {
+                searchMarks.layOverFlow();
+            }
         }
 
         /**

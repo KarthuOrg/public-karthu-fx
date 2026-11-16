@@ -11,10 +11,11 @@ import javafx.scene.text.TextFlow;
 import java.util.List;
 
 /**
- * The marks of the search over a text flow, a heading's, a paragraph's or a code or source block's: two highlight
- * layers ({@link HighlightLayer}) over its runs, one with every match but the current one
+ * The marks of the search over a text flow, a heading's, a paragraph's, a code or source block's or a table's header
+ * or body cell's: two highlight layers ({@link HighlightLayer}) over its runs, one with every match but the current one
  * ({@code markdown-search-match}), above it one with the current match ({@code markdown-search-current}). Both lie
- * below the flow's selection layer, so the selection always shows on top.
+ * below the flow's selection layer, so the selection always shows on top; a table cell's flow has none, the theme
+ * shows a selected cell's selection through its marks.
  *
  * <p>The layers are made when the flow first shows a match and kept after, hidden while it shows none, so a flow never
  * marked has none.
