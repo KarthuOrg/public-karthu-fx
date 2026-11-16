@@ -12,7 +12,8 @@ import java.util.Map;
  * {@link ColumnWidths} rule, from what the table measures, and remembers what they were fitted to, so a layout pass
  * that changes nothing changes no width. By their content until the reader drags a column's edge; from then on by the
  * widths the reader left them with, the shares. The table measures its columns and lays them out; this keeps the
- * fitting's state.
+ * fitting's state. For a measurement at a width the table is only asked about, it tells the widths that width would
+ * give the columns without giving it to them ({@link #widths(double, List, Measurement, double)}).
  */
 final class ColumnFit {
 
@@ -50,12 +51,53 @@ final class ColumnFit {
             return;
         }
         fitted = fit;
-        double[] widths = shares == null
-                ? ColumnWidths.distribute(available, measurement.content(), measurement.minimum(), pixel)
-                : ColumnWidths.refit(available, shares, measurement.minimum(), pixel);
+        double[] widths = ruleWidths(available, shares, measurement, pixel);
         for (int i = 0; i < columns.size(); i++) {
             setFittedWidth(columns.get(i), widths[i]);
         }
+    }
+
+    /**
+     * The widths the shown columns would take if they were fitted to a width now, without fitting them: by the same
+     * rule as {@link #fit(double, List, Measurement, double)}, each as its column would take it. A measurement of the
+     * table at a width it is only asked about uses these, as it must change no column: a column's new width asks the
+     * table's parents for a layout, and a parent that asks about two widths in each layout pass, as a scroll pane
+     * does with and without its vertical bar, would never come to rest.
+     *
+     * @param available   the width the columns share, without the table's insets
+     * @param columns     the shown columns, in their shown order
+     * @param measurement what the shown columns measure, in the same order
+     * @param pixel       the width of a device pixel
+     * @return each shown column's width, in their shown order
+     */
+    double[] widths(double available, List<? extends TableColumn<?, ?>> columns, Measurement measurement,
+                    double pixel) {
+        double[] widths = ruleWidths(available, readerShares(columns), measurement, pixel);
+        for (int i = 0; i < widths.length; i++) {
+            widths[i] = takenWidth(columns.get(i), widths[i]);
+        }
+        return widths;
+    }
+
+    /**
+     * The widths the {@link ColumnWidths} rule gives the columns: by their content, or in the reader's shares.
+     *
+     * @param shares the reader's widths of the shown columns, {@code null} before the reader's first drag
+     */
+    private static double[] ruleWidths(double available, double[] shares, Measurement measurement, double pixel) {
+        return shares == null
+                ? ColumnWidths.distribute(available, measurement.content(), measurement.minimum(), pixel)
+                : ColumnWidths.refit(available, shares, measurement.minimum(), pixel);
+    }
+
+    /**
+     * The width a column takes when it is given a fitted width: the preferred width
+     * {@link #setFittedWidth(TableColumn, double)} gives it, within the column's minimum and maximum width, as a
+     * column bounds its width.
+     */
+    private static double takenWidth(TableColumn<?, ?> column, double width) {
+        double minimum = column.getMinWidth();
+        return Math.min(Math.max(preferredWidth(width), minimum), Math.max(minimum, column.getMaxWidth()));
     }
 
     /**
@@ -69,7 +111,14 @@ final class ColumnFit {
      * number instead, which differs in no pixel.
      */
     private static void setFittedWidth(TableColumn<?, ?> column, double width) {
-        column.setPrefWidth(width == UNSET_WIDTH ? Math.nextUp(UNSET_WIDTH) : width);
+        column.setPrefWidth(preferredWidth(width));
+    }
+
+    /**
+     * The preferred width a column gets for a fitted width, see {@link #setFittedWidth(TableColumn, double)}.
+     */
+    private static double preferredWidth(double width) {
+        return width == UNSET_WIDTH ? Math.nextUp(UNSET_WIDTH) : width;
     }
 
     /**

@@ -13,6 +13,13 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   and clears the search. Every match is marked, the current one apart, and the view scrolls to it.
   Tables are not searched yet.
 
+### Fixed
+
+- `SettingsDialog` no longer makes JavaFX log "Loop detected" warnings for its CSS: three rules of the
+  theme set the background colour to a lookup of itself. The dialog looks as before.
+- `MarkdownView`: a document with many tables no longer keeps the application busy with endless
+  layout passes; it comes to rest after it is laid out.
+
 ## [1.1.0-RC1] - 2026-11-14
 
 The first version published to Maven Central.

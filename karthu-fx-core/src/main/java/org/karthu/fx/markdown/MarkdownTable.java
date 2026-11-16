@@ -5,8 +5,11 @@ import javafx.beans.WeakInvalidationListener;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
+import javafx.css.CssMetaData;
 import javafx.css.PseudoClass;
+import javafx.css.Styleable;
 import javafx.event.EventTarget;
+import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.control.ConstrainedColumnResizeBase;
@@ -21,6 +24,7 @@ import javafx.scene.control.TableColumnBase;
 import javafx.scene.control.TablePosition;
 import javafx.scene.control.TableRow;
 import javafx.scene.control.TableView;
+import javafx.scene.control.skin.CellSkinBase;
 import javafx.scene.control.skin.TableColumnHeader;
 import javafx.scene.control.skin.TableViewSkin;
 import javafx.scene.input.KeyCode;
@@ -42,7 +46,9 @@ import org.karthu.fx.markdown.parser.Table;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -60,11 +66,15 @@ import java.util.function.Consumer;
  *
  * <p><b>Height.</b> The table is as tall as its header and all its rows, so its flow shows every row. A
  * {@code TableView} has a fixed preferred height of its own; this one computes it for the width it is asked about: it
- * fits its columns to that width and adds up the rows' heights at the new column widths, each row as tall as its
- * tallest cell. A row the flow shows tells its height itself; a row it does not show yet (before the table's first
- * layout) is measured in a measure row, a {@link TableRow} the table adds to its own children for the measurement and
- * removes again, as JavaFX's own fit-to-content of a column does. Either way the theme's fonts, padding and row rules
- * apply, so the height is right in the same layout pass in which the width changes.
+ * computes the widths that width would give its columns, by the same rule, and adds up the header's and the rows'
+ * heights at those widths from the cells' text flows, each row as tall as its tallest cell. It gives the columns no
+ * width while it measures: only its layout does. A new width asks the table's parents for a layout, and a scroll pane
+ * asks its content's height at two widths in every layout pass, with and without its vertical bar; a table that took
+ * either width would start the next pass. The cells of a row the flow shows are measured where they are; a row it
+ * does not show yet (before the table's first layout) is measured in a measure row, an unmanaged {@link TableRow} the
+ * table adds to its own children for the measurement and removes again, as JavaFX's own fit-to-content of a column
+ * does, without asking its parents for a layout. Either way the theme's fonts, padding and row rules apply, so the
+ * height is right in the same layout pass in which the width changes.
  *
  * <p><b>No scroll bars of its own.</b> JavaFX's flow decides each scroll bar from the viewport of its previous layout:
  * content that fits exactly in both directions, as here, makes a bar shown once shrink the viewport and bring up the
@@ -113,6 +123,12 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
      * {@link #showSelectedWhole(boolean)}.
      */
     private static final PseudoClass SELECTED_WHOLE = PseudoClass.getPseudoClass("selected-whole");
+
+    /**
+     * JavaFX's default cell size: a row's {@code -fx-cell-size} below it is the row's height whatever its cells, see
+     * {@link #rowHeight(TableRow, List, double[])}.
+     */
+    private static final double DEFAULT_CELL_SIZE = 24;
 
     /**
      * The measure row, created on first use; it is a child of the table only while it measures.
@@ -467,19 +483,27 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
     }
 
     /**
-     * The header and every row at the column widths for the given width, see the class comment. A width of -1 keeps
-     * the columns as they are.
+     * The header and every row at the column widths the given width gives, see the class comment; without a width
+     * (-1), at the columns' widths as they are. It sets no column width.
      */
     @Override
     protected double computePrefHeight(double width) {
         if (!(getSkin() instanceof TableSkin skin) || getScene() == null) {
             return snappedTopInset() + snappedBottomInset();
         }
-        if (width >= 0) {
-            fitColumns(width, skin);
+        List<TableColumn<Row, ?>> columns = getVisibleLeafColumns();
+        double[] widths;
+        if (width < 0) {
+            widths = new double[columns.size()];
+            for (int i = 0; i < widths.length; i++) {
+                widths[i] = columns.get(i).getWidth();
+            }
+        } else {
+            widths = columnFit.widths(available(width), columns, measure(skin), pixel());
         }
         // The skin gives the flow the height below the header rounded down, so the rows' height is rounded up.
-        return snappedTopInset() + skin.headerHeight() + Math.ceil(rowsHeight(skin)) + snappedBottomInset();
+        return snappedTopInset() + skin.headerHeight(columns, widths) + Math.ceil(rowsHeight(skin, columns, widths))
+                + snappedBottomInset();
     }
 
     /**
@@ -518,8 +542,14 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
      * Fits the shown columns to a width by the {@link ColumnWidths} rule, see {@link ColumnFit}.
      */
     private void fitColumns(double width, TableSkin skin) {
-        double available = width - snappedLeftInset() - snappedRightInset();
-        columnFit.fit(available, getVisibleLeafColumns(), measure(skin), pixel());
+        columnFit.fit(available(width), getVisibleLeafColumns(), measure(skin), pixel());
+    }
+
+    /**
+     * The width the columns share at a width of the table: without the table's insets.
+     */
+    private double available(double width) {
+        return width - snappedLeftInset() - snappedRightInset();
     }
 
     /**
@@ -568,23 +598,49 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
     }
 
     /**
-     * The height of all rows at the columns' current widths, each as the flow sizes it: its preferred height within
-     * its minimum and maximum.
+     * The height of all rows at the given widths of the shown columns, see {@link #rowHeight(TableRow, List, double[])}.
      */
-    private double rowsHeight(TableSkin skin) {
+    private double rowsHeight(TableSkin skin, List<TableColumn<Row, ?>> columns, double[] widths) {
         double height = 0;
         for (int index = 0; index < getItems().size(); index++) {
-            TableRow<Row> row = rowAt(skin, index);
-            height += Math.max(Math.min(row.prefHeight(-1), row.maxHeight(-1)), row.minHeight(-1));
+            height += rowHeight(rowAt(skin, index), columns, widths);
         }
         stopMeasuring();
         return height;
     }
 
     /**
+     * A row's height at the given widths of the shown columns, by the rule of JavaFX's row skin: as tall as its
+     * tallest cell, at the given width of the cell's column, and at least the theme's {@code -fx-cell-size}, both with
+     * the row's insets. A cell size below JavaFX's default is every row's height whatever its cells.
+     */
+    private static double rowHeight(TableRow<Row> row, List<TableColumn<Row, ?>> columns, double[] widths) {
+        double insets = row.snappedTopInset() + row.snappedBottomInset();
+        double cellSize = row.getSkin() instanceof CellSkinBase<?> skin ? skin.getCellSize() : DEFAULT_CELL_SIZE;
+        if (cellSize < DEFAULT_CELL_SIZE) {
+            return insets + cellSize;
+        }
+        double tallest = 0;
+        for (Node child : row.getChildrenUnmodifiable()) {
+            if (child instanceof BodyCell cell) {
+                int column = columns.indexOf(cell.getTableColumn());
+                if (column >= 0) {
+                    tallest = Math.max(tallest, cell.heightAt(widths[column]));
+                }
+            }
+        }
+        return insets + Math.max(tallest, cellSize);
+    }
+
+    /**
      * The row for an index with its cells up to date: the row the flow shows, or for a row it does not show yet the
      * measure row showing the row's cells, styled. The first use of the measure row adds it to the table, so the theme
      * styles it as one of the table's rows; it stays there until {@link #stopMeasuring()}.
+     *
+     * <p>The measure row is unmanaged, which makes it a layout root of its own: what changes in it asks no parent for
+     * a layout, and the table does not lay it out. Added and removed, an unmanaged node asks the table for a layout
+     * only while it waits for one itself, so it is laid out before it is added. A measurement during a layout pass,
+     * when a parent asks the table's height, so asks none of the table's parents for another pass.
      */
     private TableRow<Row> rowAt(TableSkin skin, int index) {
         TableRow<Row> shown = skin.shownRow(index);
@@ -594,13 +650,17 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
         if (!measuring) {
             if (measureRow == null) {
                 measureRow = new TableRow<>();
+                measureRow.setManaged(false);
                 measureRow.updateTableView(this);
             }
+            measureRow.layout();
             getChildren().add(measureRow);
             measureRow.applyCss();
             measuring = true;
         }
         measureRow.updateIndex(index);
+        // As for a shown row, see TableSkin.shownRow: the size creates the cell of a column shown again.
+        measureRow.prefHeight(-1);
         measureRow.applyCss();
         return measureRow;
     }
@@ -756,6 +816,51 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
         }
 
         /**
+         * The header row's height at the given widths of the shown columns, without the columns having them: what
+         * lies around the column headers as now, the header row's height less its tallest column header's, and the
+         * tallest column header at the given widths. A column header is as tall as its label, the label's padding
+         * around the header's text flow, but no lower than its least height.
+         *
+         * @param columns the shown columns, in their shown order
+         * @param widths  their widths, in the same order
+         */
+        double headerHeight(List<TableColumn<Row, ?>> columns, double[] widths) {
+            double height = headerHeight();
+            double tallestNow = 0;
+            double tallest = 0;
+            for (TableColumnHeader header : getTableHeaderRow().getRootHeader().getColumnHeaders()) {
+                double now = header.prefHeight(-1);
+                tallestNow = Math.max(tallestNow, now);
+                int column = columns.indexOf(header.getTableColumn());
+                if (column >= 0 && header.getTableColumn().getGraphic() instanceof ColumnFlow flow
+                        && flow.getParent() instanceof Region label) {
+                    double labelHeight = label.snappedTopInset() + flow.heightAt(widths[column])
+                            + label.snappedBottomInset();
+                    tallest = Math.max(tallest, Math.max(leastHeight(header), labelHeight));
+                } else {
+                    tallest = Math.max(tallest, now);
+                }
+            }
+            return tallestNow == 0 ? height : height - tallestNow + tallest;
+        }
+
+        /**
+         * A column header's least height, its {@code -fx-size}: JavaFX makes a column header as tall as its label but
+         * no lower, and keeps the value to itself; its CSS property tells it.
+         */
+        @SuppressWarnings("unchecked")
+        private static double leastHeight(TableColumnHeader header) {
+            for (CssMetaData<? extends Styleable, ?> property : header.getCssMetaData()) {
+                if (property.getProperty().equals("-fx-size")
+                        && ((CssMetaData<TableColumnHeader, ?>) property).getStyleableProperty(header).getValue()
+                        instanceof Number size) {
+                    return size.doubleValue();
+                }
+            }
+            return 0;
+        }
+
+        /**
          * The baseline of the header row's first line, from the header row's top.
          */
         double headerBaseline() {
@@ -837,6 +942,17 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
         }
 
         /**
+         * The cell's preferred height at a width of its column, without the column having it: the text flow's height
+         * at that width and the cell's padding and border. A cell without a text flow is as tall at every width.
+         */
+        double heightAt(double columnWidth) {
+            if (getGraphic() instanceof ColumnFlow flow) {
+                return snappedTopInset() + flow.heightAt(columnWidth) + snappedBottomInset();
+            }
+            return prefHeight(-1);
+        }
+
+        /**
          * As tall as preferred: a row is as tall as its tallest cell's minimum too.
          */
         @Override
@@ -847,7 +963,8 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
 
     /**
      * The text flow of a cell, header or body, which wraps to the width its column offers it, see the class comment.
-     * Its measurements for the width rule are kept until the fonts of its runs change, as when the theme styles it.
+     * Its measurements for the width rule are kept until the fonts of its runs change, as when the theme styles it, and
+     * so are its heights at the last few widths ({@link #computePrefHeight(double)}).
      */
     private abstract static class ColumnFlow extends TextFlow {
 
@@ -862,6 +979,13 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
         private List<Font> measuredFonts;
         private double lineWidth;
         private double longestWord;
+
+        /**
+         * The heights computed so far by the width offered, the most recently asked last, see
+         * {@link #computePrefHeight(double)}, and what they were computed with.
+         */
+        private final RecentHeights heights = new RecentHeights();
+        private HeightBasis heightBasis;
 
         ColumnFlow(TableColumnBase<?, ?> column, TextAlignment alignment) {
             this.column = column;
@@ -879,7 +1003,23 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
          * The width the column offers the flow.
          */
         final double offeredWidth() {
-            return Math.max(0, snapSizeX(column.getWidth()) - chrome());
+            return offeredWidth(column.getWidth());
+        }
+
+        /**
+         * The width a width of the column would offer the flow.
+         */
+        private double offeredWidth(double columnWidth) {
+            return Math.max(0, snapSizeX(columnWidth) - chrome());
+        }
+
+        /**
+         * The flow's height at a width of its column, the column's own or one the table measures at: its preferred
+         * height at the width the column would offer it, see {@link #computePrefHeight(double)}. Asking changes
+         * nothing in the scene graph.
+         */
+        final double heightAt(double columnWidth) {
+            return prefHeight(offeredWidth(columnWidth));
         }
 
         /**
@@ -918,9 +1058,28 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
             return offeredWidth();
         }
 
+        /**
+         * The height at the width the column offers, or at a width given. JavaFX's text layout does not always answer
+         * one width alike: asked about another width before, it may lay a wrapped line out a pixel or two taller or
+         * lower. The table measures its rows at widths its columns do not have yet, and the rows' layout asks the
+         * height at the columns' widths; so that the two agree, the flow computes its height at a width once and keeps
+         * it, for the last few widths, as long as the fonts of its runs, its line spacing and its padding stay as they
+         * were.
+         */
         @Override
         protected double computePrefHeight(double width) {
-            return snapSizeY(super.computePrefHeight(width < 0 ? offeredWidth() : width));
+            double offered = width < 0 ? offeredWidth() : width;
+            HeightBasis basis = new HeightBasis(fonts(), getLineSpacing(), getInsets());
+            if (!basis.equals(heightBasis)) {
+                heightBasis = basis;
+                heights.clear();
+            }
+            Double height = heights.get(offered);
+            if (height == null) {
+                height = snapSizeY(super.computePrefHeight(offered));
+                heights.put(offered, height);
+            }
+            return height;
         }
 
         @Override
@@ -928,13 +1087,21 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
             return computePrefHeight(width);
         }
 
-        private void measure() {
+        /**
+         * The fonts of the runs, in their order.
+         */
+        private List<Font> fonts() {
             List<Font> fonts = new ArrayList<>();
             for (Node child : getChildren()) {
                 if (child instanceof Text run) {
                     fonts.add(run.getFont());
                 }
             }
+            return fonts;
+        }
+
+        private void measure() {
+            List<Font> fonts = fonts();
             if (fonts.equals(measuredFonts)) {
                 return;
             }
@@ -976,6 +1143,30 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
             MEASURE.setFont(font);
             MEASURE.setText(text);
             return MEASURE.getLayoutBounds().getWidth();
+        }
+
+        /**
+         * What a flow's height depends on besides the width: its runs' fonts, its line spacing and its padding.
+         */
+        private record HeightBasis(List<Font> fonts, double lineSpacing, Insets insets) {
+        }
+
+        /**
+         * A flow's heights by the width offered, for the last few widths asked: in a layout pass the table asks a
+         * width or two besides the columns' own, and a window resized step by step asks a new one each step.
+         */
+        private static final class RecentHeights extends LinkedHashMap<Double, Double> {
+
+            private static final int KEPT = 8;
+
+            RecentHeights() {
+                super(16, 0.75f, true);
+            }
+
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<Double, Double> eldest) {
+                return size() > KEPT;
+            }
         }
     }
 

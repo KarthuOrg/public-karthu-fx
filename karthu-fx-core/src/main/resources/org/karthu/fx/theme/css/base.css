@@ -3950,8 +3950,11 @@ Text {
    Settings Dialog
    ============================================================ */
 
+/* The dialog's colours name their tokens, never -fx-background-color: a declaration that sets a property to a
+   lookup of its own name finds itself, and JavaFX drops it with a "Loop detected" warning. The root is the
+   canvas, the panes on it the surface, as the tree, the breadcrumb and the button bar. */
 .settings-dialog {
-    -fx-background-color: -fx-background-color;
+    -fx-background-color: -fx-canvas-color;
 }
 
 .settings-tree-view {
@@ -3961,7 +3964,7 @@ Text {
 }
 
 .settings-right-pane {
-    -fx-background-color: -fx-background-color;
+    -fx-background-color: -fx-surface-color;
 }
 
 .settings-breadcrumb {
@@ -3987,7 +3990,7 @@ Text {
 }
 
 .settings-content {
-    -fx-background-color: -fx-background-color;
+    -fx-background-color: -fx-surface-color;
 }
 
 .settings-group-title {
