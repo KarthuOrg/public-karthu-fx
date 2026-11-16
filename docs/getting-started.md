@@ -35,7 +35,7 @@ mvn javafx:run -pl karthu-fx-showcase  # launch the showcase app (needs the inst
 <dependency>
     <groupId>org.karthu</groupId>
     <artifactId>karthu-fx-core</artifactId>
-    <version>1.1.0-RC2</version>
+    <version>1.1.0-RC1</version>
 </dependency>
 ```
 
