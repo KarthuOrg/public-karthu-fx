@@ -104,13 +104,60 @@ final class DocumentSearch {
      * a new search. The new segments build their marks after the view's next layout.
      */
     void documentChanged() {
+        documentChanged(null);
+    }
+
+    /**
+     * Where the current match lies, noted in the shown document for a new version of its text: its segment, to be
+     * found again in the new document ({@link NotedSegment}), and its place in the segment.
+     *
+     * @return the place, {@code null} without a current match
+     */
+    Place currentPlace() {
+        Found current = currentMatch();
+        if (current == null) {
+            return null;
+        }
+        List<Segment> segments = selection.segments();
+        return new Place(NotedSegment.of(segments, segments.get(current.order())), current.match());
+    }
+
+    /**
+     * Runs the search through a new document, the view's segments rendered anew. With the place of the old current
+     * match, a new version of the same text: the first match at or after that place in the direction becomes current,
+     * wrapping, as for a changed search. Without one, the current match is chosen as for a new search. The new
+     * segments build their marks after the view's next layout.
+     *
+     * @param place the old current match's place ({@link #currentPlace()}); {@code null} for another document
+     */
+    void documentChanged(Place place) {
         // The old segments are discarded with their marks.
         marked.clear();
         laidOut = false;
         // A new text does not scroll to its current match.
         scrollPending = false;
         findAll();
-        publish(firstInDirection());
+        publish(place == null ? firstInDirection() : nearestInDirection(place));
+    }
+
+    /**
+     * Where the search goes on from the place of an old current match in a new version of the text: its segment found
+     * again, the match's place in it.
+     *
+     * @return the index of the new current match, -1 without matches
+     */
+    private int nearestInDirection(Place place) {
+        List<Segment> segments = selection.segments();
+        Segment segment = place.segment().findIn(segments);
+        if (segment == null) {
+            return firstInDirection();
+        }
+        int order = 0;
+        while (segments.get(order) != segment) {
+            order++;
+        }
+        // A match of no segment with matches: only its order and its range count for where it starts.
+        return nearestInDirection(new Found(-1, order, place.match()));
     }
 
     /**
@@ -161,7 +208,7 @@ final class DocumentSearch {
         int old = matchIndex.get();
         Found oldCurrent = currentMatch();
         // Named before the segment numbers its texts anew: it names them as it numbered them for these matches.
-        List<Place> before = new ArrayList<>(matches.size());
+        List<LastingPlace> before = new ArrayList<>(matches.size());
         for (Found found : matches) {
             before.add(placeOf(found));
         }
@@ -187,8 +234,8 @@ final class DocumentSearch {
      * @param old    the index of the current match among them
      * @return its index among the matches now; as for a new search if none is still there
      */
-    private int firstStillThere(List<Place> before, int old) {
-        Map<Place, Integer> now = new HashMap<>();
+    private int firstStillThere(List<LastingPlace> before, int old) {
+        Map<LastingPlace, Integer> now = new HashMap<>();
         for (int i = 0; i < matches.size(); i++) {
             now.put(placeOf(matches.get(i)), i);
         }
@@ -205,9 +252,9 @@ final class DocumentSearch {
     /**
      * Where a match lies, named so that it stays the same across a change of its segment's texts.
      */
-    private Place placeOf(Found found) {
+    private LastingPlace placeOf(Found found) {
         Searchable segment = parts.get(found.part()).segment();
-        return new Place(found.order(), segment.searchTextKey(found.match().text()), found.match().start());
+        return new LastingPlace(found.order(), segment.searchTextKey(found.match().text()), found.match().start());
     }
 
     /**
@@ -466,6 +513,15 @@ final class DocumentSearch {
     }
 
     /**
+     * Where a current match lies, for a new version of the text.
+     *
+     * @param segment its segment, noted to be found again
+     * @param match   where it lies in the segment
+     */
+    record Place(NotedSegment segment, Searchable.Match match) {
+    }
+
+    /**
      * A segment with matches.
      *
      * @param segment the segment
@@ -476,13 +532,14 @@ final class DocumentSearch {
     }
 
     /**
-     * Where a match lies, the same across a change of its segment's texts' order ({@link Searchable#searchTextKey}).
+     * Where a match lies in the shown document, the same across a change of its segment's texts' order
+     * ({@link Searchable#searchTextKey}).
      *
      * @param order the segment's place in document order, among all segments
      * @param text  what names the match's text in the segment
      * @param start the match's first character in the text
      */
-    private record Place(int order, Object text, int start) {
+    private record LastingPlace(int order, Object text, int start) {
     }
 
     /**

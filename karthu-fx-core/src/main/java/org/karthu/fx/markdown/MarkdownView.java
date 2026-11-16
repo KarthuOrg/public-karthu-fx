@@ -49,7 +49,9 @@ import java.util.function.Consumer;
  * }</pre>
  *
  * <p>The view scrolls by itself and wraps its text to its width; a new text rebuilds the whole content and scrolls
- * back to the top left. {@code null} and the empty text give an empty view. Its inner nodes are not part of the API.
+ * back to the top left, while a new version of the shown text set by {@link #updateMarkdown(String)} keeps the
+ * reader's place (see <em>Text updates</em>). {@code null} and the empty text give an empty view. Its inner nodes are
+ * not part of the API.
  * Its preferred size is fixed, 480 by 360 pixels plus its frame and, while it shows, the zoom bar, like a
  * {@code TextArea}'s: the content never sets it,
  * so a long paragraph does not ask the layout around the view for its width on one line. Like any JavaFX node, the
@@ -507,7 +509,8 @@ import java.util.function.Consumer;
  * line at the top edge of the visible area stays there, cut as far down as before, though the text wraps anew (a code
  * or source block or a table cut by the edge stays cut as far down, the space between blocks scales), as far as the
  * scroll range allows. Selecting, copying, links, the context menu and the copy buttons work at every zoom. The zoom
- * stays when the text changes; a new text still scrolls to the top. At 1.0 the document is not scaled at all and
+ * stays when the text changes; a new text still scrolls to the top, an update keeps the place as a zoom does (see
+ * <em>Text updates</em>). At 1.0 the document is not scaled at all and
  * looks exactly as without a zoom. A table fits its columns to the document's unscaled width and snaps its grid lines
  * to the window's device pixels without the zoom, so at some zooms a grid line may fall between two pixels.
  *
@@ -560,6 +563,17 @@ import java.util.function.Consumer;
  * without a zoom and the shortcuts pass on, unconsumed. While the application has bound the zoom, they change nothing,
  * as the bar does.
  *
+ * <h2>Text updates</h2>
+ *
+ * <p>An application that shows a new version of the same document, such as one that reloads a file when it changes,
+ * sets it with {@link #updateMarkdown(String)}: the view stays at the paragraph the reader was reading, also when text
+ * above it was added or removed. The line at the top edge of the visible area is found again in the new text by its
+ * block, the block of the same kind with the same text nearest to its old number, else the block with its old number,
+ * and stays at the top, cut as far down as before. A search goes on from its current match's place, without
+ * scrolling. Everything else starts fresh as with a new text: the selection, the tables' sorting, columns and widths,
+ * the context menu; the zoom stays. {@link #setMarkdown(String)} and the text property show another document, from
+ * the top.
+ *
  * <h2>Search</h2>
  *
  * <p>An application searches the document's text from controls of its own: it sets {@link #searchTextProperty() the
@@ -603,7 +617,8 @@ import java.util.function.Consumer;
  * next match in the direction, <em>previous</em> to the next one against it, both wrapping around at the ends. A
  * change of the direction moves no match. A new text, and every rebuild for a change of the code languages or the line
  * limit, keeps the search and runs it on the new text, the current match chosen as for a new search; the view does not
- * scroll to it.
+ * scroll to it. A new version of the text set by {@link #updateMarkdown(String)} goes on from the old current match's
+ * place instead (see <em>Text updates</em>).
  *
  * <p><b>Table changes.</b> When the reader sorts a table, or moves, hides or shows one of its columns, the matches are
  * numbered anew in the order the table shows now, and the current match stays on its text. If its column is hidden,
@@ -933,6 +948,11 @@ public class MarkdownView extends BaseComponent {
     private SelectionHolder selectionHolder;
 
     /**
+     * Whether the text changes by {@link #updateMarkdown(String)}: the rebuild keeps the reader's place.
+     */
+    private boolean updating;
+
+    /**
      * The view's context menu and its entries. The menu belongs to the view's scroll pane; the entries it holds
      * depend on where the request comes from ({@link #prepareContextMenu(EventTarget)}).
      */
@@ -1016,8 +1036,9 @@ public class MarkdownView extends BaseComponent {
 
     /**
      * The Markdown text the view shows. Every change rebuilds the rendered content and scrolls the view back to the
-     * top left; {@code null} and the empty text give an empty view. A search keeps running on the new text, see
-     * <em>Search</em> in the class description.
+     * top left, except one by {@link #updateMarkdown(String)}, which keeps the reader's place; {@code null} and the
+     * empty text give an empty view. A search keeps running on the new text, see <em>Search</em> in the class
+     * description.
      *
      * @return the Markdown text property
      */
@@ -1035,12 +1056,51 @@ public class MarkdownView extends BaseComponent {
     }
 
     /**
-     * Sets the Markdown text the view shows.
+     * Sets the Markdown text the view shows, a new document, shown from the top left. A new version of the shown text
+     * that should keep the reader's place is set with {@link #updateMarkdown(String)}.
      *
      * @param markdown the Markdown text; {@code null} gives an empty view
      */
     public final void setMarkdown(String markdown) {
         this.markdown.set(markdown);
+    }
+
+    /**
+     * Sets a new version of the shown text and keeps the reader's place: the text changes as by
+     * {@link #setMarkdown(String)}, but where a new document starts at the top, the view stays at the paragraph the
+     * reader was reading, also when text above it was added or removed. Made for an application that reloads a
+     * document when its file changes; another document is shown with {@code setMarkdown}. See <em>Text updates</em> in
+     * the class description.
+     *
+     * <p>The place is the line or the point at the top edge of the visible area, noted as a zoom notes it, before the
+     * new text is rendered. The new text's block in its place is the block of the same kind (a heading's or a
+     * paragraph's text, a code or source block, a table) with the same text, as a copy gives it, nearest to the old
+     * block's number in the document; without one, the block with the old number, the last one if the new text is
+     * shorter. Block images are not counted. A line keeps its character position, limited to the new block's length,
+     * and the top edge cuts it as far down as before; a block is cut as far down, a gap between blocks keeps its
+     * height. The next layout scrolls there, as far as the scroll range allows, and leaves the sideways scroll position
+     * as it is. An image that arrives later above the place keeps it, as always.
+     *
+     * <p>A search goes on: it runs on the new text, and the first match at or after the old current match's place, its
+     * block found again as the reader's place is found, becomes current, in the search's direction and wrapping around;
+     * the view does not scroll to it. Everything else is as after {@code setMarkdown}: the selection is cleared, tables
+     * start unsorted with all columns shown at their fitted widths, the context menu forgets its block, and the zoom
+     * stays.
+     *
+     * <p>The same text changes nothing, as setting the same value does. Before the view is laid out, and where the
+     * shown or the new text has no block but block images, it behaves as {@code setMarkdown}.
+     *
+     * @param markdown the new version of the Markdown text; {@code null} gives an empty view
+     * @throws RuntimeException while the text property is bound, as {@code setMarkdown} throws then
+     * @since 1.1.0-RC2
+     */
+    public final void updateMarkdown(String markdown) {
+        updating = true;
+        try {
+            this.markdown.set(markdown);
+        } finally {
+            updating = false;
+        }
     }
 
     /**
@@ -2018,16 +2078,32 @@ public class MarkdownView extends BaseComponent {
     /**
      * Replaces the rendered content with the current text's and scrolls back to the top left. Nothing is selected in
      * the new content, and the context menu forgets the block it was built for last.
+     *
+     * <p>For {@link #updateMarkdown(String)} it keeps the reader's place instead of scrolling: what the new document
+     * takes over from the old one is noted first, in the old document's layout, before anything of it is dropped, and
+     * handed to the new one once it is rendered, its segments found again by {@link NotedSegment}. So far the reader's
+     * place and the search's current match.
      */
     private void rebuild() {
+        // An update notes the reader's place in the shown document's layout, before anything of it goes.
+        ReadingAnchor place = updating ? documentZoom.readingPosition() : null;
+        NotedSegment placeSegment = place == null ? null
+                : NotedSegment.of(documentSelection.segments(), place.segment());
+        DocumentSearch.Place searchPlace = place == null ? null : documentSearch.currentPlace();
         selectionHolder = null;
         documentZoom.forgetReadingPosition();
         documentSelection.reset();
         images.forget();
         document.getChildren().setAll(renderer.render(MarkdownParser.parse(markdown.get())));
-        documentSearch.documentChanged();
-        scrollPane.setVvalue(scrollPane.getVmin());
-        scrollPane.setHvalue(scrollPane.getHmin());
+        documentSearch.documentChanged(searchPlace);
+        Segment found = placeSegment == null ? null : placeSegment.findIn(documentSelection.segments());
+        if (found != null) {
+            // The next layout scrolls there; the sideways scroll position stays.
+            documentZoom.keepReadingPosition(place.movedTo(found));
+        } else {
+            scrollPane.setVvalue(scrollPane.getVmin());
+            scrollPane.setHvalue(scrollPane.getHmin());
+        }
         prepareContextMenu(null);
     }
 

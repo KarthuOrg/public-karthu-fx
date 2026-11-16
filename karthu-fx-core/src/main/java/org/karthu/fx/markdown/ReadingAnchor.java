@@ -26,6 +26,9 @@ import java.util.List;
  *       the zoom in the document's own pixels, only the scale does.</li>
  * </ul>
  * All of it is in the document's own, unscaled coordinates, so the scale between the two layouts does not matter.
+ *
+ * <p>A new version of the text keeps the place too: the anchor noted in the old document is moved to the segment the
+ * new document has in its segment's place ({@link #movedTo}).
  */
 final class ReadingAnchor {
 
@@ -88,6 +91,35 @@ final class ReadingAnchor {
         }
         Segment last = segments.getLast();
         return new ReadingAnchor(document, last, Kind.BELOW, 0, documentY - bounds(document, last).getMaxY());
+    }
+
+    /**
+     * The segment the point is held by: the one it lies in, the next one below it, or the last one above it.
+     *
+     * @return the segment, no block image
+     */
+    Segment segment() {
+        return segment;
+    }
+
+    /**
+     * The same point held by another segment, the one a new version of the text has in place of this one's
+     * ({@link NotedSegment}): as far down the line of the same character, limited to the new segment's length, as far
+     * down the block, or as far above or below it. A line of a segment that has no lines now, an empty text or a block,
+     * becomes the segment's top.
+     *
+     * @param newSegment the segment of the new document, no block image
+     * @return the anchor in the new document
+     */
+    ReadingAnchor movedTo(Segment newSegment) {
+        if (kind != Kind.LINE) {
+            return new ReadingAnchor(document, newSegment, kind, 0, amount);
+        }
+        if (!(newSegment instanceof TextSegment) || newSegment.length() == 0) {
+            return new ReadingAnchor(document, newSegment, Kind.INSIDE, 0, 0);
+        }
+        return new ReadingAnchor(document, newSegment, Kind.LINE, Math.min(character, newSegment.length() - 1),
+                amount);
     }
 
     /**

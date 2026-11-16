@@ -1037,7 +1037,8 @@ application can translate it. A click on the `×` empties the field and keeps th
 field, or gives it to the text field; its tooltip and accessible text are `clearTextProperty()`
 (default *Clear*). Escape empties a field with text and is consumed; in an empty
 field, and while read-only, it changes nothing and passes on, so a dialog around the field still
-closes. The magnifier and the `×` are out of the tab order: Tab passes the field in one step.
+closes. The magnifier, the `×` and the arrows are out of the tab order: Tab passes the field in one
+step.
 Read-only: the text can be selected and copied, not changed, the `×` hides, the magnifier stays.
 Disabled, also through a parent: the field is dimmed once with the magnifier, as a disabled button,
 and the `×` hides.
@@ -1046,7 +1047,10 @@ The text is a search, matched by one rule (non-exported package `org.karthu.fx.f
 is split at any run of whitespace into words, and an entry matches when every word occurs as a
 contiguous part of its text, case and accents folded on both sides (*zurich* finds *Zürich*,
 *zürich* finds *Zurich*; *ß* and *ss*, ligatures and other scripts beyond their accents are not
-folded). An empty search, or whitespace only, matches every entry and marks nothing.
+folded). An empty search, or whitespace only, matches every entry and marks nothing. A connected
+`MarkdownView` folds alike but takes the text as one piece, not as words.
+
+The field filters a list or searches a view, one at a time: connecting one ends the other.
 
 - **List filter:** `filter(FilteredList<T> list, Function<? super T, String> text)` connects the
   field to one list, giving the text of each entry (the one its row shows): the field sets the
@@ -1054,13 +1058,29 @@ folded). An empty search, or whitespace only, matches every entry and marks noth
   second call replaces the connection, `filter(null, null)` ends it; the list connected before gets
   every entry back (its predicate null) and no longer follows the text. The lists hold the field
   only weakly, so a long-lived application list never keeps a dropped field alive.
-- **Counter:** while a list is connected and there is text, a counter between the text and the `×`
-  shows the matches (the filtered list's size) and all entries (its source's size) through
-  `matchCountFormatProperty()`, default *{0} of {1}*: `{0}` and `{1}` are replaced wherever they
-  occur, everything else shows as it is (null shows nothing), so a translation never fails. It
-  follows the text, the filtered list and the source list, also a change the filtered list does
-  not show. With no match it carries `:no-match`, in the warning colour. It stays while read-only
-  and disabled (it changes nothing), dimmed once with a disabled field.
+- **View search:** `search(MarkdownView view)` connects the field to a Markdown view: the view takes
+  the field's text as its search text, and from then on the two stay equal both ways, the empty
+  field being the view's `null` search. A second call replaces the connection, `search(null)` ends
+  it; the view connected before keeps its search and no longer follows the text. A view whose
+  search text is bound one way is refused (`IllegalArgumentException`). While there is text, Enter
+  goes to the view's next match and Shift+Enter to its previous one, in the view's direction, both
+  consumed, also without matches, so a default button does not fire; in a `SuggestionInput` Enter
+  applies the preselected entry while the popup shows. Two arrows between the counter and the `×`
+  go through the matches with the mouse: the up arrow (Bootstrap `CHEVRON_UP`) to the match above,
+  towards the document's start, the down arrow (`CHEVRON_DOWN`) to the match below, whatever the
+  direction; each one's tooltip and accessible text name what it does in the current direction,
+  `previousMatchTextProperty()` (*Previous match*) or `nextMatchTextProperty()` (*Next match*). The
+  arrows are disabled without matches and with the field, and work while it is read-only. Control+F
+  and F3 are the application's. The view holds the field only weakly.
+- **Counter:** while a list or a view is connected and there is text, a counter between the text
+  and the `×` shows the state of the search through `matchCountFormatProperty()`, default
+  *{0} of {1}*: for a list the matches (the filtered list's size) and all entries (its source's
+  size), for a view the current match counted from 1 (0 without matches) and the number of matches,
+  *3 of 12*. `{0}` and `{1}` are replaced wherever they occur, everything else shows as it is (null
+  shows nothing), so a translation never fails. It follows the text, the filtered list and the
+  source list, also a change the filtered list does not show, or the view's matches and current
+  match. With no match it carries `:no-match`, in the warning colour. It stays while read-only and
+  disabled (it changes nothing), dimmed once with a disabled field.
 - **Marks:** `highlight(String text)` returns a new `TextFlow` (`search-highlight`) for the
   application's own cells, whose runs (`Text`, `search-text`) show the text with every occurrence
   of every word of the search in runs of their own (`search-match`), overlapping and touching ones
@@ -1072,7 +1092,7 @@ folded). An empty search, or whitespace only, matches every entry and marks noth
   added: its runs bold, its marks underlined, as a bold mark would not show in a bold text.
 
 Rules in `base.css` under *Search input*: the counter's and the marks'; the frame's, the leading
-graphic's and the trailing icon's draw the rest. Tokens: `-fx-text-secondary-color` (the counter),
+graphic's and the trailing icon's draw the rest, the arrows included. Tokens: `-fx-text-secondary-color` (the counter),
 `-fx-status-paused` (the counter with no match), `-fx-text-color` (the runs), `-fx-accent-color`
 (the marks); no token of its own.
 
@@ -1080,7 +1100,9 @@ graphic's and the trailing icon's draw the rest. Tokens: `-fx-text-secondary-col
 |---|---|---|
 | `form-search-input` | the field, beside `form-frame`; its text field carries the frame's `form-frame-text` | the frame's |
 | `form-search-icon` | the magnifier, a `StackPane` holding the icon, the shell's leading graphic beside `form-shell-leading` | the leading graphic's: 6px from the outer edge, 14px in `-fx-text-secondary-color`; dimmed once with a disabled field |
-| `form-search-count` | the counter, a `Label`, an own control of the shell before the `×`, not focus traversable; shown while a list is connected and there is text | `-fx-text-secondary-color`, the text's size, padding `0 4`; opacity 1 in a disabled frame (dimmed once) |
+| `form-search-count` | the counter, a `Label`, an own control of the shell before the arrows and the `×`, not focus traversable; shown while a list or a view is connected and there is text | `-fx-text-secondary-color`, the text's size, padding `0 4`; opacity 1 in a disabled frame (dimmed once) |
+| `form-search-up` | the up arrow (Bootstrap `CHEVRON_UP`), a `Button` beside `form-frame-icon` and `icon-button`, an own control of the shell after the counter, not focus traversable; tooltip *Previous match* forward, *Next match* backward; shown while a view is connected and there is text | the frame's trailing icon; disabled without matches (the icon button's opacity 0.5), dimmed once with a disabled field |
+| `form-search-down` | the down arrow (Bootstrap `CHEVRON_DOWN`), a `Button` beside `form-frame-icon` and `icon-button`, an own control of the shell after the up arrow, not focus traversable; tooltip *Next match* forward, *Previous match* backward; shown while a view is connected and there is text | as `form-search-up` |
 | `form-search-clear` | the clear button `×`, a `Button` beside `form-frame-icon` and `icon-button`, an own control of the shell, last before `{}` (which never shows), not focus traversable; tooltip *Clear* | the frame's trailing icon (hover `-fx-hover-color`, the icon in `-fx-text-color` under the pointer); shown while there is text and the field is neither disabled nor read-only |
 | `search-highlight` | a highlight node, a `TextFlow` from `highlight(...)`, wherever the application puts it | — |
 | `search-text` | each run of a highlight node, a `Text` | `-fx-text-color` |
@@ -1089,7 +1111,7 @@ graphic's and the trailing icon's draw the rest. Tokens: `-fx-text-secondary-col
 
 | Pseudo-class | On | Look |
 |---|---|---|
-| `:no-match` | `form-search-count`, while nothing matches (*0 of 2*) | `-fx-status-paused` |
+| `:no-match` | `form-search-count`, while nothing matches (*0 of 2*, with a view *0 of 0*) | `-fx-status-paused` |
 
 Besides, the shell's `:readonly` and `:disabled` apply.
 
