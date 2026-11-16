@@ -8,6 +8,8 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 
 ### Fixed
 
+- `SettingsDialog` no longer makes JavaFX log "Loop detected" warnings for its CSS: three rules of the
+  theme set the background colour to a lookup of itself. The dialog looks as before.
 - `MarkdownView`: a document with many tables no longer keeps the application busy with endless
   layout passes; it comes to rest after it is laid out.
 

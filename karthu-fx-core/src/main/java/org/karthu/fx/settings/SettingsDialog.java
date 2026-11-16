@@ -207,6 +207,16 @@ public class SettingsDialog {
         return result;
     }
 
+    /**
+     * The dialog's scene, built and themed before its window shows: the tests of this package style it without
+     * opening a window.
+     *
+     * @return the scene of the dialog's window
+     */
+    Scene scene() {
+        return dialogStage.getScene();
+    }
+
     // --- Tree building ---
 
     private TreeView<SettingCategory> buildTreeView() {
