@@ -371,12 +371,7 @@ public class SearchInput extends FieldFrame {
             throw new IllegalArgumentException("the text of an entry must not be null");
         }
         endViewSearch();
-        if (listFilter != null) {
-            listFilter.unwatch(weakListChanged);
-            if (listFilter.list() != list) {
-                listFilter.release();
-            }
-        }
+        endListFilter(list);
         listFilter = list == null ? null : new ListFilter<>(list, text);
         if (listFilter != null) {
             listFilter.apply(query.get());
@@ -385,13 +380,20 @@ public class SearchInput extends FieldFrame {
         updateOwnControls();
     }
 
-    /** Ends the list connection, if there is one: the list gets every entry back and no longer follows the text. */
-    private void endListFilter() {
+    /**
+     * Ends the list connection, if there is one: the list no longer follows the text and gets every entry back, unless
+     * it is the list connected next, which the new connection filters at once.
+     *
+     * @param next the list connected next, null for none
+     */
+    private void endListFilter(FilteredList<?> next) {
         if (listFilter == null) {
             return;
         }
         listFilter.unwatch(weakListChanged);
-        listFilter.release();
+        if (listFilter.list() != next) {
+            listFilter.release();
+        }
         listFilter = null;
     }
 
@@ -468,7 +470,7 @@ public class SearchInput extends FieldFrame {
             // Checked before anything changes, so a refused view leaves the connections as they were.
             throw new IllegalArgumentException("the view's search text is bound and cannot follow the field");
         }
-        endListFilter();
+        endListFilter(null);
         endViewSearch();
         searchedView = view;
         if (view != null) {
