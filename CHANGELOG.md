@@ -6,6 +6,11 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 
 ## [Unreleased]
 
+### Fixed
+
+- `MarkdownView`: a document with many tables no longer keeps the application busy with endless
+  layout passes; it comes to rest after it is laid out.
+
 ## [1.1.0-RC1] - 2026-11-14
 
 The first version published to Maven Central.
