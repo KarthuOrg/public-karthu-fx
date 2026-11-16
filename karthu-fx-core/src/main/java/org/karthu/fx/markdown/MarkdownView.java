@@ -610,15 +610,15 @@ import java.util.function.Consumer;
  * <p><b>Order and direction.</b> The matches are numbered from 0 from the top of the document, whatever the
  * direction; in a table its header first, then its rows in the order it shows them, each row's cells in the order of
  * the shown columns, so <em>next</em> walks through a table as the reader reads it. With at least one match there is
- * always a current one. A new search, after none or after one without
- * matches, makes the first match current, backward the last. A changed search keeps the current match while it still
- * matches: forward the first match that starts at or after the old current match's start becomes current, backward
- * the last one that starts at or before it, wrapping around to the first (backward the last). <em>Next</em> goes to the
- * next match in the direction, <em>previous</em> to the next one against it, both wrapping around at the ends. A
- * change of the direction moves no match. A new text, and every rebuild for a change of the code languages or the line
- * limit, keeps the search and runs it on the new text, the current match chosen as for a new search; the view does not
- * scroll to it. A new version of the text set by {@link #updateMarkdown(String)} goes on from the old current match's
- * place instead (see <em>Text updates</em>).
+ * always a current one. A new search, after none or after one without matches, makes the first match current,
+ * backward the last. A changed search keeps the current match while it still matches: forward the first match that
+ * starts at or after the old current match's start becomes current, backward the last one that starts at or before
+ * it, wrapping around to the first (backward the last). <em>Next</em> goes to the next match in the direction,
+ * <em>previous</em> to the next one against it, both wrapping around at the ends. A change of the direction moves no
+ * match. A new text, and every rebuild for a change of the code languages or the line limit, keeps the search and runs
+ * it on the new text, the current match chosen as for a new search; the view does not scroll to it. A new version of
+ * the text set by {@link #updateMarkdown(String)} goes on from the old current match's place instead (see <em>Text
+ * updates</em>).
  *
  * <p><b>Table changes.</b> When the reader sorts a table, or moves, hides or shows one of its columns, the matches are
  * numbered anew in the order the table shows now, and the current match stays on its text. If its column is hidden,
@@ -630,9 +630,8 @@ import java.util.function.Consumer;
  * is not fully visible: so that the match's middle is at the middle of the visible area, as far as the scroll range
  * allows, at every zoom, also to a table row the view has never shown. In a code or source block whose line is wider
  * than the block, and in a table wider than the view, the block first scrolls sideways so that the match shows whole,
- * with a margin. A fully visible match scrolls nothing, so going through the
- * matches on screen is calm. A search without matches leaves the view where it is. A search set before the view is
- * laid out scrolls at its first layout.
+ * with a margin. A fully visible match scrolls nothing, so going through the matches on screen is calm. A search
+ * without matches leaves the view where it is. A search set before the view is laid out scrolls at its first layout.
  *
  * <p><b>Marks.</b> Every match but the current one is marked in a muted amber ({@code markdown-search-match}), the
  * current one in amber behind a dark text ({@code markdown-search-current}): highlights like the selection's, in two
