@@ -22,6 +22,11 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   go to the next and the previous match, and two arrows in the field go up and down through the
   matches, their texts translatable with `previousMatchTextProperty()` and `nextMatchTextProperty()`.
   A field searches a view or filters a list, one at a time.
+- `SuggestionInput` shows a chevron at its right end with `setChevronVisible(true)`, so that it works
+  as a filterable combo box for the mouse too: a click opens the list as Down does (every entry in
+  an empty field, the matches with text), a click on the open list's chevron closes it. Greyed out
+  while the field is disabled or read-only, out of the tab order, its tooltip translatable with
+  `chevronTextProperty()`. Off by default: existing fields look as before.
 
 ### Fixed
 

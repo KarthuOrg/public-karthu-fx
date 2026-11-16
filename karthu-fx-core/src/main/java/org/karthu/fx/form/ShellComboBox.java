@@ -37,7 +37,7 @@ import org.kordamp.ikonli.javafx.FontIcon;
  */
 final class ShellComboBox<T> extends GuardedComboBox<T> {
 
-    private final Button chevron = createChevron();
+    private final Button chevron = createChevron("form-combo-chevron");
     /** True from the moment the list closes until the event that closed it is handled. */
     private boolean listJustClosed;
     /** True while the mouse press of the current click closed the list: the click then opens no list. */
@@ -96,10 +96,16 @@ final class ShellComboBox<T> extends GuardedComboBox<T> {
         Platform.runLater(() -> listJustClosed = false);
     }
 
-    /** Creates the chevron: Bootstrap's chevron down, styled as a trailing icon. */
-    private static Button createChevron() {
+    /**
+     * Creates a chevron: Bootstrap's chevron down, styled as a trailing icon, out of the tab order. The combo inputs'
+     * chevron, and the suggestion input's, which so looks like theirs.
+     *
+     * @param styleClass the chevron's own style class, beside the trailing icon's
+     * @return a new chevron, without an action
+     */
+    static Button createChevron(String styleClass) {
         Button button = new Button();
-        button.getStyleClass().add("form-combo-chevron");
+        button.getStyleClass().add(styleClass);
         button.setGraphic(FontIcon.of(BootstrapIcons.CHEVRON_DOWN));
         FieldShell.styleAsIcon(button);
         return button;
