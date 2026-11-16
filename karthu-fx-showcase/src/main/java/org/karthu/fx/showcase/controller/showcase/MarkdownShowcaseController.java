@@ -5,7 +5,13 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextArea;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.VBox;
+import org.karthu.fx.form.ComboInput;
+import org.karthu.fx.form.SearchInput;
 import org.karthu.fx.markdown.MarkdownView;
+import org.karthu.fx.markdown.SearchDirection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,13 +24,16 @@ import java.util.Locale;
 
 /**
  * Showcase page for the MarkdownView: a text area with a sample document on the left, the view with its zoom bar on
- * the right, following every change of the text, a divider between them to make the view narrow, and below them the
- * address of the last clicked link. Above them a <i>Zoom bar</i> switch shows and hides the bar, and a read-out shows
- * the zoom as the application reads it. The sample holds a code block of each built-in language and images of every
- * kind. Its images lie in a folder beside the page, the view's base address, and two switches above the editor play
- * animated GIFs (<i>Play animations</i>) and load images from the internet (<i>Images from the internet</i>, off at
- * first, so the page sends no request by itself). The <i>Code colours</i> card below holds the CSS of the view's code
- * colours, which the view takes at every change, and a <i>Defaults</i> button.
+ * the right, showing every change of the text as a new document, a divider between them to make the view narrow, and
+ * below them the address of the last clicked link. Above the view a bar as an application builds its own: a search
+ * field connected to the view and the choice of the search's direction. Above them a <i>Zoom bar</i> switch shows and
+ * hides the bar, and a read-out shows the zoom as the application reads it. The sample holds a code block of each
+ * built-in language, tables and images of every kind. Its images lie in a folder beside the page, the view's base
+ * address, and two switches above the editor play animated GIFs (<i>Play animations</i>) and load images from the
+ * internet (<i>Images from the internet</i>, off at first, so the page sends no request by itself). <i>Insert a line at
+ * the top</i> beside them gives the view a new version of its text, which keeps the reader's place. The <i>Code
+ * colours</i> card below holds the CSS of the view's code colours, which the view takes at every change, and a
+ * <i>Defaults</i> button.
  */
 public class MarkdownShowcaseController {
 
@@ -76,6 +85,8 @@ public class MarkdownShowcaseController {
     @FXML private CheckBox remoteImagesSwitch;
     @FXML private Label zoomReadOut;
     @FXML private SplitPane editorRow;
+    @FXML private VBox viewColumn;
+    @FXML private HBox searchBar;
     @FXML private TextArea sourceArea;
     @FXML private Label linkLabel;
     @FXML private TextArea codeColorsArea;
@@ -85,11 +96,19 @@ public class MarkdownShowcaseController {
      */
     private String codeColorsSheet;
 
+    /** The page's view. */
+    private MarkdownView view;
+
+    /** How many lines <i>Insert a line at the top</i> has inserted, which numbers the next one. */
+    private int insertedLines;
+
     @FXML
     private void initialize() {
-        MarkdownView view = new MarkdownView();
+        view = new MarkdownView();
         view.setPrefWidth(420);
-        editorRow.getItems().add(view);
+        VBox.setVgrow(view, Priority.ALWAYS);
+        viewColumn.getChildren().add(view);
+        buildSearchBar(view);
         // The showcase opens nothing: it shows the address the application would get.
         view.setOnLinkAction(address -> linkLabel.setText("Last clicked link: " + address));
 
@@ -99,8 +118,11 @@ public class MarkdownShowcaseController {
         animationSwitch.selectedProperty().bindBidirectional(view.imageAnimationProperty());
         remoteImagesSwitch.selectedProperty().bindBidirectional(view.remoteImagesProperty());
 
+        // The editor's text is another document at every change, shown from the top; not a binding, which would
+        // refuse the new versions Insert a line at the top gives the view.
         sourceArea.setText(loadSample());
-        view.markdownProperty().bind(sourceArea.textProperty());
+        view.setMarkdown(sourceArea.getText());
+        sourceArea.textProperty().addListener((observable, oldText, newText) -> view.setMarkdown(newText));
 
         zoomBarSwitch.selectedProperty().bindBidirectional(view.zoomBarVisibleProperty());
         view.zoomProperty().addListener(observable -> zoomReadOut.setText(describeZoom(view.getZoom())));
@@ -109,6 +131,50 @@ public class MarkdownShowcaseController {
         codeColorsArea.textProperty().addListener(
                 (observable, oldText, newText) -> applyCodeColors(view, newText));
         codeColorsArea.setText(DEFAULT_CODE_COLORS);
+    }
+
+    /**
+     * The bar above the view, as an application builds its own: a search field connected to the view with one call,
+     * which keeps its text and the view's search equal, counts the matches and goes through them, and beside it the
+     * choice of the search's direction, bound to the view's both ways.
+     */
+    private void buildSearchBar(MarkdownView view) {
+        SearchInput searchField = new SearchInput();
+        searchField.setId("searchField");
+        searchField.search(view);
+        HBox.setHgrow(searchField, Priority.ALWAYS);
+
+        ComboInput<SearchDirection> direction = new ComboInput<>();
+        direction.setId("searchDirection");
+        direction.getItems().setAll(SearchDirection.FORWARD, SearchDirection.BACKWARD);
+        direction.setDisplayText(MarkdownShowcaseController::describeDirection);
+        direction.setPrefWidth(150);
+        direction.valueProperty().bindBidirectional(view.searchDirectionProperty());
+
+        searchBar.getChildren().addAll(searchField, direction);
+    }
+
+    /** The label of a search direction in the choice above the view. */
+    private static String describeDirection(SearchDirection direction) {
+        if (direction == SearchDirection.BACKWARD) {
+            return "Backward";
+        }
+        return "Forward";
+    }
+
+    /**
+     * <i>Insert a line at the top</i>: gives the view a new version of its text, a numbered line more at the top, as
+     * an application gives one after a reload of its file. The view keeps the place the reader is reading, and the
+     * pictures it shows. The view takes the text first: the editor's listener then sets the same text, which changes
+     * nothing, where setting the editor first would show the text as another document, from the top.
+     */
+    @FXML
+    private void insertLineAtTop() {
+        insertedLines++;
+        String changed = "**Update " + insertedLines + ".** A line inserted at the top with `updateMarkdown`.\n\n"
+                + sourceArea.getText();
+        view.updateMarkdown(changed);
+        sourceArea.setText(changed);
     }
 
     /**

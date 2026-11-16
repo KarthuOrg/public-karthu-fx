@@ -10,6 +10,25 @@ see as plain text, with list markers, code as written and tables as tab-separate
 rows. A table the selection passes over is taken whole. Ctrl+A selects the whole
 page, and a right click offers *Copy* as well.
 
+## Search
+
+Type a word into the search field above the view, *table* for example: every place it
+occurs is marked, the current one in a stronger amber, and the field counts them,
+*3 of 12*. Enter goes to the next match and Shift+Enter to the previous one, the arrows
+in the field go to the match above and the one below, and the view scrolls to a match
+it does not show. Case and accents do not count, so *zurich* finds Zürich, and several
+words are searched as one piece: *the view* finds them together, not every *the*. Text
+in code blocks and tables is found too: *utf* finds the encodings in the code and in the
+tables further down. Sort a table while searching and the marks stay on their text.
+*Backward* beside the field starts at the last match, and the next match is the one
+above.
+
+*Insert a line at the top*, above the editor, gives the view a new version of this text
+with a line more at the top, as an application does when it reloads a changed file.
+Scroll down to an image or a table first: the view stays where you are reading, and the
+images keep their pictures. A change in the editor shows the text as a new document,
+from the top.
+
 ## Text styles
 
 Plain text, **bold**, *italic*, ***bold italic*** and `inline code` such as

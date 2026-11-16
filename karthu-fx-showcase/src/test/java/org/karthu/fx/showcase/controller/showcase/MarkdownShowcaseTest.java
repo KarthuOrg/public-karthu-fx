@@ -33,9 +33,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.InvocationInterceptor;
 import org.junit.jupiter.api.extension.ReflectiveInvocationContext;
+import org.karthu.fx.form.ComboInput;
+import org.karthu.fx.form.SearchInput;
 import org.karthu.fx.markdown.CodeCategory;
 import org.karthu.fx.markdown.ImageLoader;
 import org.karthu.fx.markdown.MarkdownView;
+import org.karthu.fx.markdown.SearchDirection;
 import org.karthu.fx.theme.ThemeManager;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -74,8 +77,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * The <i>Markdown</i> page of the group <i>Data Display</i>, loaded from its FXML and laid out with the theme in a
  * scene that is never shown: the view with its zoom bar beside the source, the <i>Zoom bar</i> switch, the read-out
- * of the zoom, the <i>Code colours</i> card, and the sample's images with the <i>Play animations</i> and <i>Images
- * from the internet</i> switches.
+ * of the zoom, the <i>Code colours</i> card, the sample's images with the <i>Play animations</i> and <i>Images from
+ * the internet</i> switches, the search field and the direction above the view, and <i>Insert a line at the top</i>.
  *
  * <p>The page's view loads its images on its own background threads and shows them on the JavaFX Application Thread.
  * So every test runs on that thread ({@link OnFxThread}), where no image arrives while it works, but for the tests
@@ -172,7 +175,7 @@ class MarkdownShowcaseTest {
         Parent root = layOut();
         SplitPane editorRow = assertInstanceOf(SplitPane.class, root.lookup("#editorRow"));
         MarkdownView view = view(root);
-        assertTrue(editorRow.getItems().contains(view));
+        assertTrue(editorRow.getItems().contains(view.getParent()), "the view under its bar, beside the divider");
         Node slider = view.lookup(".markdown-zoom-slider");
         Node reset = view.lookup(".markdown-zoom-reset");
         assertTrue(slider.isVisible());
@@ -565,6 +568,123 @@ class MarkdownShowcaseTest {
         assertTrue(description.contains("Images from the internet"), description);
     }
 
+    @Test
+    @DisplayName("the page's description tells about the search field, its direction and Insert a line at the top")
+    void descriptionMentionsTheSearchAndTheUpdate() throws IOException {
+        VBox page = assertInstanceOf(VBox.class, layOut());
+        String description = assertInstanceOf(Label.class, page.getChildren().get(1)).getText();
+
+        assertTrue(description.contains("search field"), description);
+        assertTrue(description.contains("Backward"), description);
+        assertTrue(description.contains("Insert a line at the top"), description);
+        assertTrue(description.contains("updateMarkdown"), description);
+    }
+
+    @Test
+    @DisplayName("the sample tells how to search it and how to try a new version of its text")
+    void sampleTellsAboutTheSearchAndTheUpdate() throws IOException {
+        String source = assertInstanceOf(TextArea.class, layOut().lookup("#sourceArea")).getText();
+
+        assertTrue(source.contains("\n## Search\n"), "a section on the search");
+        assertTrue(source.contains("Insert a line at the top"), "how to try a new version of the text");
+    }
+
+    @Test
+    @DisplayName("a search field in a bar above the view searches it: the field's text is the view's search, both"
+            + " ways")
+    void searchFieldSearchesTheView() throws IOException {
+        Parent root = layOut();
+        MarkdownView view = view(root);
+        SearchInput search = assertInstanceOf(SearchInput.class, root.lookup("#searchField"));
+        Bounds field = sceneBounds(search);
+        Bounds shown = sceneBounds(view);
+        assertTrue(field.getMaxY() <= shown.getMinY(), "the field " + field + " above the view " + shown);
+        assertTrue(field.getMinX() >= shown.getMinX() - 0.5 && field.getMaxX() <= shown.getMaxX() + 0.5,
+                "the field " + field + " within the view's width " + shown);
+
+        search.setText("table");
+        assertEquals("table", view.getSearchText());
+        assertTrue(view.getSearchMatchCount() > 1, "the sample has matches: " + view.getSearchMatchCount());
+        assertEquals(0, view.getSearchMatchIndex(), "forward from the first match");
+
+        view.clearSearch();
+        assertEquals("", search.getText(), "the field follows the view");
+    }
+
+    @Test
+    @DisplayName("the sample's own example finds what it promises: utf in its text, its code and a table")
+    void sampleExampleFindsTextCodeAndTables() throws IOException {
+        Parent root = layOut();
+        MarkdownView view = view(root);
+        SearchInput search = assertInstanceOf(SearchInput.class, root.lookup("#searchField"));
+
+        search.setText("utf");
+
+        assertEquals(7, view.getSearchMatchCount(), "one in the text, three in the code, three in a table");
+    }
+
+    @Test
+    @DisplayName("the choice of the direction beside the search field, forward at first, sets the view's direction and"
+            + " follows it")
+    void directionChoiceSetsTheViewsDirection() throws IOException {
+        Parent root = layOut();
+        MarkdownView view = view(root);
+        SearchInput search = assertInstanceOf(SearchInput.class, root.lookup("#searchField"));
+        assertInstanceOf(ComboInput.class, root.lookup("#searchDirection"));
+        @SuppressWarnings("unchecked")
+        ComboInput<SearchDirection> direction = (ComboInput<SearchDirection>) root.lookup("#searchDirection");
+        Bounds choice = sceneBounds(direction);
+        assertTrue(choice.getMinX() >= sceneBounds(search).getMaxX(), "beside the field, on its right");
+        assertTrue(choice.getMaxY() <= sceneBounds(view).getMinY(), "above the view");
+
+        assertEquals(List.of(SearchDirection.FORWARD, SearchDirection.BACKWARD), new ArrayList<>(direction.getItems()));
+        assertEquals("Forward", direction.getDisplayText().apply(SearchDirection.FORWARD));
+        assertEquals("Backward", direction.getDisplayText().apply(SearchDirection.BACKWARD));
+        assertEquals(SearchDirection.FORWARD, direction.getValue());
+
+        search.setText("table");
+        int matches = view.getSearchMatchCount();
+        direction.setValue(SearchDirection.BACKWARD);
+        assertEquals(SearchDirection.BACKWARD, view.getSearchDirection());
+        view.nextSearchMatch();
+        assertEquals(matches - 1, view.getSearchMatchIndex(), "backward from the first match to the last");
+
+        view.setSearchDirection(SearchDirection.FORWARD);
+        assertEquals(SearchDirection.FORWARD, direction.getValue(), "the choice follows the view");
+    }
+
+    @Test
+    @DisplayName("Insert a line at the top gives the view a new version of its text, a line more at the top, which the"
+            + " source shows too, and the view stays at the heading the reader was reading")
+    void insertLineKeepsThePlace() throws IOException {
+        Parent root = layOut();
+        MarkdownView view = view(root);
+        TextArea source = assertInstanceOf(TextArea.class, root.lookup("#sourceArea"));
+        Button insert = assertInstanceOf(Button.class, root.lookup("#insertLineButton"));
+        assertEquals("Insert a line at the top", insert.getText());
+        String before = source.getText();
+
+        // The reader has scrolled down to the tables: their heading a little below the top of the visible area.
+        ScrollPane pane = assertInstanceOf(ScrollPane.class, view.lookup(".scroll-pane"));
+        scrollTo(pane, heading(view, "Tables"), 40);
+        root.layout();
+        double readAt = sceneBounds(heading(view, "Tables")).getMinY();
+        assertEquals(sceneBounds(pane).getMinY() + 40, readAt, 2.0, "scrolled there");
+
+        insert.fire();
+        root.applyCss();
+        root.layout();
+
+        String line = "**Update 1.** A line inserted at the top with `updateMarkdown`.";
+        assertEquals(line + "\n\n" + before, source.getText());
+        assertEquals(source.getText(), view.getMarkdown());
+        assertEquals(readAt, sceneBounds(heading(view, "Tables")).getMinY(), 1.0, "the heading stays where it was");
+
+        insert.fire();
+        assertTrue(source.getText().startsWith("**Update 2.** A line inserted at the top with `updateMarkdown`.\n\n"
+                + line + "\n\n"), "a second line above the first");
+    }
+
     // --- Helpers -------------------------------------------------------------------------------------
 
     /**
@@ -730,6 +850,38 @@ class MarkdownShowcaseTest {
 
     private static Bounds sceneBounds(Node node) {
         return node.localToScene(node.getLayoutBounds());
+    }
+
+    /**
+     * Scrolls a scroll pane so that a node of its content lies a distance below the top of the visible area, as far as
+     * the scroll range allows.
+     */
+    private static void scrollTo(ScrollPane pane, Node node, double below) {
+        Node content = pane.getContent();
+        double top = content.sceneToLocal(sceneBounds(node)).getMinY();
+        double range = content.getLayoutBounds().getHeight() - pane.getViewportBounds().getHeight();
+        pane.setVvalue(Math.max(0, Math.min(1, (top - below) / range)));
+    }
+
+    /** The view's heading of a text. */
+    private static Node heading(MarkdownView view, String text) {
+        for (Node heading : view.lookupAll(".markdown-heading")) {
+            if (flowText(heading).equals(text)) {
+                return heading;
+            }
+        }
+        throw new AssertionError("no heading " + text);
+    }
+
+    /** The text of a heading's or a paragraph's flow: its runs one after the other. */
+    private static String flowText(Node flow) {
+        StringBuilder text = new StringBuilder();
+        for (Node run : ((Parent) flow).getChildrenUnmodifiable()) {
+            if (run instanceof Text piece) {
+                text.append(piece.getText());
+            }
+        }
+        return text.toString();
     }
 
     /** A mouse event of the primary button at a scene point, still since the press. */
