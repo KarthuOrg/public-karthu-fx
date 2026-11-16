@@ -13,6 +13,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Slider;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
@@ -77,7 +78,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * The <i>Markdown</i> page of the group <i>Data Display</i>, loaded from its FXML and laid out with the theme in a
  * scene that is never shown: the view with its zoom bar beside the source, the <i>Zoom bar</i> switch, the read-out
- * of the zoom, the <i>Code colours</i> card, the sample's images with the <i>Play animations</i> and <i>Images from
+ * of the zoom, the <i>Margins</i> switch with its sliders, the <i>Code colours</i> card, the sample's images with the <i>Play animations</i> and <i>Images from
  * the internet</i> switches, the search field and the direction above the view, and <i>Insert a line at the top</i>.
  *
  * <p>The page's view loads its images on its own background threads and shows them on the JavaFX Application Thread.
@@ -167,6 +168,48 @@ class MarkdownShowcaseTest {
         assertEquals("Zoom 0.50 (50%)", readOut.getText());
         view.setZoom(1.15);
         assertEquals("Zoom 1.15 (115%)", readOut.getText());
+    }
+
+    @Test
+    @DisplayName("the Margins switch gives the view the sliders' margins in whole pixels, which follow the sliders while"
+            + " it is on; off, the theme's padding holds and the sliders are disabled")
+    void marginsSwitch() throws IOException {
+        Parent root = layOut();
+        MarkdownView view = view(root);
+        CheckBox margins = assertInstanceOf(CheckBox.class, root.lookup("#marginsSwitch"));
+        Slider left = assertInstanceOf(Slider.class, root.lookup("#leftMarginSlider"));
+        Slider right = assertInstanceOf(Slider.class, root.lookup("#rightMarginSlider"));
+        Label readOut = assertInstanceOf(Label.class, root.lookup("#marginsReadOut"));
+
+        assertEquals("Margins", margins.getText());
+        assertFalse(margins.isSelected());
+        assertTrue(Double.isNaN(view.getLeftMargin()), "the theme's padding");
+        assertTrue(Double.isNaN(view.getRightMargin()), "the theme's padding");
+        assertTrue(left.isDisabled());
+        assertTrue(right.isDisabled());
+        assertEquals("Margins: the theme's padding", readOut.getText());
+
+        margins.setSelected(true);
+
+        assertEquals(80, view.getLeftMargin());
+        assertEquals(40, view.getRightMargin());
+        assertFalse(left.isDisabled());
+        assertFalse(right.isDisabled());
+        assertEquals("Margins 80 / 40 px", readOut.getText());
+
+        left.setValue(120.4);
+        right.setValue(250.6);
+
+        assertEquals(120, view.getLeftMargin());
+        assertEquals(251, view.getRightMargin());
+        assertEquals("Margins 120 / 251 px", readOut.getText());
+
+        margins.setSelected(false);
+
+        assertTrue(Double.isNaN(view.getLeftMargin()));
+        assertTrue(Double.isNaN(view.getRightMargin()));
+        assertTrue(left.isDisabled());
+        assertEquals("Margins: the theme's padding", readOut.getText());
     }
 
     @Test

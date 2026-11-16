@@ -3,6 +3,7 @@ package org.karthu.fx.showcase.controller.showcase;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.layout.HBox;
@@ -31,7 +32,8 @@ import java.util.Locale;
  * built-in language, tables and images of every kind. Its images lie in a folder beside the page, the view's base
  * address, and two switches above the editor play animated GIFs (<i>Play animations</i>) and load images from the
  * internet (<i>Images from the internet</i>, off at first, so the page sends no request by itself). <i>Insert a line at
- * the top</i> beside them gives the view a new version of its text, which keeps the reader's place. The <i>Code
+ * the top</i> beside them gives the view a new version of its text, which keeps the reader's place. Below them the
+ * <i>Margins</i> switch gives the view the margins of two sliders, live, and a read-out shows them. The <i>Code
  * colours</i> card below holds the CSS of the view's code colours, which the view takes at every change, and a
  * <i>Defaults</i> button.
  */
@@ -84,6 +86,10 @@ public class MarkdownShowcaseController {
     @FXML private CheckBox animationSwitch;
     @FXML private CheckBox remoteImagesSwitch;
     @FXML private Label zoomReadOut;
+    @FXML private CheckBox marginsSwitch;
+    @FXML private Slider leftMarginSlider;
+    @FXML private Slider rightMarginSlider;
+    @FXML private Label marginsReadOut;
     @FXML private SplitPane editorRow;
     @FXML private VBox viewColumn;
     @FXML private HBox searchBar;
@@ -127,6 +133,11 @@ public class MarkdownShowcaseController {
         zoomBarSwitch.selectedProperty().bindBidirectional(view.zoomBarVisibleProperty());
         view.zoomProperty().addListener(observable -> zoomReadOut.setText(describeZoom(view.getZoom())));
         zoomReadOut.setText(describeZoom(view.getZoom()));
+
+        marginsSwitch.selectedProperty().addListener(observable -> applyMargins());
+        leftMarginSlider.valueProperty().addListener(observable -> applyMargins());
+        rightMarginSlider.valueProperty().addListener(observable -> applyMargins());
+        applyMargins();
 
         codeColorsArea.textProperty().addListener(
                 (observable, oldText, newText) -> applyCodeColors(view, newText));
@@ -175,6 +186,23 @@ public class MarkdownShowcaseController {
                 + sourceArea.getText();
         view.updateMarkdown(changed);
         sourceArea.setText(changed);
+    }
+
+    /**
+     * The <i>Margins</i> switch and its sliders: on, the view takes the sliders' values in whole pixels at every change,
+     * as an application gives it the margins of its document; off, not a number, the theme's padding, and the sliders
+     * wait disabled.
+     */
+    private void applyMargins() {
+        boolean on = marginsSwitch.isSelected();
+        leftMarginSlider.setDisable(!on);
+        rightMarginSlider.setDisable(!on);
+        long left = Math.round(leftMarginSlider.getValue());
+        long right = Math.round(rightMarginSlider.getValue());
+        view.setLeftMargin(on ? left : Double.NaN);
+        view.setRightMargin(on ? right : Double.NaN);
+        marginsReadOut.setText(on ? String.format(Locale.ROOT, "Margins %d / %d px", left, right)
+                : "Margins: the theme's padding");
     }
 
     /**
