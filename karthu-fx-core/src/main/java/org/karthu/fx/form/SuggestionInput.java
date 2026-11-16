@@ -677,8 +677,8 @@ public class SuggestionInput<T> extends SearchInput {
 
     /**
      * The chevron's tooltip and accessible text (default <i>Show suggestions</i>), a property so that an application
-     * can translate it or name what its list holds, such as <i>Recent files</i>. Null or empty: the chevron has no
-     * tooltip.
+     * can translate it or name what its list holds, such as <i>Show all colours</i>. Null or empty: the chevron has
+     * no tooltip.
      *
      * @return the chevron text property
      * @since 1.1.0-RC2

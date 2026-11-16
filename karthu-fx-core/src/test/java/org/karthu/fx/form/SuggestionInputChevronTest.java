@@ -221,9 +221,9 @@ class SuggestionInputChevronTest {
         assertEquals("Show suggestions", chevron().getTooltip().getText());
         assertEquals("Show suggestions", chevron().getAccessibleText());
 
-        input.setChevronText("Recent files");
-        assertEquals("Recent files", chevron().getTooltip().getText());
-        assertEquals("Recent files", chevron().getAccessibleText());
+        input.setChevronText("Show all colours");
+        assertEquals("Show all colours", chevron().getTooltip().getText());
+        assertEquals("Show all colours", chevron().getAccessibleText());
 
         input.setChevronText("");
         assertNull(chevron().getTooltip());

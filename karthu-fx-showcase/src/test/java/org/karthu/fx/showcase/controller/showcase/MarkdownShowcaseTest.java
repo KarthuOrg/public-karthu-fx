@@ -78,8 +78,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * The <i>Markdown</i> page of the group <i>Data Display</i>, loaded from its FXML and laid out with the theme in a
  * scene that is never shown: the view with its zoom bar beside the source, the <i>Zoom bar</i> switch, the read-out
- * of the zoom, the <i>Margins</i> switch with its sliders, the <i>Code colours</i> card, the sample's images with the <i>Play animations</i> and <i>Images from
- * the internet</i> switches, the search field and the direction above the view, and <i>Insert a line at the top</i>.
+ * of the zoom, the <i>Margins</i> switch with its sliders, the <i>Code colours</i> card, the sample's images with the
+ * <i>Play animations</i> and <i>Images from the internet</i> switches, the search field and the direction above the
+ * view, and <i>Insert a line at the top</i>.
  *
  * <p>The page's view loads its images on its own background threads and shows them on the JavaFX Application Thread.
  * So every test runs on that thread ({@link OnFxThread}), where no image arrives while it works, but for the tests
