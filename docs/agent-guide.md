@@ -17,7 +17,7 @@ Requirements: JDK 25, JavaFX 25, Maven.
 <dependency>
     <groupId>org.karthu</groupId>
     <artifactId>karthu-fx-core</artifactId>
-    <version>1.1.0-RC1</version>
+    <version>1.1.0-RC2</version>
 </dependency>
 ```
 
