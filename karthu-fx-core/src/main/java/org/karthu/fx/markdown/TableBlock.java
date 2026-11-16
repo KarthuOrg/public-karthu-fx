@@ -181,6 +181,15 @@ final class TableBlock extends Region implements Searchable {
     }
 
     /**
+     * The table's text in the source's order with every column, see {@link MarkdownTable#sourceText()}: a copy gives
+     * the rows and columns as the reader sorted, moved and hid them, which a new document's table does not keep.
+     */
+    @Override
+    public String contentKey() {
+        return table.sourceText();
+    }
+
+    /**
      * The table's texts in the order it shows them, see {@link MarkdownTable#searchTexts()}.
      */
     @Override

@@ -77,6 +77,18 @@ interface Segment {
     String text(int start, int end);
 
     /**
+     * What finds the segment again in a new version of the document ({@link NotedSegment}): its content, whatever the
+     * reader made of how it shows. By default its whole text as a copy gives it. A table, which the reader sorts and
+     * whose columns the reader moves, hides and shows, gives its text in the source's order with every column, as the
+     * new document's table, unsorted with every column shown, gives it too.
+     *
+     * @return the content, equal for segments of the same content
+     */
+    default String contentKey() {
+        return text(0, length());
+    }
+
+    /**
      * The quotes and list items around the segment, the outermost first.
      *
      * @return the containers, empty for a segment at the document's top level

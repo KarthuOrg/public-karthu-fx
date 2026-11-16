@@ -6,6 +6,8 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.image.WritableImage;
@@ -147,6 +149,48 @@ class MarkdownViewUpdateTest {
         assertEquals(1.25, view.getZoom());
         assertTrue(cutBefore > 0.3 && cutBefore < 0.6, () -> "the top edge cut the block: " + cutBefore);
         assertEquals(cutBefore, cutFraction(view, view.lookup(block)), 0.03, "the block is cut as far down");
+    }
+
+    /**
+     * Paragraphs, a table of six rows whose cells wrap in the test scene and which sorts differently by its first
+     * column than its source has the rows, and paragraphs again.
+     */
+    private static final String SORTABLE_TABLE = longParagraphs(6) + "| Key | Meaning |\n|---|---|\n"
+            + "| key 1 | a cell that wraps in a narrow column of the table, the first row |\n"
+            + "| key 2 | a cell that wraps in a narrow column of the table, the second row |\n"
+            + "| key 3 | a cell that wraps in a narrow column of the table, the third row |\n"
+            + "| key 4 | a cell that wraps in a narrow column of the table, the fourth row |\n"
+            + "| key 5 | a cell that wraps in a narrow column of the table, the fifth row |\n"
+            + "| key 6 | a cell that wraps in a narrow column of the table, the sixth row |\n\n"
+            + longParagraphs(6);
+
+    @Test
+    @DisplayName("a table the reader sorted is found again by its content: a paragraph inserted above keeps it at the"
+            + " top edge, cut as far down")
+    void sortedTableInsertedAbove() {
+        MarkdownView view = layOut(new MarkdownView(SORTABLE_TABLE));
+        TableView<?> table = (TableView<?>) view.lookup(".markdown-table");
+        sortDescending(table, 0);
+        relayOut(view);
+        scrollToTop(view, sceneBounds(table), 0.45);
+        double cutBefore = cutFraction(view, table);
+
+        view.updateMarkdown("A paragraph inserted at the top.\n\n" + SORTABLE_TABLE);
+        relayOut(view);
+
+        assertTrue(cutBefore > 0.3 && cutBefore < 0.6, () -> "the top edge cut the table: " + cutBefore);
+        assertEquals(cutBefore, cutFraction(view, view.lookup(".markdown-table")), 0.03,
+                "the table is cut as far down");
+    }
+
+    /**
+     * Sorts a table by one of its columns, the largest first, through the table's sort order, as two clicks on the
+     * column's header do.
+     */
+    private static <S> void sortDescending(TableView<S> table, int column) {
+        TableColumn<S, ?> sorted = table.getColumns().get(column);
+        sorted.setSortType(TableColumn.SortType.DESCENDING);
+        table.getSortOrder().setAll(List.of(sorted));
     }
 
     @Test

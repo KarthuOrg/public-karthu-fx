@@ -184,6 +184,11 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
     private final List<TableColumn<Row, ?>> sourceColumns;
 
     /**
+     * The rows in the source's order, whatever order the reader has sorted them to.
+     */
+    private final List<Row> sourceRows;
+
+    /**
      * The texts of the table the view's search ran through last, in the order it numbered them, see
      * {@link #searchTexts()}.
      */
@@ -262,6 +267,7 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
         for (int i = 0; i < table.rows().size(); i++) {
             rows.add(new Row(i, table.rows().get(i)));
         }
+        sourceRows = List.copyOf(rows);
         getItems().setAll(rows);
         // A header's text flow wraps to what its column header leaves it, which shrinks when the sort arrow appears,
         // and in the last shown column by the menu button's corner.
@@ -415,6 +421,36 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
             return "";
         }
         return rectangleText(new CellKey(0, 0), new CellKey(getItems().size() - 1, columns - 1), null, true);
+    }
+
+    /**
+     * The table's text as its source has it, whatever the reader made of it: in the format of {@link #wholeText()},
+     * but the rows in the source's order and every column in the source's order, a hidden one too. So it is the same
+     * for a table the reader sorted or rearranged and for the same table as a new text renders it, unsorted with every
+     * column shown, whose {@link #wholeText()} it equals.
+     *
+     * @return the text
+     */
+    String sourceText() {
+        StringBuilder text = new StringBuilder();
+        appendSourceRow(text, header);
+        for (Row row : sourceRows) {
+            text.append('\n');
+            appendSourceRow(text, row.cells());
+        }
+        return text.toString();
+    }
+
+    /**
+     * Appends the visible texts of a row's cells in the source's column order, joined by a tab.
+     */
+    private static void appendSourceRow(StringBuilder text, List<Table.Cell> cells) {
+        for (int column = 0; column < cells.size(); column++) {
+            if (column > 0) {
+                text.append('\t');
+            }
+            text.append(MarkdownRenderer.visibleText(cells.get(column).content()));
+        }
     }
 
     /**

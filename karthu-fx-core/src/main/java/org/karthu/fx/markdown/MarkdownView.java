@@ -574,8 +574,9 @@ import java.util.function.Consumer;
  * <p>An application that shows a new version of the same document, such as one that reloads a file when it changes,
  * sets it with {@link #updateMarkdown(String)}: the view stays at the paragraph the reader was reading, also when text
  * above it was added or removed. The line at the top edge of the visible area is found again in the new text by its
- * block, the block of the same kind with the same text nearest to its old number, else the block with its old number,
- * and stays at the top, cut as far down as before. Images keep showing what they showed until their files have been
+ * block, the block of the same kind with the same text nearest to its old number (a table by its text in the source's
+ * order, however the reader sorted or rearranged it), else the block with its old number, and stays at the top, cut
+ * as far down as before. Images keep showing what they showed until their files have been
  * loaded again, so nothing flashes and the text does not jump (see <em>Images</em>, <em>Loading</em>). A search goes
  * on from its current match's place, without scrolling. Everything else starts fresh as with a new text: the
  * selection, the tables' sorting, columns and widths, the context menu; the zoom stays. {@link #setMarkdown(String)}
@@ -1081,8 +1082,9 @@ public class MarkdownView extends BaseComponent {
      * <p>The place is the line or the point at the top edge of the visible area, noted as a zoom notes it, before the
      * new text is rendered. The new text's block in its place is the block of the same kind (a heading's or a
      * paragraph's text, a code or source block, a table) with the same text, as a copy gives it, nearest to the old
-     * block's number in the document; without one, the block with the old number, the last one if the new text is
-     * shorter. Block images are not counted. A line keeps its character position, limited to the new block's length,
+     * block's number in the document; a table's text taken in the source's order with every column, so a table the
+     * reader sorted or rearranged is found too. Without one, the block with the old number, the last one if the new
+     * text is shorter. Block images are not counted. A line keeps its character position, limited to the new block's length,
      * and the top edge cuts it as far down as before; a block is cut as far down, a gap between blocks keeps its
      * height. The next layout scrolls there, as far as the scroll range allows, and leaves the sideways scroll position
      * as it is. An image that arrives later above the place keeps it, as always.

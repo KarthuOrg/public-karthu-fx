@@ -9,10 +9,11 @@ import java.util.List;
  * found. The one rule for both.
  *
  * <p>A segment is noted by its kind (its class: a heading's or a paragraph's text, a code or source block, a table),
- * its text as a copy gives it ({@link Segment#text}) and its number. The segment found is the new one of the same
- * kind with the same text nearest to the old number, the one above on a tie: so a paragraph stays found when text
- * above it is added or removed. Without one, the text of the segment was changed itself, and the segment with the old
- * number is found, the last one if the new document is shorter.
+ * its content ({@link Segment#contentKey}: its text as a copy gives it, a table's in the source's order with every
+ * column) and its number. The segment found is the new one of the same kind with the same content nearest to the old
+ * number, the one above on a tie: so a paragraph stays found when text above it is added or removed, and so does a
+ * table the reader sorted or rearranged. Without one, the content of the segment was changed itself, and the segment
+ * with the old number is found, the last one if the new document is shorter.
  *
  * <p>Block images are not counted: they hold no place of the reader's ({@link ReadingAnchor}) and no match of the
  * search, and an image added or removed above would shift the numbers of the text below.
@@ -20,12 +21,12 @@ import java.util.List;
 final class NotedSegment {
 
     private final Class<? extends Segment> kind;
-    private final String text;
+    private final String content;
     private final int number;
 
-    private NotedSegment(Class<? extends Segment> kind, String text, int number) {
+    private NotedSegment(Class<? extends Segment> kind, String content, int number) {
         this.kind = kind;
-        this.text = text;
+        this.content = content;
         this.number = number;
     }
 
@@ -42,7 +43,7 @@ final class NotedSegment {
         while (counted.get(number) != segment) {
             number++;
         }
-        return new NotedSegment(segment.getClass(), textOf(segment), number);
+        return new NotedSegment(segment.getClass(), segment.contentKey(), number);
     }
 
     /**
@@ -56,7 +57,7 @@ final class NotedSegment {
         if (counted.isEmpty()) {
             return null;
         }
-        // Outwards from the old number, above before below at the same distance; each segment's text is read once.
+        // Outwards from the old number, above before below at the same distance; each segment's content is read once.
         for (int distance = 0; distance <= Math.max(number, counted.size() - 1 - number); distance++) {
             Segment above = sameAt(counted, number - distance);
             if (above != null) {
@@ -71,7 +72,7 @@ final class NotedSegment {
     }
 
     /**
-     * The segment at a number if it is of the noted kind and has the noted text.
+     * The segment at a number if it is of the noted kind and has the noted content.
      *
      * @return the segment, {@code null} if it is not or the number lies outside the document
      */
@@ -80,7 +81,7 @@ final class NotedSegment {
             return null;
         }
         Segment segment = counted.get(at);
-        return segment.getClass() == kind && textOf(segment).equals(text) ? segment : null;
+        return segment.getClass() == kind && segment.contentKey().equals(content) ? segment : null;
     }
 
     /**
@@ -94,12 +95,5 @@ final class NotedSegment {
             }
         }
         return counted;
-    }
-
-    /**
-     * A segment's whole text as a copy gives it.
-     */
-    private static String textOf(Segment segment) {
-        return segment.text(0, segment.length());
     }
 }
