@@ -563,8 +563,8 @@ switch for each state:
   for its row, ending in an ellipsis) beside person cards with the footer (*{0} of {1} people*),
   drawn by the page's own cell factory from the public API (the person type, the initials avatar
   and the card are the showcase's, not karthu-fx's); a try-out suggestion input that also filters
-  its names, the switches *Disabled* and *Read-only*, and a read-out of its text, its counter, its
-  chosen entry and the last choice its handler heard.
+  its names, with its chevron, the switches *Disabled*, *Read-only* and *Chevron*, and a read-out of
+  its text, its counter, its chosen entry and the last choice its handler heard.
 
 *Shell* (`FieldShell`): its children, left to right, are the type's leading graphic, if it has one
 (the search input's magnifier), the content (the control the type wraps),
@@ -1128,7 +1128,8 @@ its mark).
 - **Opening:** typing (also deleting and pasting) opens the popup once the text holds a word: the
   matching entries in the order of the items, the first preselected; it follows the typing, the
   first match preselected again, and closes when no word is left. Down or Alt+Down open it too: in
-  the empty field with every entry, with text with its matches. It never opens on the focus alone,
+  the empty field with every entry, with text with its matches, and so does a click on the chevron
+  (see *Chevron*). It never opens on the focus alone,
   never for a text the field puts in itself or the application sets while the text field has no
   focus (one set while it has the focus counts as typed), never while disabled or read-only. With no
   match it stays open with one line, `noMatchesTextProperty()` (default *No matches*), in the list's
@@ -1144,6 +1145,14 @@ its mark).
   in the window outside the field and the popup (the press still acts there); a press in the field
   itself, such as one that moves the caret, keeps it open, and the `×` closes it as it empties the
   field.
+- **Chevron:** off by default, so the field lays out as a search input; `chevronVisibleProperty()`
+  turns it on (since 1.1.0-RC2): the combo input's chevron (Bootstrap `CHEVRON_DOWN`, a trailing
+  icon) at the field's right end, after the `×`, so the field works as a filterable combo box for
+  the mouse too. A click opens the popup as Down does (every entry in the empty field, the matches
+  with text) and gives the text field the focus; a click while the popup is open only closes it, the
+  text kept (its press, in the field, kept the popup open). Out of the tab order; greyed out while
+  the field is disabled or read-only, when a click does nothing. Its tooltip and accessible text are
+  `chevronTextProperty()`, default *Show suggestions*; null or empty, no tooltip.
 - **Rows:** by default the item text on one line through `highlight(...)`, its marks bold; a text
   longer than the row is clipped after the last character that fits whole, an ellipsis (`…`,
   `form-suggestion-ellipsis`) after it, the highlight node keeping the whole text and its marks.
@@ -1177,7 +1186,8 @@ its mark).
   preselection stays on the same entry (`equals`) while it matches, else goes to the first.
 
 Rules in `base.css` under *Suggestion input*, after the search input's: the popup's frame, its list
-and rows, the line *No matches*, the marks in the popup and the footer. Tokens: `-fx-control-border`
+and rows, the line *No matches*, the marks in the popup and the footer; the chevron is drawn by the
+frame's trailing icon rules. Tokens: `-fx-control-border`
 (the popup's frame, the line above the footer), `-fx-surface-color` (the popup's frame),
 `-fx-hover-color` (a row under the pointer), `-fx-selection-color` and `-fx-selection-text-color` (the preselected row),
 `-fx-text-color` (a row's marks), `-fx-text-secondary-color` (*No matches*, the footer); no token of
@@ -1186,6 +1196,7 @@ its own.
 | Style class | On | Look |
 |---|---|---|
 | `form-suggestion-input` | the field, beside `form-search-input` and `form-frame` | the search input's |
+| `form-suggestion-chevron` | the chevron (Bootstrap `CHEVRON_DOWN`), a `Button` beside `form-frame-icon` and `icon-button`, the shell's last own control, after the `×`, not focus traversable; tooltip *Show suggestions*; shown while turned on | the frame's trailing icon, as the combo input's `form-combo-chevron`; disabled while read-only (the icon button's opacity 0.5), dimmed once with a disabled field |
 | `form-suggestion-popup` | the popup's content, a `VBox` holding the list or the line | the popup's frame, as a combo box's list: `-fx-control-border` 1px around `-fx-surface-color`, radius 3, padding 1 |
 | `form-suggestion-list` | the popup's list, a `ListView` (keeps `list-view`), never focused; its rows list cells (`list-cell`), by default the item text through `highlight(...)`, else the application's cells | no frame, no background of its own; a row padding `4 8`, `-fx-hover-color` under the pointer, the preselected row (`:selected`) `-fx-selection-color` |
 | `form-suggestion-ellipsis` | the ellipsis of a default row whose text does not fit, a `TextFlow` beside `search-highlight` holding one run (`search-text`), shown only while the text is clipped | the look of the row's plain runs, by the rules of `search-highlight` and `search-text`; no rule of its own |

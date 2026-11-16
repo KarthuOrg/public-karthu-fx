@@ -258,10 +258,13 @@ class AgentGuideSamplesTest {
         city.setSearchTexts(item -> List.of(item));
         List<String> chosen = new ArrayList<>();
         city.setOnItemChosen(chosen::add);
+        city.setChevronVisible(true);
+        city.setChevronText("Show all cities");
 
         search.setText("zurich");
         assertEquals(List.of("Zürich"), new ArrayList<>(list.getItems()));
         assertTrue(chosen.isEmpty());
+        assertTrue(city.isChevronVisible());
     }
 
     @Test

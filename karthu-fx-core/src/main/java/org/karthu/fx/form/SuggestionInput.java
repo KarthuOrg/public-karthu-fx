@@ -16,10 +16,12 @@ import javafx.event.EventTarget;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
@@ -54,7 +56,8 @@ import java.util.function.Function;
  * character other than whitespace: with the entries the search matches, in the order of the items, the first one
  * preselected. While it is open it follows the typing, the first match preselected again after each change; when the
  * text holds no word any more it closes. Down (or Alt+Down) opens it as well: in the empty field with every entry, with
- * text with the entries the text matches. It never opens on the focus alone, never for a text the field puts in itself
+ * text with the entries the text matches; so does a click on the {@linkplain #chevronVisibleProperty() chevron}, where
+ * the application turns it on. It never opens on the focus alone, never for a text the field puts in itself
  * (applying an entry, the chosen entry set), never for a text the application sets while the text field does not have
  * the focus (one set while it has the focus counts as typed), and never while the field is disabled or read-only. When
  * nothing matches, the popup stays open with one line, the {@linkplain #noMatchesTextProperty() <i>No matches</i>}, so
@@ -73,6 +76,15 @@ import java.util.function.Function;
  * list's width (beside the vertical scroll bar while the list scrolls), whatever it asks for, and the popup never
  * scrolls sideways; an application's row wraps or clips what does not fit, as it chooses (a text flow such as a
  * highlight node wraps its lines by itself).
+ *
+ * <p><b>Chevron.</b> Turned on with {@link #chevronVisibleProperty()} (off by default, when the field lays out as a
+ * search field), the field shows a chevron at its right end, after the clear button, so that it works as a filterable
+ * combo box for the mouse too: the combo input's chevron (Bootstrap's chevron down, a trailing icon), out of the tab
+ * order. A click opens the popup as Down does, in the empty field with every entry, with text with the entries the text
+ * matches, and gives the text field the focus; a click while the popup is open closes it and keeps the text. While the
+ * field is disabled or read-only the chevron is greyed out and a click does nothing. Its tooltip and accessible text
+ * are the {@linkplain #chevronTextProperty() chevron text}, <i>Show suggestions</i> unless the application sets
+ * another.
  *
  * <p><b>Footer.</b> Turned on with {@link #footerVisibleProperty()}, the popup shows a footer under the rows: on the
  * left the number of matches and of all entries through the {@linkplain #footerCountFormatProperty() count format}
@@ -95,7 +107,8 @@ import java.util.function.Function;
  * <p><b>Mouse.</b> A click on a row applies its entry. The popup closes when the text field loses the focus, the
  * window moves, the field becomes disabled or read-only, or the user presses the mouse in the window outside the field
  * and the popup (the press still does what it does there). A press in the field itself, such as one that moves the
- * caret, keeps the popup open; a click on the clear button closes it, as it empties the field.
+ * caret, keeps the popup open; a click on the clear button closes it, as it empties the field, and a click on the
+ * chevron, whose press so kept it open, only closes it.
  *
  * <p><b>Applying</b> an entry, in this order: the popup closes; the text becomes the entry's item text, the caret at
  * its end, without the popup opening again and without the chosen entry being cleared; the
@@ -118,6 +131,9 @@ import java.util.function.Function;
  * The field carries {@code form-suggestion-input} beside the search field's
  * {@code form-search-input} and the shell's {@code form-frame} (see {@link SearchInput} for its parts).
  * <ul>
+ *   <li>{@code form-suggestion-chevron}: the chevron, a {@link Button} beside {@code form-frame-icon} and
+ *       {@code icon-button}, the last own control of the shell, after the clear button; shown while turned on, greyed
+ *       out (disabled) while read-only (since 1.1.0-RC2)</li>
  *   <li>{@code form-suggestion-popup}: the popup's content, a {@link VBox} that draws the popup's frame</li>
  *   <li>{@code form-suggestion-list}: the popup's list, a {@link ListView} (keeps {@code list-view}); its rows are
  *       list cells ({@code list-cell}), the preselected one {@code :selected}, by default each showing the item text
@@ -159,6 +175,8 @@ public class SuggestionInput<T> extends SearchInput {
     // The arrows up and down and the middle dot as escapes: the build does not depend on the source encoding.
     private final StringProperty footerHintText = new SimpleStringProperty(this, "footerHintText",
             "\u2191\u2193 select \u00B7 Enter apply \u00B7 Esc close");
+    private final BooleanProperty chevronVisible = new SimpleBooleanProperty(this, "chevronVisible", false);
+    private final StringProperty chevronText = new SimpleStringProperty(this, "chevronText", "Show suggestions");
 
     /** The entries the popup's list shows: those the search matches, in the order of the items. */
     private final ObservableList<T> matches = FXCollections.observableArrayList();
@@ -182,6 +200,13 @@ public class SuggestionInput<T> extends SearchInput {
      */
     private final SuggestionPopup popupWindow =
             new SuggestionPopup(this, content, this::hidePopup, this::popupWindowHidden, this::pressedInWindow);
+    /**
+     * The chevron, the last of the field's own controls, at its right end after the clear button: shown while turned
+     * on, it opens and closes the popup.
+     */
+    private final Button chevron = ShellComboBox.createChevron("form-suggestion-chevron");
+    /** The chevron's tooltip, which shows the chevron text; the chevron has it only while that text is not empty. */
+    private final Tooltip chevronTooltip = new Tooltip();
 
     /** Whether the popup is open: from opening to closing, also where no window can show it. */
     private boolean popupOpen;
@@ -196,6 +221,7 @@ public class SuggestionInput<T> extends SearchInput {
     public SuggestionInput() {
         getStyleClass().add("form-suggestion-input");
         buildPopup();
+        buildChevron();
 
         items.addListener((ListChangeListener<T>) change -> entriesChanged());
         itemText.addListener((observable, oldFunction, newFunction) -> entriesChanged());
@@ -613,6 +639,119 @@ public class SuggestionInput<T> extends SearchInput {
         return text == null ? "" : text;
     }
 
+    // --- Chevron -------------------------------------------------------------------------------------
+
+    /**
+     * Whether the field shows its chevron at its right end, after the clear button (default false). A click on it opens
+     * the popup as Down does (every entry in the empty field, the matches with text) and gives the text field the focus;
+     * a click while the popup is open closes it. Out of the tab order, greyed out while the field is disabled or
+     * read-only, when a click does nothing; its tooltip is the {@linkplain #chevronTextProperty() chevron text}. Turned
+     * off, it takes no room, and the field lays out as a search field.
+     *
+     * @return the chevron visible property
+     * @since 1.1.0-RC2
+     */
+    public final BooleanProperty chevronVisibleProperty() {
+        return chevronVisible;
+    }
+
+    /**
+     * Returns whether the field shows its chevron.
+     *
+     * @return true while the chevron shows
+     * @since 1.1.0-RC2
+     */
+    public final boolean isChevronVisible() {
+        return chevronVisible.get();
+    }
+
+    /**
+     * Turns the chevron on or off.
+     *
+     * @param visible true to show the chevron
+     * @since 1.1.0-RC2
+     */
+    public final void setChevronVisible(boolean visible) {
+        chevronVisible.set(visible);
+    }
+
+    /**
+     * The chevron's tooltip and accessible text (default <i>Show suggestions</i>), a property so that an application
+     * can translate it or name what its list holds, such as <i>Recent files</i>. Null or empty: the chevron has no
+     * tooltip.
+     *
+     * @return the chevron text property
+     * @since 1.1.0-RC2
+     */
+    public final StringProperty chevronTextProperty() {
+        return chevronText;
+    }
+
+    /**
+     * Returns the chevron's tooltip and accessible text.
+     *
+     * @return the chevron text, empty or null when the chevron has no tooltip
+     * @since 1.1.0-RC2
+     */
+    public final String getChevronText() {
+        return chevronText.get();
+    }
+
+    /**
+     * Sets the chevron's tooltip and accessible text.
+     *
+     * @param text the chevron text; null or empty for no tooltip
+     * @since 1.1.0-RC2
+     */
+    public final void setChevronText(String text) {
+        chevronText.set(text);
+    }
+
+    /**
+     * Puts the chevron after the search field's own controls, at the field's right end, shown while turned on, with
+     * its tooltip and accessible text.
+     */
+    private void buildChevron() {
+        chevron.setOnAction(event -> toggleByChevron());
+        chevronTooltip.textProperty().bind(chevronText);
+        chevron.accessibleTextProperty().bind(chevronText);
+        chevronText.addListener((observable, oldText, newText) -> updateChevronTooltip());
+        updateChevronTooltip();
+        getOwnControls().add(chevron);
+        chevronVisible.addListener((observable, wasVisible, visible) -> updateChevron());
+        updateChevron();
+    }
+
+    /** Gives the chevron its tooltip while the chevron text is not empty; an empty tooltip would show as a box. */
+    private void updateChevronTooltip() {
+        String text = chevronText.get();
+        chevron.setTooltip(text == null || text.isEmpty() ? null : chevronTooltip);
+    }
+
+    /**
+     * The chevron's click: closes the open popup, the text kept; else gives the text field the focus, so that the keys
+     * move through the popup and losing the focus closes it, and opens the popup as Down does. The press of that click
+     * keeps an open popup open, as every press in the field does, so the click only closes it.
+     */
+    private void toggleByChevron() {
+        if (hidePopup() || !userMayChangeValue()) {
+            return;
+        }
+        getTextField().requestFocus();
+        openPopup();
+    }
+
+    /**
+     * Shows the chevron while turned on, greyed out (disabled) while the field is read-only or bound, when no popup
+     * opens; hidden, it takes no room. A disabled field greys it out with everything else.
+     */
+    private void updateChevron() {
+        updateOwnControl(chevron, chevronVisible.get());
+        if (isReadOnly()) {
+            chevron.setDisable(true);
+        }
+    }
+
     // --- The text and the popup ----------------------------------------------------------------------
 
     /**
@@ -784,7 +923,8 @@ public class SuggestionInput<T> extends SearchInput {
     // --- Read-only -----------------------------------------------------------------------------------
 
     /**
-     * Follows read-only as the search field does, and closes the popup while the user may not edit.
+     * Follows read-only as the search field does, closes the popup while the user may not edit, and greys the chevron
+     * out meanwhile.
      *
      * @param editable true while the user may edit the text: neither bound nor read-only
      */
@@ -793,6 +933,11 @@ public class SuggestionInput<T> extends SearchInput {
         super.updateContentEditable(editable);
         if (!editable) {
             hidePopup();
+        }
+        // The frame's constructor sets its content, and so calls this hook, before this field's chevron exists; the
+        // constructor shows the chevron then.
+        if (chevron != null) {
+            updateChevron();
         }
     }
 

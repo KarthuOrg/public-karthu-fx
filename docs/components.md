@@ -252,7 +252,10 @@ dependency.
   chosen entry is an event and a property, null again as soon as the text is edited. An
   application draws richer rows with its own cell factory, such as cards of people with the marks
   in every line, and turns on a footer with the count (*2 of 14 people*) and the key hints; no row
-  is ever wider than the popup.
+  is ever wider than the popup. Turned on (from 1.1.0-RC2), a chevron at the field's right end, the
+  combo input's, makes it a filterable combo box for the mouse too: a click opens the popup as Down
+  does, a click on the open popup's chevron closes it; greyed out while disabled or read-only, its
+  tooltip (*Show suggestions*) a property. Off by default.
 
 ### Texts, styling and the showcase
 

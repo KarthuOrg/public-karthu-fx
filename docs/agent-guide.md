@@ -260,6 +260,8 @@ city.setItemText(item -> item);
 city.setSearchTexts(item -> List.of(item));
 List<String> chosen = new ArrayList<>();
 city.setOnItemChosen(chosen::add);
+city.setChevronVisible(true);
+city.setChevronText("Show all cities");
 ```
 
 - `SearchInput.filter` sets the list's predicate from then on: do not set a predicate of your own
@@ -268,6 +270,8 @@ city.setOnItemChosen(chosen::add);
   not go into a `FormField`.
 - `SuggestionInput<T>`: `setItemText` is what goes into the field, `setSearchTexts` what is
   searched, `setOnItemChosen` what happens on Enter or a click.
+- `setChevronVisible(true)` adds a chevron that opens and closes the list with the mouse, for a
+  field that serves as a filterable combo box; off by default. `setChevronText` is its tooltip.
 - A `SearchInput` searches a Markdown view instead of a list with `search(view)`, see
   *Search in a Markdown view* below. A field filters a list or searches a view, one at a time.
 

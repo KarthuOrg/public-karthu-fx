@@ -2711,7 +2711,12 @@ Text {
 
 /* --- Suggestion input (SuggestionInput) ------------------------------
  * A search input (form-suggestion-input) with a popup of suggestions
- * under it, drawn by the search input's rules. The popup's content
+ * under it, drawn by the search input's rules. Its chevron
+ * (form-suggestion-chevron), where the application turns it on, is a
+ * trailing icon (form-frame-icon) after the clear button, the combo
+ * input's chevron: the frame's icon rules draw it, muted at rest and in
+ * the text colour under the pointer, dimmed as a disabled icon button
+ * while read-only and once with a disabled field. The popup's content
  * (form-suggestion-popup, a VBox) draws the popup's frame as a combo
  * box's list does: a 1px border in the control border colour around
  * the surface, radius 3. Inside it the list (form-suggestion-list, a
