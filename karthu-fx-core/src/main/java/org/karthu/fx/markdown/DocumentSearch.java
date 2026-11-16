@@ -218,13 +218,13 @@ final class DocumentSearch {
         Searchable oldSegment = oldCurrent == null ? null : parts.get(oldCurrent.part()).segment();
         findAll();
         publish(oldCurrent == null ? firstInDirection() : firstStillThere(before, old));
-        remarkSegment(segment);
+        markSegmentAgain(segment);
         if (oldSegment != null) {
-            remarkSegment(oldSegment);
+            markSegmentAgain(oldSegment);
         }
         Found current = currentMatch();
         if (current != null) {
-            remarkSegment(parts.get(current.part()).segment());
+            markSegmentAgain(parts.get(current.part()).segment());
         }
         markNear();
     }
@@ -261,10 +261,10 @@ final class DocumentSearch {
     }
 
     /**
-     * Has a segment that shows its marks show them anew: its matches, or the current match among them, changed. A
-     * segment left without matches takes its marks away.
+     * Has any segment that shows its marks show them anew, found by itself: its matches, or the current match among
+     * them, changed, and it may have none left after a change of its texts, which takes its marks away.
      */
-    private void remarkSegment(Searchable segment) {
+    private void markSegmentAgain(Searchable segment) {
         if (!marked.contains(segment)) {
             return;
         }
@@ -349,8 +349,8 @@ final class DocumentSearch {
         int old = matchIndex.get();
         int current = Math.floorMod(old + by, matches.size());
         publish(current);
-        remark(matches.get(old).part());
-        remark(matches.get(current).part());
+        markPartAgain(matches.get(old).part());
+        markPartAgain(matches.get(current).part());
         markNear();
         scrollToCurrent();
     }
@@ -467,9 +467,10 @@ final class DocumentSearch {
     }
 
     /**
-     * Has a segment with matches show them anew, if it shows its marks: the current match has come or gone.
+     * Has the segment of a part, a segment with matches, show them anew, if it shows its marks: the current match has
+     * come or gone.
      */
-    private void remark(int part) {
+    private void markPartAgain(int part) {
         if (marked.contains(parts.get(part).segment())) {
             show(part);
         }

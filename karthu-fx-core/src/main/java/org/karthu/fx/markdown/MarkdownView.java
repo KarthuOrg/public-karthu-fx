@@ -1084,10 +1084,10 @@ public class MarkdownView extends BaseComponent {
      * paragraph's text, a code or source block, a table) with the same text, as a copy gives it, nearest to the old
      * block's number in the document; a table's text taken in the source's order with every column, so a table the
      * reader sorted or rearranged is found too. Without one, the block with the old number, the last one if the new
-     * text is shorter. Block images are not counted. A line keeps its character position, limited to the new block's length,
-     * and the top edge cuts it as far down as before; a block is cut as far down, a gap between blocks keeps its
-     * height. The next layout scrolls there, as far as the scroll range allows, and leaves the sideways scroll position
-     * as it is. An image that arrives later above the place keeps it, as always.
+     * text is shorter. Block images are not counted. A line keeps its character position, limited to the new block's
+     * length, and the top edge cuts it as far down as before; a block is cut as far down, a gap between blocks keeps
+     * its height. The next layout scrolls there, as far as the scroll range allows, and leaves the sideways scroll
+     * position as it is. An image that arrives later above the place keeps it, as always.
      *
      * <p>An image of the new text whose address, as written, an image of the shown text has starts with what that
      * image showed, its picture at its size, an animated GIF playing, or its error box, the first of them that showed
@@ -1099,9 +1099,9 @@ public class MarkdownView extends BaseComponent {
      * <p>A search goes on: it runs on the new text, and the first match at or after the old current match's place, its
      * block found again as the reader's place is found, becomes current, in the search's direction and wrapping around;
      * in a table the place lies in the same cell as the source has it, however the reader had sorted or rearranged the
-     * table. The view does not scroll to it. Everything else is as after {@code setMarkdown}: the selection is cleared, tables
-     * start unsorted with all columns shown at their fitted widths, the context menu forgets its block, and the zoom
-     * stays.
+     * table. The view does not scroll to it. Everything else is as after {@code setMarkdown}: the selection is cleared,
+     * tables start unsorted with all columns shown at their fitted widths, the context menu forgets its block, and the
+     * zoom stays.
      *
      * <p>The same text changes nothing, as setting the same value does. Before the view is laid out, and where the
      * shown or the new text has no block but block images, it shows the new text from the top, as {@code setMarkdown}
@@ -2104,7 +2104,7 @@ public class MarkdownView extends BaseComponent {
      */
     private void rebuild() {
         // An update notes the reader's place in the shown document's layout, before anything of it goes.
-        ReadingAnchor place = updating ? documentZoom.readingPosition() : null;
+        ReadingAnchor place = updating ? documentZoom.noteReadingPosition() : null;
         NotedSegment placeSegment = place == null ? null
                 : NotedSegment.of(documentSelection.segments(), place.segment());
         DocumentSearch.Place searchPlace = place == null ? null : documentSearch.currentPlace();

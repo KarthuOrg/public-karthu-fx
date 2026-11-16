@@ -184,11 +184,12 @@ final class TableBlock extends Region implements Searchable {
     }
 
     /**
-     * The table's texts in the order it shows them, see {@link MarkdownTable#searchTexts()}.
+     * The table's texts in the order it shows them, numbered anew by the table for the search's matches, see
+     * {@link MarkdownTable#numberSearchTexts()}.
      */
     @Override
     public List<String> searchTexts() {
-        return table.searchTexts();
+        return table.numberSearchTexts();
     }
 
     /**

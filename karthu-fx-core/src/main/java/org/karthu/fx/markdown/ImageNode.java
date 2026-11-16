@@ -463,15 +463,16 @@ abstract sealed class ImageNode extends Region permits ImageBlock, InlineImage {
      * @param before what the old node showed
      */
     final void startWith(Shown before) {
-        Object shownBefore = new Object();
+        // Stands for the load what is carried over comes from: no load of the node is it.
+        Object carriedOver = new Object();
         switch (before) {
             case ShownPicture shownPicture -> {
                 // The bytes come along, so the picture opens at full size until the new load returns its own.
                 loaded = shownPicture.loaded();
-                showBitmap(shownPicture.bitmap(), shownPicture.pixelWidth(), shownPicture.pixelHeight(), shownBefore,
+                showBitmap(shownPicture.bitmap(), shownPicture.pixelWidth(), shownPicture.pixelHeight(), carriedOver,
                         shownPicture.playing());
             }
-            case ShownErrorBox shownError -> showError(shownError.note(), shownBefore);
+            case ShownErrorBox shownError -> showError(shownError.note(), carriedOver);
         }
     }
 

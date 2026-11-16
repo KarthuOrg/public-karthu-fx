@@ -118,10 +118,10 @@ import java.util.function.Consumer;
  * ({@link #showSelectedWhole(boolean)}) and copies as {@link #wholeText()}, while its own selection of cells stays
  * empty.
  *
- * <p><b>Search.</b> The view's search runs through the table's texts in the order it shows them
- * ({@link #searchTexts()}), a cell's text derived from its inlines without drawing it. The table keeps the matches by
- * their cells as the source has them, and the flows of the headers and of the body cells of the rows near the visible
- * area show their cell's matches in the two layers of their {@link SearchMarks}
+ * <p><b>Search.</b> The view's search runs through the table's texts in the order it shows them, which the table
+ * numbers for it ({@link #numberSearchTexts()}), a cell's text derived from its inlines without drawing it. The table
+ * keeps the matches by their cells as the source has them, and the flows of the headers and of the body cells of the
+ * rows near the visible area show their cell's matches in the two layers of their {@link SearchMarks}
  * ({@link #showSearchMatches(List, int)}, {@link #showSearchMatchesNear(NearArea)}). A sort and a moved, hidden or
  * shown column call the search back ({@link #onSearchTextsChanged(Runnable)}), which numbers the matches anew; it finds
  * its current match again by the cell as the source has it ({@link #searchTextKey(int)}).
@@ -190,7 +190,7 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
 
     /**
      * The texts of the table the view's search ran through last, in the order it numbered them, see
-     * {@link #searchTexts()}.
+     * {@link #numberSearchTexts()}.
      */
     private List<SearchText> searchTexts = List.of();
 
@@ -303,7 +303,7 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
      * What names a text of the search across sorts and moved columns: its cell as the source has it, header or body,
      * and its stretch in the cell.
      *
-     * @param text the text's number among the texts of the last {@link #searchTexts()}
+     * @param text the text's number among the texts of the last {@link #numberSearchTexts()}
      * @return what names it, equal for the same text whatever the order
      */
     Object searchTextKey(int text) {
@@ -311,9 +311,9 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
     }
 
     /**
-     * The number of the text of a cell and stretch among the texts of the last {@link #searchTexts()}: a key names the
-     * same cell in another rendering of the same table, so the search finds its current match's text again in a new
-     * version of the document, whose table starts unsorted with every column.
+     * The number of the text of a cell and stretch among the texts of the last {@link #numberSearchTexts()}: a key
+     * names the same cell in another rendering of the same table, so the search finds its current match's text again
+     * in a new version of the document, whose table starts unsorted with every column.
      *
      * @param key what names a text, as {@link #searchTextKey(int)} gives it, of this table or another
      * @return the text's number, -1 if no text of the table has that key
@@ -471,16 +471,18 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
     }
 
     /**
-     * The texts the view's search runs through, in the order the table shows them: the header's cells of the shown
-     * columns in their shown order, then the rows in their shown order, each row's cells in the shown columns' order. A
-     * hidden column is not searched. A cell's text is what its flow shows, derived from its inlines without drawing it
+     * Numbers the texts the view's search runs through anew, in the order the table shows them now, keeps that
+     * numbering and returns the texts: the header's cells of the shown columns in their shown order, then the rows in
+     * their shown order, each row's cells in the shown columns' order. A hidden column is not searched. A cell's text
+     * is what its flow shows, derived from its inlines without drawing it
      * ({@link MarkdownRenderer#cellSearchTexts(List)}), so a row never drawn is searched too; a cell with images gives
-     * a text per stretch between their icons. The table keeps the list: the search's matches name a text by its number
-     * in it, and {@link #searchTextKey(int)} names it across a sort or a moved column.
+     * a text per stretch between their icons. The search's matches name a text by its number in the numbering kept,
+     * which {@link #showSearchMatches(List, int)}, {@link #searchMatchBounds} and {@link #searchTextKey(int)} read, the
+     * last naming it across a sort or a moved column.
      *
      * @return the texts, in the order the table shows them
      */
-    List<String> searchTexts() {
+    List<String> numberSearchTexts() {
         List<SearchText> found = new ArrayList<>();
         List<TableColumn<Row, ?>> shown = getVisibleLeafColumns();
         for (TableColumn<Row, ?> column : shown) {
@@ -523,8 +525,8 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
      * a sort, which fills the cells anew, keeps the marks on their text. A cell whose matches stay as they were keeps
      * its marks: the next match in a table changes the marks of two cells.
      *
-     * @param matches the table's matches, their texts numbered as the table's last {@link #searchTexts()}; none to
-     *                show no marks, which unmarks every row
+     * @param matches the table's matches, their texts numbered as the table's last {@link #numberSearchTexts()};
+     *                none to show no marks, which unmarks every row
      * @param current the index of the current match among them, -1 if it lies elsewhere or there is none
      */
     void showSearchMatches(List<Searchable.Match> matches, int current) {
@@ -604,7 +606,7 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
      * A body cell is found in its row as the table lays it out; the table lays out every row, so a row is found though
      * the view has never shown it. Before that, the box is the table's.
      *
-     * @param match one of the table's matches, its text numbered as the table's last {@link #searchTexts()}
+     * @param match one of the table's matches, its text numbered as the table's last {@link #numberSearchTexts()}
      * @return its bounds in the scene
      */
     Bounds searchMatchBounds(Searchable.Match match) {
@@ -1129,7 +1131,7 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
     }
 
     /**
-     * A text of the search, see {@link #searchTexts()}.
+     * A text of the search, see {@link #numberSearchTexts()}.
      *
      * @param key      what names it across sorts and moved columns
      * @param shownRow its row's place in the shown order when the search ran, {@link #HEADER_ROW} for the header

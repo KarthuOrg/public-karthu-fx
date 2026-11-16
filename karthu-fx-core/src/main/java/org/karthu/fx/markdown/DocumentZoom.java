@@ -19,7 +19,7 @@ import javafx.scene.layout.Region;
  * which scales the document and wraps it anew, scrolls it back there ({@link #restoreReadingPosition()}). A zoom
  * applied again before that layout notes the point anew in the same, not yet changed layout. An image that arrives
  * above the line at the top keeps that line in place the same way ({@link #keepReadingPosition()}), and so does a new
- * version of the text, whose new document the view finds the noted place in ({@link #readingPosition()},
+ * version of the text, whose new document the view finds the noted place in ({@link #noteReadingPosition()},
  * {@link #keepReadingPosition(ReadingAnchor)}).
  *
  * <p><b>The reader's zoom.</b> The bar, the wheel and the shortcuts change the zoom through {@link #zoomTo(int)} and
@@ -154,30 +154,31 @@ final class DocumentZoom {
      */
     void keepReadingPosition() {
         if (readingAnchor == null) {
-            noteReadingPosition(0);
+            noteReadingAnchor(0);
             layoutRequest.run();
         }
     }
 
     /**
-     * The reader's place in the shown document, for a new version of the text: the place that waits for the next
-     * layout, noted before a zoom or an arriving image, else the line at the top of the visible area now. It is noted
-     * in the current layout; {@link #keepReadingPosition(ReadingAnchor)} keeps it, moved to the new document, at the
-     * same height of the viewport.
+     * Notes the reader's place in the shown document, for a new version of the text, and returns it: the place that
+     * waits for the next layout, noted before a zoom or an arriving image, else the line at the top of the visible area
+     * now, noted in the current layout as the place that waits from now on, until the view forgets it
+     * ({@link #forgetReadingPosition()}) for the new text. {@link #keepReadingPosition(ReadingAnchor)} keeps it, moved
+     * to the new document, at the same height of the viewport.
      *
      * @return the place; {@code null} before the view is laid out and for a document without segments other than
      *         block images
      */
-    ReadingAnchor readingPosition() {
+    ReadingAnchor noteReadingPosition() {
         if (readingAnchor == null) {
-            noteReadingPosition(0);
+            noteReadingAnchor(0);
         }
         return readingAnchor;
     }
 
     /**
-     * Keeps a place of a new version of the text, found from {@link #readingPosition()}, through the next layout at
-     * the height of the viewport that place was noted at. Images above it that arrive before that layout keep it, as
+     * Keeps a place of a new version of the text, found from {@link #noteReadingPosition()}, through the next layout
+     * at the height of the viewport that place was noted at. Images above it that arrive before that layout keep it, as
      * they keep a zoom's place: it was noted before their change.
      *
      * @param anchor the place in the new document
@@ -232,7 +233,7 @@ final class DocumentZoom {
             return;
         }
         readingAnchor = null;
-        noteReadingPosition(anchorY);
+        noteReadingAnchor(anchorY);
         zoomBox.setZoom(factor);
         layoutRequest.run();
     }
@@ -243,7 +244,7 @@ final class DocumentZoom {
      *
      * @param anchorY the height in the viewport, from its top edge
      */
-    private void noteReadingPosition(double anchorY) {
+    private void noteReadingAnchor(double anchorY) {
         double viewportHeight = scrollPane.getViewportBounds().getHeight();
         if (viewportHeight > 0) {
             Region document = zoomBox.document();
