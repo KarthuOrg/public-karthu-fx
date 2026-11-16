@@ -100,14 +100,6 @@ final class DocumentSearch {
     }
 
     /**
-     * Runs the search through a new document, the view's segments rendered anew: the current match is chosen as for
-     * a new search. The new segments build their marks after the view's next layout.
-     */
-    void documentChanged() {
-        documentChanged(null);
-    }
-
-    /**
      * Where the current match lies, noted in the shown document for a new version of its text: its segment, to be
      * found again in the new document ({@link NotedSegment}), what names its text there across a new order of the
      * texts ({@link Searchable#searchTextKey(int)}), and its place in the segment.
