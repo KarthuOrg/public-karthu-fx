@@ -6,6 +6,8 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 
 ## [Unreleased]
 
+## [1.1.0-RC2] - 2026-11-16
+
 ### Added
 
 - `MarkdownView` searches its text: an application sets the search text, reads the number of
