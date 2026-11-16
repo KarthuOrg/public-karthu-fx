@@ -46,9 +46,9 @@ final class TextSegment extends TextFlow implements Searchable {
     private HighlightLayer layer;
 
     /**
-     * The search's marks, {@code null} until the first match.
+     * The search's marks, whose layers are made on the first match.
      */
-    private SearchMarks searchMarks;
+    private final SearchMarks searchMarks = new SearchMarks(this);
 
     /**
      * The width the text wraps at, which the flow's inline images shrink to: of the flow's last layout, or the width
@@ -186,24 +186,12 @@ final class TextSegment extends TextFlow implements Searchable {
      */
     @Override
     public void showSearchMatches(List<Match> matches, int current) {
-        if (searchMarks == null) {
-            if (matches.isEmpty()) {
-                return;
-            }
-            searchMarks = new SearchMarks(this);
-        }
         List<Stretch> stretches = stretches();
-        List<Range> others = new ArrayList<>();
-        Range currentRange = null;
-        for (int i = 0; i < matches.size(); i++) {
-            Range range = rangeOf(matches.get(i), stretches);
-            if (i == current) {
-                currentRange = range;
-            } else {
-                others.add(range);
-            }
+        List<Range> ranges = new ArrayList<>(matches.size());
+        for (Match match : matches) {
+            ranges.add(rangeOf(match, stretches));
         }
-        searchMarks.show(others, currentRange, layer);
+        searchMarks.show(ranges, current, layer);
     }
 
     @Override
@@ -337,9 +325,7 @@ final class TextSegment extends TextFlow implements Searchable {
     @Override
     protected void layoutChildren() {
         super.layoutChildren();
-        if (searchMarks != null) {
-            searchMarks.layOverFlow();
-        }
+        searchMarks.layOverFlow();
         if (layer != null) {
             layer.layOverFlow();
         }

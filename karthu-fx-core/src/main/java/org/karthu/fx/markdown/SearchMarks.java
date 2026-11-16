@@ -8,6 +8,7 @@ import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.PathElement;
 import javafx.scene.text.TextFlow;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,8 +18,9 @@ import java.util.List;
  * below the flow's selection layer, so the selection always shows on top; a table cell's flow has none, the theme
  * shows a selected cell's selection through its marks.
  *
- * <p>The layers are made when the flow first shows a match and kept after, hidden while it shows none, so a flow never
- * marked has none.
+ * <p>A flow holds its marks from the start; the layers are made when the flow first shows a match and kept after,
+ * hidden while it shows none, so a flow never marked has none. The flow calls {@link #layOverFlow()} whenever it has
+ * laid out its runs.
  */
 final class SearchMarks {
 
@@ -27,12 +29,12 @@ final class SearchMarks {
     /**
      * The layer of every match but the current one; {@code null} until the first match.
      */
-    private HighlightLayer matches;
+    private HighlightLayer matchLayer;
 
     /**
      * The layer of the current match, above the other; {@code null} until the first match.
      */
-    private HighlightLayer current;
+    private HighlightLayer currentLayer;
 
     /**
      * Creates the marks of a flow, without layers yet.
@@ -44,31 +46,37 @@ final class SearchMarks {
     }
 
     /**
-     * Shows matches of the flow's text: none hide the marks.
+     * Shows matches of the flow's text, the current one among them in its own layer: none hide the marks.
      *
-     * @param others       every match but the current one, as ranges of the flow's positions in their order
-     * @param currentRange the current match, {@code null} if it lies elsewhere or there is none
-     * @param below        the node the layers lie below, the flow's selection layer; {@code null} while the flow has
-     *                     none, which, made later, lies above them as the flow's last child
+     * @param matches the matches, as ranges of the flow's positions in their order
+     * @param current the index of the current match among them, -1 if it lies elsewhere or there is none
+     * @param below   the node the layers lie below, the flow's selection layer; {@code null} while the flow has none,
+     *                which, made later, lies above them as the flow's last child
      */
-    void show(List<Segment.Range> others, Segment.Range currentRange, Node below) {
-        if (matches == null) {
-            if (others.isEmpty() && currentRange == null) {
+    void show(List<Segment.Range> matches, int current, Node below) {
+        if (matchLayer == null) {
+            if (matches.isEmpty()) {
                 return;
             }
-            matches = new HighlightLayer(flow, "markdown-search-match");
-            current = new HighlightLayer(flow, "markdown-search-current");
+            matchLayer = new HighlightLayer(flow, "markdown-search-match");
+            currentLayer = new HighlightLayer(flow, "markdown-search-current");
             int index = below == null ? flow.getChildren().size() : flow.getChildren().indexOf(below);
-            flow.getChildren().addAll(index, List.of(matches, current));
+            flow.getChildren().addAll(index, List.of(matchLayer, currentLayer));
             if (flow.getScene() != null) {
                 // Styled now: layers made during a layout would otherwise show one frame in a path's default black,
                 // before the next pulse styles them.
-                matches.applyCss();
-                current.applyCss();
+                matchLayer.applyCss();
+                currentLayer.applyCss();
             }
         }
-        matches.show(others);
-        current.show(currentRange == null ? List.of() : List.of(currentRange));
+        List<Segment.Range> others = new ArrayList<>(matches.size());
+        for (int i = 0; i < matches.size(); i++) {
+            if (i != current) {
+                others.add(matches.get(i));
+            }
+        }
+        matchLayer.show(others);
+        currentLayer.show(current >= 0 && current < matches.size() ? List.of(matches.get(current)) : List.of());
     }
 
     /**
@@ -108,12 +116,13 @@ final class SearchMarks {
     }
 
     /**
-     * Lays the layers over the flow as its text is laid out now, after the flow has laid out its runs.
+     * Lays the layers over the flow as its text is laid out now, after the flow has laid out its runs: a new width
+     * wraps the text anew, and the marks' shapes with it. Nothing while the flow has never shown a match.
      */
     void layOverFlow() {
-        if (matches != null) {
-            matches.layOverFlow();
-            current.layOverFlow();
+        if (matchLayer != null) {
+            matchLayer.layOverFlow();
+            currentLayer.layOverFlow();
         }
     }
 }

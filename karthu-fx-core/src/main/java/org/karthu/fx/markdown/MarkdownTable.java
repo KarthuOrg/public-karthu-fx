@@ -1390,9 +1390,9 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
         private HeightBasis heightBasis;
 
         /**
-         * The search's marks, {@code null} until the first match.
+         * The search's marks, whose layers are made on the first match.
          */
-        private SearchMarks searchMarks;
+        private final SearchMarks searchMarks = new SearchMarks(this);
 
         /**
          * The matches the marks show.
@@ -1417,29 +1417,21 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
                 return;
             }
             shownMatches = matches;
-            if (searchMarks == null) {
-                if (matches.isEmpty()) {
-                    return;
-                }
-                searchMarks = new SearchMarks(this);
-            }
             List<Integer> starts = stretchStarts();
-            List<Segment.Range> others = new ArrayList<>();
-            Segment.Range current = null;
+            List<Segment.Range> ranges = new ArrayList<>(matches.size());
+            int current = -1;
             for (CellMatch match : matches) {
                 if (match.stretch() >= starts.size()) {
                     // A cell that shows another cell's text until the next layout fills it, see BodyCell.
                     continue;
                 }
-                int start = starts.get(match.stretch());
-                Segment.Range range = new Segment.Range(start + match.start(), start + match.end());
                 if (match.current()) {
-                    current = range;
-                } else {
-                    others.add(range);
+                    current = ranges.size();
                 }
+                int start = starts.get(match.stretch());
+                ranges.add(new Segment.Range(start + match.start(), start + match.end()));
             }
-            searchMarks.show(others, current, null);
+            searchMarks.show(ranges, current, null);
         }
 
         /**
@@ -1483,9 +1475,7 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
         @Override
         protected void layoutChildren() {
             super.layoutChildren();
-            if (searchMarks != null) {
-                searchMarks.layOverFlow();
-            }
+            searchMarks.layOverFlow();
         }
 
         /**

@@ -389,17 +389,11 @@ final class MonospaceBlock extends StackPane implements Searchable {
          * Shows the search's matches in the block's text, below the selection.
          */
         void showSearchMatches(List<Match> matches, int current) {
-            List<Range> others = new ArrayList<>();
-            Range currentRange = null;
-            for (int i = 0; i < matches.size(); i++) {
-                Range range = new Range(matches.get(i).start(), matches.get(i).end());
-                if (i == current) {
-                    currentRange = range;
-                } else {
-                    others.add(range);
-                }
+            List<Range> ranges = new ArrayList<>(matches.size());
+            for (Match match : matches) {
+                ranges.add(new Range(match.start(), match.end()));
             }
-            searchMarks.show(others, currentRange, layer);
+            searchMarks.show(ranges, current, layer);
         }
 
         /**
