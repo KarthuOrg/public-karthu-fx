@@ -1,5 +1,7 @@
 /**
- * The matching rule of the search and suggestion inputs, independent of JavaFX: which entries match a search, and
- * where their marks go. Internal: the package is not exported, so the rule can change without an API change.
+ * The matching rules of search, independent of JavaFX, which share one folding of case and accents: the search and
+ * suggestion inputs' rule, which entries match a search and where their marks go, and the Markdown view's rule, where
+ * a search as one piece matches in a text. Internal: the package is not exported, so the rules can change without an
+ * API change.
  */
 package org.karthu.fx.form.search;
