@@ -72,6 +72,10 @@ final class HighlightLayer extends TextFlow {
         clip.setStroke(null);
         clip.setFill(Color.BLACK);
         setClip(clip);
+        // Laid out before the flow adds it: adding a node whose layout is not clean asks the flow's parents for a new
+        // layout, unmanaged or not, and so would every mark the search adds, the whole document's box each time.
+        // Unmanaged, the layer is a layout root of its own from now on: its own requests reach no parent.
+        layout();
     }
 
     /**

@@ -403,11 +403,14 @@ class MarkdownViewSearchTest {
         assertInTheMiddle(view, "The target is here.", 4, 10);
     }
 
-    @Test
+    @ParameterizedTest(name = "zoom {0}")
     @DisplayName("a match beyond the right edge of a code block scrolls the block sideways until it shows whole")
-    void codeBlockScrollsSideways() {
+    @ValueSource(doubles = {1.0, 1.5})
+    void codeBlockScrollsSideways(double zoom) {
         MarkdownView view = layOut(new MarkdownView("Text.\n\n```\nshort line\n" + "x".repeat(150)
                 + " target at the end\n```"));
+        view.setZoom(zoom);
+        relayOut(view);
         ScrollPane block = (ScrollPane) view.lookup(".markdown-code-block .scroll-pane");
         TextFlow code = (TextFlow) view.lookup(".markdown-code-block .markdown-block-content");
         int start = "short line\n".length() + 151;
@@ -477,7 +480,7 @@ class MarkdownViewSearchTest {
     @DisplayName("every match but the current one is marked in the search colour, the current one in the current"
             + " colour, each highlight in the shape of its characters, the characters shown on it in its text colour")
     void marksInAParagraph() {
-        MarkdownView view = layOut(new MarkdownView("Anna and anna and ANNA."));
+        MarkdownView view = layOut(new MarkdownView("Anna and *anna* and **ANNA**."));
         TextFlow paragraph = paragraphs(view).getFirst();
 
         view.setSearchText("anna");
@@ -489,8 +492,8 @@ class MarkdownViewSearchTest {
         assertEquals(shape(paragraph, 0, 4), describe(current.getElements()));
         assertEquals(themeColor(view, "-fx-markdown-search-color"), matches.getFill());
         assertEquals(themeColor(view, "-fx-markdown-search-current-color"), current.getFill());
-        assertCopiesIn(matches, themeColor(view, "-fx-markdown-search-text-color"));
-        assertCopiesIn(current, themeColor(view, "-fx-markdown-search-current-text-color"));
+        assertCopiesIn(paragraph, matches, themeColor(view, "-fx-markdown-search-text-color"));
+        assertCopiesIn(paragraph, current, themeColor(view, "-fx-markdown-search-current-text-color"));
 
         view.nextSearchMatch();
         relayOut(view);
@@ -803,17 +806,31 @@ class MarkdownViewSearchTest {
     }
 
     /**
-     * Asserts that the characters shown on a highlight, the text runs beside it in its layer, take a colour.
+     * Asserts that the characters shown on a highlight, the text runs beside it in its layer, take a colour and lie
+     * exactly over the flow's own runs, a copy over each run.
      */
-    private static void assertCopiesIn(Path highlight, Paint fill) {
-        int copies = 0;
+    private static void assertCopiesIn(TextFlow flow, Path highlight, Paint fill) {
+        List<Text> runs = new ArrayList<>();
+        for (Node child : flow.getChildren()) {
+            if (child instanceof Text run) {
+                runs.add(run);
+            }
+        }
+        List<Text> copies = new ArrayList<>();
         for (Node node : highlight.getParent().getChildrenUnmodifiable()) {
             if (node instanceof Text copy) {
                 assertEquals(fill, copy.getFill(), () -> "'" + copy.getText() + "'");
-                copies++;
+                copies.add(copy);
             }
         }
-        assertTrue(copies > 0, "the characters are shown on the highlight");
+        assertEquals(runs.size(), copies.size(), "a copy of each run");
+        for (int i = 0; i < runs.size(); i++) {
+            Bounds run = sceneBounds(runs.get(i));
+            Bounds copy = sceneBounds(copies.get(i));
+            assertEquals(runs.get(i).getText(), copies.get(i).getText());
+            assertEquals(run.getMinX(), copy.getMinX(), 0.5, "over its run: x");
+            assertEquals(run.getMinY(), copy.getMinY(), 0.5, "over its run: y");
+        }
     }
 
     /**
