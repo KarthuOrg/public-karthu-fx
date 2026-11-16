@@ -42,7 +42,7 @@ import java.util.function.Function;
  * arrows and Enter or a click, and the application learns the chosen entry. Built on {@link SearchInput}, so it looks
  * and behaves like a search field (the magnifier, the placeholder <i>Search</i>, the clear button, Escape), matches by
  * the same rule (every word of the search in one of an entry's texts, case and accents folded) and can also filter a
- * list and hand out highlight nodes; its normal use is the popup.
+ * list, search a Markdown view and hand out highlight nodes; its normal use is the popup.
  *
  * <p><b>Entries.</b> {@link #getItems()} are the application's own objects, in their order. Of each entry the field
  * needs two things: its {@linkplain #itemTextProperty() item text}, the text that goes into the field when the entry
@@ -88,7 +88,9 @@ import java.util.function.Function;
  * second Escape empties the field (see {@link SearchInput}); Tab closes the popup without applying and moves the focus
  * on as always. These keys are consumed, Tab excepted; with a modifier down (Shift, Control, Alt, the meta key) they
  * are the text field's, so Shift+Home still selects. With the popup closed every key is the text field's, Down and
- * Alt+Down excepted.
+ * Alt+Down excepted. A field that searches a view (see {@link SearchInput}) goes to the view's next match with Enter
+ * only while the popup is closed; while it shows, Enter applies the preselected entry, and Shift+Enter goes to the
+ * previous match.
  *
  * <p><b>Mouse.</b> A click on a row applies its entry. The popup closes when the text field loses the focus, the
  * window moves, the field becomes disabled or read-only, or the user presses the mouse in the window outside the field
@@ -797,10 +799,12 @@ public class SuggestionInput<T> extends SearchInput {
     // --- The popup's window --------------------------------------------------------------------------
 
     /**
-     * Returns whether the popup is open. Package-private: the tests' seam, as its window shows only in a shown window.
+     * Returns whether the popup is open. Package-private: the search field leaves Enter to an open popup, and the
+     * tests' seam, as its window shows only in a shown window.
      *
      * @return true while the popup is open
      */
+    @Override
     boolean isPopupOpen() {
         return popupOpen;
     }

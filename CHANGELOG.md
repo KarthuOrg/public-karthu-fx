@@ -16,6 +16,11 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   position: the paragraph at the top stays there, also when text above it was added or removed,
   and a search goes on from its current match. Images keep showing their pictures until their
   files have been read again, so nothing flashes or jumps. `setMarkdown` still starts at the top.
+- `SearchInput` searches a `MarkdownView` with `search(view)`: the field's text is the view's search,
+  the counter shows the current match and the number of matches (*3 of 12*), Enter and Shift+Enter
+  go to the next and the previous match, and two arrows in the field go up and down through the
+  matches, their texts translatable with `previousMatchTextProperty()` and `nextMatchTextProperty()`.
+  A field searches a view or filters a list, one at a time.
 
 ### Fixed
 

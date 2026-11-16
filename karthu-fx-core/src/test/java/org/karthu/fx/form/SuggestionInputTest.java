@@ -25,6 +25,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.karthu.fx.markdown.MarkdownView;
 import org.karthu.fx.theme.ThemeManager;
 
 import java.util.ArrayList;
@@ -370,6 +371,44 @@ class SuggestionInputTest {
         assertEquals(1, input.windowsShown);
         assertFalse(input.windowShowing);
         assertEquals("Jan Novak", input.getChosenItem());
+    }
+
+    @Test
+    @DisplayName("connected to a view, Enter applies the preselected entry while the popup shows, then goes to the"
+            + " next match")
+    void enterWithAViewAppliesWhileThePopupShows() {
+        MarkdownView view = new MarkdownView("Anna Muster met Hanna Meier.\n\nAnna Muster again.");
+        input.search(view);
+        List<String> chosen = new ArrayList<>();
+        input.setOnItemChosen(chosen::add);
+        type("an");
+        assertTrue(input.isPopupOpen());
+
+        assertTrue(consumes(KeyCode.ENTER));
+        assertEquals(List.of("Anna Muster"), chosen);
+        assertEquals("Anna Muster", view.getSearchText());
+        assertEquals(0, view.getSearchMatchIndex());
+        assertFalse(input.isPopupOpen());
+
+        assertTrue(consumes(KeyCode.ENTER));
+        assertEquals(1, view.getSearchMatchIndex());
+        assertEquals(List.of("Anna Muster"), chosen);
+    }
+
+    @Test
+    @DisplayName("connected to a view, Shift+Enter goes to the previous match also while the popup shows")
+    void shiftEnterWithAViewWhileThePopupShows() {
+        MarkdownView view = new MarkdownView("Anna Muster met Hanna Meier.\n\nAnna Muster again.");
+        input.search(view);
+        type("anna");
+        assertTrue(input.isPopupOpen());
+        assertEquals(0, view.getSearchMatchIndex());
+
+        assertTrue(press(FormTestSupport.shiftKeyPressed(KeyCode.ENTER)).isEmpty());
+
+        assertEquals(2, view.getSearchMatchIndex());
+        assertEquals("anna", input.getText());
+        assertNull(input.getChosenItem());
     }
 
     @Test
