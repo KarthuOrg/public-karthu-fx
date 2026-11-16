@@ -22,6 +22,10 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   go to the next and the previous match, and two arrows in the field go up and down through the
   matches, their texts translatable with `previousMatchTextProperty()` and `nextMatchTextProperty()`.
   A field searches a view or filters a list, one at a time.
+- `MarkdownView` takes a left and a right margin, `leftMarginProperty()` and `rightMarginProperty()`,
+  in pixels at 100 % that the zoom scales. Unset, the theme's padding of `markdown-document` holds
+  as before. A view narrower than both margins and 300 pixels of text shrinks them in their
+  proportion, so the text keeps 300 pixels and nothing scrolls sideways.
 
 ### Fixed
 

@@ -289,6 +289,8 @@ view.getCodeLanguages().put("todo", code -> {
     return pieces;
 });
 view.setZoom(1.25);
+view.setLeftMargin(48);
+view.setRightMargin(48);
 view.updateMarkdown("# Release notes\n\nNow with search.\n\nSee [the guide](https://example.com/guide).");
 ```
 
@@ -301,6 +303,10 @@ view.updateMarkdown("# Release notes\n\nNow with search.\n\nSee [the guide](http
 - `setMarkdown` shows another document, from the top. `updateMarkdown` sets a new version of the
   shown one, such as a file read again after it changed, and keeps the reader's place and the
   pictures of images whose address stays. It throws while `markdownProperty()` is bound.
+- The space left and right of the text is `setLeftMargin` and `setRightMargin`, in pixels at 100 %:
+  the zoom scales them, and a narrow view shrinks them so the text keeps 300 pixels, so they need
+  no computing against the view's width. Not a number, the default, keeps the theme's 14 pixels.
+  Do not pad the view or a box around it for this.
 - The view scrolls by itself: do not put it into a `ScrollPane`. Give it the room it may grow into
   (`VBox.setVgrow(view, Priority.ALWAYS)`).
 - It renders a subset of CommonMark with GFM tables; raw HTML shows as source.

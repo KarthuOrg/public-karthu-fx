@@ -7,6 +7,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyIntegerProperty;
 import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
@@ -25,7 +26,6 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.layout.VBox;
 import org.karthu.fx.components.BaseComponent;
 import org.karthu.fx.markdown.lexer.BuiltInLanguages;
 import org.karthu.fx.markdown.parser.MarkdownParser;
@@ -569,6 +569,29 @@ import java.util.function.Consumer;
  * without a zoom and the shortcuts pass on, unconsumed. While the application has bound the zoom, they change nothing,
  * as the bar does.
  *
+ * <h2>Margins</h2>
+ *
+ * <p>The text keeps a space to its left and its right, by default the theme's padding of {@code markdown-document},
+ * 14 pixels on each side. An application sets margins of its own through {@link #leftMarginProperty()} and
+ * {@link #rightMarginProperty()}, in pixels at 100 %:
+ * <pre>{@code
+ * view.setLeftMargin(80);
+ * view.rightMarginProperty().bind(settings.rightMarginProperty());
+ * }</pre>
+ * A margin replaces the theme's padding on its side; a side without one keeps it, and the top and the bottom always
+ * keep the theme's padding, so a stylesheet that sets the padding of {@code markdown-document} keeps working. Not a
+ * number, the default, leaves a side to the theme, and a value below 0 counts as 0. The zoom scales the margins with
+ * everything inside the document: 40 pixels show as 60 at 150 %.
+ *
+ * <p>A view narrower than both margins plus 300 pixels of text, all at the zoom, shrinks both margins in their
+ * proportion, so that the text keeps its 300 pixels; with no room beyond those, the margins are 0. The theme's padding
+ * of a side without a margin does not shrink. So the margins never make the view scroll sideways, and a wider view
+ * gives them back their size. Everything that depends on the document's width follows the margins: the text wraps
+ * between them, a table fits its columns and an image shrinks to the width between them, and the search's marks and
+ * the selection stay on their characters. A new margin keeps the line at the top of the visible area at the top, as a
+ * new zoom does, and a zoom and a {@link #updateMarkdown(String) text update} keep the reader's place with margins as
+ * without them. A press in a margin is a press in the document, as one in the theme's padding is.
+ *
  * <h2>Text updates</h2>
  *
  * <p>An application that shows a new version of the same document, such as one that reloads a file when it changes,
@@ -678,7 +701,8 @@ import java.util.function.Consumer;
  *       {@code track} fills the track up to the thumb</td></tr>
  *   <tr><td>{@code markdown-zoom-reset}</td><td>the <em>Reset</em> button, a flat text {@code Button}</td></tr>
  *   <tr><td>{@code markdown-document}</td><td>the box of all blocks inside the view's scroll pane (margins and
- *       spacing between blocks), scaled by the zoom</td></tr>
+ *       spacing between blocks), scaled by the zoom; the view's margins, while set, replace its left and right
+ *       padding (see <em>Margins</em>)</td></tr>
  *   <tr><td>{@code markdown-heading} and {@code markdown-heading-1} to {@code markdown-heading-6}</td>
  *       <td>a heading's {@code TextFlow}</td></tr>
  *   <tr><td>{@code markdown-paragraph}</td><td>a paragraph's {@code TextFlow}</td></tr>
@@ -852,7 +876,9 @@ public class MarkdownView extends BaseComponent {
             DEFAULT_ZOOM_LEVELS_TEXT);
     private final StringProperty resetZoomText = new SimpleStringProperty(this, "resetZoomText",
             DEFAULT_RESET_ZOOM_TEXT);
-    private final VBox document = new VBox();
+    private final DoubleProperty leftMargin = new SimpleDoubleProperty(this, "leftMargin", Double.NaN);
+    private final DoubleProperty rightMargin = new SimpleDoubleProperty(this, "rightMargin", Double.NaN);
+    private final DocumentBox document = new DocumentBox(leftMargin, rightMargin);
     private final ZoomBox zoomBox = new ZoomBox(document);
     private final ScrollPane scrollPane = new ScrollPane(zoomBox);
 
@@ -1022,6 +1048,9 @@ public class MarkdownView extends BaseComponent {
         codeHighlightLineLimit.addListener((observable, oldLimit, newLimit) -> rebuild());
         // The visible height at the zoom limits the images' size.
         zoom.addListener(observable -> images.limitsChanged());
+        // New margins wrap the text anew, as a new zoom does: the line at the top stays there.
+        leftMargin.addListener(observable -> keepReadingPosition());
+        rightMargin.addListener(observable -> keepReadingPosition());
         // Where images come from and the pixel limit: the view's own loader follows the base and the internet switch
         // first, then every change loads the shown images anew, in place. The one place of that rule; a new source of
         // images joins here.
@@ -1338,6 +1367,72 @@ public class MarkdownView extends BaseComponent {
      */
     public final void setResetZoomText(String text) {
         resetZoomText.set(text);
+    }
+
+    /**
+     * The space left of the document's text, in pixels at 100 % zoom; not a number, the default, leaves the theme's
+     * left padding of {@code markdown-document} (14 pixels). The zoom scales it with the document, and a narrow view
+     * shrinks it, so the text keeps 300 pixels; a value below 0 counts as 0. A change keeps the line at the top of the
+     * visible area at the top, as a new zoom does. See <em>Margins</em> in the class description.
+     *
+     * @return the left margin property
+     * @since 1.1.0-RC2
+     */
+    public final DoubleProperty leftMarginProperty() {
+        return leftMargin;
+    }
+
+    /**
+     * Returns the space left of the document's text, see {@link #leftMarginProperty()}.
+     *
+     * @return the margin in pixels at 100 % zoom, as set; not a number while the theme's padding holds
+     * @since 1.1.0-RC2
+     */
+    public final double getLeftMargin() {
+        return leftMargin.get();
+    }
+
+    /**
+     * Sets the space left of the document's text, see {@link #leftMarginProperty()}.
+     *
+     * @param margin the margin in pixels at 100 % zoom, below 0 as 0; not a number for the theme's padding
+     * @since 1.1.0-RC2
+     */
+    public final void setLeftMargin(double margin) {
+        leftMargin.set(margin);
+    }
+
+    /**
+     * The space right of the document's text, in pixels at 100 % zoom; not a number, the default, leaves the theme's
+     * right padding of {@code markdown-document} (14 pixels). The zoom scales it with the document, and a narrow view
+     * shrinks it, so the text keeps 300 pixels; a value below 0 counts as 0. A change keeps the line at the top of the
+     * visible area at the top, as a new zoom does. See <em>Margins</em> in the class description.
+     *
+     * @return the right margin property
+     * @since 1.1.0-RC2
+     */
+    public final DoubleProperty rightMarginProperty() {
+        return rightMargin;
+    }
+
+    /**
+     * Returns the space right of the document's text, see {@link #rightMarginProperty()}.
+     *
+     * @return the margin in pixels at 100 % zoom, as set; not a number while the theme's padding holds
+     * @since 1.1.0-RC2
+     */
+    public final double getRightMargin() {
+        return rightMargin.get();
+    }
+
+    /**
+     * Sets the space right of the document's text, see {@link #rightMarginProperty()}.
+     *
+     * @param margin the margin in pixels at 100 % zoom, below 0 as 0; not a number for the theme's padding
+     * @since 1.1.0-RC2
+     */
+    public final void setRightMargin(double margin) {
+        rightMargin.set(margin);
     }
 
     /**

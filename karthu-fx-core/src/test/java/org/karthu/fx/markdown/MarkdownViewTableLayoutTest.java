@@ -53,6 +53,27 @@ class MarkdownViewTableLayoutTest {
         view.setMarkdown(documentWithTables());
         view.setZoom(zoom);
         view.setSearchText(search);
+        assertComesToRest(view);
+    }
+
+    @ParameterizedTest(name = "zoom {0}, margins {1} and {2}")
+    @DisplayName("with margins, also margins that shrink in the view's width, a document with many tables comes to rest"
+            + " within a few layout passes")
+    @CsvSource({"1.0, 60, 40", "1.25, 60, 40", "1.0, 500, 400", "1.25, 500, 400", "2.0, 300, 100"})
+    void manyTablesWithMarginsComeToRest(double zoom, double left, double right) {
+        MarkdownView view = new MarkdownView();
+        view.setLeftMargin(left);
+        view.setRightMargin(right);
+        view.setMarkdown(documentWithTables());
+        view.setZoom(zoom);
+        assertComesToRest(view);
+    }
+
+    /**
+     * Lays the view out in a scene of 1200 by 800 pixels pass after pass, as pulses would, and fails unless a pass
+     * within {@value #PASSES} requests no layout of any node and leaves none to be laid out.
+     */
+    private static void assertComesToRest(MarkdownView view) {
         StackPane root = new StackPane(view);
         Scene scene = new Scene(root, 1200, 800);
         ThemeManager.apply(scene);

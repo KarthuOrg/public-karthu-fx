@@ -82,6 +82,14 @@ require `javafx.web`, so no browser engine ships with the application.
   (`zoomProperty()`, limited to 0.5 to 2.0 in whole percent, kept when the text changes); the bar
   shows by default, and `zoomBarVisibleProperty()` hides it, which also takes zooming from the
   reader.
+- **Margins** (from 1.1.0-RC2). The space left and right of the text is the theme's padding of
+  `markdown-document`, 14 pixels, until the application sets its own with `leftMarginProperty()`
+  and `rightMarginProperty()`, in pixels at 100 % that the zoom scales with the document; top and
+  bottom stay the theme's. A view narrower than both margins and 300 pixels of text shrinks them in
+  their proportion, so the text keeps its 300 pixels, down to 0, and the margins never scroll the
+  view sideways. Wrapping, tables, images, the search's marks, the selection and the reading
+  position kept by a zoom or an update follow the margins, and a new margin keeps the line at the
+  top in place.
 - **Images.** Images show as pictures (PNG, JPEG, GIF, also animated, and BMP), never larger than
   they were on the screen they were taken on and shrunk to the text's width and the visible height
   by the view's own area average, so a 4K screenshot keeps its letters clean. The view loads them
@@ -125,8 +133,8 @@ require `javafx.web`, so no browser engine ships with the application.
   the zoom, a block of every built-in language, tables, images of every kind with the switches
   *Play animations* and *Images from the internet*, a search field connected to the view with the
   choice of its direction above it, an *Insert a line at the top* button that gives the view a new
-  version of its text through `updateMarkdown`, and a *Code colours* card whose CSS recolours the
-  view as it is typed.
+  version of its text through `updateMarkdown`, a *Margins* switch with a slider for each margin
+  that sets them live, and a *Code colours* card whose CSS recolours the view as it is typed.
 
 ## Form fields
 

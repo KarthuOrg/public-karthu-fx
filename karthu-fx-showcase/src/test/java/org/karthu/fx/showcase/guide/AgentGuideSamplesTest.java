@@ -265,7 +265,7 @@ class AgentGuideSamplesTest {
     }
 
     @Test
-    @DisplayName("Markdown view: the text, links, images, an own language and the zoom")
+    @DisplayName("Markdown view: the text, links, images, an own language, the zoom and the margins")
     void markdownView() {
         MarkdownView view = new MarkdownView("# Release notes\n\nSee [the guide](https://example.com/guide).");
         List<String> opened = new ArrayList<>();
@@ -282,10 +282,14 @@ class AgentGuideSamplesTest {
             return pieces;
         });
         view.setZoom(1.25);
+        view.setLeftMargin(48);
+        view.setRightMargin(48);
         view.updateMarkdown("# Release notes\n\nNow with search.\n\nSee [the guide](https://example.com/guide).");
 
         assertTrue(view.getCodeLanguages().containsKey("java"));
         assertEquals(1.25, view.getZoom(), 0.001);
+        assertEquals(48, view.getLeftMargin());
+        assertEquals(48, view.getRightMargin());
         assertEquals("# Release notes\n\nNow with search.\n\nSee [the guide](https://example.com/guide).",
                 view.getMarkdown());
         view.markdownProperty().bind(new SimpleStringProperty("# Bound"));
