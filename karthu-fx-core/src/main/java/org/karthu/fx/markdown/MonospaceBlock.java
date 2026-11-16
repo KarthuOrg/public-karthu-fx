@@ -1,5 +1,6 @@
 package org.karthu.fx.markdown;
 
+import javafx.geometry.Bounds;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -54,18 +55,29 @@ import java.util.List;
  * or ends elsewhere in the document. The characters under the pointer are found with {@link TextFlow#getHitInfo} from
  * the pointer's scene position (so a block scrolled sideways selects what it shows), the flow's padding included. A
  * run's own selection does not show inside a text flow, so the selected characters show as in a paragraph: a
- * {@link SelectionLayer} over the runs, there from the start, fills their shape with the highlight
+ * {@link HighlightLayer} over the runs, there from the start, fills their shape with the highlight
  * ({@code markdown-selection}) and shows them on it in the selection's text colour. A press with the primary button on
  * the text and the drag after it go to the document selection, which consumes them, so neither scroll pane takes the
  * focus or pans, and which gives the block the keyboard focus (the block stays out of the focus traversal). With the
  * focus, the shortcut key plus C copies the document selection if it reaches into the block, else nothing; plus A
  * selects the block's whole text. A double click selects a word as code has it, a triple click a line: rules on the
  * block's text, whatever its runs.
+ *
+ * <p><b>Search.</b> The block's text is one text of the view's search, its matches shown in the two layers of its
+ * flow's {@link SearchMarks}, below the selection's layer. A match the search goes to scrolls the block sideways into
+ * view ({@link #revealSideways}).
  */
-final class MonospaceBlock extends StackPane implements Segment {
+final class MonospaceBlock extends StackPane implements Searchable {
 
     private static final KeyCombination COPY = new KeyCodeCombination(KeyCode.C, KeyCombination.SHORTCUT_DOWN);
     private static final KeyCombination SELECT_ALL = new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN);
+
+    /**
+     * The room beside a match the search scrolls the block sideways to, in the document's pixels: about four
+     * characters of code, and enough to keep a match at the end of the first line clear of the copy button over the
+     * block's top right corner.
+     */
+    private static final double SIDEWAYS_MARGIN = 32;
 
     /**
      * The block's text, which its runs hold in order.
@@ -249,6 +261,51 @@ final class MonospaceBlock extends StackPane implements Segment {
         return text.substring(start, end);
     }
 
+    /**
+     * One text, the block's text as it shows it: its positions are the block's.
+     */
+    @Override
+    public List<String> searchTexts() {
+        return List.of(text);
+    }
+
+    @Override
+    public void showSearchMatches(List<Match> matches, int current) {
+        flow.showSearchMatches(matches, current);
+    }
+
+    @Override
+    public Bounds searchMatchBounds(Match match) {
+        return flow.localToScene(SearchMarks.boundsOf(flow, new Range(match.start(), match.end())));
+    }
+
+    /**
+     * Scrolls the block sideways, if its text is wider than the block and the match does not show whole: so that the
+     * match shows whole with a margin on the side it came in from, its start if it is wider than the block. The
+     * scroll pane's content is the flow, so the flow's coordinates are the content's.
+     */
+    @Override
+    public void revealSideways(Match match) {
+        double visibleWidth = scrollPane.getViewportBounds().getWidth();
+        double range = flow.getLayoutBounds().getWidth() - visibleWidth;
+        double span = scrollPane.getHmax() - scrollPane.getHmin();
+        if (visibleWidth <= 0 || range <= 0 || span <= 0) {
+            return;
+        }
+        Bounds bounds = SearchMarks.boundsOf(flow, new Range(match.start(), match.end()));
+        double offset = (scrollPane.getHvalue() - scrollPane.getHmin()) / span * range;
+        if (bounds.getMinX() >= offset && bounds.getMaxX() <= offset + visibleWidth) {
+            return;
+        }
+        double wanted;
+        if (bounds.getMinX() < offset || bounds.getWidth() + 2 * SIDEWAYS_MARGIN > visibleWidth) {
+            wanted = bounds.getMinX() - SIDEWAYS_MARGIN;
+        } else {
+            wanted = bounds.getMaxX() + SIDEWAYS_MARGIN - visibleWidth;
+        }
+        scrollPane.setHvalue(scrollPane.getHmin() + Math.clamp(wanted / range, 0, 1) * span);
+    }
+
     @Override
     public List<BlockContainer> containers() {
         return containers;
@@ -307,7 +364,7 @@ final class MonospaceBlock extends StackPane implements Segment {
     /**
      * The flow of a block's text: its runs, and over them, its last child, the layer that shows the selection, there
      * from the start, its copies of the runs made on the first selection. The layer holds the selected range, the
-     * block's only record of it.
+     * block's only record of it. The search's layers, made on the first match, lie between the runs and it.
      */
     private static final class BlockFlow extends TextFlow {
 
@@ -317,14 +374,32 @@ final class MonospaceBlock extends StackPane implements Segment {
          */
         private static final int TAB_SIZE = 4;
 
-        private final SelectionLayer layer;
+        private final HighlightLayer layer;
+        private final SearchMarks searchMarks = new SearchMarks(this);
 
         BlockFlow(List<Text> runs) {
             // A value set here, not in the theme: an application's stylesheet may still set -fx-tab-size.
             setTabSize(TAB_SIZE);
             getChildren().addAll(runs);
-            layer = new SelectionLayer(this);
+            layer = new HighlightLayer(this, "markdown-selection");
             getChildren().add(layer);
+        }
+
+        /**
+         * Shows the search's matches in the block's text, below the selection.
+         */
+        void showSearchMatches(List<Match> matches, int current) {
+            List<Range> others = new ArrayList<>();
+            Range currentRange = null;
+            for (int i = 0; i < matches.size(); i++) {
+                Range range = new Range(matches.get(i).start(), matches.get(i).end());
+                if (i == current) {
+                    currentRange = range;
+                } else {
+                    others.add(range);
+                }
+            }
+            searchMarks.show(others, currentRange, layer);
         }
 
         /**
@@ -332,22 +407,23 @@ final class MonospaceBlock extends StackPane implements Segment {
          * selects nothing and shows no highlight.
          */
         void select(int start, int end) {
-            layer.select(start, end);
+            layer.show(start, end);
         }
 
         /**
          * Whether characters of the text are selected.
          */
         boolean hasSelection() {
-            return layer.hasSelection();
+            return layer.isShowing();
         }
 
         /**
-         * Lays out the runs, then the selection's layer over them.
+         * Lays out the runs, then the search's and the selection's layers over them.
          */
         @Override
         protected void layoutChildren() {
             super.layoutChildren();
+            searchMarks.layOverFlow();
             layer.layOverFlow();
         }
     }

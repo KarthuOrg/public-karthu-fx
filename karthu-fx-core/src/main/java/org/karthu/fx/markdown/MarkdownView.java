@@ -4,6 +4,8 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyIntegerProperty;
+import javafx.beans.property.ReadOnlyIntegerWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -558,6 +560,63 @@ import java.util.function.Consumer;
  * without a zoom and the shortcuts pass on, unconsumed. While the application has bound the zoom, they change nothing,
  * as the bar does.
  *
+ * <h2>Search</h2>
+ *
+ * <p>An application searches the document's text from controls of its own: it sets {@link #searchTextProperty() the
+ * search text}, reads {@link #searchMatchCountProperty() the number of matches} and
+ * {@link #searchMatchIndexProperty() the current match}, goes to the {@link #nextSearchMatch() next} and the
+ * {@link #previousSearchMatch() previous} match in {@link #searchDirectionProperty() the direction} it chose, and
+ * {@link #clearSearch() clears} the search:
+ * <pre>{@code
+ * view.searchTextProperty().bind(searchField.textProperty());
+ * nextButton.setOnAction(event -> view.nextSearchMatch());
+ * counter.textProperty().bind(Bindings.format("%d of %d",
+ *         view.searchMatchIndexProperty().add(1), view.searchMatchCountProperty()));
+ * }</pre>
+ * The search works with the zoom bar hidden and needs none of the view's controls; the view takes no keys for it.
+ *
+ * <p><b>What is searched.</b> The text the reader sees in headings, paragraphs, list items and quotes at any depth,
+ * and the text of code and source blocks as they show it. An inline image is a position no match takes. Not searched:
+ * tables, block images, the alt text of images, list markers, link addresses, tooltips and buttons. A match never runs
+ * from one heading, paragraph or block into the next.
+ *
+ * <p><b>Matching.</b> The search is one piece: its words in their order, next to each other, so {@code der Bericht}
+ * finds the places where both stand together, not every {@code der}. Whitespace at its start and its end is dropped,
+ * and a run of whitespace inside it matches any run of whitespace in the text, a line break, a tab and a no-break
+ * space included, so a phrase that wraps in the source or in a code block is still found. Case and accents are
+ * ignored as the search inputs ignore them when they filter a list: {@code bericht} finds {@code Bericht},
+ * {@code zurich} finds {@code Zürich} and {@code zürich} finds {@code Zurich}. Both sides are compared in lower case
+ * ({@link java.util.Locale#ROOT}) and canonically decomposed without their combining marks, nothing more: the sharp s
+ * and {@code ss}, a ligature and its letters, and a letter without a decomposition such as {@code ø} and {@code o}
+ * stay apart. {@code null}, the empty text and whitespace only are no search. Matches do not overlap: after a match the
+ * next one starts after its end, so {@code aa} finds two matches in {@code aaaa}.
+ *
+ * <p><b>Order and direction.</b> The matches are numbered from 0 from the top of the document, whatever the
+ * direction. With at least one match there is always a current one. A new search, after none or after one without
+ * matches, makes the first match current, backward the last. A changed search keeps the current match while it still
+ * matches: forward the first match that starts at or after the old current match's start becomes current, backward
+ * the last one that starts at or before it, wrapping around to the first (backward the last). <em>Next</em> goes to the
+ * next match in the direction, <em>previous</em> to the next one against it, both wrapping around at the ends. A
+ * change of the direction moves no match. A new text, and every rebuild for a change of the code languages or the line
+ * limit, keeps the search and runs it on the new text, the current match chosen as for a new search; the view does not
+ * scroll to it.
+ *
+ * <p><b>Scrolling.</b> After next, previous and a new or changed search, the view scrolls to the current match if it
+ * is not fully visible: so that the match's middle is at the middle of the visible area, as far as the scroll range
+ * allows, at every zoom. In a code or source block whose line is wider than the block, the block first scrolls
+ * sideways so that the match shows whole, with a margin. A fully visible match scrolls nothing, so going through the
+ * matches on screen is calm. A search without matches leaves the view where it is. A search set before the view is
+ * laid out scrolls at its first layout.
+ *
+ * <p><b>Marks.</b> Every match but the current one is marked in a muted amber ({@code markdown-search-match}), the
+ * current one in amber behind a dark text ({@code markdown-search-current}): highlights like the selection's, in two
+ * layers over the text of a heading, a paragraph or a code or source block, which show the matched characters again in
+ * the highlight's text colour. The selection lies above both, so the search never hides it, and the search never
+ * changes it. The marks stay on their characters when the view is resized, wraps its text anew or zooms, and go when
+ * the search is cleared. The matches of the whole document are found at once, but only the blocks within one visible
+ * height above or below the visible area build their marks, more as the view scrolls, so a one-letter search in a large
+ * document stays quick.
+ *
  * <h2>Style classes</h2>
  *
  * <p>The look comes from karthu-fx's theme ({@link org.karthu.fx.theme.ThemeManager}). These style classes are a
@@ -637,6 +696,15 @@ import java.util.function.Consumer;
  *       {@code -fx-fill} is the selection's colour, its own CSS property {@code -fx-highlight-text-fill} the colour of
  *       the selected characters. A selected image, block or inline, has one of its own, a {@code Path} over its
  *       picture, placeholder or error box, which the theme makes half see-through ({@code -fx-opacity})</td></tr>
+ *   <tr><td>{@code markdown-search-match}</td><td>the highlight behind every match of the search but the current
+ *       one, a {@code Path}, in a layer over the runs of a heading's, a paragraph's or a code or source block's flow
+ *       (an unmanaged {@code TextFlow} child of the flow, clipped to the matches) that shows the matched characters
+ *       again on the highlight, below the current match's layer and the selection's. Like {@code markdown-selection},
+ *       its {@code -fx-fill} is the highlight's colour and its {@code -fx-highlight-text-fill} the colour of the
+ *       characters on it</td></tr>
+ *   <tr><td>{@code markdown-search-current}</td><td>the highlight behind the current match of the search, a
+ *       {@code Path} in a layer of its own like the other matches', above theirs and below the selection's, with the
+ *       same two properties</td></tr>
  *   <tr><td>{@code markdown-image-block}</td><td>a block image, a {@code Region} that shows its picture, its
  *       placeholder or its error box at its top left, and the open button over the picture's top right corner while
  *       the pointer is over the image</td></tr>
@@ -674,8 +742,12 @@ import java.util.function.Consumer;
  *
  * <p>Colours come from the theme's tokens, some of them the view's own: {@code -fx-code-text-color}, the colour of
  * code, inline and in code blocks, {@code -fx-code-background-color}, the background of code and source blocks and of
- * the copy buttons, {@code -fx-markdown-table-row-odd}, the colour of a table's odd rows, and the colours of coloured
- * code, one per {@link CodeCategory category} (see <em>Code colours</em>). A selection, of
+ * the copy buttons, {@code -fx-markdown-table-row-odd}, the colour of a table's odd rows, the colours of coloured
+ * code, one per {@link CodeCategory category} (see <em>Code colours</em>), and the colours of the search's marks:
+ * {@code -fx-markdown-search-color} and {@code -fx-markdown-search-text-color}, the highlight and the characters of
+ * every match but the current one, a muted amber behind the text colour, and {@code -fx-markdown-search-current-color}
+ * and {@code -fx-markdown-search-current-text-color}, those of the current match, amber behind a dark text, both
+ * apart from the blue of the selection. A selection, of
  * characters or of table cells, takes the theme's {@code -fx-selection-color} and {@code -fx-selection-text-color},
  * as a selected row of a list does. A table's rows take the surface colour, the odd ones too: inside the view the
  * theme's {@code -fx-table-row-odd} is {@code -fx-markdown-table-row-odd}, which the theme sets to
@@ -825,6 +897,19 @@ public class MarkdownView extends BaseComponent {
     private final ZoomBar zoomBar = new ZoomBar(documentZoom, zoomOutText, zoomInText, zoomLevelsText,
             resetZoomText);
 
+    private final StringProperty searchText = new SimpleStringProperty(this, "searchText");
+    private final ReadOnlyIntegerWrapper searchMatchCount = new ReadOnlyIntegerWrapper(this, "searchMatchCount");
+    private final ReadOnlyIntegerWrapper searchMatchIndex = new ReadOnlyIntegerWrapper(this, "searchMatchIndex", -1);
+    private final ObjectProperty<SearchDirection> searchDirection = new SimpleObjectProperty<>(this,
+            "searchDirection", SearchDirection.FORWARD);
+
+    /**
+     * The search at work: the matches of the search text in the document, the current one, its marks and the
+     * scrolling to it.
+     */
+    private final DocumentSearch documentSearch = new DocumentSearch(searchText, searchMatchCount, searchMatchIndex,
+            searchDirection, documentSelection, scrollPane);
+
     /**
      * What holds the view's one selection: the document selection or a table; {@code null} if nothing has held one
      * since the text was set.
@@ -915,7 +1000,8 @@ public class MarkdownView extends BaseComponent {
 
     /**
      * The Markdown text the view shows. Every change rebuilds the rendered content and scrolls the view back to the
-     * top left; {@code null} and the empty text give an empty view.
+     * top left; {@code null} and the empty text give an empty view. A search keeps running on the new text, see
+     * <em>Search</em> in the class description.
      *
      * @return the Markdown text property
      */
@@ -1159,6 +1245,145 @@ public class MarkdownView extends BaseComponent {
      */
     public final void setResetZoomText(String text) {
         resetZoomText.set(text);
+    }
+
+    /**
+     * The text the view searches for, {@code null} by default: no search. {@code null}, the empty text and whitespace
+     * only are no search. Each change runs the search through the document anew, see <em>Search</em> in the class
+     * description: the number of matches and the current match follow, the marks show the new matches, and the view
+     * scrolls to the current match if it is not fully visible. The property may be bound, also both ways, for
+     * example to an application's search field.
+     *
+     * @return the search text property
+     * @since 1.1.0-RC2
+     */
+    public final StringProperty searchTextProperty() {
+        return searchText;
+    }
+
+    /**
+     * Returns the text the view searches for, see {@link #searchTextProperty()}.
+     *
+     * @return the search text, {@code null} without a search
+     * @since 1.1.0-RC2
+     */
+    public final String getSearchText() {
+        return searchText.get();
+    }
+
+    /**
+     * Sets the text the view searches for, see {@link #searchTextProperty()}.
+     *
+     * @param text the search text; {@code null}, the empty text and whitespace only for no search
+     * @since 1.1.0-RC2
+     */
+    public final void setSearchText(String text) {
+        searchText.set(text);
+    }
+
+    /**
+     * The number of matches of the search in the document, 0 without a search or without matches.
+     *
+     * @return the read-only property of the number of matches
+     * @since 1.1.0-RC2
+     */
+    public final ReadOnlyIntegerProperty searchMatchCountProperty() {
+        return searchMatchCount.getReadOnlyProperty();
+    }
+
+    /**
+     * Returns the number of matches of the search in the document, see {@link #searchMatchCountProperty()}.
+     *
+     * @return the number of matches, 0 without a search
+     * @since 1.1.0-RC2
+     */
+    public final int getSearchMatchCount() {
+        return searchMatchCount.get();
+    }
+
+    /**
+     * The number of the current match in document order, from 0 for the first match from the top of the document,
+     * whatever the direction; -1 without a current match. With at least one match there is always a current one. An
+     * application shows it from 1, as in <em>3 of 12</em>.
+     *
+     * @return the read-only property of the current match's index
+     * @since 1.1.0-RC2
+     */
+    public final ReadOnlyIntegerProperty searchMatchIndexProperty() {
+        return searchMatchIndex.getReadOnlyProperty();
+    }
+
+    /**
+     * Returns the number of the current match in document order, see {@link #searchMatchIndexProperty()}.
+     *
+     * @return the index from 0, -1 without a current match
+     * @since 1.1.0-RC2
+     */
+    public final int getSearchMatchIndex() {
+        return searchMatchIndex.get();
+    }
+
+    /**
+     * The direction the search goes in, {@link SearchDirection#FORWARD} by default; {@code null} counts as
+     * {@code FORWARD}. Forward, a new search starts at the first match and {@link #nextSearchMatch()} goes to the
+     * one below; backward, a new search starts at the last match and the next match is the one above. A change moves
+     * no match.
+     *
+     * @return the direction property
+     * @since 1.1.0-RC2
+     */
+    public final ObjectProperty<SearchDirection> searchDirectionProperty() {
+        return searchDirection;
+    }
+
+    /**
+     * Returns the direction the search goes in, see {@link #searchDirectionProperty()}.
+     *
+     * @return the direction, {@code FORWARD} by default; {@code null} if set so, which counts as {@code FORWARD}
+     * @since 1.1.0-RC2
+     */
+    public final SearchDirection getSearchDirection() {
+        return searchDirection.get();
+    }
+
+    /**
+     * Sets the direction the search goes in, see {@link #searchDirectionProperty()}.
+     *
+     * @param direction the direction; {@code null} counts as {@link SearchDirection#FORWARD}
+     * @since 1.1.0-RC2
+     */
+    public final void setSearchDirection(SearchDirection direction) {
+        searchDirection.set(direction);
+    }
+
+    /**
+     * Makes the next match in the search's direction the current one, after the last the first again (backward,
+     * before the first the last), and scrolls to it if it is not fully visible. Without matches it does nothing.
+     *
+     * @since 1.1.0-RC2
+     */
+    public final void nextSearchMatch() {
+        documentSearch.next();
+    }
+
+    /**
+     * Makes the next match against the search's direction the current one, wrapping around as
+     * {@link #nextSearchMatch()} does, and scrolls to it if it is not fully visible. Without matches it does nothing.
+     *
+     * @since 1.1.0-RC2
+     */
+    public final void previousSearchMatch() {
+        documentSearch.previous();
+    }
+
+    /**
+     * Ends the search: sets the search text to {@code null}, so the marks go and there are no matches.
+     *
+     * @throws RuntimeException while the search text is bound one way, as setting a bound property throws
+     * @since 1.1.0-RC2
+     */
+    public final void clearSearch() {
+        searchText.set(null);
     }
 
     /**
@@ -1784,6 +2009,7 @@ public class MarkdownView extends BaseComponent {
         documentSelection.reset();
         images.forget();
         document.getChildren().setAll(renderer.render(MarkdownParser.parse(markdown.get())));
+        documentSearch.documentChanged();
         scrollPane.setVvalue(scrollPane.getVmin());
         scrollPane.setHvalue(scrollPane.getHmin());
         prepareContextMenu(null);
@@ -2053,6 +2279,8 @@ public class MarkdownView extends BaseComponent {
         images.setVisibleHeight(height - scrollPane.snappedTopInset() - scrollPane.snappedBottomInset());
         scrollPane.resizeRelocate(left, top, width, height);
         documentZoom.restoreReadingPosition();
+        // After the reading position: the search marks what lies near the visible area where the document now is.
+        documentSearch.layoutDone();
     }
 
     // The view scrolls, so its size does not follow its content: a long paragraph would otherwise ask its parent

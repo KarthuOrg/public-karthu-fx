@@ -96,6 +96,10 @@ change tokens — do not hardcode colors in component rules.
 | `-fx-code-text-color` | `#8fd6c8` | code in the Markdown view, inline and in code blocks (soft mint, apart from the indigo accent) |
 | `-fx-code-background-color` | `#1d1f33` | the background of code and source blocks and of the copy buttons in the Markdown view (darker than the surface the view shows) |
 | `-fx-markdown-table-row-odd` | `-fx-surface-color` | the odd rows of a table in the Markdown view, its `-fx-table-row-odd` (no zebra stripes) |
+| `-fx-markdown-search-color` | `derive(#e0a84c, -55%)` | the highlight of every match of the Markdown view's search but the current one: a muted amber, apart from the selection's blue |
+| `-fx-markdown-search-text-color` | `-fx-text-color` | the characters of those matches, shown on their highlight |
+| `-fx-markdown-search-current-color` | `#e0a84c` | the highlight of the search's current match: the amber itself |
+| `-fx-markdown-search-current-text-color` | `#1b1d2d` | the characters of the current match, dark on the amber |
 | `-fx-code-comment-color` | `#8a90a8` | comments in a coloured code block (base category) |
 | `-fx-code-keyword-color` | `#c88bff` | keywords of a language (base) |
 | `-fx-code-string-color` | `#e0a84c` | text in quotes (base) |
@@ -227,10 +231,10 @@ optional colored status dot from the status tokens.
 framed like a text area. Its style classes are a public contract, also listed in the class
 JavaDoc: renaming one is a breaking change. Sizes, spacing and fonts in `base.css`, colours
 through tokens: the view's own, `-fx-code-text-color`, `-fx-code-background-color`,
-`-fx-markdown-table-row-odd` and the 23 `-fx-code-<category>-color` of coloured code (§2, Markdown
-view), and the theme's `-fx-surface-color`,
-`-fx-control-border`, `-fx-text-color`, `-fx-text-secondary-color`, `-fx-accent-color`,
-`-fx-hover-color`, `-fx-button-pressed-color`, `-fx-selection-color`,
+`-fx-markdown-table-row-odd`, the 23 `-fx-code-<category>-color` of coloured code and the four
+`-fx-markdown-search-` tokens of the search's marks (§2, Markdown view), and the theme's
+`-fx-surface-color`, `-fx-control-border`, `-fx-text-color`, `-fx-text-secondary-color`,
+`-fx-accent-color`, `-fx-hover-color`, `-fx-button-pressed-color`, `-fx-selection-color`,
 `-fx-selection-text-color` and, in the full size window of images, `-fx-canvas-color`. Inside
 the view a table's `-fx-table-row-odd` is `-fx-markdown-table-row-odd`, which `dark.css` sets to
 `-fx-surface-color` (no zebra stripes).
@@ -265,6 +269,8 @@ Images add no token. Two pseudo-classes: `:loose` on a list, `:focus-within` on 
 | `markdown-block-content` | the `TextFlow` inside a code or source block's scroll pane that holds its text as `Text` runs: `markdown-text` and `markdown-code` in a code block, `markdown-text` alone in a source block. One run for the whole text, except in a code block coloured by its language: a run per piece, which also carries its category's `code-` classes (`code-keyword`, an annotation `code-annotation` and `code-keyword`), and a run per plain stretch between pieces | padding `8 12`; monospace, never wrapped, a tab stop every four columns; code in `-fx-code-text-color`, a piece in its `-fx-code-<category>-color`, source in `-fx-text-color` |
 | `code-comment`, `code-keyword`, `code-string`, `code-number`, `code-type`, `code-function`, `code-variable`, `code-property`, `code-tag` (base), `code-doc`, `code-annotation`, `code-literal`, `code-constant`, `code-escape`, `code-attribute`, `code-operator`, `code-punctuation`, `code-heading`, `code-link`, `code-code`, `code-list`, `code-quote`, `code-emphasis` (fine) | the run of a piece in a code block coloured by its language, beside `markdown-text` and `markdown-code`: the class of its category and of every category its fallback chain passes (a doc comment `code-doc` and `code-comment`, a constant `code-constant`, `code-literal` and `code-number`, a heading `code-heading` and `code-function`, while operator, punctuation and emphasis carry only their own) | `-fx-fill` from the category's `-fx-code-<category>-color` (§2, Markdown view), under `.markdown-view .markdown-code-block`, base classes first and fine ones after them, so the finest class of a run wins; colour only, no bold, no italic |
 | `markdown-selection` | the highlight behind selected characters, a `Path`, in a layer over the runs of a heading's, a paragraph's or a code or source block's flow (an unmanaged `TextFlow`, clipped to the selection) that shows the selected characters again on the highlight. Over a selected image, block or inline, a `Path` of its own over the picture, placeholder or error box | `-fx-fill: -fx-selection-color`; its own property `-fx-highlight-text-fill: -fx-selection-text-color` colours the selected characters. Over an image `-fx-opacity: 0.5` |
+| `markdown-search-match` | the highlight behind every match of the search but the current one, a `Path`, in a layer over the runs of a heading's, a paragraph's or a code or source block's flow (an unmanaged `TextFlow`, clipped to the matches) that shows the matched characters again on it, below the current match's layer and the selection's | `-fx-fill: -fx-markdown-search-color`; `-fx-highlight-text-fill: -fx-markdown-search-text-color` colours the matched characters |
+| `markdown-search-current` | the highlight behind the current match of the search, a `Path` in a layer of its own like the other matches', above theirs and below the selection's | `-fx-fill: -fx-markdown-search-current-color`; `-fx-highlight-text-fill: -fx-markdown-search-current-text-color` |
 | `markdown-image-block` | a block image (an image alone in its paragraph, or alone in a link alone in its paragraph), a `Region` that shows its picture, its placeholder or its error box at its top left | no look of its own: transparent, no padding, so the pointer is over the block exactly while it is over what the block shows |
 | `markdown-image` | the picture of a block or inline image, an `ImageView` the view sizes: a bitmap the view shrank by its area average at the shown size in screen pixels, the decoded image where it shows at its natural size or beyond, or a playing GIF | no look of its own. The alt text is its accessible text, the title its tooltip (a linked image without a title the link's address), with a hand cursor inside a link |
 | `markdown-image-inline` | an image in a sentence or a heading, a `Region` that is one node of its line's `TextFlow`, its bottom on the baseline, one character for the selection | shrinks to the width its text wraps at. Its placeholder and error box are smaller than a block's (radius 3, padding `0 3`, 4px between icon and text), so the line keeps its height |

@@ -133,7 +133,7 @@ abstract sealed class ImageNode extends Region permits ImageBlock, InlineImage {
     /**
      * The selection's highlight over what the node shows, {@code null} until a selection first includes the image.
      */
-    private SelectionHighlight selectionHighlight;
+    private HighlightPath selectionHighlight;
 
     /**
      * What the highlight lies over, the picture or the box, followed as it changes its bounds; {@code null} before the
@@ -473,7 +473,7 @@ abstract sealed class ImageNode extends Region permits ImageBlock, InlineImage {
      */
     final void showSelected(boolean selected) {
         if (selected && selectionHighlight == null) {
-            selectionHighlight = new SelectionHighlight();
+            selectionHighlight = new HighlightPath("markdown-selection");
             getChildren().add(selectionHighlight);
         }
         if (selectionHighlight != null) {

@@ -12,27 +12,28 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * The layer that shows a selection of a text flow's characters: the paragraphs' and headings' flows
- * ({@link TextSegment}) and the flows of code and source blocks ({@link MonospaceBlock}).
+ * A layer that shows ranges of a text flow's characters highlighted: the paragraphs' and headings' flows
+ * ({@link TextSegment}) and the flows of code and source blocks ({@link MonospaceBlock}). The selection shows in one,
+ * the search's matches in two more, all matches and the current one, below it ({@link SearchMarks}).
  *
  * <p>The runs' own selection ({@code Text.selectionStart}) does not colour the characters of a run inside a text flow
  * (checked with JavaFX 25: a run's selection fill does not show there, at any offsets). So the flow lays this layer
  * over its runs: an unmanaged text flow as large as the flow, with the same insets, line spacing, alignment and tab
  * size, a copy of each run in its font and an empty space as large as each inline image among the runs, so it lays out
- * its text exactly as the flow does, clipped to the selection's shape. In it the highlight ({@code markdown-selection})
- * fills that shape with the selection colour, over the flow's selected characters, and the copies show the selected
- * characters on it in the selection's text colour. The shape leaves out the inline images, which show the highlight
- * over themselves, see-through ({@link ImageNode#showSelected(boolean)}). The layer lies outside the flow's text
- * layout: an unmanaged child is no part of a text flow's text.
+ * its text exactly as the flow does, clipped to the ranges' shape. In it the highlight ({@link HighlightPath}, its
+ * style class given) fills that shape with its colour, over the flow's highlighted characters, and the copies show
+ * those characters on it in the highlight's text colour. The shape leaves out the inline images, which show the
+ * selection's highlight over themselves, see-through ({@link ImageNode#showSelected(boolean)}), and which the search
+ * never matches. The layer lies outside the flow's text layout: an unmanaged child is no part of a text flow's text.
  *
- * <p>The copies are made on the first selection, from the flow's runs then, so a flow never selected has none. The
- * copies and the highlight take their colours and fonts by binding, so no style class of the view's reaches the copies
- * and a lookup of the view's runs does not find them.
+ * <p>The copies are made when the layer first shows a range, from the flow's runs then, so a layer never shown has
+ * none. The copies and the highlight take their colours and fonts by binding, so no style class of the view's reaches
+ * the copies and a lookup of the view's runs does not find them.
  */
-final class SelectionLayer extends TextFlow {
+final class HighlightLayer extends TextFlow {
 
     private final TextFlow flow;
-    private final SelectionHighlight highlight = new SelectionHighlight();
+    private final HighlightPath highlight;
     private final Path clip = new Path();
 
     /**
@@ -45,17 +46,21 @@ final class SelectionLayer extends TextFlow {
      */
     private final List<NodeSpace> spaces = new ArrayList<>();
 
-    private int selectionStart;
-    private int selectionEnd;
+    /**
+     * The ranges shown, none empty, in the flow's order; none while the layer is hidden.
+     */
+    private List<Segment.Range> ranges = List.of();
 
     /**
-     * Creates the layer of a flow's selection, hidden, with an empty highlight. The flow adds it as its last child,
-     * after its runs, so it lies over them, and calls {@link #layOverFlow()} whenever it has laid out its runs.
+     * Creates the layer of a flow, hidden, with an empty highlight. The flow adds it after its runs, so it lies over
+     * them, and calls {@link #layOverFlow()} whenever it has laid out its runs.
      *
-     * @param flow the flow whose characters it shows selected
+     * @param flow       the flow whose characters it shows highlighted
+     * @param styleClass the style class of its highlight, such as {@code markdown-selection}
      */
-    SelectionLayer(TextFlow flow) {
+    HighlightLayer(TextFlow flow, String styleClass) {
         this.flow = flow;
+        highlight = new HighlightPath(styleClass);
         setManaged(false);
         setMouseTransparent(true);
         setVisible(false);
@@ -70,16 +75,30 @@ final class SelectionLayer extends TextFlow {
     }
 
     /**
-     * Shows the characters from {@code start} (inclusive) to {@code end} (exclusive) of the flow's text selected; an
-     * empty range hides the layer and empties its highlight.
+     * Shows the characters from {@code start} (inclusive) to {@code end} (exclusive) of the flow's text highlighted;
+     * an empty range hides the layer and empties its highlight.
      *
-     * @param start the first selected character
-     * @param end   the position after the last selected character
+     * @param start the first highlighted character
+     * @param end   the position after the last highlighted character
      */
-    void select(int start, int end) {
-        selectionStart = start;
-        selectionEnd = end;
-        if (start >= end) {
+    void show(int start, int end) {
+        show(start < end ? List.of(new Segment.Range(start, end)) : List.of());
+    }
+
+    /**
+     * Shows ranges of the flow's text highlighted; none, or empty ones only, hide the layer and empty its highlight.
+     *
+     * @param shown the ranges, in the flow's order, not overlapping
+     */
+    void show(List<Segment.Range> shown) {
+        List<Segment.Range> kept = new ArrayList<>();
+        for (Segment.Range range : shown) {
+            if (range.start() < range.end()) {
+                kept.add(range);
+            }
+        }
+        ranges = kept;
+        if (kept.isEmpty()) {
             highlight.getElements().clear();
             clip.getElements().clear();
             setVisible(false);
@@ -93,18 +112,18 @@ final class SelectionLayer extends TextFlow {
     }
 
     /**
-     * Whether characters of the flow are shown selected: the range last selected is not empty.
+     * Whether characters of the flow are shown highlighted: a range shown is not empty.
      *
-     * @return whether the layer shows a selection
+     * @return whether the layer shows a range
      */
-    boolean hasSelection() {
-        return selectionStart < selectionEnd;
+    boolean isShowing() {
+        return !ranges.isEmpty();
     }
 
     /**
      * Lays the layer over the flow as the flow's text is laid out now: a new width wraps the text anew, and the
-     * selection's shape with it. The shape is the selected range's, line spacing included, so the highlight of a
-     * selection over several lines has no gaps.
+     * ranges' shape with it. The shape is the ranges', line spacing included, so the highlight of a range over several
+     * lines has no gaps.
      */
     void layOverFlow() {
         resizeRelocate(0, 0, flow.getWidth(), flow.getHeight());
@@ -113,43 +132,58 @@ final class SelectionLayer extends TextFlow {
         for (NodeSpace space : spaces) {
             space.requestLayout();
         }
-        if (selectionStart < selectionEnd) {
+        if (!ranges.isEmpty()) {
+            List<Integer> nodes = nodePositions();
             // Each path gets path elements of its own.
-            highlight.getElements().setAll(selectedShape());
-            clip.getElements().setAll(selectedShape());
+            highlight.getElements().setAll(shape(nodes));
+            clip.getElements().setAll(shape(nodes));
             setVisible(true);
         }
     }
 
     /**
-     * The shape of the selected characters, without the nodes among the runs: an inline image in the selection shows
-     * the highlight over itself, see-through, which an opaque highlight lying over it here would cover.
+     * The positions of the nodes among the flow's runs, its inline images, in order: each is one position of the
+     * flow's text.
      */
-    private List<PathElement> selectedShape() {
-        List<PathElement> shape = new ArrayList<>();
-        int from = selectionStart;
+    private List<Integer> nodePositions() {
+        List<Integer> positions = new ArrayList<>();
         int position = 0;
         for (Node child : flow.getChildren()) {
             if (child instanceof Text run) {
                 position += run.getText().length();
             } else if (child.isManaged()) {
-                if (position >= selectionStart && position < selectionEnd) {
-                    if (from < position) {
-                        shape.addAll(List.of(flow.getRangeShape(from, position, true)));
-                    }
-                    from = position + 1;
-                }
+                positions.add(position);
                 position++;
             }
         }
-        if (from < selectionEnd) {
-            shape.addAll(List.of(flow.getRangeShape(from, selectionEnd, true)));
+        return positions;
+    }
+
+    /**
+     * The shape of the ranges' characters, without the nodes among the runs: an inline image in the selection shows
+     * the highlight over itself, see-through, which an opaque highlight lying over it here would cover.
+     */
+    private List<PathElement> shape(List<Integer> nodes) {
+        List<PathElement> shape = new ArrayList<>();
+        for (Segment.Range range : ranges) {
+            int from = range.start();
+            for (int node : nodes) {
+                if (node >= range.start() && node < range.end()) {
+                    if (from < node) {
+                        shape.addAll(List.of(flow.getRangeShape(from, node, true)));
+                    }
+                    from = node + 1;
+                }
+            }
+            if (from < range.end()) {
+                shape.addAll(List.of(flow.getRangeShape(from, range.end(), true)));
+            }
         }
         return shape;
     }
 
     /**
-     * Adds a copy of each of the flow's runs, in the run's font and the selection's text colour, after the highlight,
+     * Adds a copy of each of the flow's runs, in the run's font and the highlight's text colour, after the highlight,
      * and an empty space as large as each other node among them, an inline image: the layer lays out its text as the
      * flow does only with the same nodes between the runs.
      */

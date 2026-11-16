@@ -78,6 +78,14 @@
     -fx-code-background-color: #1d1f33;
     -fx-markdown-table-row-odd: -fx-surface-color;
 
+    /* Markdown view: the marks of the search. Every match in a muted amber behind the text colour, the
+     * current one in the amber itself behind a dark text: apart from the blue of the selection, which
+     * lies above both. */
+    -fx-markdown-search-color: derive(#e0a84c, -55%);
+    -fx-markdown-search-text-color: -fx-text-color;
+    -fx-markdown-search-current-color: #e0a84c;
+    -fx-markdown-search-current-text-color: #1b1d2d;
+
     /* Markdown view: the colours of code blocks coloured by their language, one per category
      * (CodeCategory). The nine base categories have colours of their own, each readable on
      * -fx-code-background-color (contrast 5.1:1 or more). The fourteen fine ones refer to the

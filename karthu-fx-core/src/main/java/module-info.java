@@ -53,7 +53,8 @@ module org.karthu.fx {
     // (org.karthu.fx.form.number) of the number input, the suggestion filter (org.karthu.fx.form.suggestion) of
     // the editable combo input, the cron rules (org.karthu.fx.form.cron), which check, parse, describe and convert
     // the expressions of the cron input, and the matching rule (org.karthu.fx.form.search) of the search and
-    // suggestion inputs, which decides which entries match a search and where their marks go, so that their parsed
-    // form, their messages, their plain text, their conversions and their folding can change without an API change.
+    // suggestion inputs, which decides which entries match a search and where their marks go, beside the Markdown
+    // view's rule of a search in a document's text, which shares its folding, so that their parsed form, their
+    // messages, their plain text, their conversions and their folding can change without an API change.
     exports org.karthu.fx.form;
 }

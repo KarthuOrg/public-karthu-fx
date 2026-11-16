@@ -2,7 +2,6 @@ package org.karthu.fx.markdown;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ScrollPane;
@@ -348,14 +347,8 @@ final class DocumentImages {
      * @return {@code true} if it does; {@code false} before the view is laid out
      */
     boolean isNear(ImageNode node) {
-        double viewportHeight = scrollPane.getViewportBounds().getHeight();
-        if (viewportHeight <= 0 || node.getScene() == null) {
-            return false;
-        }
-        // In the scroll pane's content, the zoom box: scaled pixels, as the scroll offset.
-        Bounds bounds = zoomBox.sceneToLocal(node.localToScene(node.getLayoutBounds()));
-        double top = VerticalScroll.offset(scrollPane);
-        return bounds.getMaxY() >= top - viewportHeight && bounds.getMinY() <= top + 2 * viewportHeight;
+        NearArea area = NearArea.of(scrollPane);
+        return area != null && node.getScene() != null && area.contains(node);
     }
 
     /**

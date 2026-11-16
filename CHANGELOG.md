@@ -6,6 +6,13 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 
 ## [Unreleased]
 
+### Added
+
+- `MarkdownView` searches its text: an application sets the search text, reads the number of
+  matches and the current match, goes to the next and the previous match in a `SearchDirection`
+  and clears the search. Every match is marked, the current one apart, and the view scrolls to it.
+  Tables are not searched yet.
+
 ## [1.1.0-RC1] - 2026-11-14
 
 The first version published to Maven Central.

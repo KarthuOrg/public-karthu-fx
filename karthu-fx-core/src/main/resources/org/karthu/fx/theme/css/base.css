@@ -3264,6 +3264,21 @@ Text {
     -fx-highlight-text-fill: -fx-selection-text-color;
 }
 
+/* The marks of the search in a heading, a paragraph, a code or a source
+ * block: highlights like the selection's, in two layers below it, every
+ * match but the current one (markdown-search-match) and above it the
+ * current one (markdown-search-current), each match's characters shown
+ * again on its highlight in the layer's text colour. */
+.markdown-view .markdown-search-match {
+    -fx-fill: -fx-markdown-search-color;
+    -fx-highlight-text-fill: -fx-markdown-search-text-color;
+}
+
+.markdown-view .markdown-search-current {
+    -fx-fill: -fx-markdown-search-current-color;
+    -fx-highlight-text-fill: -fx-markdown-search-current-text-color;
+}
+
 /* A code block's copy button: the theme's icon button (.icon-button:
  * padding 4, radius 3, hand cursor) laid over the block's top right
  * corner, 4px from its edges (set by the view: a StackPane margin is

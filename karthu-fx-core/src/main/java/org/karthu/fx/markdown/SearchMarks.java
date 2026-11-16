@@ -1,0 +1,118 @@
+package org.karthu.fx.markdown;
+
+import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
+import javafx.scene.Node;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.PathElement;
+import javafx.scene.text.TextFlow;
+
+import java.util.List;
+
+/**
+ * The marks of the search over a text flow, a heading's, a paragraph's or a code or source block's: two highlight
+ * layers ({@link HighlightLayer}) over its runs, one with every match but the current one
+ * ({@code markdown-search-match}), above it one with the current match ({@code markdown-search-current}). Both lie
+ * below the flow's selection layer, so the selection always shows on top.
+ *
+ * <p>The layers are made when the flow first shows a match and kept after, hidden while it shows none, so a flow never
+ * marked has none.
+ */
+final class SearchMarks {
+
+    private final TextFlow flow;
+
+    /**
+     * The layer of every match but the current one; {@code null} until the first match.
+     */
+    private HighlightLayer matches;
+
+    /**
+     * The layer of the current match, above the other; {@code null} until the first match.
+     */
+    private HighlightLayer current;
+
+    /**
+     * Creates the marks of a flow, without layers yet.
+     *
+     * @param flow the flow
+     */
+    SearchMarks(TextFlow flow) {
+        this.flow = flow;
+    }
+
+    /**
+     * Shows matches of the flow's text: none hide the marks.
+     *
+     * @param others       every match but the current one, as ranges of the flow's positions in their order
+     * @param currentRange the current match, {@code null} if it lies elsewhere or there is none
+     * @param below        the node the layers lie below, the flow's selection layer; {@code null} while the flow has
+     *                     none, which, made later, lies above them as the flow's last child
+     */
+    void show(List<Segment.Range> others, Segment.Range currentRange, Node below) {
+        if (matches == null) {
+            if (others.isEmpty() && currentRange == null) {
+                return;
+            }
+            matches = new HighlightLayer(flow, "markdown-search-match");
+            current = new HighlightLayer(flow, "markdown-search-current");
+            int index = below == null ? flow.getChildren().size() : flow.getChildren().indexOf(below);
+            flow.getChildren().addAll(index, List.of(matches, current));
+            if (flow.getScene() != null) {
+                // Styled now: layers made during a layout would otherwise show one frame in a path's default black,
+                // before the next pulse styles them.
+                matches.applyCss();
+                current.applyCss();
+            }
+        }
+        matches.show(others);
+        current.show(currentRange == null ? List.of() : List.of(currentRange));
+    }
+
+    /**
+     * The box around a range of a flow's characters, in the flow's coordinates: from the shape of the range, each
+     * line's box without the line spacing.
+     *
+     * @param flow  the flow, laid out
+     * @param range the range, not empty
+     * @return the box
+     */
+    static Bounds boundsOf(TextFlow flow, Segment.Range range) {
+        double minX = Double.POSITIVE_INFINITY;
+        double minY = Double.POSITIVE_INFINITY;
+        double maxX = Double.NEGATIVE_INFINITY;
+        double maxY = Double.NEGATIVE_INFINITY;
+        for (PathElement element : flow.getRangeShape(range.start(), range.end(), false)) {
+            double x;
+            double y;
+            if (element instanceof MoveTo move) {
+                x = move.getX();
+                y = move.getY();
+            } else if (element instanceof LineTo line) {
+                x = line.getX();
+                y = line.getY();
+            } else {
+                continue;
+            }
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+        }
+        if (minX > maxX) {
+            return new BoundingBox(0, 0, 0, 0);
+        }
+        return new BoundingBox(minX, minY, maxX - minX, maxY - minY);
+    }
+
+    /**
+     * Lays the layers over the flow as its text is laid out now, after the flow has laid out its runs.
+     */
+    void layOverFlow() {
+        if (matches != null) {
+            matches.layOverFlow();
+            current.layOverFlow();
+        }
+    }
+}
