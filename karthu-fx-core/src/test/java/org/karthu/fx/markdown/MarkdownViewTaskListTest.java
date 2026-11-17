@@ -98,6 +98,80 @@ class MarkdownViewTaskListTest {
     }
 
     @Test
+    @DisplayName("a numbered task item shows its number and the check box side by side, the number on the text's"
+            + " baseline, the box 4 pixels from the text")
+    void numberedTaskItems() {
+        MarkdownView view = layOut(new MarkdownView("1. [ ] build\n2. [x] test\n3. ship"));
+
+        Node list = view.lookup(".markdown-ordered-list");
+        assertTrue(list.getStyleClass().contains("markdown-task-list"));
+        List<Region> boxes = boxes(view);
+        assertEquals(2, boxes.size());
+        assertEquals(List.of(false, true), List.of(checked(boxes.get(0)), checked(boxes.get(1))));
+        assertEquals(List.of("1.", "2.", "3."), markers(view), "every item keeps its number");
+        assertEquals(List.of("build", "test", "ship"), texts(view));
+        List<TextFlow> paragraphs = paragraphs(view);
+        List<Node> numbers = new ArrayList<>(view.lookupAll(".markdown-list-marker"));
+        for (int i = 0; i < 2; i++) {
+            Bounds box = sceneBounds(boxes.get(i));
+            double textX = sceneBounds(paragraphs.get(i)).getMinX();
+            assertEquals(textX - ListItemBox.TASK_BOX_GAP, box.getMaxX(), 0.51);
+            assertEquals(box.getMinX(), sceneBounds(numbers.get(i)).getMaxX(), 0.51, "the number left of the box");
+            assertEquals(sceneBaseline(paragraphs.get(i)), sceneBaseline(numbers.get(i)), 0.51);
+            double fontSize = ((Text) paragraphs.get(i).getChildren().getFirst()).getFont().getSize();
+            assertEquals(sceneBaseline(paragraphs.get(i)) - fontSize / 4, box.getCenterY(), 0.51);
+        }
+    }
+
+    @Test
+    @DisplayName("every item of a numbered task list starts its text at the same place, task or not, also when the"
+            + " numbers grow wider, and the list makes room for number and box")
+    void numberedTaskListAlignment() {
+        MarkdownView view = layOut(new MarkdownView("9. [ ] nine\n10. [x] ten\n11. eleven\n\n"
+                + "1) plain one\n2) plain two"));
+
+        List<TextFlow> paragraphs = paragraphs(view);
+        double textX = sceneBounds(paragraphs.get(0)).getMinX();
+        assertEquals(textX, sceneBounds(paragraphs.get(1)).getMinX(), 0.01);
+        assertEquals(textX, sceneBounds(paragraphs.get(2)).getMinX(), 0.01);
+        double plainX = sceneBounds(paragraphs.get(3)).getMinX();
+        assertTrue(textX > plainX, "a numbered task list indents further than a plain one");
+        List<Node> numbers = new ArrayList<>(view.lookupAll(".markdown-list-marker"));
+        Node taskList = view.lookup(".markdown-ordered-list.markdown-task-list");
+        Bounds box = sceneBounds(boxes(view).getFirst());
+        Bounds nine = sceneBounds(numbers.get(0));
+        assertTrue(nine.getMinX() >= sceneBounds(taskList).getMinX() - 0.01, "1. to 9. fit within the indent");
+        assertEquals(box.getMinX(), nine.getMaxX(), 0.51);
+        assertTrue(sceneBounds(numbers.get(1)).getMinX() < nine.getMinX(), "10. reaches further left");
+        assertEquals(nine.getMaxX(), sceneBounds(numbers.get(1)).getMaxX(), 0.51, "numbers end at the box");
+    }
+
+    @Test
+    @DisplayName("numbered and bullet task lists nest in each other, with either delimiter")
+    void nestedNumberedTasks() {
+        MarkdownView view = layOut(new MarkdownView("- [ ] outer\n  1) [x] inner\n     - [ ] deeper\n"
+                + "- plain\n  1. [ ] three"));
+
+        assertEquals(4, boxes(view).size());
+        assertEquals(List.of("1)", "\u2022", "1."), markers(view));
+        assertEquals(List.of("outer", "inner", "deeper", "plain", "three"), texts(view));
+    }
+
+    @Test
+    @DisplayName("a numbered task copies with its number, delimiter and task marker")
+    void numberedCopy() {
+        MarkdownView view = layOut(new MarkdownView("1. [ ] build\n2. [X] test\n3. ship\n\n7) [x] seven"));
+        List<String> copied = recordCopies(view);
+        TextFlow first = paragraphs(view).getFirst();
+
+        click(runAt(first, 0), textPoint(first, 0));
+        shortcut(view, KeyCode.A);
+        shortcut(view, KeyCode.C);
+
+        assertEquals(List.of("1. [ ] build\n2. [x] test\n3. ship\n7) [x] seven"), copied);
+    }
+
+    @Test
     @DisplayName("a wrapped task's second line starts under its text, not under the check box")
     void wrappedTaskLines() {
         MarkdownView view = layOut(new MarkdownView("- [x] " + "a long task that wraps ".repeat(12)), 240);

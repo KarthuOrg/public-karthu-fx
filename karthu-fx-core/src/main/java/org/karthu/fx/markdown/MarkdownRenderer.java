@@ -318,7 +318,7 @@ final class MarkdownRenderer {
     private Node bulletList(BulletList list) {
         VBox box = listBox("markdown-bullet-list", list.tight(), list.items());
         for (ListItem item : list.items()) {
-            box.getChildren().add(listItem(BULLET, "-", list.tight(), item));
+            box.getChildren().add(listItem(null, "-", list.tight(), item));
         }
         return box;
     }
@@ -327,7 +327,7 @@ final class MarkdownRenderer {
      * An ordered list: the items count on from the list's start number, each marker the number and the delimiter.
      */
     private Node orderedList(OrderedList list) {
-        VBox box = listBox("markdown-ordered-list", list.tight(), List.of());
+        VBox box = listBox("markdown-ordered-list", list.tight(), list.items());
         long number = list.start();
         for (ListItem item : list.items()) {
             String marker = number + String.valueOf(list.delimiter());
@@ -361,19 +361,21 @@ final class MarkdownRenderer {
      * An item row: the marker as shown, and the item's blocks, rendered inside the item as their container, whose
      * copied text starts with the marker as written for copying ({@code -} for a bullet).
      *
-     * <p>A task item of a bullet list shows its check box in place of the bullet. Its copied marker carries the task
-     * marker as GFM writes it ({@code - [ ]}, {@code - [x]}), so the copy keeps the state.
+     * <p>A task item shows its check box in place of a bullet, or beside its number. Its copied marker carries the
+     * task marker as GFM writes it ({@code - [ ]}, {@code 1. [x]}), so the copy keeps the state.
+     *
+     * @param number the number and delimiter of an ordered list's item, {@code null} for a bullet item
      */
-    private Node listItem(String markerText, String copiedMarker, boolean tight, ListItem item) {
+    private Node listItem(String number, String copiedMarker, boolean tight, ListItem item) {
         TaskBox taskBox = null;
         String copied = copiedMarker;
-        if (item.task() != ListItem.Task.NONE && markerText.equals(BULLET)) {
+        if (item.task() != ListItem.Task.NONE) {
             taskBox = new TaskBox(item.task() == ListItem.Task.DONE);
             copied = copiedMarker + (item.task() == ListItem.Task.DONE ? " [x]" : " [ ]");
         }
         Label marker = null;
-        if (taskBox == null) {
-            marker = new Label(markerText);
+        if (number != null || taskBox == null) {
+            marker = new Label(number != null ? number : BULLET);
             marker.getStyleClass().add("markdown-list-marker");
         }
         containers.add(new BlockContainer.Item(copied, tight));

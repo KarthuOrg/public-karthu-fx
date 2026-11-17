@@ -19,9 +19,10 @@ import java.util.List;
  * instead of being cut. The marker is unmanaged: the box's size is its blocks', the padding included.
  *
  * <p><b>Task items.</b> A task item's check box ({@link TaskBox}) sits in the padding too, {@link #TASK_BOX_GAP} left
- * of the blocks, and takes the place of a bullet: a bullet task item has no marker label. Vertically the box is
- * centred on the middle of the first line's lowercase letters, a quarter of the line's font size above its baseline,
- * as a browser's {@code vertical-align: middle} does. The box is unmanaged like the marker.
+ * of the blocks, and takes the place of a bullet: a bullet task item has no marker label. An ordered task item's
+ * number stands left of the box, its right edge at the box, on the first line's baseline as always. Vertically the
+ * box is centred on the middle of the first line's lowercase letters, a quarter of the line's font size above its
+ * baseline, as a browser's {@code vertical-align: middle} does. The box is unmanaged like the marker.
  */
 final class ListItemBox extends VBox {
 
