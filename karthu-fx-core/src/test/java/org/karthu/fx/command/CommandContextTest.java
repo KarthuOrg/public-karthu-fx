@@ -377,6 +377,74 @@ class CommandContextTest {
         });
     }
 
+    @Test
+    @DisplayName("once a menu bar left the window, its items' keys are the window's again: another accelerator runs")
+    void menuItemKeysLeaveWithTheirMenuBar() throws InterruptedException {
+        RunCounter rename = new RunCounter();
+        RunCounter save = new RunCounter();
+        RunCounter renameAccelerator = new RunCounter();
+        RunCounter saveAccelerator = new RunCounter();
+        onFxThread(() -> {
+            Button onCanvas = new Button("node on the canvas");
+            StackPane canvas = new StackPane(onCanvas);
+            Button outside = new Button("outside");
+            VBox root = new VBox(canvas, outside);
+            Scene scene = themedScene(root);
+            CommandRegistry registry = new CommandRegistry(scene);
+            CommandGroup edit = registry.addGroup("edit", "Edit");
+            Command renameCommand = registry.addCommand(edit, registry.addContext("canvas", "Canvas", canvas),
+                    "canvas.rename", "Rename Node", Shortcut.of(KeyCode.F2), rename);
+            Command saveCommand = registry.addCommand(edit, "file.save", "Save", Shortcut.of(KeyCode.S, CTRL), save);
+            saveCommand.setDisabled(true);
+            MenuItem renameItem = new MenuItem("Rename Node");
+            MenuItem saveItem = new MenuItem("Save");
+            renameCommand.bind(renameItem);
+            saveCommand.bind(saveItem);
+            addMenuBar(root, renameItem, saveItem);
+
+            // The menu bar leaves the window, as a page with a menu of its own does, and takes its accelerators.
+            root.getChildren().remove(0);
+            assertNull(scene.getAccelerators().get(renameItem.getAccelerator()));
+            scene.getAccelerators().put(Shortcut.of(KeyCode.F2).toKeyCombination(), renameAccelerator);
+            scene.getAccelerators().put(Shortcut.of(KeyCode.S, CTRL).toKeyCombination(), saveAccelerator);
+            outside.requestFocus();
+            pressOnFocusOwner(scene, KeyCode.F2);
+            pressOnFocusOwner(scene, KeyCode.S, CTRL);
+
+            assertEquals(List.of(1, 1), List.of(renameAccelerator.runs(), saveAccelerator.runs()));
+            assertEquals(List.of(0, 0), List.of(rename.runs(), save.runs()));
+        });
+    }
+
+    @Test
+    @DisplayName("while a menu bar is in the window, the key of its item runs neither the command outside its context"
+            + " nor an accelerator the application put on it before")
+    void menuItemKeyWhileItsMenuBarIsIn() throws InterruptedException {
+        RunCounter rename = new RunCounter();
+        RunCounter applicationsAccelerator = new RunCounter();
+        onFxThread(() -> {
+            Button onCanvas = new Button("node on the canvas");
+            StackPane canvas = new StackPane(onCanvas);
+            Button outside = new Button("outside");
+            VBox root = new VBox(canvas, outside);
+            Scene scene = themedScene(root);
+            CommandRegistry registry = new CommandRegistry(scene);
+            Command command = registry.addCommand(registry.addGroup("edit", "Edit"),
+                    registry.addContext("canvas", "Canvas", canvas), "canvas.rename", "Rename Node",
+                    Shortcut.of(KeyCode.F2), rename);
+            // The application's own accelerator first: the menu bar's item takes its place in the scene.
+            scene.getAccelerators().put(Shortcut.of(KeyCode.F2).toKeyCombination(), applicationsAccelerator);
+            MenuItem item = new MenuItem("Rename Node");
+            command.bind(item);
+            addMenuBar(root, item);
+
+            outside.requestFocus();
+            pressOnFocusOwner(scene, KeyCode.F2);
+
+            assertEquals(List.of(0, 0), List.of(rename.runs(), applicationsAccelerator.runs()));
+        });
+    }
+
     // --- AltGr in text inputs ------------------------------------------------------------------------
 
     @Test

@@ -49,9 +49,6 @@ public final class Command {
 
     private final BooleanProperty disabled = new SimpleBooleanProperty(this, "disabled");
 
-    /** Whether a menu item is bound to the command, which shows the command's key as its accelerator. */
-    private boolean boundToMenuItem;
-
     /**
      * The current key as JavaFX's combination, the accelerator of every bound menu item; null while there is no key.
      */
@@ -258,7 +255,6 @@ public final class Command {
         item.setOnAction(event -> execute());
         item.disableProperty().bind(disabled);
         item.acceleratorProperty().bind(accelerator);
-        boundToMenuItem = true;
     }
 
     /**
@@ -302,15 +298,15 @@ public final class Command {
     }
 
     /**
-     * Whether a key press is the key a bound menu item shows as its accelerator, through which the item would run the
-     * command.
+     * Whether a combination is the very accelerator the command's bound menu items show: the object, not an equal one.
+     * A menu puts its item's accelerator into its scene's accelerators as the item holds it, so the registry tells an
+     * item of its own from an accelerator the application put on the same key.
      *
-     * @param event a key press
-     * @return true when a menu item is bound to the command and the press is its key
+     * @param combination a combination, null for none
+     * @return true when it is the command's accelerator
      */
-    boolean isMenuItemKey(KeyEvent event) {
-        Shortcut current = shortcut.get();
-        return boundToMenuItem && current != null && current.matches(event);
+    boolean isAccelerator(KeyCombination combination) {
+        return combination != null && combination == accelerator.get();
     }
 
     /** The current key as JavaFX's combination, null while the command has none. */

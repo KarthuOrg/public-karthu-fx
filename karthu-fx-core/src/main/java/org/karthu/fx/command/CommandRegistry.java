@@ -2,10 +2,12 @@ package org.karthu.fx.command;
 
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.collections.MapChangeListener;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +16,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -69,6 +72,8 @@ public final class CommandRegistry {
      */
     private static final Object SCENE_PROPERTY = new Object();
 
+    private final Scene scene;
+
     private final List<CommandGroup> groups = new ArrayList<>();
 
     private final List<Command> commands = new ArrayList<>();
@@ -104,6 +109,15 @@ public final class CommandRegistry {
     private boolean changingKeys;
 
     /**
+     * The actions the scene runs on the accelerators of menu items bound to the commands, by identity. A menu bar, a
+     * menu button or the control of a context menu puts its items' accelerators into the scene's accelerators, each
+     * with an action that fires its item, while it is in the scene, and takes them out when it leaves; an action put
+     * there with a command's very accelerator as its key is a bound item's. The scene runs whichever action its map
+     * holds for a key, the application's own included, so it is the action that counts, not the key.
+     */
+    private final Set<Runnable> menuItemActions = Collections.newSetFromMap(new IdentityHashMap<>());
+
+    /**
      * Creates the registry of a window and installs it on the window's scene.
      *
      * @param scene the window's scene
@@ -117,11 +131,13 @@ public final class CommandRegistry {
             throw new IllegalArgumentException("the scene has a command registry already");
         }
         scene.getProperties().put(SCENE_PROPERTY, this);
+        this.scene = scene;
         contexts.add(windowContext);
         contextIds.add(windowContext.getId());
         // A handler, not a filter: the key reaches the registry after the focused control, which keeps the keys it
         // consumes, and before the scene's accelerators, which a bound menu item's key is one of.
         scene.addEventHandler(KeyEvent.KEY_PRESSED, this::handleKeyPressed);
+        scene.getAccelerators().addListener(this::acceleratorsChanged);
     }
 
     /**
@@ -499,8 +515,9 @@ public final class CommandRegistry {
     /**
      * A key pressed in the window and not consumed by the focused control: the first enabled command on that key runs,
      * looked for in the contexts that hold the focus from the innermost outward, and the key is consumed. A key no
-     * command runs on is consumed too when it is a bound menu item's key: the item's accelerator, which the scene runs
-     * after its handlers, would run the command where its key does not hold.
+     * command runs on is consumed too while it is the accelerator of a bound menu item in the scene: the scene runs its
+     * accelerators after its handlers, and the item's would run the command where its key does not hold. Once the
+     * item's menu left the scene, the key goes on to the scene's other accelerators.
      */
     private void handleKeyPressed(KeyEvent event) {
         // The key's target is the node with the focus, or the text field inside it that an editable combo box or
@@ -517,14 +534,39 @@ public final class CommandRegistry {
                 }
             }
         }
-        // The scene consumes a key that is an accelerator, whatever its item does: consuming it here takes nothing
-        // from the scene's own handling of keys, such as moving the focus.
-        for (Command command : commands) {
-            if (command.isMenuItemKey(event)) {
+        // The scene consumes a key that is an accelerator with an action, whatever its item does, a disabled one
+        // too: consuming it here takes nothing from the scene's own handling of keys, such as moving the focus.
+        for (Map.Entry<KeyCombination, Runnable> accelerator : scene.getAccelerators().entrySet()) {
+            if (menuItemActions.contains(accelerator.getValue()) && accelerator.getKey().match(event)) {
                 event.consume();
                 return;
             }
         }
+    }
+
+    /**
+     * Keeps {@link #menuItemActions} in line with the scene's accelerators: an action leaves with its entry, and an
+     * action put with a command's accelerator as its key is a bound menu item's.
+     */
+    private void acceleratorsChanged(MapChangeListener.Change<? extends KeyCombination, ? extends Runnable> change) {
+        if (change.wasRemoved()) {
+            menuItemActions.remove(change.getValueRemoved());
+        }
+        if (change.wasAdded() && change.getValueAdded() != null && isAccelerator(change.getKey())) {
+            menuItemActions.add(change.getValueAdded());
+        }
+    }
+
+    /**
+     * Whether a combination is the accelerator of a command's bound menu items, the object itself.
+     */
+    private boolean isAccelerator(KeyCombination combination) {
+        for (Command command : commands) {
+            if (command.isAccelerator(combination)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
