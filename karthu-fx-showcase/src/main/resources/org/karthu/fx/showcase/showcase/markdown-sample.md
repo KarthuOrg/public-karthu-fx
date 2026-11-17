@@ -153,6 +153,31 @@ A list with blank lines between its items is *loose* and spaced like paragraphs:
 
   The second paragraph of the second item.
 
+### Task lists
+
+An item that starts with `[ ]` or `[x]` is a task and shows a check box instead of its
+bullet. The boxes only show the state: a click does not tick them, and the tooltip names it.
+
+- [x] Read the spec
+- [X] Write the tests (a capital X is done too)
+- [ ] Ship the release, a long task that wraps to the width of the view, its second line under
+  its text and not under the check box
+  - [x] Build the archive
+  - [ ] Upload it
+- A plain item keeps its bullet beside the tasks
+- [ ]
+
+The empty task above has a check box alone. Numbered tasks keep their number:
+
+1. [x] Check out the code
+2. [ ] Run the build
+3. Read the log, no task
+
+Only GitHub's forms count, so these stay text:
+
+- [/] half done, as some editors write it
+- [x](https://example.com) is a link
+
 ## Quotes and breaks
 
 Block quotes start with `>` and set notes apart:
