@@ -152,6 +152,13 @@ final class HtmlFixture {
         cr();
         for (ListItem item : items) {
             html.append("<li>");
+            // A task item's check box as cmark-gfm writes it, before the item's blocks.
+            switch (item.task()) {
+                case NONE -> {
+                }
+                case OPEN -> html.append("<input disabled=\"\" type=\"checkbox\"> ");
+                case DONE -> html.append("<input checked=\"\" disabled=\"\" type=\"checkbox\"> ");
+            }
             blocks(item.blocks(), tight);
             html.append("</li>");
             cr();

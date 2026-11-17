@@ -3093,6 +3093,45 @@ Text {
     -fx-text-fill: -fx-text-color;
 }
 
+/* A task list item's check box: in place of the bullet, 4px left of
+ * the item's blocks (a gap the view keeps), so box and gap fill the
+ * bullet item's 18px indent. Drawn from the check box tokens of the
+ * theme's CheckBox, without hover and with the default cursor: the
+ * reader cannot tick it. The same colours inside a quote. */
+.markdown-view .markdown-task-box {
+    -fx-background-color: -fx-checkbox-bg;
+    -fx-background-radius: 3;
+    -fx-border-color: -fx-checkbox-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+    -fx-pref-width: 14;
+    -fx-pref-height: 14;
+    -fx-min-width: 14;
+    -fx-min-height: 14;
+    -fx-max-width: 14;
+    -fx-max-height: 14;
+}
+
+.markdown-view .markdown-task-box:checked {
+    -fx-background-color: -fx-accent-color;
+    -fx-border-color: -fx-accent-color;
+}
+
+.markdown-view .markdown-task-box .mark {
+    -fx-background-color: transparent;
+    -fx-shape: "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z";
+    -fx-pref-width: 10;
+    -fx-pref-height: 10;
+    -fx-min-width: 10;
+    -fx-min-height: 10;
+    -fx-max-width: 10;
+    -fx-max-height: 10;
+}
+
+.markdown-view .markdown-task-box:checked .mark {
+    -fx-background-color: -fx-checkbox-mark;
+}
+
 /* Block quotes: a 3px accent bar on the left (a border), the quote's
  * blocks 12px beyond it and spaced like the document's, the text and
  * list markers in the secondary colour. Code and links keep their own

@@ -17,6 +17,12 @@ import java.util.List;
  * ({@link #item(ItemStart)}); a block quote does the same with its lines without their {@code >} markers
  * ({@link #quote()}).
  *
+ * <p><b>Task list items.</b> A list item whose content starts with a GFM task marker ({@code [ ]}, {@code [x]} or
+ * {@code [X]}, then a space, a tab or the end of the line) is a task, if that line starts the item's first paragraph
+ * ({@link #taskMarker(String)}). The parser of the item's content takes the marker out of that paragraph's text before
+ * the inline parse, once the block structure is settled: so {@code - [ ] # x} is a task with the text {@code # x}, as
+ * in GFM, while a table that starts on the marker's line leaves the item a plain one.
+ *
  * <p><b>Lazy lines.</b> CommonMark lets a paragraph inside a container continue on a line that is not indented
  * enough for the container, or lacks the quote's {@code >} (a <em>lazy continuation line</em>). Such a line belongs to
  * the innermost open paragraph, whatever its indentation or markers say in the inner containers. So the container
@@ -71,18 +77,32 @@ final class BlockParser {
     private final boolean probe;
 
     /**
+     * The task marker the first line starts with, when the lines are a list item's content: the item is a task if
+     * that line starts a paragraph. {@link ListItem.Task#NONE} for any other lines.
+     */
+    private final ListItem.Task taskMarker;
+
+    /**
+     * The task the lines turned out to be: the task marker once the first line started a paragraph, else
+     * {@link ListItem.Task#NONE}.
+     */
+    private ListItem.Task task = ListItem.Task.NONE;
+
+    /**
      * Creates a parser over lines.
      *
-     * @param lines     the lines, without line endings
-     * @param lazyLines the indexes of the lines that are lazy continuation lines
-     * @param depth     the number of containers around the lines, 0 for the document
-     * @param probe     whether the parse only probes the block structure
+     * @param lines      the lines, without line endings
+     * @param lazyLines  the indexes of the lines that are lazy continuation lines
+     * @param depth      the number of containers around the lines, 0 for the document
+     * @param probe      whether the parse only probes the block structure
+     * @param taskMarker the task marker the first line starts with, if the lines are a list item's content
      */
-    private BlockParser(List<String> lines, BitSet lazyLines, int depth, boolean probe) {
+    private BlockParser(List<String> lines, BitSet lazyLines, int depth, boolean probe, ListItem.Task taskMarker) {
         this.lines = lines;
         this.lazyLines = lazyLines;
         this.depth = depth;
         this.probe = probe;
+        this.taskMarker = taskMarker;
     }
 
     /**
@@ -92,7 +112,7 @@ final class BlockParser {
      * @return the blocks in source order
      */
     static List<Block> parseBlocks(List<String> lines) {
-        return new BlockParser(lines, new BitSet(), 0, false).parse();
+        return new BlockParser(lines, new BitSet(), 0, false, ListItem.Task.NONE).parse();
     }
 
     private List<Block> parse() {
@@ -106,7 +126,8 @@ final class BlockParser {
                 endsInParagraph = false;
                 continue;
             }
-            if (blankBefore && !blocks.isEmpty()) {
+            // An empty task's paragraph is no block, but a blank line after it loosens the list as after any.
+            if (blankBefore && (!blocks.isEmpty() || task != ListItem.Task.NONE)) {
                 blankBetweenBlocks = true;
             }
             blankBefore = false;
@@ -141,6 +162,9 @@ final class BlockParser {
             } else if (isTableStart(index)) {
                 blocks.add(table());
                 endsInParagraph = false;
+            } else if (index == 0 && taskMarker != ListItem.Task.NONE) {
+                taskParagraph(blocks);
+                endsInParagraph = true;
             } else {
                 blocks.add(paragraph());
                 endsInParagraph = true;
@@ -173,7 +197,7 @@ final class BlockParser {
         ItemStart start = first;
         while (start != null) {
             Content item = item(start);
-            items.add(new ListItem(item.blocks()));
+            items.add(new ListItem(item.blocks(), item.task()));
             lastItemEndsInParagraph = item.endsInParagraph();
             if (item.blankBetweenBlocks()) {
                 tight = false;
@@ -251,7 +275,49 @@ final class BlockParser {
             previousBlank = false;
         }
         index = end;
-        return parseContent(content.subList(0, kept), contentLazyLines, probe);
+        // A probe needs the block structure only, which the task marker does not change.
+        ListItem.Task marker = probe ? ListItem.Task.NONE : taskMarker(start.firstLine());
+        return parseContent(content.subList(0, kept), contentLazyLines, probe, marker);
+    }
+
+    /**
+     * The GFM task marker a list item's first line starts with: {@code [}, a space, {@code x} or {@code X}, then
+     * {@code ]}, followed by a space, a tab or the end of the line. Exactly one character between the brackets, and
+     * only GitHub's: {@code [/]}, {@code [-]} and the like stay text, and so does {@code [x]} followed by anything
+     * else ({@code [x](link)}, {@code [x]done}).
+     *
+     * @param firstLine the item's content on its marker's line, after the spaces that follow the list marker
+     * @return the task marker, {@link ListItem.Task#NONE} if the line starts with none
+     */
+    static ListItem.Task taskMarker(String firstLine) {
+        if (firstLine.length() < 3 || firstLine.charAt(0) != '[' || firstLine.charAt(2) != ']') {
+            return ListItem.Task.NONE;
+        }
+        if (firstLine.length() > 3 && !Characters.isSpaceOrTab(firstLine.charAt(3))) {
+            return ListItem.Task.NONE;
+        }
+        return switch (firstLine.charAt(1)) {
+            case ' ' -> ListItem.Task.OPEN;
+            case 'x', 'X' -> ListItem.Task.DONE;
+            default -> ListItem.Task.NONE;
+        };
+    }
+
+    /**
+     * Reads a task item's first paragraph, which starts on the first line with the task marker: the marker and the
+     * space or tab after it are taken out, and the rest of the line starts the paragraph's text. A marker alone on its
+     * line leaves the paragraph to start with the next line, and a marker alone in its paragraph leaves no paragraph,
+     * so an empty task has no block for it.
+     *
+     * @param blocks the blocks read so far, none: the paragraph joins them unless it is empty
+     */
+    private void taskParagraph(List<Block> blocks) {
+        task = taskMarker;
+        String firstLine = lines.get(index);
+        Paragraph paragraph = paragraph(firstLine.substring(Math.min(firstLine.length(), 4)));
+        if (!paragraph.content().isEmpty()) {
+            blocks.add(paragraph);
+        }
     }
 
     /**
@@ -281,7 +347,7 @@ final class BlockParser {
             }
             index++;
         }
-        Content quoteContent = parseContent(content, contentLazyLines, probe);
+        Content quoteContent = parseContent(content, contentLazyLines, probe, ListItem.Task.NONE);
         return new Container(new BlockQuote(quoteContent.blocks()), quoteContent.endsInParagraph());
     }
 
@@ -328,7 +394,7 @@ final class BlockParser {
      * thrown away, so their inline content is not parsed.
      */
     private boolean endsInParagraph(List<String> lines, BitSet lazyLines) {
-        return parseContent(lines, lazyLines, true).endsInParagraph();
+        return parseContent(lines, lazyLines, true, ListItem.Task.NONE).endsInParagraph();
     }
 
     /**
@@ -338,11 +404,14 @@ final class BlockParser {
      * @param contentLazyLines the indexes of the content's lazy continuation lines
      * @param probeOnly        whether only the block structure counts: the inline content of paragraphs is then not
      *                         parsed
+     * @param taskMarker       the task marker a list item's content starts with, {@link ListItem.Task#NONE} for none
+     *                         and for a quote's content
      */
-    private Content parseContent(List<String> contentLines, BitSet contentLazyLines, boolean probeOnly) {
-        BlockParser parser = new BlockParser(contentLines, contentLazyLines, depth + 1, probeOnly);
+    private Content parseContent(List<String> contentLines, BitSet contentLazyLines, boolean probeOnly,
+                                 ListItem.Task taskMarker) {
+        BlockParser parser = new BlockParser(contentLines, contentLazyLines, depth + 1, probeOnly, taskMarker);
         List<Block> blocks = parser.parse();
-        return new Content(blocks, parser.endsInParagraph, parser.blankBetweenBlocks);
+        return new Content(blocks, parser.endsInParagraph, parser.blankBetweenBlocks, parser.task);
     }
 
     /**
@@ -352,8 +421,10 @@ final class BlockParser {
      * @param endsInParagraph    whether the content ends inside an open paragraph, also one nested in the last
      *                           list's last item: the container's next line may then be a lazy continuation line
      * @param blankBetweenBlocks whether a blank line separates two of the blocks: a list item's makes its list loose
+     * @param task               whether the content is a task item's, whose first paragraph started with the marker
      */
-    private record Content(List<Block> blocks, boolean endsInParagraph, boolean blankBetweenBlocks) {
+    private record Content(List<Block> blocks, boolean endsInParagraph, boolean blankBetweenBlocks,
+                           ListItem.Task task) {
     }
 
     /**
@@ -764,11 +835,24 @@ final class BlockParser {
      * another block belongs to it. The lines lose their leading spaces, the paragraph its trailing ones.
      */
     private Paragraph paragraph() {
-        StringBuilder text = new StringBuilder(stripLeadingSpaces(lines.get(index)));
+        return paragraph(lines.get(index));
+    }
+
+    /**
+     * Reads a paragraph from the current line on, with the given text in place of the current line's.
+     *
+     * @param firstLine the text of the paragraph's first line; empty for a task marker alone on its line, whose
+     *                  paragraph then starts with the next line
+     */
+    private Paragraph paragraph(String firstLine) {
+        StringBuilder text = new StringBuilder(stripLeadingSpaces(firstLine));
         index++;
         while (index < lines.size() && !isBlank(lines.get(index))
                 && (lazyLines.get(index) || (!interruptsParagraph(lines.get(index)) && !isTableStart(index)))) {
-            text.append('\n').append(stripLeadingSpaces(lines.get(index)));
+            if (!text.isEmpty()) {
+                text.append('\n');
+            }
+            text.append(stripLeadingSpaces(lines.get(index)));
             index++;
         }
         if (probe) {

@@ -65,8 +65,8 @@ import java.util.function.Consumer;
  * deep (deeper, a marker stays text), fenced code blocks (three or more backticks or tildes; the first word of the info
  * string, such as {@code java}, names the code's language, see <em>Code colours</em>), thematic breaks ({@code ---},
  * {@code ***}, {@code ___}), emphasis ({@code *x*}, {@code _x_}), strong emphasis ({@code **x**}, {@code __x__}), both
- * ({@code ***x***}), code spans, backslash escapes, links and GFM tables. Tabs are not expanded: indentation counts
- * spaces only. Whatever it does not know stays visible as text; it never fails on any text.
+ * ({@code ***x***}), code spans, backslash escapes, links, GFM tables and GFM task list items ({@code - [ ] open},
+ * {@code - [x] done}, see <em>Task lists</em>). Tabs are not expanded: indentation counts spaces only. Whatever it does not know stays visible as text; it never fails on any text.
  *
  * <p>Links are inline links {@code [text](address)} and {@code [text](address "title")}, whose text may hold
  * emphasis and code, autolinks {@code <https://...>} (any scheme), and bare {@code http://} and {@code https://}
@@ -432,6 +432,24 @@ import java.util.function.Consumer;
  * whole column. A rectangle spans the shown columns in their shown order and the rows in their shown order. A sort
  * clears the table's selection. A click on a link in a cell follows the link and selects the cell.
  *
+ * <h2>Task lists</h2>
+ *
+ * <p>A list item that starts with a GFM task marker is a task and shows a check box instead of its bullet
+ * ({@code markdown-task-box}): open for {@code [ ]}, ticked for {@code [x]} and {@code [X]}. The marker counts only
+ * at the very start of the item's first paragraph, on the list marker's line, with exactly one space, {@code x} or
+ * {@code X} between the brackets, followed by a space, a tab or the end of the line; the item's text starts after it.
+ * Anything else stays text, as on GitHub: other characters between the brackets ({@code [/]}, {@code [-]}), a bracket
+ * followed by anything but white space ({@code [x](address)} is a link), an escaped bracket ({@code \[x]}), a marker
+ * later in the text or on a later line, and one outside a list item. An item with the marker alone ({@code - [ ]}) is an
+ * empty task, its check box alone. Tasks show in bullet lists at any depth, in loose lists and inside quotes.
+ *
+ * <p>The check box only shows the state: the reader cannot tick it, and the view never changes its source. It has no
+ * hover effect, no hand cursor and no keyboard focus, and a press on it starts a selection as a press beside the text
+ * does. It is drawn from the theme's check box colours, in place of the bullet and right-aligned against the item's
+ * text, its middle on the middle of the first line's lowercase letters, and scales with the zoom. A done item's text
+ * looks like any other text: the item's row carries {@code markdown-task-item}, and the pseudo-class {@code :checked}
+ * while done, for a stylesheet that strikes done items through or dims them.
+ *
  * <h2>Copying</h2>
  *
  * <p>A code block has a copy button in its top right corner, laid over the code so that it stays in place when the
@@ -495,7 +513,8 @@ import java.util.function.Consumer;
  * order, the shown columns in their shown order, cells joined by a tab (as <em>Copy with header</em> writes them);
  * blocks are separated by a line feed, a heading or a paragraph from its neighbours by a blank line (a tight list's
  * items are no paragraphs here); a list item starts with its marker ({@code - } for a bullet, the number and delimiter
- * such as {@code 3. } in an ordered list) and its further lines, like a nested list's items and the lines of code or a
+ * such as {@code 3. } in an ordered list, a task's followed by its task marker, {@code - [ ] } or {@code - [x] }, so
+ * the copy keeps the state) and its further lines, like a nested list's items and the lines of code or a
  * table inside it, are indented by two spaces per level; each line in a quote starts with {@code > }, a blank line
  * inside it with {@code >}. A block selected only in part gives its selected part, with its marker or prefix only if
  * the selection includes its first character; a selection within one code or source block gives its characters
@@ -719,7 +738,15 @@ import java.util.function.Consumer;
  *   <tr><td>{@code markdown-list-item}</td><td>an item row: a box of the item's blocks, indented by its left
  *       padding, which holds the marker</td></tr>
  *   <tr><td>{@code markdown-list-marker}</td><td>an item's marker, a {@code Label}: <code>&bull;</code> in a bullet
- *       list, the number and its delimiter ({@code 3.}, {@code 3)}) in an ordered list</td></tr>
+ *       list, the number and its delimiter ({@code 3.}, {@code 3)}) in an ordered list; a bullet task item has
+ *       none</td></tr>
+ *   <tr><td>{@code markdown-task-list}</td><td>beside {@code markdown-bullet-list}: a list with at least one task
+ *       item</td></tr>
+ *   <tr><td>{@code markdown-task-item}</td><td>beside {@code markdown-list-item}: a task item's row, with the
+ *       pseudo-class {@code :checked} while the task is done</td></tr>
+ *   <tr><td>{@code markdown-task-box}</td><td>a task's check box in place of the bullet, a {@code Region} drawn like
+ *       the theme's check box, with a region {@code mark} inside it for the tick; with the pseudo-class
+ *       {@code :checked} while the task is done</td></tr>
  *   <tr><td>{@code markdown-quote}</td><td>a block quote: a box of the quote's blocks, with a bar on its left</td></tr>
  *   <tr><td>{@code markdown-separator}</td><td>a thematic break, a horizontal {@code Separator}</td></tr>
  *   <tr><td>{@code markdown-code-block}</td><td>a fenced code block: a box with a {@code ScrollPane} of its own that
