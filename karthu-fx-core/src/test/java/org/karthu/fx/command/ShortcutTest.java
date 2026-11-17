@@ -50,6 +50,54 @@ class ShortcutTest {
     }
 
     @Test
+    @DisplayName("a punctuation key is the character it types, shown as the character: Ctrl++, Ctrl+-, Ctrl+Alt+#")
+    void characterDisplayText() {
+        assertEquals("Ctrl++", Shortcut.of('+', CTRL).getDisplayText());
+        assertEquals("Ctrl+-", Shortcut.of('-', CTRL).getDisplayText());
+        assertEquals("Ctrl+Alt+#", Shortcut.of('#', ALT, CTRL).getDisplayText());
+        assertEquals("Alt+.", Shortcut.of('.', ALT).toString());
+    }
+
+    @Test
+    @DisplayName("two character shortcuts are equal with the same character and modifiers; a key is another shortcut,"
+            + " also the key JavaFX names after the character")
+    void characterEquality() {
+        Shortcut plus = Shortcut.of('+', CTRL);
+
+        assertEquals(Shortcut.of('+', CTRL), plus);
+        assertEquals(Shortcut.of('+', CTRL).hashCode(), plus.hashCode());
+        assertEquals(Shortcut.of('#', ALT, CTRL), Shortcut.of('#', CTRL, ALT));
+        assertNotEquals(Shortcut.of('-', CTRL), plus);
+        assertNotEquals(Shortcut.of('+', CTRL, ALT), plus);
+        assertNotEquals(Shortcut.of('+'), plus);
+        assertNotEquals(Shortcut.of(KeyCode.PLUS, CTRL), plus);
+        assertNotEquals(Shortcut.of(KeyCode.ADD, CTRL), plus);
+        assertNotEquals(plus, Shortcut.of(KeyCode.PLUS, CTRL));
+    }
+
+    @Test
+    @DisplayName("a letter A to Z or a digit is a key, not a character; a space or an invisible character is no"
+            + " character either; Shift comes with the character; missing modifiers are refused")
+    void refusedCharacters() {
+        assertThrows(IllegalArgumentException.class, () -> Shortcut.of('s', CTRL));
+        assertThrows(IllegalArgumentException.class, () -> Shortcut.of('S', CTRL));
+        assertThrows(IllegalArgumentException.class, () -> Shortcut.of('0', CTRL));
+        assertThrows(IllegalArgumentException.class, () -> Shortcut.of('9'));
+        assertThrows(IllegalArgumentException.class, () -> Shortcut.of(' ', CTRL));
+        assertThrows(IllegalArgumentException.class, () -> Shortcut.of('\t', CTRL));
+        assertThrows(IllegalArgumentException.class, () -> Shortcut.of('\n'));
+        assertThrows(IllegalArgumentException.class, () -> Shortcut.of('\u00A0', CTRL));
+        assertThrows(IllegalArgumentException.class, () -> Shortcut.of('\u200B', CTRL));
+        assertThrows(IllegalArgumentException.class, () -> Shortcut.of('\uD83D', CTRL));
+        assertThrows(IllegalArgumentException.class, () -> Shortcut.of('+', CTRL, SHIFT));
+        assertThrows(NullPointerException.class, () -> Shortcut.of('+', (Shortcut.Modifier) null));
+        assertThrows(NullPointerException.class, () -> Shortcut.of('+', (Shortcut.Modifier[]) null));
+        // A character typed with AltGr, or one without a key of its own, is a character too.
+        assertEquals("Ctrl+@", Shortcut.of('@', CTRL).getDisplayText());
+        assertEquals("Ctrl+\u00FC", Shortcut.of('\u00FC', CTRL).getDisplayText());
+    }
+
+    @Test
     @DisplayName("a modifier key or an undefined key is no shortcut's key, and missing arguments are refused")
     void refusedKeys() {
         assertThrows(IllegalArgumentException.class, () -> Shortcut.of(KeyCode.CONTROL));

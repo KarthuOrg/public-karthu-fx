@@ -42,7 +42,12 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 - Commands and their keys, in the new package `org.karthu.fx.command`: an application creates a
   `CommandRegistry` for its window's scene and adds its groups and its commands, each `Command` with
   an id, a translatable name, a group, a default key and an action. A key is a `Shortcut`: a key
-  with Ctrl, Alt and Shift (*Ctrl+Shift+S*, *F5*). A command runs when its key is pressed anywhere
+  with Ctrl, Alt and Shift (*Ctrl+Shift+S*, *F5*), or a punctuation character with Ctrl and Alt
+  (*Ctrl++*, `Shortcut.of('+', CTRL)`), which runs on whichever key types the character on the
+  user's keyboard layout, with Shift or without, and on the numeric keypad's key for it: *Ctrl++*
+  runs on every plus key of a Swiss, German or US keyboard, so an application catches no variants
+  of its own. A digit key runs on the keypad's digit too (*Ctrl+0*). A command runs when its key
+  is pressed anywhere
   in the window, never while it is disabled, and a focused text field keeps its own editing keys
   (Ctrl+C, X, V, A, Z). A menu item or a button bound to a command with `bind` takes its action and
   its disabled state, and a menu item shows the command's key as its accelerator. The display text

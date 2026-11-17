@@ -1,29 +1,122 @@
 package org.karthu.fx.command;
 
+import javafx.scene.input.KeyCharacterCombination;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
 /**
- * One key combination of a {@link Command}: a key with the modifiers Ctrl, Alt and Shift held down, such as
- * <i>Ctrl+S</i>, <i>F5</i> or <i>Ctrl+Shift+Delete</i>. Immutable; two shortcuts are equal when they hold the same
- * key and the same modifiers.
+ * One key combination of a {@link Command}: a key or a typed character with the modifiers Ctrl, Alt and Shift held
+ * down, such as <i>Ctrl+S</i>, <i>F5</i>, <i>Ctrl+Shift+Delete</i> or <i>Ctrl++</i>. Immutable; two shortcuts are
+ * equal when they hold the same key, or the same character, and the same modifiers.
  *
- * <p>A key press is the shortcut when it is the shortcut's key with exactly its modifiers held down: <i>Ctrl+S</i> is
- * neither <i>S</i> nor <i>Ctrl+Shift+S</i>. Ctrl stands for the platform's shortcut key, which is Ctrl on Windows and
- * Linux.
+ * <p><b>Keys.</b> Letters, digits, function keys and named keys, such as the arrows, Home, Delete or the keys of the
+ * numeric keypad, are given by their key, with {@link #of(KeyCode, Modifier...)}. A key press is the shortcut when it
+ * is the shortcut's key with exactly its modifiers held down: <i>Ctrl+S</i> is neither <i>S</i> nor
+ * <i>Ctrl+Shift+S</i>. A digit of the main keyboard has one variant, the numeric keypad's digit with the same
+ * modifiers: <i>Ctrl+0</i> also runs on Ctrl and the keypad's 0. Letters and the other keys have none; a keypad key
+ * runs on the keypad's key alone.
+ *
+ * <p><b>Characters.</b> Punctuation is given by the character it types, with {@link #of(char, Modifier...)}, since
+ * the key that types it differs from keyboard layout to layout: {@code +} is a key of its own on a German keyboard,
+ * Shift plus {@code =} on a US one and Shift plus {@code 1} on a Swiss one. A key press is the shortcut when it has
+ * exactly the shortcut's Ctrl and Alt, Shift down or not, and is
+ * <ul>
+ *   <li>the main keyboard's key that types the character without Shift;</li>
+ *   <li>where the layout types the character with Shift, the key that types it, with Shift: <i>Ctrl++</i> runs on
+ *       Ctrl, Shift and {@code =} on a US keyboard, not on Ctrl and {@code =}, which types another character;</li>
+ *   <li>the numeric keypad's key that types the character, for {@code +}, {@code -}, {@code *} and {@code /}.</li>
+ * </ul>
+ * <p>So a command on <i>Ctrl++</i> runs on whichever plus key the user presses, and an application catches no
+ * variants of its own. Shift belongs to typing a character, so it is no modifier of one. A key JavaFX names after a
+ * character, such as {@link KeyCode#PLUS}, is a key like the others: it runs on that key alone, so give punctuation as
+ * a character.
+ *
+ * <p>Ctrl stands for the platform's shortcut key, which is Ctrl on Windows and Linux.
  *
  * @since 1.1.0-RC2
  */
 public final class Shortcut {
 
+    /**
+     * The key codes JavaFX names after a character: it gives a key of the main keyboard that types one of these
+     * characters without Shift that character's code, on every layout, wherever the key lies ({@code +} is a key of
+     * its own on a German keyboard and gets {@link KeyCode#PLUS} there).
+     */
+    private static final Map<Character, KeyCode> MAIN_KEYS = Map.ofEntries(
+            Map.entry('!', KeyCode.EXCLAMATION_MARK),
+            Map.entry('"', KeyCode.QUOTEDBL),
+            Map.entry('#', KeyCode.NUMBER_SIGN),
+            Map.entry('$', KeyCode.DOLLAR),
+            Map.entry('&', KeyCode.AMPERSAND),
+            Map.entry('\'', KeyCode.QUOTE),
+            Map.entry('(', KeyCode.LEFT_PARENTHESIS),
+            Map.entry(')', KeyCode.RIGHT_PARENTHESIS),
+            Map.entry('*', KeyCode.ASTERISK),
+            Map.entry('+', KeyCode.PLUS),
+            Map.entry(',', KeyCode.COMMA),
+            Map.entry('-', KeyCode.MINUS),
+            Map.entry('.', KeyCode.PERIOD),
+            Map.entry('/', KeyCode.SLASH),
+            Map.entry(':', KeyCode.COLON),
+            Map.entry(';', KeyCode.SEMICOLON),
+            Map.entry('<', KeyCode.LESS),
+            Map.entry('=', KeyCode.EQUALS),
+            Map.entry('>', KeyCode.GREATER),
+            Map.entry('@', KeyCode.AT),
+            Map.entry('[', KeyCode.OPEN_BRACKET),
+            Map.entry('\\', KeyCode.BACK_SLASH),
+            Map.entry(']', KeyCode.CLOSE_BRACKET),
+            Map.entry('^', KeyCode.CIRCUMFLEX),
+            Map.entry('_', KeyCode.UNDERSCORE),
+            Map.entry('`', KeyCode.BACK_QUOTE),
+            Map.entry('{', KeyCode.BRACELEFT),
+            Map.entry('}', KeyCode.BRACERIGHT),
+            Map.entry('\u00A1', KeyCode.INVERTED_EXCLAMATION_MARK),
+            Map.entry('\u20AC', KeyCode.EURO_SIGN));
+
+    /**
+     * The keys of the numeric keypad by the character they type, the same on every layout.
+     */
+    private static final Map<Character, KeyCode> KEYPAD_KEYS = Map.of(
+            '+', KeyCode.ADD,
+            '-', KeyCode.SUBTRACT,
+            '*', KeyCode.MULTIPLY,
+            '/', KeyCode.DIVIDE);
+
+    /**
+     * The numeric keypad's digits by the main keyboard's digit keys.
+     */
+    private static final Map<KeyCode, KeyCode> KEYPAD_DIGITS = Map.of(
+            KeyCode.DIGIT0, KeyCode.NUMPAD0,
+            KeyCode.DIGIT1, KeyCode.NUMPAD1,
+            KeyCode.DIGIT2, KeyCode.NUMPAD2,
+            KeyCode.DIGIT3, KeyCode.NUMPAD3,
+            KeyCode.DIGIT4, KeyCode.NUMPAD4,
+            KeyCode.DIGIT5, KeyCode.NUMPAD5,
+            KeyCode.DIGIT6, KeyCode.NUMPAD6,
+            KeyCode.DIGIT7, KeyCode.NUMPAD7,
+            KeyCode.DIGIT8, KeyCode.NUMPAD8,
+            KeyCode.DIGIT9, KeyCode.NUMPAD9);
+
+    /**
+     * The key; null when the shortcut is on a character.
+     */
     private final KeyCode key;
+
+    /**
+     * The character; null when the shortcut is on a key.
+     */
+    private final Character character;
 
     private final Set<Modifier> modifiers;
 
@@ -33,10 +126,18 @@ public final class Shortcut {
      */
     private final KeyCombination combination;
 
-    private Shortcut(KeyCode key, Set<Modifier> modifiers) {
+    /**
+     * The numeric keypad's digit with the same modifiers, when the key is a digit of the main keyboard; else null.
+     */
+    private final KeyCombination keypadDigit;
+
+    private Shortcut(KeyCode key, Character character, Set<Modifier> modifiers, KeyCombination combination,
+            KeyCombination keypadDigit) {
         this.key = key;
+        this.character = character;
         this.modifiers = modifiers;
-        this.combination = new KeyCodeCombination(key, javaFxModifiers(modifiers));
+        this.combination = combination;
+        this.keypadDigit = keypadDigit;
     }
 
     /**
@@ -57,17 +158,77 @@ public final class Shortcut {
         if (key == KeyCode.UNDEFINED || key.isModifierKey()) {
             throw new IllegalArgumentException("not a key a shortcut can be on: " + key);
         }
+        Set<Modifier> down = modifierSet(modifiers);
+        KeyCode keypadKey = KEYPAD_DIGITS.get(key);
+        KeyCombination keypadDigit = keypadKey == null ? null
+                : new KeyCodeCombination(keypadKey, javaFxModifiers(down));
+        return new Shortcut(key, null, down, new KeyCodeCombination(key, javaFxModifiers(down)), keypadDigit);
+    }
+
+    /**
+     * Returns the shortcut of a typed character with modifiers: a punctuation character, such as {@code +}, {@code -}
+     * or {@code #}, on whichever key the keyboard layout types it, see the class's description. The order of the
+     * modifiers does not matter, nor does a modifier given twice.
+     *
+     * @param character the character, such as {@code '+'}
+     * @param modifiers the modifiers held down with it, Ctrl or Alt or both; none for the character alone
+     * @return the shortcut
+     * @throws NullPointerException     when the modifiers or one of them is null
+     * @throws IllegalArgumentException when the character is a letter A to Z or a digit, which are keys, a space or
+     *                                  another character no key cap shows, such as a control character, or when Shift
+     *                                  is among the modifiers
+     * @since 1.1.0-RC2
+     */
+    public static Shortcut of(char character, Modifier... modifiers) {
+        Set<Modifier> down = modifierSet(modifiers);
+        if (isKeyOfItsOwn(character)) {
+            throw new IllegalArgumentException("a letter A to Z or a digit is a key, not a character: " + character);
+        }
+        if (!isVisible(character)) {
+            throw new IllegalArgumentException("not a character a shortcut can be on: U+"
+                    + Integer.toHexString(character).toUpperCase(Locale.ROOT));
+        }
+        if (down.contains(Modifier.SHIFT)) {
+            throw new IllegalArgumentException("Shift comes with the character, it is no modifier of it: "
+                    + character);
+        }
+        return new Shortcut(null, character, down, new CharacterCombination(character, javaFxModifiers(down)), null);
+    }
+
+    /**
+     * Whether a character is a letter A to Z or a digit: JavaFX gives each of them a key of its own on every layout.
+     */
+    private static boolean isKeyOfItsOwn(char character) {
+        return character >= 'a' && character <= 'z' || character >= 'A' && character <= 'Z'
+                || character >= '0' && character <= '9';
+    }
+
+    /**
+     * Whether a character is one the user sees on a key cap: not a space, a control or format character, nor half of
+     * a character outside the Basic Multilingual Plane, which no key types alone.
+     */
+    private static boolean isVisible(char character) {
+        return !Character.isWhitespace(character) && !Character.isSpaceChar(character)
+                && !Character.isISOControl(character) && !Character.isSurrogate(character)
+                && Character.getType(character) != Character.FORMAT;
+    }
+
+    /**
+     * The modifiers as an unmodifiable set; refuses null.
+     */
+    private static Set<Modifier> modifierSet(Modifier... modifiers) {
+        Objects.requireNonNull(modifiers, "modifiers");
         Set<Modifier> down = EnumSet.noneOf(Modifier.class);
         for (Modifier modifier : modifiers) {
             down.add(Objects.requireNonNull(modifier, "modifier"));
         }
-        return new Shortcut(key, Collections.unmodifiableSet(down));
+        return Collections.unmodifiableSet(down);
     }
 
     /**
      * Returns the shortcut as the user reads it, the same text a menu item shows for it as its accelerator: the
-     * modifiers in the order Ctrl, Alt, Shift, then the key's name, joined by {@code +}, such as <i>Ctrl+Shift+S</i>
-     * or <i>F5</i>.
+     * modifiers in the order Ctrl, Alt, Shift, then the key's name or the character, joined by {@code +}, such as
+     * <i>Ctrl+Shift+S</i>, <i>F5</i> or <i>Ctrl++</i>.
      *
      * @return the display text
      * @since 1.1.0-RC2
@@ -86,17 +247,18 @@ public final class Shortcut {
     }
 
     /**
-     * Whether a key press is this shortcut: its key with exactly its modifiers.
+     * Whether a key press is this shortcut: its key with exactly its modifiers, a digit's keypad digit too, or a key
+     * that types its character (see the class's description).
      *
      * @param event a key press
      * @return true when the press is this shortcut
      */
     boolean matches(KeyEvent event) {
-        return combination.match(event);
+        return combination.match(event) || keypadDigit != null && keypadDigit.match(event);
     }
 
     /**
-     * Whether another object is the same shortcut: the same key with the same modifiers.
+     * Whether another object is the same shortcut: the same key, or the same character, with the same modifiers.
      *
      * @param other the other object
      * @return true when it is the same shortcut
@@ -104,7 +266,8 @@ public final class Shortcut {
      */
     @Override
     public boolean equals(Object other) {
-        return other instanceof Shortcut shortcut && key == shortcut.key && modifiers.equals(shortcut.modifiers);
+        return other instanceof Shortcut shortcut && key == shortcut.key
+                && Objects.equals(character, shortcut.character) && modifiers.equals(shortcut.modifiers);
     }
 
     /**
@@ -115,7 +278,7 @@ public final class Shortcut {
      */
     @Override
     public int hashCode() {
-        return Objects.hash(key, modifiers);
+        return Objects.hash(key, character, modifiers);
     }
 
     /**
@@ -147,6 +310,100 @@ public final class Shortcut {
     }
 
     /**
+     * A shortcut on a character as JavaFX's combination: Ctrl and Alt exactly as given, Shift either way, and a key
+     * that types the character. JavaFX's own {@link KeyCharacterCombination} is not enough: it matches the key the
+     * layout types the character on whether the press holds the Shift the layout needs for it or not, so Ctrl plus
+     * {@code 1} on a Swiss keyboard, where {@code +} is Shift plus {@code 1}, would be Ctrl plus {@code +}; and it
+     * misses the keypad's key. It is the bound menu items' accelerator too, so that a press the registry leaves runs
+     * no command through a menu item either.
+     */
+    private static final class CharacterCombination extends KeyCombination {
+
+        private final String character;
+
+        /**
+         * The key code JavaFX gives a main keyboard's key that types the character without Shift, which it names
+         * after the character; null when it has none.
+         */
+        private final KeyCode mainKey;
+
+        /**
+         * The numeric keypad's key that types the character; null when it has none.
+         */
+        private final KeyCode keypadKey;
+
+        /**
+         * The key the layout types the character on, with Shift down. JavaFX finds the key for the layout but does
+         * not say whether the layout needs Shift or AltGr for it, so a character typed with AltGr counts on its key
+         * with Shift as well.
+         */
+        private final KeyCharacterCombination shifted;
+
+        /**
+         * Creates the combination of a character with JavaFX's modifiers for the shortcut's, Shift not among them.
+         */
+        CharacterCombination(char character, KeyCombination.Modifier[] modifiers) {
+            super(with(modifiers, KeyCombination.SHIFT_ANY));
+            this.character = String.valueOf(character);
+            this.mainKey = MAIN_KEYS.get(character);
+            this.keypadKey = KEYPAD_KEYS.get(character);
+            this.shifted = new KeyCharacterCombination(this.character, with(modifiers, KeyCombination.SHIFT_DOWN));
+        }
+
+        /**
+         * Whether a key press types the character with the modifiers: the key that types it without Shift, by its
+         * code or by the press's text, or the keypad's key, Shift down or not; or the key the layout types it on with
+         * Shift, Shift down.
+         */
+        @Override
+        public boolean match(KeyEvent event) {
+            if (!super.match(event)) {
+                return false;
+            }
+            KeyCode code = event.getCode();
+            return code == mainKey || code == keypadKey || character.equals(event.getText()) || shifted.match(event);
+        }
+
+        /** The modifiers, then the character: <i>Ctrl++</i>. */
+        @Override
+        public String getDisplayText() {
+            return super.getDisplayText() + character;
+        }
+
+        /** The modifiers, then the character in quotes, as JavaFX names a character's combination. */
+        @Override
+        public String getName() {
+            return super.getName() + "+'" + character + "'";
+        }
+
+        /**
+         * Equal with the same character and modifiers: a scene keeps its accelerators in a map, so the accelerators
+         * of two characters must be two keys.
+         */
+        @Override
+        public boolean equals(Object other) {
+            return other instanceof CharacterCombination combination && character.equals(combination.character)
+                    && super.equals(other);
+        }
+
+        /** A hash code that agrees with {@link #equals(Object)}. */
+        @Override
+        public int hashCode() {
+            return 31 * super.hashCode() + character.hashCode();
+        }
+
+        /**
+         * The modifiers and one more.
+         */
+        private static KeyCombination.Modifier[] with(KeyCombination.Modifier[] modifiers,
+                KeyCombination.Modifier added) {
+            KeyCombination.Modifier[] with = Arrays.copyOf(modifiers, modifiers.length + 1);
+            with[modifiers.length] = added;
+            return with;
+        }
+    }
+
+    /**
      * A modifier key held down with a shortcut's key.
      *
      * @since 1.1.0-RC2
@@ -168,7 +425,8 @@ public final class Shortcut {
         ALT,
 
         /**
-         * The Shift key.
+         * The Shift key. A modifier of a key only: a character's shortcut runs with Shift or without, as the
+         * keyboard layout types the character.
          *
          * @since 1.1.0-RC2
          */
