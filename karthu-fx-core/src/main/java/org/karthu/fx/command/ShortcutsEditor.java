@@ -153,6 +153,8 @@ public final class ShortcutsEditor extends VBox {
     private final StringProperty searchPromptText =
             new SimpleStringProperty(this, "searchPromptText", "Filter by command or key");
 
+    private final StringProperty searchClearText = new SimpleStringProperty(this, "searchClearText", "Clear");
+
     private final StringProperty allFilterText = new SimpleStringProperty(this, "allFilterText", "All");
 
     private final StringProperty modifiedFilterText =
@@ -332,6 +334,7 @@ public final class ShortcutsEditor extends VBox {
     private HBox bar() {
         search.getStyleClass().add("shortcuts-search");
         search.promptTextProperty().bind(searchPromptText);
+        search.clearTextProperty().bind(searchClearText);
         search.textProperty().addListener((observable, oldText, newText) -> searchChanged(newText));
         HBox.setHgrow(search, Priority.ALWAYS);
 
@@ -912,6 +915,36 @@ public final class ShortcutsEditor extends VBox {
      */
     public void setSearchPromptText(String text) {
         searchPromptText.set(text);
+    }
+
+    /**
+     * The tooltip and accessible text of the search field's &times;, which empties the field (default <i>Clear</i>).
+     *
+     * @return the search clear text property
+     * @since 1.1.0-RC2
+     */
+    public StringProperty searchClearTextProperty() {
+        return searchClearText;
+    }
+
+    /**
+     * Returns the tooltip of the search field's &times;.
+     *
+     * @return the search clear text
+     * @since 1.1.0-RC2
+     */
+    public String getSearchClearText() {
+        return searchClearText.get();
+    }
+
+    /**
+     * Sets the tooltip of the search field's &times;.
+     *
+     * @param text the search clear text
+     * @since 1.1.0-RC2
+     */
+    public void setSearchClearText(String text) {
+        searchClearText.set(text);
     }
 
     /**

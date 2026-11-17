@@ -290,6 +290,24 @@ class ShortcutsEditorTest {
     }
 
     @Test
+    @DisplayName("the search field's clear button names itself in its tooltip and accessible text, which follow their"
+            + " property")
+    void searchClearText() {
+        ShortcutsEditor editor = shown(new ShortcutsEditor(new App().registry));
+        Button clear = (Button) editor.lookup(".shortcuts-search .form-search-clear");
+
+        assertEquals("Clear", editor.getSearchClearText());
+        assertEquals("Clear", clear.getTooltip().getText());
+        assertEquals("Clear", clear.getAccessibleText());
+
+        editor.setSearchClearText("Leeren");
+
+        assertEquals("Leeren", editor.searchClearTextProperty().get());
+        assertEquals("Leeren", clear.getTooltip().getText());
+        assertEquals("Leeren", clear.getAccessibleText());
+    }
+
+    @Test
     @DisplayName("Not assigned follows its property")
     void notAssignedText() {
         ShortcutsEditor editor = shown(new ShortcutsEditor(new App().registry));
