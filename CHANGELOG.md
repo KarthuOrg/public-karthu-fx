@@ -39,6 +39,15 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   *Done*, translatable with `taskOpenTextProperty()` and `taskDoneTextProperty()`. Other forms such
   as `[/]` stay text, as on GitHub. Style classes `markdown-task-list`, `markdown-task-item` and
   `markdown-task-box`, with `:checked` while a task is done.
+- Commands and their keys, in the new package `org.karthu.fx.command`: an application creates a
+  `CommandRegistry` for its window's scene and adds its groups and its commands, each `Command` with
+  an id, a translatable name, a group, a default key and an action. A key is a `Shortcut`: a key
+  with Ctrl, Alt and Shift (*Ctrl+Shift+S*, *F5*). A command runs when its key is pressed anywhere
+  in the window, never while it is disabled, and a focused text field keeps its own editing keys
+  (Ctrl+C, X, V, A, Z). A menu item or a button bound to a command with `bind` takes its action and
+  its disabled state, and a menu item shows the command's key as its accelerator. The display text
+  of a command's key is a property (*Ctrl+S*, empty without a key), so tooltips and prompts that
+  name the key are built from it.
 
 ### Fixed
 

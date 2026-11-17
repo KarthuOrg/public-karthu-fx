@@ -17,7 +17,10 @@
  * {@link org.karthu.fx.form.CronInput} with its {@link org.karthu.fx.form.CronFormat}), the row of a form
  * ({@link org.karthu.fx.form.FormField}) and, in the same shell, a search field
  * ({@link org.karthu.fx.form.SearchInput}) and one with a popup of suggestions
- * ({@link org.karthu.fx.form.SuggestionInput}).
+ * ({@link org.karthu.fx.form.SuggestionInput}), and commands with their keys
+ * ({@link org.karthu.fx.command.CommandRegistry}, {@link org.karthu.fx.command.Command},
+ * {@link org.karthu.fx.command.Shortcut}), which run when their keys are pressed in a window and drive the menu items
+ * and buttons bound to them.
  *
  * <p>The module requires only {@code slf4j-api} for logging; the consuming application provides
  * the binding.
@@ -41,6 +44,7 @@ module org.karthu.fx {
     exports org.karthu.fx.components;
     exports org.karthu.fx.dialog;
     exports org.karthu.fx.settings;
+    exports org.karthu.fx.command;
     // The Markdown view. Its parser and document model (org.karthu.fx.markdown.parser) stay internal, so the parser
     // can be replaced without an API change, and so do the built-in lexers of its coloured code blocks
     // (org.karthu.fx.markdown.lexer): an application reaches them only through the view.
