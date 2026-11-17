@@ -37,7 +37,7 @@ final class ShortcutRecorder extends HBox {
      * layout types with Shift come first ({@code /} before {@code |} on the Swiss {@code 7}, {@code *} before
      * {@code #} on the Swiss {@code 3}), the ones it types with AltGr last.
      */
-    private static final String CHARACTERS = "!\"$%&'()*+,-./:;<=>?^_`°£§@#|~{}[]\\€";
+    private static final String CHARACTERS = "!\"$%&'()*+,-./:;<=>?^_`\u00B0\u00A3\u00A7@#|~{}[]\\\u20AC";
 
     private final ShortcutsEditor editor;
 

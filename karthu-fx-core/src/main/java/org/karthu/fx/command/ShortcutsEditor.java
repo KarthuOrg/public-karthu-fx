@@ -133,7 +133,7 @@ public final class ShortcutsEditor extends VBox {
     private final StringProperty notAssignedText =
             new SimpleStringProperty(this, "notAssignedText", "Not assigned");
 
-    private final StringProperty pressKeysText = new SimpleStringProperty(this, "pressKeysText", "Press keys…");
+    private final StringProperty pressKeysText = new SimpleStringProperty(this, "pressKeysText", "Press keys\u2026");
 
     private final StringProperty escToCancelText =
             new SimpleStringProperty(this, "escToCancelText", "Esc to cancel");
@@ -351,7 +351,7 @@ public final class ShortcutsEditor extends VBox {
     }
 
     private static Label separator() {
-        Label separator = new Label(" · ");
+        Label separator = new Label(" \u00B7 ");
         separator.getStyleClass().add("shortcuts-count-separator");
         separator.setMinWidth(Region.USE_PREF_SIZE);
         return separator;

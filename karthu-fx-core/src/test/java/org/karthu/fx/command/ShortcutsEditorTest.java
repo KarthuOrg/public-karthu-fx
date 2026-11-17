@@ -59,7 +59,7 @@ import static org.karthu.fx.command.ShortcutsEditorTestSupport.text;
  */
 class ShortcutsEditorTest {
 
-    private static final String PRESS_KEYS = "Press keys… Esc to cancel";
+    private static final String PRESS_KEYS = "Press keys\u2026 Esc to cancel";
 
     @BeforeAll
     static void initToolkit() throws InterruptedException {
@@ -111,10 +111,10 @@ class ShortcutsEditorTest {
         assertEquals(title.getMinX(), keys.getMinX(), 0.5, "the title stands over the key caps");
 
         editor.setCommandColumnText("Befehl");
-        editor.setShortcutColumnText("Tastenkürzel");
+        editor.setShortcutColumnText("Tastenk\u00FCrzel");
 
         assertEquals("BEFEHL", command.getText());
-        assertEquals("TASTENKÜRZEL", shortcut.getText());
+        assertEquals("TASTENK\u00DCRZEL", shortcut.getText());
     }
 
     @Test
@@ -217,14 +217,14 @@ class ShortcutsEditorTest {
         assertEquals("Remove shortcut", button(save, "shortcuts-remove").getTooltip().getText());
         assertEquals("Reset to default", button(save, "shortcuts-reset").getTooltip().getText());
 
-        editor.setEditTooltipText("Tastenkürzel ändern");
-        editor.setRemoveTooltipText("Tastenkürzel entfernen");
-        editor.setResetTooltipText("Zurücksetzen");
+        editor.setEditTooltipText("Tastenk\u00FCrzel \u00E4ndern");
+        editor.setRemoveTooltipText("Tastenk\u00FCrzel entfernen");
+        editor.setResetTooltipText("Zur\u00FCcksetzen");
 
-        assertEquals("Tastenkürzel ändern", button(save, "shortcuts-edit").getTooltip().getText());
-        assertEquals("Tastenkürzel ändern", button(save, "shortcuts-edit").getAccessibleText());
-        assertEquals("Tastenkürzel entfernen", button(save, "shortcuts-remove").getAccessibleText());
-        assertEquals("Zurücksetzen", button(save, "shortcuts-reset").getAccessibleText());
+        assertEquals("Tastenk\u00FCrzel \u00E4ndern", button(save, "shortcuts-edit").getTooltip().getText());
+        assertEquals("Tastenk\u00FCrzel \u00E4ndern", button(save, "shortcuts-edit").getAccessibleText());
+        assertEquals("Tastenk\u00FCrzel entfernen", button(save, "shortcuts-remove").getAccessibleText());
+        assertEquals("Zur\u00FCcksetzen", button(save, "shortcuts-reset").getAccessibleText());
     }
 
     @Test
@@ -265,15 +265,15 @@ class ShortcutsEditorTest {
 
         editor.setSearchPromptText("Filtern");
         editor.setAllFilterText("Alle");
-        editor.setModifiedFilterText("Geändert");
+        editor.setModifiedFilterText("Ge\u00E4ndert");
         editor.setConflictsFilterText("Konflikte");
-        editor.setResetAllText("Alle zurücksetzen");
+        editor.setResetAllText("Alle zur\u00FCcksetzen");
 
         assertEquals("Filtern", search.getPromptText());
         assertEquals("Alle", all.getText());
-        assertEquals("Geändert", modified.getText());
+        assertEquals("Ge\u00E4ndert", modified.getText());
         assertEquals("Konflikte", conflicts.getText());
-        assertEquals("Alle zurücksetzen", resetAll.getText());
+        assertEquals("Alle zur\u00FCcksetzen", resetAll.getText());
     }
 
     @Test
@@ -396,13 +396,13 @@ class ShortcutsEditorTest {
     @DisplayName("the field's texts follow their properties")
     void recordingTexts() {
         ShortcutsEditor editor = shown(new ShortcutsEditor(new App().registry));
-        editor.setPressKeysText("Tasten drücken…");
+        editor.setPressKeysText("Tasten dr\u00FCcken\u2026");
         editor.setEscToCancelText("Esc bricht ab");
         editor.setNeedsCtrlOrAltFormat("{0} braucht Strg oder Alt");
         select(editor, "Save");
         press(editor, keyPressed(KeyCode.ENTER, "\r", false, false, false));
 
-        assertShortcutColumn(editor, "Save", "Tasten drücken… Esc bricht ab");
+        assertShortcutColumn(editor, "Save", "Tasten dr\u00FCcken\u2026 Esc bricht ab");
 
         press(editor, keyPressed(KeyCode.Q, "q", false, false, false));
 
@@ -569,12 +569,12 @@ class ShortcutsEditorTest {
     void counterCounts() {
         ShortcutsEditor editor = shown(new ShortcutsEditor(new App().registry));
 
-        assertEquals("9 commands · 0 modified · 0 conflicts · 1 not assigned", counter(editor));
+        assertEquals("9 commands \u00B7 0 modified \u00B7 0 conflicts \u00B7 1 not assigned", counter(editor));
 
         button(select(editor, "Save"), "shortcuts-remove").fire();
         record(editor, "Bind to variable", keyPressed(KeyCode.B, "b", false, true, false));
 
-        assertEquals("9 commands · 2 modified · 0 conflicts · 1 not assigned", counter(editor));
+        assertEquals("9 commands \u00B7 2 modified \u00B7 0 conflicts \u00B7 1 not assigned", counter(editor));
     }
 
     @Test
@@ -583,14 +583,14 @@ class ShortcutsEditorTest {
         App app = new App();
         ShortcutsEditor editor = shown(new ShortcutsEditor(app.registry));
         button(select(editor, "Save"), "shortcuts-remove").fire();
-        assertEquals("9 commands · 1 modified · 0 conflicts · 2 not assigned", counter(editor));
+        assertEquals("9 commands \u00B7 1 modified \u00B7 0 conflicts \u00B7 2 not assigned", counter(editor));
 
         editor.setCommandCountFormat("{0} Befehle");
-        editor.setModifiedCountOneFormat("{0} geändert");
+        editor.setModifiedCountOneFormat("{0} ge\u00E4ndert");
         editor.setConflictCountFormat("{0} Konflikte");
         editor.setNotAssignedCountFormat("{0} ohne Taste");
 
-        assertEquals("9 Befehle · 1 geändert · 0 Konflikte · 2 ohne Taste", counter(editor));
+        assertEquals("9 Befehle \u00B7 1 ge\u00E4ndert \u00B7 0 Konflikte \u00B7 2 ohne Taste", counter(editor));
 
         CommandRegistry small = new CommandRegistry(themedScene(new StackPane()));
         small.addCommand(small.addGroup("file", "File"), "file.save", "Save", null, () -> { });
@@ -599,7 +599,7 @@ class ShortcutsEditorTest {
         one.setNotAssignedCountOneFormat("{0} ohne Taste");
         one.setConflictCountFormat(null);
 
-        assertEquals("1 Befehl · 0 modified ·  · 1 ohne Taste", counter(one));
+        assertEquals("1 Befehl \u00B7 0 modified \u00B7  \u00B7 1 ohne Taste", counter(one));
     }
 
     // --- The working copy ------------------------------------------------------------------------------
@@ -682,7 +682,7 @@ class ShortcutsEditorTest {
 
         assertEquals("  Run *: [F6]", line(row(editor, "Run")));
         assertFalse(editor.hasChanges());
-        assertEquals("9 commands · 1 modified · 0 conflicts · 1 not assigned", counter(editor));
+        assertEquals("9 commands \u00B7 1 modified \u00B7 0 conflicts \u00B7 1 not assigned", counter(editor));
     }
 
     @Test

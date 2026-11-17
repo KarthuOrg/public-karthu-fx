@@ -64,9 +64,9 @@ class ShortcutsDialogTest {
             assertEquals(List.of(icon), window.getIcons());
             assertFalse(window.isShowing());
 
-            dialog.setTitle("Tastenkürzel");
-            assertEquals("Tastenkürzel", window.getTitle());
-            assertEquals("Tastenkürzel", dialog.getTitle());
+            dialog.setTitle("Tastenk\u00FCrzel");
+            assertEquals("Tastenk\u00FCrzel", window.getTitle());
+            assertEquals("Tastenk\u00FCrzel", dialog.getTitle());
         });
     }
 
