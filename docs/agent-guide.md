@@ -98,6 +98,9 @@ Keep these; most mistakes come from breaking one of them.
     (*Open (Ctrl+O)*), and leaves the key out while the text is empty, since the user may remove
     or change any key. Punctuation is a character, `Shortcut.of('+', Shortcut.Modifier.CTRL)`,
     never `KeyCode.PLUS`: the character runs on whichever key types it on the user's keyboard.
+    A key on Ctrl+Alt, such as Ctrl+Alt+S, never runs while a text input has the focus, a default
+    or one the user recorded, since AltGr arrives as Ctrl+Alt (function and navigation keys are
+    the exception): a command that must run while the user types needs a key without Alt.
 
 ## 3. Which component for what
 

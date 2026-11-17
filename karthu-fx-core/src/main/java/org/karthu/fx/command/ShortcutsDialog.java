@@ -26,8 +26,9 @@ import java.util.Objects;
  * <p><i>Apply</i> hands the user's changes to the registry and closes the dialog. It is disabled while a key is on two
  * commands of the same context ({@link ShortcutsEditor#hasConflictsProperty()}), so that the user resolves every
  * conflict first. <i>Cancel</i>, Esc while no key is being recorded, and closing the window drop the changes. Every
- * showing starts from the registry's keys with every group open. The window opens at about 760 by 660 pixels, room
- * for about 30 commands without scrolling, is resizable, and remembers nothing.
+ * showing starts from the registry's keys with every group open. The window opens at about 760 by 660 pixels, where
+ * the list shows about 18 commands in four open groups beside two folded ones; with more, the list scrolls, and
+ * folding a group makes room. The window is resizable and remembers nothing.
  *
  * <p>The window's title and the buttons' texts are properties of the dialog with English defaults; the editor's texts
  * are the editor's ({@link #getEditor()}). The dialog's content carries the style class {@code shortcuts-dialog}, its

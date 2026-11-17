@@ -286,8 +286,10 @@ the user changes in a dialog. No new dependency.
   is pressed anywhere in the window, once, and never while it is disabled (`disabledProperty()`):
   a disabled command leaves its key to the next command outward. A control that consumes a key
   keeps it, so a focused text field keeps its editing keys (Ctrl+C, X, V, A, Z), and while a text
-  input has the focus no command runs on Ctrl+Alt with a key that types a character, so typing
-  `@` or `{` with AltGr never runs one.
+  input has the focus no command runs on Ctrl+Alt with a key that may type a character (any key
+  but a function or navigation key), so typing `@` or `{` with AltGr never runs one. That holds
+  for a default and for a key the user recorded alike: a command on *Ctrl+Alt+S* runs everywhere
+  but in a text input, so a command that must run while the user types needs a key without Alt.
 - **Bound controls.** `bind(menuItem)` gives a menu item the command's action, its disabled state
   and its current key as the accelerator, following every change of the key; `bind(button)` gives
   a button, a toggle button or a hyperlink the action and the disabled state. The display text of
@@ -326,7 +328,8 @@ the user changes in a dialog. No new dependency.
   then JavaFX's name of the key or the character (`Ctrl+Shift+S`, `F5`, `Ctrl+Page Up`, `Ctrl++`).
 - **The dialog.** `ShortcutsDialog` (`new ShortcutsDialog(owner, registry).showAndWait()`) is a
   modal window with the normal title bar, the theme and the owner's icons, centred on its owner,
-  room for about 30 commands before the list scrolls. On top a search field, the filters *All*,
+  room for about 18 commands in four open groups beside two folded ones; with more, the list
+  scrolls, and folding a group makes room. On top a search field, the filters *All*,
   *Modified* and *Conflicts* and *Reset all*; then the columns *Command* and *Shortcut*; then
   every command in its group, the groups with their counts and folding with a click, each command
   with its key as key caps or *Not assigned*, and a small mark with the part's name where its key

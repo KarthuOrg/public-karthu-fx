@@ -45,7 +45,9 @@ import java.util.Set;
  * Windows: while a text input has the focus, no command runs on Ctrl+Alt (with or without Shift) with a key that may
  * type a character, so typing {@code @}, <code>{</code> or {@code |} on a German or Swiss keyboard never runs a
  * command. Function keys and the navigation keys, such as the arrows or Home, type no character: their commands on
- * Ctrl+Alt run there too.
+ * Ctrl+Alt run there too. So a command on Ctrl+Alt (with or without Shift) and any other key, such as
+ * <i>Ctrl+Alt+S</i>, never runs while a text input has the focus, whether the key is the application's default or one
+ * the user recorded: give a command that must run while the user types a key without Alt.
  *
  * <p>A bound menu item shows its command's key as its accelerator, but only the registry runs a command on its key:
  * once, and only where the key holds.

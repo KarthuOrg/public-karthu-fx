@@ -334,7 +334,7 @@ public final class Command {
     /** Refuses to bind a control to a command that has no action to run. */
     private void checkAction() {
         if (action == null) {
-            throw new IllegalStateException("the fixed command " + id + " has no action a control could run");
+            throw new IllegalStateException("a control cannot be bound to the command " + id + ": it has no action");
         }
     }
 }

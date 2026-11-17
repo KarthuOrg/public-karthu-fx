@@ -16,7 +16,10 @@ import java.util.Map;
  *
  * <p>Keys clash when they are equal ({@link Shortcut#equals(Object)}). A key and a character can run on the same press
  * on some keyboard layouts without being equal, such as Ctrl, Shift and the {@code 1} key and <i>Ctrl++</i> on a Swiss
- * keyboard; which presses those are depends on the layout, so such keys are not found.
+ * keyboard. So can two characters, since a character runs with Shift or without: <i>Ctrl+=</i> and <i>Ctrl++</i> both
+ * run on Ctrl, Shift and the {@code =} key of a US keyboard, <i>Ctrl++</i> and <i>Ctrl+*</i> on Ctrl, Shift and the
+ * {@code +} key of a German one, where the command added first takes the press. Which presses those are depends on
+ * the layout, so such keys are not found.
  */
 final class ShortcutClashes {
 

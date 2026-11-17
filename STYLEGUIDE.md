@@ -463,7 +463,8 @@ the CheckBox keep the theme's own rules.
 the user's view of a window's commands and their keys: a bar (search field, the segmented filters
 *All / Modified / Conflicts*, *Reset all*), a header row naming the columns in capitals, the list of
 group lines and command rows, and a footer with the counter and, in the dialog, *Cancel* and *Apply*.
-Rows are 22px high (`-fx-fixed-cell-size`), room for about 30 commands in the dialog's 760 × 660.
+Rows are 22px high (`-fx-fixed-cell-size`): the dialog's 760 × 660 shows about 18 commands in four
+open groups beside two folded ones, and the list scrolls beyond.
 The command column takes 55 % of the list's width in the header and in every row, and both indent
 the names by 26px, so the titles stand over the columns. Rules in `base.css` under *Shortcuts
 editor*, colours through the theme's tokens only, no token of its own: `-fx-surface-color` (the
