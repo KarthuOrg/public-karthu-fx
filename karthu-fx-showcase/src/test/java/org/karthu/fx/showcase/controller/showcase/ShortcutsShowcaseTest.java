@@ -16,6 +16,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -64,6 +65,26 @@ class ShortcutsShowcaseTest {
         CountDownLatch started = new CountDownLatch(1);
         Platform.runLater(started::countDown);
         assertTrue(started.await(10, TimeUnit.SECONDS), "the toolkit's thread did not run");
+    }
+
+    @Test
+    @DisplayName("in a window lower than the page, the document and the texts keep their room")
+    void exampleKeepsItsRoomInALowWindow() throws IOException {
+        Parent root = layOut();
+        // The showcase fits a page to the height of its window, down to the page's minimum height.
+        double width = 1400;
+        double height = Math.max(root.minHeight(width), 700);
+        root.resize(width, height);
+        root.layout();
+
+        Region document = (Region) root.lookup("#document");
+        assertTrue(document.getHeight() >= 320, "the document's height: " + document.getHeight());
+        for (Node node : root.lookupAll(".showcase-page-description")) {
+            Label text = (Label) node;
+            double needed = text.prefHeight(text.getWidth());
+            assertTrue(text.getHeight() >= needed - 0.5,
+                    "a text squeezed to " + text.getHeight() + " of " + needed + ": " + text.getText());
+        }
     }
 
     @Test

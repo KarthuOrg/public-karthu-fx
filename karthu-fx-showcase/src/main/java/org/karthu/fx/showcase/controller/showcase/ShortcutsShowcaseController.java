@@ -126,7 +126,9 @@ public class ShortcutsShowcaseController {
         document.setId("document");
         // The window's View commands zoom the document: the view's own zoom bar and keys stay off.
         document.setZoomBarVisible(false);
-        document.setPrefHeight(200);
+        // The showcase fits a page to its window's height: without a minimum the document would shrink to a line.
+        document.setPrefHeight(320);
+        document.setMinHeight(Region.USE_PREF_SIZE);
         TextField note = new TextField();
         note.setId("noteField");
         HBox.setHgrow(note, Priority.ALWAYS);
@@ -334,6 +336,7 @@ public class ShortcutsShowcaseController {
     private void fillEditor() {
         ShortcutsEditor editor = new ShortcutsEditor(registry);
         editor.setPrefHeight(460);
+        editor.setMinHeight(Region.USE_PREF_SIZE);
         Button discard = new Button("Discard");
         discard.disableProperty().bind(editor.hasChangesProperty().not());
         discard.setOnAction(event -> editor.discard());
