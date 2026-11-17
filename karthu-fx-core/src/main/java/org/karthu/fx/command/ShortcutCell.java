@@ -220,8 +220,9 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
         if (!getStyleClass().contains(GROUP_ROW_CLASS)) {
             getStyleClass().add(GROUP_ROW_CLASS);
         }
-        setPseudoClasses(false, false, false, false, !group.isExpanded(), false, false);
-        arrow.setIconCode(group.isExpanded() ? BootstrapIcons.CHEVRON_DOWN : BootstrapIcons.CHEVRON_RIGHT);
+        boolean open = editor.isOpen(group);
+        setPseudoClasses(false, false, false, false, !open, false, false);
+        arrow.setIconCode(open ? BootstrapIcons.CHEVRON_DOWN : BootstrapIcons.CHEVRON_RIGHT);
         groupName.setText(group.getGroup().getName());
         groupCount.setText(Integer.toString(editor.shownCount(group)));
         if (getGraphic() != groupLine) {

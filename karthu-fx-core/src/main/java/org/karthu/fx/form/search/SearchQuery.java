@@ -28,8 +28,9 @@ import java.util.function.Predicate;
  *
  * <p>A query is immutable: build one with {@link #of} for each search text, and use it for every entry.
  *
- * <p>This package is not exported: the rule is pinned down by its own tests, and the search and suggestion inputs
- * are its only callers.
+ * <p>This package is not exported: the rule is pinned down by its own tests. Its callers are the search and suggestion
+ * inputs and the shortcut editor's search ({@code org.karthu.fx.command.ShortcutsEditor}), which matches a command's
+ * texts by it, so that both ignore case and accents alike.
  */
 public final class SearchQuery {
 

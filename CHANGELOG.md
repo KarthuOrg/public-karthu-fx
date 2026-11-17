@@ -85,12 +85,16 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   defaults of the application show as a conflict as soon as the dialog opens. A key of a part of the
   window that a command of the window, or of a part around it, holds too is no conflict: the row
   says which command it overrides there. A counter shows the commands, the modified ones, the
-  conflicts and those without a key. *Apply* hands the changes to the registry, which reports them
-  once, *Cancel* and closing the window drop them. The same content is a node of its own,
-  `ShortcutsEditor`, with `apply()`, `discard()`, `hasChangesProperty()` and
-  `hasConflictsProperty()`, for a settings page in the application's own window. Every text of both
-  is a property with an English default; the style classes and pseudo-classes are listed in
-  STYLEGUIDE.md.
+  conflicts and those without a key. A search field finds a command by its name, its group, its
+  context or its key (*ctrl+0* finds both commands of a conflict on Ctrl+0), ignoring case and
+  accents as `SearchInput` does, and opens the groups with matches while it searches. The filters
+  *All*, *Modified* and *Conflicts* show every command, those whose keys differ from their defaults
+  (also keys set in an earlier session) or those in a conflict, and *Reset all* puts every key back
+  to its default. *Apply* hands the changes to the registry, which reports them once, *Cancel* and
+  closing the window drop them. The same content is a node of its own, `ShortcutsEditor`, with
+  `apply()`, `discard()`, `hasChangesProperty()` and `hasConflictsProperty()`, for a settings page
+  in the application's own window. Every text of both is a property with an English default; the
+  style classes and pseudo-classes are listed in STYLEGUIDE.md.
 
 ### Fixed
 
