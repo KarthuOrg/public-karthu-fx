@@ -121,7 +121,7 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
         fix.setOnAction(event -> {
             // A link that was followed shows as visited: this one stays a fix, whichever line the cell shows next.
             fix.setVisited(false);
-            if (getItem() instanceof ShortcutEntry entry) {
+            if (getItem() instanceof CommandRow entry) {
                 editor.removeFromOthers(entry);
             }
         });
@@ -133,17 +133,17 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
         setUpButton(reset, "shortcuts-reset", BootstrapIcons.ARROW_COUNTERCLOCKWISE,
                 editor.resetTooltipTextProperty());
         edit.setOnAction(event -> {
-            if (getItem() instanceof ShortcutEntry entry) {
+            if (getItem() instanceof CommandRow entry) {
                 editor.startRecording(entry);
             }
         });
         remove.setOnAction(event -> {
-            if (getItem() instanceof ShortcutEntry entry) {
+            if (getItem() instanceof CommandRow entry) {
                 editor.remove(entry);
             }
         });
         reset.setOnAction(event -> {
-            if (getItem() instanceof ShortcutEntry entry) {
+            if (getItem() instanceof CommandRow entry) {
                 editor.reset(entry);
             }
         });
@@ -191,8 +191,8 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
     private void draw() {
         ShortcutListItem item = isEmpty() ? null : getItem();
         switch (item) {
-            case ShortcutEntry entry -> drawRow(entry);
-            case ShortcutGroupEntry group -> drawGroup(group);
+            case CommandRow entry -> drawRow(entry);
+            case GroupLine group -> drawGroup(group);
             case null -> drawEmpty();
         }
     }
@@ -203,7 +203,7 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
         setGraphic(null);
     }
 
-    private void drawGroup(ShortcutGroupEntry group) {
+    private void drawGroup(GroupLine group) {
         getStyleClass().remove(ROW_CLASS);
         if (!getStyleClass().contains(GROUP_ROW_CLASS)) {
             getStyleClass().add(GROUP_ROW_CLASS);
@@ -218,7 +218,7 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
         }
     }
 
-    private void drawRow(ShortcutEntry entry) {
+    private void drawRow(CommandRow entry) {
         getStyleClass().remove(GROUP_ROW_CLASS);
         if (!getStyleClass().contains(ROW_CLASS)) {
             getStyleClass().add(ROW_CLASS);
@@ -290,12 +290,12 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
      * Draws the hint after the key caps: the other commands of a conflict, with the fix while one of them may lose
      * the key; else the commands the row's key overrides; nothing while the row's key clashes with none.
      */
-    private void drawHint(ShortcutEntry entry) {
+    private void drawHint(CommandRow entry) {
         String text = null;
         boolean fixable = false;
         if (entry.isInConflict()) {
             text = ShortcutsEditor.fill(editor.getConflictHintFormat(), names(entry.getConflicts()));
-            for (ShortcutEntry other : entry.getConflicts()) {
+            for (CommandRow other : entry.getConflicts()) {
                 fixable = fixable || other.isChangeable();
             }
         } else if (!entry.getOverridden().isEmpty()) {
@@ -311,9 +311,9 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
     /**
      * The names of the commands of rows, separated by commas.
      */
-    private static String names(List<ShortcutEntry> entries) {
+    private static String names(List<CommandRow> entries) {
         List<String> names = new ArrayList<>();
-        for (ShortcutEntry entry : entries) {
+        for (CommandRow entry : entries) {
             names.add(entry.getCommand().getName());
         }
         return String.join(", ", names);
@@ -348,9 +348,9 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
             return;
         }
         ShortcutListItem item = getItem();
-        if (item instanceof ShortcutGroupEntry group && event.getClickCount() == 1) {
+        if (item instanceof GroupLine group && event.getClickCount() == 1) {
             editor.toggle(group);
-        } else if (item instanceof ShortcutEntry entry && event.getClickCount() == 2
+        } else if (item instanceof CommandRow entry && event.getClickCount() == 2
                 && !editor.isInRecorder(event.getTarget())) {
             editor.startRecording(entry);
         }

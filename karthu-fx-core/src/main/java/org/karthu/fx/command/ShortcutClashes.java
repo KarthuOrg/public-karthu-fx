@@ -31,13 +31,13 @@ final class ShortcutClashes {
      * @param registry the registry of the commands, which knows the contexts around each context
      * @return the number of conflicts: of keys that two or more commands of one context hold
      */
-    static int find(List<ShortcutEntry> entries, CommandRegistry registry) {
-        Map<Slot, List<ShortcutEntry>> holders = new HashMap<>();
-        for (ShortcutEntry entry : entries) {
+    static int find(List<CommandRow> entries, CommandRegistry registry) {
+        Map<Slot, List<CommandRow>> holders = new HashMap<>();
+        for (CommandRow entry : entries) {
             Shortcut shortcut = entry.getShortcut();
             if (shortcut != null) {
                 Slot slot = new Slot(entry.getCommand().getContext(), shortcut);
-                List<ShortcutEntry> holding = holders.get(slot);
+                List<CommandRow> holding = holders.get(slot);
                 if (holding == null) {
                     holding = new ArrayList<>();
                     holders.put(slot, holding);
@@ -46,7 +46,7 @@ final class ShortcutClashes {
             }
         }
         int conflicts = 0;
-        for (List<ShortcutEntry> holding : holders.values()) {
+        for (List<CommandRow> holding : holders.values()) {
             if (holding.size() > 1) {
                 conflicts++;
             }
@@ -55,19 +55,19 @@ final class ShortcutClashes {
         for (CommandContext context : registry.getContexts()) {
             enclosing.put(context, enclosingContexts(context, registry));
         }
-        for (ShortcutEntry entry : entries) {
-            List<ShortcutEntry> others = new ArrayList<>();
-            List<ShortcutEntry> overridden = new ArrayList<>();
+        for (CommandRow entry : entries) {
+            List<CommandRow> others = new ArrayList<>();
+            List<CommandRow> overridden = new ArrayList<>();
             Shortcut shortcut = entry.getShortcut();
             CommandContext context = entry.getCommand().getContext();
             if (shortcut != null) {
-                for (ShortcutEntry holder : holders.get(new Slot(context, shortcut))) {
+                for (CommandRow holder : holders.get(new Slot(context, shortcut))) {
                     if (holder != entry) {
                         others.add(holder);
                     }
                 }
                 for (CommandContext outer : enclosing.get(context)) {
-                    List<ShortcutEntry> holding = holders.get(new Slot(outer, shortcut));
+                    List<CommandRow> holding = holders.get(new Slot(outer, shortcut));
                     if (holding != null) {
                         overridden.addAll(holding);
                     }

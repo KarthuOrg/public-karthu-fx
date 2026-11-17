@@ -7,7 +7,7 @@ import java.util.Objects;
  * A command's row in the shortcut editor: the command and its key in the editor's working copy, which the user
  * changes and the editor hands to the registry when it applies.
  */
-final class ShortcutEntry implements ShortcutListItem {
+final class CommandRow implements ShortcutListItem {
 
     private final Command command;
 
@@ -15,17 +15,17 @@ final class ShortcutEntry implements ShortcutListItem {
     private Shortcut shortcut;
 
     /** The rows of the other commands of the context that hold the same key in the working copy, in their order. */
-    private List<ShortcutEntry> conflicts = List.of();
+    private List<CommandRow> conflicts = List.of();
 
     /** The rows of the commands of enclosing contexts whose key this row's key overrides, the innermost first. */
-    private List<ShortcutEntry> overridden = List.of();
+    private List<CommandRow> overridden = List.of();
 
     /**
      * Creates the row of a command, its key in the working copy being the command's current key.
      *
      * @param command the command
      */
-    ShortcutEntry(Command command) {
+    CommandRow(Command command) {
         this.command = command;
         this.shortcut = command.getShortcut();
     }
@@ -101,7 +101,7 @@ final class ShortcutEntry implements ShortcutListItem {
      *
      * @return the other rows, unmodifiable, empty while the row is in no conflict
      */
-    List<ShortcutEntry> getConflicts() {
+    List<CommandRow> getConflicts() {
         return conflicts;
     }
 
@@ -120,7 +120,7 @@ final class ShortcutEntry implements ShortcutListItem {
      *
      * @return the overridden rows, unmodifiable, the innermost context's first; empty when the key overrides none
      */
-    List<ShortcutEntry> getOverridden() {
+    List<CommandRow> getOverridden() {
         return overridden;
     }
 
@@ -130,7 +130,7 @@ final class ShortcutEntry implements ShortcutListItem {
      * @param conflicts  the rows of the other commands of the same context on the same key
      * @param overridden the rows of the commands of enclosing contexts on the same key
      */
-    void setClashes(List<ShortcutEntry> conflicts, List<ShortcutEntry> overridden) {
+    void setClashes(List<CommandRow> conflicts, List<CommandRow> overridden) {
         this.conflicts = List.copyOf(conflicts);
         this.overridden = List.copyOf(overridden);
     }

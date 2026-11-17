@@ -5,5 +5,5 @@ package org.karthu.fx.command;
  * lines that show; the editor keeps every line and picks those that show, so that folding, the search and the filters
  * choose from the same lines and a line keeps its state while it is hidden.
  */
-sealed interface ShortcutListItem permits ShortcutGroupEntry, ShortcutEntry {
+sealed interface ShortcutListItem permits GroupLine, CommandRow {
 }

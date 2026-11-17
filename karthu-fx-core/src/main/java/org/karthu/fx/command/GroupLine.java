@@ -9,11 +9,11 @@ import java.util.List;
  * is open. Groups start open; their folding lives as long as the editor's working copy. A search keeps a folding of its
  * own, so that the user's folding without a search is there again when the search is cleared.
  */
-final class ShortcutGroupEntry implements ShortcutListItem {
+final class GroupLine implements ShortcutListItem {
 
     private final CommandGroup group;
 
-    private final List<ShortcutEntry> entries = new ArrayList<>();
+    private final List<CommandRow> entries = new ArrayList<>();
 
     /** Whether the group is open while no search is on: the user's folding, which a search leaves alone. */
     private boolean expanded = true;
@@ -26,7 +26,7 @@ final class ShortcutGroupEntry implements ShortcutListItem {
      *
      * @param group the group
      */
-    ShortcutGroupEntry(CommandGroup group) {
+    GroupLine(CommandGroup group) {
         this.group = group;
     }
 
@@ -44,7 +44,7 @@ final class ShortcutGroupEntry implements ShortcutListItem {
      *
      * @return the rows, unmodifiable
      */
-    List<ShortcutEntry> getEntries() {
+    List<CommandRow> getRows() {
         return Collections.unmodifiableList(entries);
     }
 
@@ -53,7 +53,7 @@ final class ShortcutGroupEntry implements ShortcutListItem {
      *
      * @param entry the row
      */
-    void add(ShortcutEntry entry) {
+    void add(CommandRow entry) {
         entries.add(entry);
     }
 
