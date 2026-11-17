@@ -96,6 +96,19 @@ class ShortcutsEditorTest {
     }
 
     @Test
+    @DisplayName("a group without commands has no line")
+    void emptyGroupHasNoLine() {
+        CommandRegistry registry = new CommandRegistry(themedScene(new StackPane()));
+        registry.addGroup("empty", "Empty");
+        CommandGroup help = registry.addGroup("help", "Help");
+        registry.addCommand(help, "help.about", "About", null, () -> { });
+
+        ShortcutsEditor editor = shown(new ShortcutsEditor(registry));
+
+        assertEquals(List.of("Help 1", "  About: Not assigned"), lines(editor));
+    }
+
+    @Test
     @DisplayName("the header names the columns in capitals, over the columns of the rows")
     void headerNamesTheColumns() {
         ShortcutsEditor editor = shown(new ShortcutsEditor(new App().registry));

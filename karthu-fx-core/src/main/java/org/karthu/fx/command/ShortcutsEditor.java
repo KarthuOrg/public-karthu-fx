@@ -56,8 +56,8 @@ import java.util.Objects;
  * <i>Conflicts</i> and <i>Reset all</i>; a header row naming the columns <i>Command</i> and <i>Shortcut</i>, in
  * capitals; the list; and a footer with the counter, such as <i>30 commands · 1 modified · 0 conflicts · 1 not
  * assigned</i>. The list shows each group's line, with a fold arrow, the group's name and the number of its commands,
- * then the rows of its commands in their order. A click on a group's line folds or opens it; groups start open, and
- * their folding is not kept. A command's row shows its name, a dot when its key differs from its default, a small mark
+ * then the rows of its commands in their order; a group without commands has no line. A click on a group's line folds
+ * or opens it; groups start open, and their folding is not kept. A command's row shows its name, a dot when its key differs from its default, a small mark
  * with its context's name when its key holds only in a part of the window, and its key as key caps or <i>Not
  * assigned</i>. The row under the pointer and the selected row show a pencil, which records a new key, and an
  * &times;, which removes the key; a modified row shows a reset button, which puts the default back. A
@@ -66,7 +66,8 @@ import java.util.Objects;
  * <p><b>Recording.</b> Enter, a double-click on a row or its pencil starts recording: a field takes the place of the
  * key caps, shows the modifiers held down, <i>Press keys…</i> and <i>Esc to cancel</i>. The first key the user may
  * record becomes the command's key at once. The user may record F1 to F12 alone or with any modifiers, and every
- * other key only with Ctrl or Alt; a refused key shows why in the field, and recording goes on. Letters, digits,
+ * other key only with Ctrl or Alt ({@link Shortcut#isRecordable()}); a refused key shows why in the field, and
+ * recording goes on. A modifier key alone shows as held and records nothing. Letters, digits,
  * function keys and named keys are recorded by the key, punctuation by the character it types: Ctrl and the plus key
  * record <i>Ctrl++</i>, whichever key types the plus on the user's keyboard. Esc, a click elsewhere or the field
  * losing the focus end the recording and keep the old key.
