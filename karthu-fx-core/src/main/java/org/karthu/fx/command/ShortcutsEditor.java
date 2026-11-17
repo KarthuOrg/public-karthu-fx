@@ -2,7 +2,6 @@ package org.karthu.fx.command;
 
 import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
-import javafx.beans.WeakInvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.IntegerProperty;
@@ -13,7 +12,6 @@ import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.event.EventTarget;
@@ -32,15 +30,12 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import org.karthu.fx.command.ShortcutsWorkingCopy.Filter;
 import org.karthu.fx.form.SearchInput;
-import org.karthu.fx.form.search.SearchQuery;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -238,16 +233,10 @@ public final class ShortcutsEditor extends VBox {
 
     private final SearchInput search = new SearchInput();
 
-    /** The search typed into the search field, folded and split into words as the search inputs do. */
-    private SearchQuery query = SearchQuery.of(null);
-
     /** The filters, a segmented control: always one of them is chosen. */
     private final ToggleGroup filters = new ToggleGroup();
 
     private final ToggleButton allFilter = filterButton("shortcuts-filter-all", allFilterText, filters, Filter.ALL);
-
-    /** The rows the chosen filter lets show. */
-    private Filter filter = Filter.ALL;
 
     private final Button resetAll = new Button();
 
@@ -275,21 +264,8 @@ public final class ShortcutsEditor extends VBox {
 
     private final ShortcutRecorder recorder;
 
-    /** The lines of every group, in the registry's order, each with the rows of its commands. */
-    private final List<GroupLine> groups = new ArrayList<>();
-
-    /**
-     * The listener on the names of the registry's groups, contexts and commands, held here since the names hold it
-     * weakly: an editor the application drops does not live on in the registry. A new one with every working copy, so
-     * that the old one goes.
-     */
-    private InvalidationListener nameListener;
-
-    /** The listeners on the keys of the registry's commands, one per row, held here as the name listener is. */
-    private final List<ChangeListener<Shortcut>> keyListeners = new ArrayList<>();
-
-    /** The number of keys that two or more commands of one context hold in the working copy. */
-    private int conflicts;
+    /** The rows and their keys as the user changes them, and which of them show. */
+    private final ShortcutsWorkingCopy workingCopy;
 
     /** The row the user records a key for; null while no recording runs. */
     private CommandRow recording;
@@ -309,6 +285,7 @@ public final class ShortcutsEditor extends VBox {
      */
     public ShortcutsEditor(CommandRegistry registry) {
         this.registry = Objects.requireNonNull(registry, "registry");
+        workingCopy = new ShortcutsWorkingCopy(registry, this::changed);
         getStyleClass().add("shortcuts-editor");
         recorder = new ShortcutRecorder(this);
 
@@ -343,7 +320,7 @@ public final class ShortcutsEditor extends VBox {
         InvalidationListener hintFormatChanged = observable -> revision.set(revision.get() + 1);
         conflictHintFormat.addListener(hintFormatChanged);
         overrideHintFormat.addListener(hintFormatChanged);
-        rebuild();
+        workingCopy.read();
         changed();
     }
 
@@ -466,13 +443,7 @@ public final class ShortcutsEditor extends VBox {
      */
     public void apply() {
         cancelRecording(false);
-        // The registry takes the whole state as the keys that differ from their defaults: the rows' keys, and the
-        // current keys of the commands that have no row.
-        Map<Command, Shortcut> keys = new HashMap<>();
-        for (CommandRow entry : rows()) {
-            keys.put(entry.getCommand(), entry.getShortcut());
-        }
-        registry.setChangedShortcuts(registry.changedShortcuts(keys));
+        workingCopy.apply();
         changed();
     }
 
@@ -485,7 +456,7 @@ public final class ShortcutsEditor extends VBox {
      */
     public void discard() {
         cancelRecording(false);
-        rebuild();
+        workingCopy.read();
         // A new working copy starts with every row, as the dialog does each time it opens.
         search.setText("");
         allFilter.setSelected(true);
@@ -536,60 +507,21 @@ public final class ShortcutsEditor extends VBox {
     }
 
     /**
-     * Reads the registry's groups and commands into a new working copy.
-     */
-    private void rebuild() {
-        keyListeners.clear();
-        groups.clear();
-        Map<CommandGroup, GroupLine> byGroup = new IdentityHashMap<>();
-        nameListener = observable -> changed();
-        for (CommandGroup group : registry.getGroups()) {
-            GroupLine entry = new GroupLine(group);
-            groups.add(entry);
-            byGroup.put(group, entry);
-            group.nameProperty().addListener(new WeakInvalidationListener(nameListener));
-        }
-        for (CommandContext context : registry.getContexts()) {
-            context.nameProperty().addListener(new WeakInvalidationListener(nameListener));
-        }
-        for (Command command : registry.getCommands()) {
-            CommandRow entry = new CommandRow(command);
-            byGroup.get(command.getGroup()).add(entry);
-            command.nameProperty().addListener(new WeakInvalidationListener(nameListener));
-            // A key the registry changes reaches the row while the user has not changed it.
-            ChangeListener<Shortcut> keyChanged = (observable, oldKey, newKey) -> {
-                if (Objects.equals(entry.getShortcut(), oldKey)) {
-                    entry.setShortcut(newKey);
-                }
-                changed();
-            };
-            keyListeners.add(keyChanged);
-            command.shortcutProperty().addListener(new WeakChangeListener<>(keyChanged));
-        }
-    }
-
-    /**
      * Brings everything that depends on the working copy in line with it: the conflicts and overrides of every row,
      * the lines the list shows, the counter, whether there are changes or conflicts, and the cells, which draw their
      * lines again.
      */
     private void changed() {
         // The clashes first: every row knows whether it is in a conflict before the editor picks the rows that show.
-        conflicts = ShortcutClashes.find(rows(), registry);
+        workingCopy.findClashes();
         refreshItems();
         updateCounter();
-        boolean changes = false;
-        boolean modified = false;
-        for (CommandRow entry : rows()) {
-            changes = changes || entry.isChanged();
-            modified = modified || entry.isModified();
-        }
-        hasChanges.set(changes);
-        hasConflicts.set(conflicts > 0);
+        hasChanges.set(workingCopy.hasChanges());
+        hasConflicts.set(workingCopy.conflicts() > 0);
         // Reset all has nothing to do while every key is its default.
-        resetAll.setDisable(!modified);
+        resetAll.setDisable(!workingCopy.hasModified());
         // Without any command there is no match to miss: the empty list says nothing.
-        noMatch.setVisible(!rows().isEmpty());
+        noMatch.setVisible(!workingCopy.rows().isEmpty());
         revision.set(revision.get() + 1);
     }
 
@@ -600,12 +532,12 @@ public final class ShortcutsEditor extends VBox {
      */
     private void refreshItems() {
         List<ShortcutListItem> shown = new ArrayList<>();
-        for (GroupLine group : groups) {
-            List<CommandRow> entries = shownRows(group);
-            if (!entries.isEmpty()) {
+        for (GroupLine group : workingCopy.groups()) {
+            List<CommandRow> rows = workingCopy.shownRows(group);
+            if (!rows.isEmpty()) {
                 shown.add(group);
-                if (isOpen(group)) {
-                    shown.addAll(entries);
+                if (workingCopy.isOpen(group)) {
+                    shown.addAll(rows);
                 }
             }
         }
@@ -614,8 +546,8 @@ public final class ShortcutsEditor extends VBox {
         }
         ShortcutListItem selected = list.getSelectionModel().getSelectedItem();
         list.getItems().setAll(shown);
-        if (selected instanceof CommandRow entry && !shown.contains(entry)) {
-            selected = groupOf(entry);
+        if (selected instanceof CommandRow row && !shown.contains(row)) {
+            selected = workingCopy.groupOf(row);
         }
         if (selected != null && shown.contains(selected)) {
             list.getSelectionModel().select(selected);
@@ -625,60 +557,11 @@ public final class ShortcutsEditor extends VBox {
     }
 
     /**
-     * The rows of a group that show, in their order.
-     */
-    private List<CommandRow> shownRows(GroupLine group) {
-        List<CommandRow> shown = new ArrayList<>();
-        for (CommandRow entry : group.getRows()) {
-            if (passesFilter(entry) && query.matches(searchedTexts(group, entry))) {
-                shown.add(entry);
-            }
-        }
-        return shown;
-    }
-
-    /**
-     * Whether the chosen filter lets a row show: every row, the rows whose keys differ from their defaults, or the
-     * rows in a conflict.
-     */
-    private boolean passesFilter(CommandRow entry) {
-        return switch (filter) {
-            case ALL -> true;
-            case MODIFIED -> entry.isModified();
-            case CONFLICTS -> entry.isInConflict();
-        };
-    }
-
-    /**
-     * The texts of a row the search looks at, as the row shows them: the command's name, its group's, the name of its
-     * context as the row's mark shows it, and the display text of its key in the working copy (<i>Ctrl+0</i>, so
-     * that <i>ctrl+0</i> finds every command on that key). The window's context is named in no row, so that a search
-     * for a word such as <i>window</i> does not find every command of the window.
-     */
-    private List<String> searchedTexts(GroupLine group, CommandRow entry) {
-        Command command = entry.getCommand();
-        List<String> texts = new ArrayList<>();
-        texts.add(command.getName());
-        texts.add(group.getGroup().getName());
-        if (command.getContext() != registry.getWindowContext()) {
-            texts.add(command.getContext().getName());
-        }
-        if (entry.getShortcut() != null) {
-            texts.add(entry.getShortcut().getDisplayText());
-        }
-        return texts;
-    }
-
-    /**
      * The search changed: the rows that show follow it.
      */
     private void searchChanged(String text) {
         cancelRecording(false);
-        query = SearchQuery.of(text);
-        // Every change of the search opens the groups with a match again.
-        for (GroupLine group : groups) {
-            group.setFoldedInSearch(false);
-        }
+        workingCopy.search(text);
         changed();
     }
 
@@ -686,32 +569,12 @@ public final class ShortcutsEditor extends VBox {
      * A filter was chosen: the rows that show follow it.
      */
     private void filterChosen(Filter chosen) {
-        if (chosen == filter) {
+        if (chosen == workingCopy.getFilter()) {
             return;
         }
         cancelRecording(false);
-        filter = chosen;
+        workingCopy.setFilter(chosen);
         changed();
-    }
-
-    /**
-     * Every command's row, in the order of the groups and of the commands within them.
-     */
-    private List<CommandRow> rows() {
-        List<CommandRow> entries = new ArrayList<>();
-        for (GroupLine group : groups) {
-            entries.addAll(group.getRows());
-        }
-        return entries;
-    }
-
-    private GroupLine groupOf(CommandRow entry) {
-        for (GroupLine group : groups) {
-            if (group.getRows().contains(entry)) {
-                return group;
-            }
-        }
-        return null;
     }
 
     /**
@@ -719,19 +582,20 @@ public final class ShortcutsEditor extends VBox {
      * a key.
      */
     private void updateCounter() {
-        List<CommandRow> entries = rows();
+        List<CommandRow> rows = workingCopy.rows();
         int modified = 0;
         int notAssigned = 0;
-        for (CommandRow entry : entries) {
-            if (entry.isModified()) {
+        for (CommandRow row : rows) {
+            if (row.isModified()) {
                 modified++;
             }
-            if (entry.getShortcut() == null) {
+            if (row.getShortcut() == null) {
                 notAssigned++;
             }
         }
-        commandCount.setText(count(entries.size(), commandCountOneFormat, commandCountFormat));
+        commandCount.setText(count(rows.size(), commandCountOneFormat, commandCountFormat));
         modifiedCount.setText(count(modified, modifiedCountOneFormat, modifiedCountFormat));
+        int conflicts = workingCopy.conflicts();
         conflictCount.setText(count(conflicts, conflictCountOneFormat, conflictCountFormat));
         conflictCount.pseudoClassStateChanged(CONFLICT, conflicts > 0);
         notAssignedCount.setText(count(notAssigned, notAssignedCountOneFormat, notAssignedCountFormat));
@@ -768,12 +632,7 @@ public final class ShortcutsEditor extends VBox {
      * @param group the group's line
      */
     void toggle(GroupLine group) {
-        // A search folds on its own, so that the folding without it is there again when it is cleared.
-        if (query.isEmpty()) {
-            group.setExpanded(!group.isExpanded());
-        } else {
-            group.setFoldedInSearch(!group.isFoldedInSearch());
-        }
+        workingCopy.toggle(group);
         changed();
     }
 
@@ -785,7 +644,7 @@ public final class ShortcutsEditor extends VBox {
      * @return true while the group is open
      */
     boolean isOpen(GroupLine group) {
-        return query.isEmpty() ? group.isExpanded() : !group.isFoldedInSearch();
+        return workingCopy.isOpen(group);
     }
 
     /**
@@ -821,7 +680,7 @@ public final class ShortcutsEditor extends VBox {
      */
     private void resetAll() {
         cancelRecording(false);
-        for (CommandRow entry : rows()) {
+        for (CommandRow entry : workingCopy.rows()) {
             entry.reset();
         }
         changed();
@@ -1011,7 +870,7 @@ public final class ShortcutsEditor extends VBox {
      * @return the number
      */
     int shownCount(GroupLine group) {
-        return shownRows(group).size();
+        return workingCopy.shownRows(group).size();
     }
 
     /**
@@ -1849,15 +1708,5 @@ public final class ShortcutsEditor extends VBox {
      */
     public void setNotAssignedCountOneFormat(String format) {
         notAssignedCountOneFormat.set(format);
-    }
-
-    /** Which rows the filters of the bar let show. */
-    private enum Filter {
-        /** Every row. */
-        ALL,
-        /** The rows whose keys differ from their defaults. */
-        MODIFIED,
-        /** The rows in a conflict. */
-        CONFLICTS
     }
 }
