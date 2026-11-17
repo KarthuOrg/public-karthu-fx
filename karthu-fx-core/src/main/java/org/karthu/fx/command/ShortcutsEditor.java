@@ -33,6 +33,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import org.karthu.fx.form.SearchInput;
+import org.karthu.fx.form.search.SearchQuery;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -56,13 +57,27 @@ import java.util.Objects;
  * <p><b>Layout</b>, from top to bottom: a bar with a search field, the filters <i>All</i>, <i>Modified</i> and
  * <i>Conflicts</i> and <i>Reset all</i>; a header row naming the columns <i>Command</i> and <i>Shortcut</i>, in
  * capitals; the list; and a footer with the counter, such as <i>30 commands · 1 modified · 1 conflict · 1 not
- * assigned</i>. The list shows each group's line, with a fold arrow, the group's name and the number of its commands,
- * then the rows of its commands in their order; a group without commands has no line. A click on a group's line folds
- * or opens it; groups start open, and their folding is not kept. A command's row shows its name, a dot when its key
- * differs from its default, a small mark with its context's name when its key holds only in a part of the window, and
- * its key as key caps or <i>Not assigned</i>. The row under the pointer and the selected row show a pencil, which
- * records a new key, and an &times;, which removes the key; a modified row shows a reset button, which puts the
- * default back. A {@linkplain Command#isFixed() fixed} command's row shows its key and has none of the buttons.
+ * assigned</i>. The list shows each group's line, with a fold arrow, the group's name and the number of its commands
+ * that show, then the rows of its commands in their order; a group without commands that show has no line. A click on
+ * a group's line folds or opens it; groups start open, and their folding is not kept. A command's row shows its name,
+ * a dot when its key differs from its default, a small mark with its context's name when its key holds only in a part
+ * of the window, and its key as key caps or <i>Not assigned</i>. The row under the pointer and the selected row show a
+ * pencil, which records a new key, and an &times;, which removes the key; a modified row shows a reset button, which
+ * puts the default back. A {@linkplain Command#isFixed() fixed} command's row shows its key and has none of the
+ * buttons.
+ *
+ * <p><b>Finding a command.</b> The search field filters the list as the user types: a row shows when every word of the
+ * search occurs in the command's name, its group's name, the name of its context as the row's mark shows it, or the
+ * display text of its key in the working copy, ignoring case and accents exactly as a {@link SearchInput} does. So
+ * <i>ctrl+0</i> finds every command on <i>Ctrl+0</i>, both rows of a conflict on it included, and <i>zurich</i> finds
+ * <i>Zürich</i>. While a search is on, every group with a match is open and a group without one has no line; a group
+ * the user folds then stays folded until the search changes, and clearing the search brings back the folding from
+ * before it. The filters, of which one is always chosen, show every row (<i>All</i>), the rows whose keys differ from
+ * their defaults (<i>Modified</i>, also keys set in an earlier session), or the rows in a conflict (<i>Conflicts</i>);
+ * with a search, a row shows when it passes both. A row leaves as soon as it no longer passes, such as a conflict just
+ * fixed under <i>Conflicts</i>. While nothing passes, the empty list says <i>No matching commands</i>. The counter
+ * counts every command, whatever shows. <i>Reset all</i> puts every key back to its default in the working copy, for
+ * the registry to take with {@link #apply()}; it is disabled while every key is its default.
  *
  * <p><b>Conflicts.</b> A key on two or more commands of the same context, fixed commands included, is a conflict: only
  * one of them could run on it. Every row of a conflict shows its key caps in the theme's error colour and after them
@@ -104,7 +119,8 @@ import java.util.Objects;
  * {@code shortcuts-editor}; the bar {@code shortcuts-bar} with {@code shortcuts-search}, {@code shortcuts-filter}
  * (holding {@code shortcuts-filter-all}, {@code shortcuts-filter-modified}, {@code shortcuts-filter-conflicts}) and
  * {@code shortcuts-reset-all}; the header {@code shortcuts-header} with {@code shortcuts-header-command} and
- * {@code shortcuts-header-shortcut}; the list {@code shortcuts-list}; a group's line {@code shortcuts-group-row}
+ * {@code shortcuts-header-shortcut}; the list {@code shortcuts-list}, its text while it is empty
+ * {@code shortcuts-no-match}; a group's line {@code shortcuts-group-row}
  * (a list cell) with its content {@code shortcuts-group-content} holding {@code shortcuts-group-arrow},
  * {@code shortcuts-group-name} and {@code shortcuts-group-count}; a command's row {@code shortcuts-row} (a list cell)
  * with its content {@code shortcuts-row-content} holding {@code shortcuts-command-column} (with
@@ -148,6 +164,9 @@ public final class ShortcutsEditor extends VBox {
             new SimpleStringProperty(this, "conflictsFilterText", "Conflicts");
 
     private final StringProperty resetAllText = new SimpleStringProperty(this, "resetAllText", "Reset all");
+
+    private final StringProperty noMatchText =
+            new SimpleStringProperty(this, "noMatchText", "No matching commands");
 
     private final StringProperty commandColumnText =
             new SimpleStringProperty(this, "commandColumnText", "Command");
@@ -214,6 +233,24 @@ public final class ShortcutsEditor extends VBox {
 
     private final ReadOnlyBooleanWrapper hasConflicts = new ReadOnlyBooleanWrapper(this, "hasConflicts");
 
+    private final SearchInput search = new SearchInput();
+
+    /** The search typed into the search field, folded and split into words as the search inputs do. */
+    private SearchQuery query = SearchQuery.of(null);
+
+    /** The filters, a segmented control: always one of them is chosen. */
+    private final ToggleGroup filters = new ToggleGroup();
+
+    private final ToggleButton allFilter = filterButton("shortcuts-filter-all", allFilterText, filters, Filter.ALL);
+
+    /** The rows the chosen filter lets show. */
+    private Filter filter = Filter.ALL;
+
+    private final Button resetAll = new Button();
+
+    /** What the list shows while the search and the filter leave no row. */
+    private final Label noMatch = new Label();
+
     private final ListView<ShortcutListItem> list = new ListView<>();
 
     private final DoubleBinding commandColumnWidth =
@@ -271,6 +308,9 @@ public final class ShortcutsEditor extends VBox {
         list.getStyleClass().add("shortcuts-list");
         list.setCellFactory(view -> new ShortcutCell(this));
         list.addEventFilter(KeyEvent.KEY_PRESSED, this::listKeyPressed);
+        noMatch.getStyleClass().add("shortcuts-no-match");
+        noMatch.textProperty().bind(noMatchText);
+        list.setPlaceholder(noMatch);
         VBox.setVgrow(list, Priority.ALWAYS);
 
         getChildren().addAll(bar(), header(), list, footer());
@@ -303,42 +343,47 @@ public final class ShortcutsEditor extends VBox {
     // --- Layout ----------------------------------------------------------------------------------------
 
     /**
-     * The bar above the list: the search field, the filters and <i>Reset all</i>. They show, but take no input yet:
-     * the search, the filters and resetting every key follow.
+     * The bar above the list: the search field, the filters and <i>Reset all</i>.
      */
     private HBox bar() {
-        SearchInput search = new SearchInput();
         search.getStyleClass().add("shortcuts-search");
         search.promptTextProperty().bind(searchPromptText);
+        search.textProperty().addListener((observable, oldText, newText) -> searchChanged(newText));
         HBox.setHgrow(search, Priority.ALWAYS);
 
-        ToggleGroup filters = new ToggleGroup();
-        ToggleButton all = filterButton("shortcuts-filter-all", allFilterText, filters);
-        ToggleButton modified = filterButton("shortcuts-filter-modified", modifiedFilterText, filters);
-        ToggleButton conflicts = filterButton("shortcuts-filter-conflicts", conflictsFilterText, filters);
-        all.setSelected(true);
-        HBox filter = new HBox(all, modified, conflicts);
-        filter.getStyleClass().add("shortcuts-filter");
+        ToggleButton modified = filterButton("shortcuts-filter-modified", modifiedFilterText, filters,
+                Filter.MODIFIED);
+        ToggleButton conflicts = filterButton("shortcuts-filter-conflicts", conflictsFilterText, filters,
+                Filter.CONFLICTS);
+        allFilter.setSelected(true);
+        filters.selectedToggleProperty().addListener((observable, oldToggle, newToggle) -> {
+            if (newToggle == null) {
+                // A segmented control always has one choice: a click on the chosen filter keeps it chosen.
+                oldToggle.setSelected(true);
+            } else {
+                filterChosen((Filter) newToggle.getUserData());
+            }
+        });
+        HBox filterBox = new HBox(allFilter, modified, conflicts);
+        filterBox.getStyleClass().add("shortcuts-filter");
 
-        Button resetAll = new Button();
         resetAll.getStyleClass().add("shortcuts-reset-all");
         resetAll.textProperty().bind(resetAllText);
+        resetAll.setOnAction(event -> resetAll());
 
-        search.setDisable(true);
-        filter.setDisable(true);
-        resetAll.setDisable(true);
-
-        HBox bar = new HBox(search, filter, resetAll);
+        HBox bar = new HBox(search, filterBox, resetAll);
         bar.getStyleClass().add("shortcuts-bar");
         bar.setAlignment(Pos.CENTER_LEFT);
         return bar;
     }
 
-    private static ToggleButton filterButton(String styleClass, StringProperty text, ToggleGroup group) {
+    private static ToggleButton filterButton(String styleClass, StringProperty text, ToggleGroup group,
+            Filter filter) {
         ToggleButton button = new ToggleButton();
         button.getStyleClass().add(styleClass);
         button.textProperty().bind(text);
         button.setToggleGroup(group);
+        button.setUserData(filter);
         button.setMinWidth(Region.USE_PREF_SIZE);
         return button;
     }
@@ -429,14 +474,18 @@ public final class ShortcutsEditor extends VBox {
     }
 
     /**
-     * Drops the working copy: the editor shows the registry's groups, commands and keys again, every group open. A
-     * recording that runs ends without a key.
+     * Drops the working copy: the editor shows the registry's groups, commands and keys again, every group open,
+     * every command shown, the search empty and the filter <i>All</i> chosen. A recording that runs ends without a
+     * key.
      *
      * @since 1.1.0-RC2
      */
     public void discard() {
         cancelRecording(false);
         rebuild();
+        // A new working copy starts with every row, as the dialog does each time it opens.
+        search.setText("");
+        allFilter.setSelected(true);
         changed();
     }
 
@@ -528,19 +577,26 @@ public final class ShortcutsEditor extends VBox {
         refreshItems();
         updateCounter();
         boolean changes = false;
+        boolean modified = false;
         for (ShortcutGroupEntry group : groups) {
             for (ShortcutEntry entry : group.getEntries()) {
                 changes = changes || entry.isChanged();
+                modified = modified || entry.isModified();
             }
         }
         hasChanges.set(changes);
         hasConflicts.set(conflicts > 0);
+        // Reset all has nothing to do while every key is its default.
+        resetAll.setDisable(!modified);
+        // Without any command there is no match to miss: the empty list says nothing.
+        noMatch.setVisible(!entries().isEmpty());
         revision.set(revision.get() + 1);
     }
 
     /**
      * Shows the lines that show: each group with a row that shows, then, while it is open, those rows. The selection
-     * stays on its line; when its line is folded away, it moves to the line of the line's group.
+     * stays on its line; when its line is folded away or no longer passes the search or the filter, it moves to the
+     * line of the line's group, if that shows.
      */
     private void refreshItems() {
         List<ShortcutListItem> shown = new ArrayList<>();
@@ -548,7 +604,7 @@ public final class ShortcutsEditor extends VBox {
             List<ShortcutEntry> entries = shownEntries(group);
             if (!entries.isEmpty()) {
                 shown.add(group);
-                if (group.isExpanded()) {
+                if (isOpen(group)) {
                     shown.addAll(entries);
                 }
             }
@@ -572,7 +628,70 @@ public final class ShortcutsEditor extends VBox {
      * The rows of a group that show, in their order.
      */
     private List<ShortcutEntry> shownEntries(ShortcutGroupEntry group) {
-        return group.getEntries();
+        List<ShortcutEntry> shown = new ArrayList<>();
+        for (ShortcutEntry entry : group.getEntries()) {
+            if (passesFilter(entry) && query.matches(searchedTexts(group, entry))) {
+                shown.add(entry);
+            }
+        }
+        return shown;
+    }
+
+    /**
+     * Whether the chosen filter lets a row show: every row, the rows whose keys differ from their defaults, or the
+     * rows in a conflict.
+     */
+    private boolean passesFilter(ShortcutEntry entry) {
+        return switch (filter) {
+            case ALL -> true;
+            case MODIFIED -> entry.isModified();
+            case CONFLICTS -> entry.isInConflict();
+        };
+    }
+
+    /**
+     * The texts of a row the search looks at, as the row shows them: the command's name, its group's, the name of its
+     * context as the row's mark shows it, and the display text of its key in the working copy (<i>Ctrl+0</i>, so
+     * that <i>ctrl+0</i> finds every command on that key). The window's context is named in no row, so that a search
+     * for a word such as <i>window</i> does not find every command of the window.
+     */
+    private List<String> searchedTexts(ShortcutGroupEntry group, ShortcutEntry entry) {
+        Command command = entry.getCommand();
+        List<String> texts = new ArrayList<>();
+        texts.add(command.getName());
+        texts.add(group.getGroup().getName());
+        if (command.getContext() != registry.getWindowContext()) {
+            texts.add(command.getContext().getName());
+        }
+        if (entry.getShortcut() != null) {
+            texts.add(entry.getShortcut().getDisplayText());
+        }
+        return texts;
+    }
+
+    /**
+     * The search changed: the rows that show follow it.
+     */
+    private void searchChanged(String text) {
+        cancelRecording(false);
+        query = SearchQuery.of(text);
+        // Every change of the search opens the groups with a match again.
+        for (ShortcutGroupEntry group : groups) {
+            group.setFoldedInSearch(false);
+        }
+        changed();
+    }
+
+    /**
+     * A filter was chosen: the rows that show follow it.
+     */
+    private void filterChosen(Filter chosen) {
+        if (chosen == filter) {
+            return;
+        }
+        cancelRecording(false);
+        filter = chosen;
+        changed();
     }
 
     /**
@@ -652,8 +771,24 @@ public final class ShortcutsEditor extends VBox {
      * @param group the group's line
      */
     void toggle(ShortcutGroupEntry group) {
-        group.setExpanded(!group.isExpanded());
+        // A search folds on its own, so that the folding without it is there again when it is cleared.
+        if (query.isEmpty()) {
+            group.setExpanded(!group.isExpanded());
+        } else {
+            group.setFoldedInSearch(!group.isFoldedInSearch());
+        }
         changed();
+    }
+
+    /**
+     * Whether a group shows its rows: while a search is on, every group with a match is open unless the user folded
+     * it in this search; without a search, the groups the user left open.
+     *
+     * @param group the group's line
+     * @return true while the group is open
+     */
+    boolean isOpen(ShortcutGroupEntry group) {
+        return query.isEmpty() ? group.isExpanded() : !group.isFoldedInSearch();
     }
 
     /**
@@ -678,6 +813,20 @@ public final class ShortcutsEditor extends VBox {
         for (ShortcutEntry other : entry.getConflicts()) {
             if (other.isChangeable()) {
                 other.setShortcut(null);
+            }
+        }
+        changed();
+    }
+
+    /**
+     * <i>Reset all</i>: puts every command's default key back in the working copy, as the reset button of each row
+     * does. The registry takes them with {@link #apply()}.
+     */
+    private void resetAll() {
+        cancelRecording(false);
+        for (ShortcutEntry entry : entries()) {
+            if (entry.isChangeable()) {
+                entry.setShortcut(entry.getCommand().getDefaultShortcut());
             }
         }
         changed();
@@ -719,7 +868,7 @@ public final class ShortcutsEditor extends VBox {
             if (code == KeyCode.ENTER || code == KeyCode.SPACE) {
                 toggle(group);
                 press.consume();
-            } else if (code == KeyCode.LEFT && group.isExpanded() || code == KeyCode.RIGHT && !group.isExpanded()) {
+            } else if (code == KeyCode.LEFT && isOpen(group) || code == KeyCode.RIGHT && !isOpen(group)) {
                 toggle(group);
                 press.consume();
             }
@@ -1029,6 +1178,37 @@ public final class ShortcutsEditor extends VBox {
      */
     public void setResetAllText(String text) {
         resetAllText.set(text);
+    }
+
+    /**
+     * What the list shows while the search and the chosen filter leave no command (default <i>No matching
+     * commands</i>).
+     *
+     * @return the no match text property
+     * @since 1.1.0-RC2
+     */
+    public StringProperty noMatchTextProperty() {
+        return noMatchText;
+    }
+
+    /**
+     * Returns what the list shows while the search and the chosen filter leave no command.
+     *
+     * @return the no match text
+     * @since 1.1.0-RC2
+     */
+    public String getNoMatchText() {
+        return noMatchText.get();
+    }
+
+    /**
+     * Sets what the list shows while the search and the chosen filter leave no command.
+     *
+     * @param text the no match text
+     * @since 1.1.0-RC2
+     */
+    public void setNoMatchText(String text) {
+        noMatchText.set(text);
     }
 
     /**
@@ -1674,5 +1854,15 @@ public final class ShortcutsEditor extends VBox {
      */
     public void setNotAssignedCountOneFormat(String format) {
         notAssignedCountOneFormat.set(format);
+    }
+
+    /** Which rows the filters of the bar let show. */
+    private enum Filter {
+        /** Every row. */
+        ALL,
+        /** The rows whose keys differ from their defaults. */
+        MODIFIED,
+        /** The rows in a conflict. */
+        CONFLICTS
     }
 }

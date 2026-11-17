@@ -471,8 +471,9 @@ editor, the dialog), `-fx-canvas-color` (the band of a group's line), `-fx-contr
 header's and footer's lines, the filters' frame, the key caps' and the context mark's frames),
 `-fx-button-color` (the key caps, the chosen filter), `-fx-text-color`, `-fx-text-secondary-color`
 (the column titles, the group's count, *Not assigned*, the context mark, the field's hint, an
-override's hint, the counter, the row's icons), `-fx-accent-color` (the modified dot, the reset
-icon, the recording field's frame, a conflict's fix, `-fx-accent-hover-color` under the pointer),
+override's hint, the counter, the row's icons, and through the list's placeholder the empty list's
+text), `-fx-accent-color` (the modified dot, the reset icon, the recording field's frame, a
+conflict's fix, `-fx-accent-hover-color` under the pointer),
 `-fx-control-inner-background` (the recording field), `-fx-status-error` (a refused key's reason, the
 × under the pointer, a conflict's key caps and hint, the counter's conflicts), `-fx-hover-color` and,
 through the list, `-fx-selection-color` and `-fx-selection-text-color`. The key caps and the segmented filters are no public controls; their
@@ -484,17 +485,18 @@ renaming one is a breaking change.
 | `shortcuts-editor` | the editor, a `VBox`: bar, header, list, footer | `-fx-surface-color` |
 | `shortcuts-dialog` | the dialog's content, a `VBox` around the editor | `-fx-surface-color` |
 | `shortcuts-bar` | the bar, an `HBox` | padding 8, spacing 8 |
-| `shortcuts-search` | the search field, a `SearchInput` (keeps `form-search-input`) | the search input's |
-| `shortcuts-filter` | the segmented filters, an `HBox` of three `ToggleButton`s in one toggle group | joined: one 1px `-fx-control-border` frame, radius 3 at the ends, `-fx-text-secondary-color` text on `-fx-surface-color`, `-fx-hover-color` under the pointer |
-| `shortcuts-filter-all`, `shortcuts-filter-modified`, `shortcuts-filter-conflicts` | the filters, each a `ToggleButton` | the chosen one (`:selected`) bold in `-fx-text-color` on `-fx-button-color` |
-| `shortcuts-reset-all` | *Reset all*, a `Button` | flat: transparent, bold, `-fx-hover-color` under the pointer |
+| `shortcuts-search` | the search field, a `SearchInput` (keeps `form-search-input`): filters the rows by the command's name, its group, its context's mark and its key's display text, folded as the search inputs fold | the search input's |
+| `shortcuts-filter` | the segmented filters, an `HBox` of three `ToggleButton`s in one toggle group, always one of them chosen | joined: one 1px `-fx-control-border` frame, radius 3 at the ends, `-fx-text-secondary-color` text on `-fx-surface-color`, `-fx-hover-color` under the pointer |
+| `shortcuts-filter-all`, `shortcuts-filter-modified`, `shortcuts-filter-conflicts` | the filters, each a `ToggleButton`: every row, the rows whose keys differ from their defaults, the rows in a conflict | the chosen one (`:selected`) bold in `-fx-text-color` on `-fx-button-color` |
+| `shortcuts-reset-all` | *Reset all*, a `Button`: every key back to its default in the working copy; disabled while every key is its default | flat: transparent, bold, `-fx-hover-color` under the pointer |
 | `shortcuts-header` | the header row, an `HBox` | padding `4 8 4 0`, 1px `-fx-control-border` lines above and below; its labels 11px bold `-fx-text-secondary-color` |
 | `shortcuts-header-command`, `shortcuts-header-shortcut` | the column titles, `Label`s, in capitals | the command title indented 26px |
 | `shortcuts-list` | the list, a `ListView` (keeps `list-view`) | cells 22px high, padding `0 8 0 0` |
+| `shortcuts-no-match` | the list's placeholder, a `Label`: *No matching commands* while the search and the filter leave no row; hidden while the registry has no command | the theme's list placeholder, `-fx-text-secondary-color` |
 | `shortcuts-group-row` | a group's line, a list cell | a `-fx-canvas-color` band; the list's hover and selection |
 | `shortcuts-group-content` | the group line's content, an `HBox`: arrow, name, count | padding `0 0 0 8`, spacing 6 |
 | `shortcuts-group-arrow` | its fold arrow, a Bootstrap `CHEVRON_DOWN` icon, `CHEVRON_RIGHT` while folded | 12px, `-fx-text-secondary-color` |
-| `shortcuts-group-name`, `shortcuts-group-count` | its name and the number of its commands, `Label`s | the name bold, the count `-fx-text-secondary-color` |
+| `shortcuts-group-name`, `shortcuts-group-count` | its name and the number of its commands that show, `Label`s | the name bold, the count `-fx-text-secondary-color` |
 | `shortcuts-row` | a command's row, a list cell | the list's cell, its hover and selection |
 | `shortcuts-command-column` | the row's command column, an `HBox`: name, dot, mark | padding `0 8 0 26`, spacing 6 |
 | `shortcuts-command-name` | the command's name, a `Label` | `-fx-text-color` |
@@ -529,7 +531,7 @@ renaming one is a breaking change.
 | `:conflict` | `shortcuts-row`, while another command of the same context, fixed or not, has its key | the key caps and *Also used by …* in `-fx-status-error`, the fix while one of the others is not fixed |
 | `:override` | `shortcuts-row`, while a command of an enclosing context (the window, or a part whose node is an ancestor of this part's) has its key | *Overrides …* muted, unless the row is in a conflict too, whose hint it then shows |
 | `:conflict` | `shortcuts-count-conflicts`, while there is a conflict | the number in `-fx-status-error` |
-| `:collapsed` | `shortcuts-group-row`, while the group is folded | the arrow points right; the group's rows are not in the list |
+| `:collapsed` | `shortcuts-group-row`, while the group is folded; while a search is on, every group with a match is open unless folded in that search | the arrow points right; the group's rows are not in the list |
 | `:refused` | `shortcuts-recorder`, while it shows why the last key was refused | the message in `-fx-status-error` |
 | `:selected`, `:hover` | `shortcuts-row`, `shortcuts-group-row` (the list cell's own) | the list's selection and hover; the row's pencil and × show |
 

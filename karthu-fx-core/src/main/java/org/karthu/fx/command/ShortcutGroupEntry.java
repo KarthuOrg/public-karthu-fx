@@ -6,7 +6,8 @@ import java.util.List;
 
 /**
  * A group's line in the shortcut editor's list: the group, its commands' rows in their order, and whether the group
- * is open. Groups start open; their folding lives as long as the editor's working copy.
+ * is open. Groups start open; their folding lives as long as the editor's working copy. A search keeps a folding of its
+ * own, so that the user's folding without a search is there again when the search is cleared.
  */
 final class ShortcutGroupEntry implements ShortcutListItem {
 
@@ -14,7 +15,11 @@ final class ShortcutGroupEntry implements ShortcutListItem {
 
     private final List<ShortcutEntry> entries = new ArrayList<>();
 
+    /** Whether the group is open while no search is on: the user's folding, which a search leaves alone. */
     private boolean expanded = true;
+
+    /** Whether the user folded the group while the current search shows. */
+    private boolean foldedInSearch;
 
     /**
      * Creates the line of a group, open and without rows.
@@ -68,5 +73,24 @@ final class ShortcutGroupEntry implements ShortcutListItem {
      */
     void setExpanded(boolean expanded) {
         this.expanded = expanded;
+    }
+
+    /**
+     * Returns whether the user folded the group while the current search shows: a search opens every group with a
+     * match, and the user may fold one of them until the search changes.
+     *
+     * @return true while the group is folded in the current search
+     */
+    boolean isFoldedInSearch() {
+        return foldedInSearch;
+    }
+
+    /**
+     * Folds or opens the group in the current search.
+     *
+     * @param foldedInSearch true to fold the group while the current search shows
+     */
+    void setFoldedInSearch(boolean foldedInSearch) {
+        this.foldedInSearch = foldedInSearch;
     }
 }

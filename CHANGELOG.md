@@ -52,6 +52,7 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   takes its action and its disabled state, and a menu item shows the command's key as its
   accelerator. The display text of a command's key is a property (*Ctrl+S*, empty without a key),
   so tooltips and prompts that name the key are built from it.
+
   A `CommandContext` names a part of the window, such as a document area or a canvas, bound to a
   node: its commands run while the focus is in that node, and there they win over the window's
   commands on the same key. Contexts nest as their nodes do, the innermost asked first, and a
@@ -60,6 +61,7 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   owns (*Copy* on Ctrl+C in a document): their keys never change, and without an action they leave
   the key to the component. While a text input has the focus, no command runs on Ctrl+Alt with a
   key that types a character, so typing `@`, `{` or `|` with AltGr never runs a command.
+
   The user's keys outlive a restart without the library touching a file: the registry gives out
   the keys that differ from their defaults as a map from command id to a text
   (`file.save=Ctrl+Shift+S`, an empty text for a removed key), reports every change through
@@ -71,6 +73,7 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   (*Ctrl+Page Up*, *Ctrl+Plus* for the key, *Ctrl++* for the character). `Shortcut.isRecordable()`
   says whether a user may choose a key: F1 to F12 as they are, every other key only with Ctrl or
   Alt. Two defaults on one key in one context are logged as a warning.
+
   The user changes the keys in a `ShortcutsDialog` (`new ShortcutsDialog(owner, registry)
   .showAndWait()`): every command in its group, with its key as key caps, *Not assigned* without
   one, and a small mark with the context's name for a key that holds only in a part of the window;
@@ -85,12 +88,17 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   defaults of the application show as a conflict as soon as the dialog opens. A key of a part of the
   window that a command of the window, or of a part around it, holds too is no conflict: the row
   says which command it overrides there. A counter shows the commands, the modified ones, the
-  conflicts and those without a key. *Apply* hands the changes to the registry, which reports them
-  once, *Cancel* and closing the window drop them. The same content is a node of its own,
-  `ShortcutsEditor`, with `apply()`, `discard()`, `hasChangesProperty()` and
-  `hasConflictsProperty()`, for a settings page in the application's own window. Every text of both
-  is a property with an English default; the style classes and pseudo-classes are listed in
-  STYLEGUIDE.md.
+  conflicts and those without a key. A search field finds a command by its name, its group, its
+  context or its key (*ctrl+0* finds both commands of a conflict on Ctrl+0), ignoring case and
+  accents as `SearchInput` does, and opens the groups with matches while it searches. The filters
+  *All*, *Modified* and *Conflicts* show every command, those whose keys differ from their defaults
+  (also keys set in an earlier session) or those in a conflict, and *Reset all* puts every key back
+  to its default. *Apply* hands the changes to the registry, which reports them once, *Cancel* and
+  closing the window drop them. The same content is a node of its own, `ShortcutsEditor`, with
+  `apply()`, `discard()`, `hasChangesProperty()` and `hasConflictsProperty()`, for a settings page
+  in the application's own window. Every text of both is a property with an English default; the
+  style classes and pseudo-classes are listed in STYLEGUIDE.md.
+
   The showcase's *Shortcuts* page is a small example application to try all of it: 30 commands
   with a menu bar, a toolbar, a document and a note field with keys of their own, read-outs of the
   last command and of the kept keys, the dialog and the editor. `docs/components.md` describes the
