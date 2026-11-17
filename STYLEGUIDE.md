@@ -470,11 +470,12 @@ editor*, colours through the theme's tokens only, no token of its own: `-fx-surf
 editor, the dialog), `-fx-canvas-color` (the band of a group's line), `-fx-control-border` (the
 header's and footer's lines, the filters' frame, the key caps' and the context mark's frames),
 `-fx-button-color` (the key caps, the chosen filter), `-fx-text-color`, `-fx-text-secondary-color`
-(the column titles, the group's count, *Not assigned*, the context mark, the field's hint, the
-counter, the row's icons), `-fx-accent-color` (the modified dot, the reset icon, the recording
-field's frame), `-fx-control-inner-background` (the recording field), `-fx-status-error` (a refused
-key's reason, the × under the pointer), `-fx-hover-color` and, through the list, `-fx-selection-color`
-and `-fx-selection-text-color`. The key caps and the segmented filters are no public controls; their
+(the column titles, the group's count, *Not assigned*, the context mark, the field's hint, an
+override's hint, the counter, the row's icons), `-fx-accent-color` (the modified dot, the reset
+icon, the recording field's frame, a conflict's fix, `-fx-accent-hover-color` under the pointer),
+`-fx-control-inner-background` (the recording field), `-fx-status-error` (a refused key's reason, the
+× under the pointer, a conflict's key caps and hint, the counter's conflicts), `-fx-hover-color` and,
+through the list, `-fx-selection-color` and `-fx-selection-text-color`. The key caps and the segmented filters are no public controls; their
 style classes, like all the others here, are a public contract, also listed in the classes' JavaDoc:
 renaming one is a breaking change.
 
@@ -499,9 +500,12 @@ renaming one is a breaking change.
 | `shortcuts-command-name` | the command's name, a `Label` | `-fx-text-color` |
 | `shortcuts-modified-dot` | the dot after the name of a modified command, a `Region` | a 6px circle in `-fx-accent-color` |
 | `shortcuts-context-mark` | the context's name after the name of a command whose key holds only in a part of the window, a `Label` | 10px, `-fx-text-secondary-color`, 1px `-fx-control-border` frame, radius 3 |
-| `shortcuts-shortcut-column` | the row's shortcut column, a `StackPane` holding the key caps, *Not assigned* or the recording field | left aligned, grows |
+| `shortcuts-shortcut-column` | the row's shortcut column, a `StackPane` holding the key line, *Not assigned* or the recording field | left aligned, grows |
+| `shortcuts-key-line` | the key line, an `HBox`: the key caps, then the hint and the fix | spacing 8 |
 | `shortcuts-key-caps` | a key's caps, an `HBox` | spacing 3 |
-| `shortcuts-key-cap` | one cap, a `Label`: a modifier, the key's name or the character | 11px, padding `0 5`, `-fx-button-color` in a 1px `-fx-control-border` frame, radius 3 |
+| `shortcuts-key-cap` | one cap, a `Label`: a modifier, the key's name or the character | 11px, padding `0 5`, `-fx-button-color` in a 1px `-fx-control-border` frame, radius 3; in a conflict framed and lettered in `-fx-status-error` |
+| `shortcuts-hint` | the hint after the key caps, a `Label`: *Also used by …* naming the other commands of a conflict, else *Overrides …* naming the commands of enclosing contexts the key overrides; shows only then | `-fx-text-secondary-color`; in a conflict `-fx-status-error`, also on the selected row; shrinks with an ellipsis |
+| `shortcuts-fix` | the conflict's one-click fix after the hint, a `Hyperlink`, not focus traversable: *Remove there* takes the key from the other commands; shows only while one of them is not fixed | the theme's link, `-fx-accent-color`, `-fx-accent-hover-color` under the pointer, no padding |
 | `shortcuts-not-assigned` | *Not assigned*, a `Label` | `-fx-text-secondary-color` |
 | `shortcuts-row-content` | the row's content, an `HBox`: the columns and the buttons | — |
 | `shortcuts-edit`, `shortcuts-remove`, `shortcuts-reset` | the pencil (Bootstrap `PENCIL`), the × (`X`) and the reset (`ARROW_COUNTERCLOCKWISE`), `Button`s beside `icon-button`, not focus traversable | icons 13px in `-fx-text-secondary-color`, the × in `-fx-status-error` under the pointer, the reset in `-fx-accent-color`; pencil and × on the row under the pointer and the selected row, the reset on a modified row, none on a fixed row |
@@ -510,7 +514,7 @@ renaming one is a breaking change.
 | `shortcuts-recorder-hint` | *Esc to cancel* at the field's end, a `Label` | `-fx-text-secondary-color` |
 | `shortcuts-footer` | the footer, an `HBox`: counter, then the buttons | padding 8, spacing 8, a 1px `-fx-control-border` line above |
 | `shortcuts-count` | the counter, an `HBox` of `Label`s | `-fx-text-secondary-color` |
-| `shortcuts-count-commands`, `shortcuts-count-modified`, `shortcuts-count-conflicts`, `shortcuts-count-not-assigned` | the counter's parts | — |
+| `shortcuts-count-commands`, `shortcuts-count-modified`, `shortcuts-count-conflicts`, `shortcuts-count-not-assigned` | the counter's parts | the conflicts in `-fx-status-error` while there is one |
 | `shortcuts-count-separator` | the ` · ` between the parts | — |
 | `shortcuts-footer-buttons` | the footer's buttons, an `HBox` at its right end | spacing 8; buttons at least 80px wide |
 | `shortcuts-dialog-cancel` | the dialog's *Cancel*, a `Button`, the cancel button (Esc) | the theme's button |
@@ -522,6 +526,9 @@ renaming one is a breaking change.
 | `:not-assigned` | `shortcuts-row`, while the command has no key | *Not assigned* in place of the key caps |
 | `:fixed` | `shortcuts-row` of a fixed command | no pencil, × or reset |
 | `:recording` | `shortcuts-row`, while it records a new key | the recording field in place of the key caps, no buttons |
+| `:conflict` | `shortcuts-row`, while another command of the same context, fixed or not, has its key | the key caps and *Also used by …* in `-fx-status-error`, the fix while one of the others is not fixed |
+| `:override` | `shortcuts-row`, while a command of an enclosing context (the window, or a part whose node is an ancestor of this part's) has its key | *Overrides …* muted, unless the row is in a conflict too, whose hint it then shows |
+| `:conflict` | `shortcuts-count-conflicts`, while there is a conflict | the number in `-fx-status-error` |
 | `:collapsed` | `shortcuts-group-row`, while the group is folded | the arrow points right; the group's rows are not in the list |
 | `:refused` | `shortcuts-recorder`, while it shows why the last key was refused | the message in `-fx-status-error` |
 | `:selected`, `:hover` | `shortcuts-row`, `shortcuts-group-row` (the list cell's own) | the list's selection and hover; the row's pencil and × show |

@@ -23,10 +23,11 @@ import java.util.Objects;
  * new ShortcutsDialog(stage, registry).showAndWait();
  * }</pre>
  *
- * <p><i>Apply</i> hands the user's changes to the registry and closes the dialog. <i>Cancel</i>, Esc while no key is
- * being recorded, and closing the window drop them. Every showing starts from the registry's keys with every group
- * open. The window opens at about 760 by 660 pixels, room for about 30 commands without scrolling, is resizable, and
- * remembers nothing.
+ * <p><i>Apply</i> hands the user's changes to the registry and closes the dialog. It is disabled while a key is on two
+ * commands of the same context ({@link ShortcutsEditor#hasConflictsProperty()}), so that the user resolves every
+ * conflict first. <i>Cancel</i>, Esc while no key is being recorded, and closing the window drop the changes. Every
+ * showing starts from the registry's keys with every group open. The window opens at about 760 by 660 pixels, room
+ * for about 30 commands without scrolling, is resizable, and remembers nothing.
  *
  * <p>The window's title and the buttons' texts are properties of the dialog with English defaults; the editor's texts
  * are the editor's ({@link #getEditor()}). The dialog's content carries the style class {@code shortcuts-dialog}, its
@@ -94,6 +95,8 @@ public final class ShortcutsDialog {
         Button apply = new Button();
         apply.getStyleClass().addAll("shortcuts-dialog-apply", "primary-button");
         apply.textProperty().bind(applyText);
+        // A key on two commands of one context would run only one of them: the user resolves every conflict first.
+        apply.disableProperty().bind(editor.hasConflictsProperty());
         apply.setOnAction(event -> {
             editor.apply();
             applied = true;

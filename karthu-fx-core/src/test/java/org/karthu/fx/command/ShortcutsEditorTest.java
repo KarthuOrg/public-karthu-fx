@@ -385,7 +385,7 @@ class ShortcutsEditorTest {
         assertShortcutColumn(editor, "Save", "[Ctrl] " + PRESS_KEYS);
 
         press(editor, keyPressed(KeyCode.F5, "", false, false, false));
-        assertShortcutColumn(editor, "Save", "[F5]");
+        assertShortcutColumn(editor, "Save", "[F5] Also used by Run <Remove there>");
     }
 
     @Test
@@ -500,7 +500,7 @@ class ShortcutsEditorTest {
         ShortcutsEditor editor = shown(new ShortcutsEditor(app.registry));
 
         record(editor, "Save", keyPressed(KeyCode.PLUS, "+", false, true, false));
-        assertShortcutColumn(editor, "Save", "[Ctrl] [+]");
+        assertShortcutColumn(editor, "Save", "[Ctrl] [+] Also used by Zoom in <Remove there>");
         record(editor, "Open...", keyPressed(KeyCode.SUBTRACT, "-", false, true, false));
         assertShortcutColumn(editor, "Open...", "[Ctrl] [-]");
         record(editor, "Undo", keyPressed(KeyCode.COMMA, ",", false, false, true));
@@ -526,7 +526,7 @@ class ShortcutsEditorTest {
 
         record(editor, "Save", keyPressed(key, "", true, true, false));
 
-        assertShortcutColumn(editor, "Save", "[Ctrl] [+]");
+        assertShortcutColumn(editor, "Save", "[Ctrl] [+] Also used by Zoom in <Remove there>");
         editor.apply();
         assertEquals(Shortcut.of('+', CTRL), app.save.getShortcut());
     }

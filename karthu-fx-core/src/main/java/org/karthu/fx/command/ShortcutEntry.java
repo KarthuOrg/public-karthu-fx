@@ -1,5 +1,6 @@
 package org.karthu.fx.command;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -12,6 +13,12 @@ final class ShortcutEntry implements ShortcutListItem {
 
     /** The key in the working copy; null for none. */
     private Shortcut shortcut;
+
+    /** The rows of the other commands of the context that hold the same key in the working copy, in their order. */
+    private List<ShortcutEntry> conflicts = List.of();
+
+    /** The rows of the commands of enclosing contexts whose key this row's key overrides, the innermost first. */
+    private List<ShortcutEntry> overridden = List.of();
 
     /**
      * Creates the row of a command, its key in the working copy being the command's current key.
@@ -76,5 +83,45 @@ final class ShortcutEntry implements ShortcutListItem {
      */
     boolean isChanged() {
         return !Objects.equals(shortcut, command.getShortcut());
+    }
+
+    /**
+     * Returns the rows of the other commands of the same context that hold this row's key in the working copy: the
+     * conflict this row is in, fixed commands included.
+     *
+     * @return the other rows, unmodifiable, empty while the row is in no conflict
+     */
+    List<ShortcutEntry> getConflicts() {
+        return conflicts;
+    }
+
+    /**
+     * Whether another command of the same context holds this row's key in the working copy.
+     *
+     * @return true while the row is in a conflict
+     */
+    boolean isInConflict() {
+        return !conflicts.isEmpty();
+    }
+
+    /**
+     * Returns the rows of the commands of the contexts around this row's context that hold its key in the working
+     * copy: the commands this row's key overrides while the focus is in its context.
+     *
+     * @return the overridden rows, unmodifiable, the innermost context's first; empty when the key overrides none
+     */
+    List<ShortcutEntry> getOverridden() {
+        return overridden;
+    }
+
+    /**
+     * Sets what the row's key clashes with, as the editor finds it after every change of the working copy.
+     *
+     * @param conflicts  the rows of the other commands of the same context on the same key
+     * @param overridden the rows of the commands of enclosing contexts on the same key
+     */
+    void setClashes(List<ShortcutEntry> conflicts, List<ShortcutEntry> overridden) {
+        this.conflicts = List.copyOf(conflicts);
+        this.overridden = List.copyOf(overridden);
     }
 }

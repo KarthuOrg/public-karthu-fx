@@ -9,6 +9,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.Labeled;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
@@ -103,7 +104,8 @@ final class ShortcutsEditorTestSupport {
 
     /**
      * What a command's row shows in its shortcut column: the key caps in brackets, the text in place of a key, or the
-     * recording field's held caps and its texts.
+     * recording field's held caps and its texts. A hint after the key caps follows them, and the one-click fix after
+     * it in angle brackets: <i>[Ctrl] [O] Also used by Save &lt;Remove there&gt;</i>.
      *
      * @param cell the command's row
      * @return the shortcut column's text
@@ -120,7 +122,16 @@ final class ShortcutsEditorTestSupport {
         if (notAssigned != null && notAssigned.isVisible()) {
             return ((Label) notAssigned).getText();
         }
-        return String.join(" ", caps(cell));
+        List<String> parts = new ArrayList<>(caps(cell));
+        Node hint = cell.lookup(".shortcuts-hint");
+        if (hint != null && hint.isVisible()) {
+            parts.add(((Label) hint).getText());
+        }
+        Node fix = cell.lookup(".shortcuts-fix");
+        if (fix != null && fix.isVisible()) {
+            parts.add("<" + ((Labeled) fix).getText() + ">");
+        }
+        return String.join(" ", parts);
     }
 
     /**

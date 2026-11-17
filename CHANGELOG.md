@@ -79,10 +79,16 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   command's key, punctuation by its character (*Ctrl++* whichever key types the plus). A refused
   key says why while recording goes on, and Esc, a click elsewhere or leaving the field cancel.
   The ×, Delete or Backspace remove a key; a key that differs from its default carries a dot and a
-  reset button. A counter shows the commands, the modified ones and those without a key. *Apply*
-  hands the changes to the registry, which reports them once, *Cancel* and closing the window drop
-  them. The same content is a node of its own, `ShortcutsEditor`, with `apply()`, `discard()` and
-  `hasChangesProperty()`, for a settings page in the application's own window. Every text of both
+  reset button. A key on two commands of the same context, fixed ones included, marks every row
+  involved in red with *Also used by …* and a one-click fix that takes the key from the other
+  commands (never from a fixed one), and *Apply* stays disabled until no conflict is left; clashing
+  defaults of the application show as a conflict as soon as the dialog opens. A key of a part of the
+  window that a command of the window, or of a part around it, holds too is no conflict: the row
+  says which command it overrides there. A counter shows the commands, the modified ones, the
+  conflicts and those without a key. *Apply* hands the changes to the registry, which reports them
+  once, *Cancel* and closing the window drop them. The same content is a node of its own,
+  `ShortcutsEditor`, with `apply()`, `discard()`, `hasChangesProperty()` and
+  `hasConflictsProperty()`, for a settings page in the application's own window. Every text of both
   is a property with an English default; the style classes and pseudo-classes are listed in
   STYLEGUIDE.md.
 

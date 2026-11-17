@@ -8,6 +8,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.Tooltip;
@@ -20,6 +21,7 @@ import javafx.scene.layout.StackPane;
 import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -40,6 +42,10 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
 
     private static final PseudoClass COLLAPSED = PseudoClass.getPseudoClass("collapsed");
 
+    private static final PseudoClass CONFLICT = PseudoClass.getPseudoClass("conflict");
+
+    private static final PseudoClass OVERRIDE = PseudoClass.getPseudoClass("override");
+
     private static final String ROW_CLASS = "shortcuts-row";
 
     private static final String GROUP_ROW_CLASS = "shortcuts-group-row";
@@ -58,6 +64,13 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
     private final StackPane shortcutSlot = new StackPane();
 
     private final HBox caps = KeyCaps.row();
+
+    private final Label hint = new Label();
+
+    private final Hyperlink fix = new Hyperlink();
+
+    /** The key caps with the hint and the fix after them. */
+    private final HBox keyLine = new HBox(caps, hint, fix);
 
     private final Label notAssigned = new Label();
 
@@ -111,6 +124,21 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
         shortcutSlot.getStyleClass().add("shortcuts-shortcut-column");
         shortcutSlot.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(shortcutSlot, Priority.ALWAYS);
+        hint.getStyleClass().add("shortcuts-hint");
+        hint.setMinWidth(0);
+        fix.getStyleClass().add("shortcuts-fix");
+        fix.setMinWidth(Region.USE_PREF_SIZE);
+        fix.setFocusTraversable(false);
+        fix.textProperty().bind(editor.conflictFixTextProperty());
+        fix.setOnAction(event -> {
+            // A link that was followed shows as visited: this one stays a fix, whichever line the cell shows next.
+            fix.setVisited(false);
+            if (getItem() instanceof ShortcutEntry entry) {
+                editor.removeFromOthers(entry);
+            }
+        });
+        keyLine.getStyleClass().add("shortcuts-key-line");
+        keyLine.setAlignment(Pos.CENTER_LEFT);
 
         setUpButton(edit, "shortcuts-edit", BootstrapIcons.PENCIL, editor.editTooltipTextProperty());
         setUpButton(remove, "shortcuts-remove", BootstrapIcons.X, editor.removeTooltipTextProperty());
@@ -183,7 +211,7 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
 
     private void drawEmpty() {
         getStyleClass().removeAll(ROW_CLASS, GROUP_ROW_CLASS);
-        setPseudoClasses(false, false, false, false, false);
+        setPseudoClasses(false, false, false, false, false, false, false);
         setGraphic(null);
     }
 
@@ -192,7 +220,7 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
         if (!getStyleClass().contains(GROUP_ROW_CLASS)) {
             getStyleClass().add(GROUP_ROW_CLASS);
         }
-        setPseudoClasses(false, false, false, false, !group.isExpanded());
+        setPseudoClasses(false, false, false, false, !group.isExpanded(), false, false);
         arrow.setIconCode(group.isExpanded() ? BootstrapIcons.CHEVRON_DOWN : BootstrapIcons.CHEVRON_RIGHT);
         groupName.setText(group.getGroup().getName());
         groupCount.setText(Integer.toString(editor.shownCount(group)));
@@ -211,7 +239,9 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
         boolean recording = editor.isRecording(entry);
         boolean modified = entry.isModified();
         Shortcut shortcut = entry.getShortcut();
-        setPseudoClasses(modified, shortcut == null, !changeable, recording, false);
+        boolean conflict = entry.isInConflict();
+        boolean override = !entry.getOverridden().isEmpty();
+        setPseudoClasses(modified, shortcut == null, !changeable, recording, false, conflict, override);
 
         name.setText(command.getName());
         modifiedDot.setVisible(modified);
@@ -233,7 +263,8 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
                 KeyCaps.show(caps, parts);
                 shownCaps = parts;
             }
-            showInSlot(caps);
+            drawHint(entry);
+            showInSlot(keyLine);
         }
 
         // The pencil and the x show on the row under the pointer and on the selected row, so that they serve the
@@ -250,6 +281,39 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
     }
 
     /**
+     * Draws the hint after the key caps: the other commands of a conflict, with the fix while one of them may lose
+     * the key; else the commands the row's key overrides; nothing while the row's key clashes with none.
+     */
+    private void drawHint(ShortcutEntry entry) {
+        String text = null;
+        boolean fixable = false;
+        if (entry.isInConflict()) {
+            text = ShortcutsEditor.fill(editor.getConflictHintFormat(), names(entry.getConflicts()));
+            for (ShortcutEntry other : entry.getConflicts()) {
+                fixable = fixable || other.isChangeable();
+            }
+        } else if (!entry.getOverridden().isEmpty()) {
+            text = ShortcutsEditor.fill(editor.getOverrideHintFormat(), names(entry.getOverridden()));
+        }
+        hint.setText(text == null ? "" : text);
+        hint.setVisible(text != null);
+        hint.setManaged(text != null);
+        fix.setVisible(fixable);
+        fix.setManaged(fixable);
+    }
+
+    /**
+     * The names of the commands of rows, separated by commas.
+     */
+    private static String names(List<ShortcutEntry> entries) {
+        List<String> names = new ArrayList<>();
+        for (ShortcutEntry entry : entries) {
+            names.add(entry.getCommand().getName());
+        }
+        return String.join(", ", names);
+    }
+
+    /**
      * Shows a node in the shortcut column, unless it shows there already: the recording field keeps the focus only
      * while it stays in the scene.
      */
@@ -260,12 +324,14 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
     }
 
     private void setPseudoClasses(boolean modified, boolean notAssigned, boolean fixed, boolean recording,
-            boolean collapsed) {
+            boolean collapsed, boolean conflict, boolean override) {
         pseudoClassStateChanged(MODIFIED, modified);
         pseudoClassStateChanged(NOT_ASSIGNED, notAssigned);
         pseudoClassStateChanged(FIXED, fixed);
         pseudoClassStateChanged(RECORDING, recording);
         pseudoClassStateChanged(COLLAPSED, collapsed);
+        pseudoClassStateChanged(CONFLICT, conflict);
+        pseudoClassStateChanged(OVERRIDE, override);
     }
 
     /**

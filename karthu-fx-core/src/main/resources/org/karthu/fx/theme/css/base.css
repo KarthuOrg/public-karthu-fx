@@ -2398,6 +2398,41 @@ Text {
     -fx-font-size: 11px;
 }
 
+/* The key caps, then the hint of a conflict or an override and the
+ * conflict's one-click fix. */
+.shortcuts-key-line {
+    -fx-spacing: 8;
+}
+
+/* A conflict: the key caps framed and lettered in the error colour, the
+ * hint in the error colour too, also on the selected row. */
+.shortcuts-list .shortcuts-row:conflict .shortcuts-key-cap {
+    -fx-background-color: -fx-status-error, -fx-button-color;
+}
+
+.shortcuts-list .shortcuts-row:conflict .shortcuts-key-cap .text,
+.shortcuts-list .shortcuts-row:conflict .shortcuts-hint .text {
+    -fx-fill: -fx-status-error;
+}
+
+/* An override is no fault: its hint muted, as Not assigned. */
+.shortcuts-list .shortcuts-hint .text {
+    -fx-fill: -fx-text-secondary-color;
+}
+
+/* The fix: the theme's link, in the row's height. */
+.shortcuts-list .shortcuts-fix {
+    -fx-padding: 0;
+}
+
+.shortcuts-list .shortcuts-fix .text {
+    -fx-fill: -fx-accent-color;
+}
+
+.shortcuts-list .shortcuts-fix:hover .text {
+    -fx-fill: -fx-accent-hover-color;
+}
+
 /* The row's buttons: the theme's icon buttons, small and quiet; the x
  * in the error colour under the pointer, the reset in the accent. */
 .shortcuts-row-content .icon-button {
@@ -2451,6 +2486,10 @@ Text {
 
 .shortcuts-count .label {
     -fx-text-fill: -fx-text-secondary-color;
+}
+
+.shortcuts-count .shortcuts-count-conflicts:conflict {
+    -fx-text-fill: -fx-status-error;
 }
 
 .shortcuts-footer-buttons {

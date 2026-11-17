@@ -15,6 +15,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.beans.value.WeakChangeListener;
 import javafx.collections.ObservableList;
+import javafx.css.PseudoClass;
 import javafx.event.EventTarget;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -54,14 +55,32 @@ import java.util.Objects;
  *
  * <p><b>Layout</b>, from top to bottom: a bar with a search field, the filters <i>All</i>, <i>Modified</i> and
  * <i>Conflicts</i> and <i>Reset all</i>; a header row naming the columns <i>Command</i> and <i>Shortcut</i>, in
- * capitals; the list; and a footer with the counter, such as <i>30 commands · 1 modified · 0 conflicts · 1 not
+ * capitals; the list; and a footer with the counter, such as <i>30 commands · 1 modified · 1 conflict · 1 not
  * assigned</i>. The list shows each group's line, with a fold arrow, the group's name and the number of its commands,
  * then the rows of its commands in their order; a group without commands has no line. A click on a group's line folds
- * or opens it; groups start open, and their folding is not kept. A command's row shows its name, a dot when its key differs from its default, a small mark
- * with its context's name when its key holds only in a part of the window, and its key as key caps or <i>Not
- * assigned</i>. The row under the pointer and the selected row show a pencil, which records a new key, and an
- * &times;, which removes the key; a modified row shows a reset button, which puts the default back. A
- * {@linkplain Command#isFixed() fixed} command's row shows its key and has none of the buttons.
+ * or opens it; groups start open, and their folding is not kept. A command's row shows its name, a dot when its key
+ * differs from its default, a small mark with its context's name when its key holds only in a part of the window, and
+ * its key as key caps or <i>Not assigned</i>. The row under the pointer and the selected row show a pencil, which
+ * records a new key, and an &times;, which removes the key; a modified row shows a reset button, which puts the
+ * default back. A {@linkplain Command#isFixed() fixed} command's row shows its key and has none of the buttons.
+ *
+ * <p><b>Conflicts.</b> A key on two or more commands of the same context, fixed commands included, is a conflict: only
+ * one of them could run on it. Every row of a conflict shows its key caps in the theme's error colour and after them
+ * <i>Also used by …</i>, naming the other commands, with a fix, <i>Remove there</i>, that takes the key from those
+ * commands with one click. A fixed command keeps its key, so a row whose conflict is with fixed commands alone offers
+ * no fix: its own key has to change. {@link #hasConflictsProperty()} is true while a conflict is left, the dialog
+ * disables its <i>Apply</i> meanwhile, and the counter counts the conflicts, a key on three commands as one. Clashing
+ * defaults of the application show as a conflict as soon as the editor opens.
+ *
+ * <p><b>Overrides.</b> A key of a part of the window that a command of an enclosing context holds too is an override,
+ * no conflict: while the focus is in the part, the part's command runs on the key, elsewhere the other. The row of the
+ * part's command shows <i>Overrides …</i>, naming the commands it overrides, the innermost part's first; the other
+ * rows show nothing. The whole window encloses every part, and a part encloses another when its node is an ancestor of
+ * the other's node at the time the working copy last changed.
+ *
+ * <p>Keys clash only when they are equal ({@link Shortcut#equals(Object)}). A key and a character can run on the same
+ * press on some keyboard layouts without being equal, such as Ctrl, Shift and the {@code 1} key and <i>Ctrl++</i> on a
+ * Swiss keyboard; which presses those are depends on the user's layout, so the editor does not find such a clash.
  *
  * <p><b>Recording.</b> Enter, a double-click on a row or its pencil starts recording: a field takes the place of the
  * key caps, shows the modifiers held down, <i>Press keys…</i> and <i>Esc to cancel</i>. The first key the user may
@@ -90,22 +109,27 @@ import java.util.Objects;
  * {@code shortcuts-group-name} and {@code shortcuts-group-count}; a command's row {@code shortcuts-row} (a list cell)
  * with its content {@code shortcuts-row-content} holding {@code shortcuts-command-column} (with
  * {@code shortcuts-command-name}, {@code shortcuts-modified-dot} and {@code shortcuts-context-mark}),
- * {@code shortcuts-shortcut-column} (with {@code shortcuts-key-caps} holding one {@code shortcuts-key-cap} per
- * modifier and key, or {@code shortcuts-not-assigned}), and the buttons {@code shortcuts-edit},
+ * {@code shortcuts-shortcut-column} (with {@code shortcuts-key-line}, holding {@code shortcuts-key-caps} with one
+ * {@code shortcuts-key-cap} per modifier and key, the hint of a conflict or an override {@code shortcuts-hint} and the
+ * conflict's fix {@code shortcuts-fix}, or {@code shortcuts-not-assigned}), and the buttons {@code shortcuts-edit},
  * {@code shortcuts-remove} and {@code shortcuts-reset}; the recording field {@code shortcuts-recorder} with
  * {@code shortcuts-recorder-message} and {@code shortcuts-recorder-hint}; the footer {@code shortcuts-footer} with the
  * counter {@code shortcuts-count} (holding {@code shortcuts-count-commands}, {@code shortcuts-count-modified},
  * {@code shortcuts-count-conflicts}, {@code shortcuts-count-not-assigned} and the separators
- * {@code shortcuts-count-separator}) and {@code shortcuts-footer-buttons}, empty but in the dialog. Pseudo-classes: on a
- * command's row {@code :modified}, {@code :not-assigned}, {@code :fixed} and {@code :recording}, beside the list
- * cell's own {@code :selected} and {@code :hover}; on a group's line {@code :collapsed}; on the recording field
- * {@code :refused} while it shows why a key was refused.
+ * {@code shortcuts-count-separator}) and {@code shortcuts-footer-buttons}, empty but in the dialog. Pseudo-classes:
+ * on a command's row {@code :modified}, {@code :not-assigned}, {@code :fixed}, {@code :recording}, {@code :conflict}
+ * and {@code :override}, beside the list cell's own {@code :selected} and {@code :hover}; on a group's line
+ * {@code :collapsed}; on the recording field {@code :refused} while it shows why a key was refused; on the counter's
+ * {@code shortcuts-count-conflicts} {@code :conflict} while there is one.
  *
  * <p>Like the registry, the editor is used on the JavaFX Application Thread.
  *
  * @since 1.1.0-RC2
  */
 public final class ShortcutsEditor extends VBox {
+
+    /** On the counter's number of conflicts while there is one. */
+    private static final PseudoClass CONFLICT = PseudoClass.getPseudoClass("conflict");
 
     /** The share of the list's width that the command column takes; the shortcut column takes the rest. */
     private static final double COMMAND_COLUMN_SHARE = 0.55;
@@ -154,6 +178,14 @@ public final class ShortcutsEditor extends VBox {
     private final StringProperty resetTooltipText =
             new SimpleStringProperty(this, "resetTooltipText", "Reset to default");
 
+    private final StringProperty conflictHintFormat =
+            new SimpleStringProperty(this, "conflictHintFormat", "Also used by {0}");
+
+    private final StringProperty conflictFixText = new SimpleStringProperty(this, "conflictFixText", "Remove there");
+
+    private final StringProperty overrideHintFormat =
+            new SimpleStringProperty(this, "overrideHintFormat", "Overrides {0}");
+
     private final StringProperty commandCountFormat =
             new SimpleStringProperty(this, "commandCountFormat", "{0} commands");
 
@@ -179,6 +211,8 @@ public final class ShortcutsEditor extends VBox {
             new SimpleStringProperty(this, "notAssignedCountOneFormat", "{0} not assigned");
 
     private final ReadOnlyBooleanWrapper hasChanges = new ReadOnlyBooleanWrapper(this, "hasChanges");
+
+    private final ReadOnlyBooleanWrapper hasConflicts = new ReadOnlyBooleanWrapper(this, "hasConflicts");
 
     private final ListView<ShortcutListItem> list = new ListView<>();
 
@@ -209,6 +243,9 @@ public final class ShortcutsEditor extends VBox {
      * application drops does not live on in the registry.
      */
     private final List<Object> registryListeners = new ArrayList<>();
+
+    /** The number of keys that two or more commands of one context hold in the working copy. */
+    private int conflicts;
 
     /** The row the user records a key for; null while no recording runs. */
     private ShortcutEntry recording;
@@ -255,6 +292,10 @@ public final class ShortcutsEditor extends VBox {
                 notAssignedCountOneFormat)) {
             format.addListener(countFormatChanged);
         }
+        // A row's hint is filled from its format: the cells draw their lines again.
+        InvalidationListener hintFormatChanged = observable -> revision.set(revision.get() + 1);
+        conflictHintFormat.addListener(hintFormatChanged);
+        overrideHintFormat.addListener(hintFormatChanged);
         rebuild();
         changed();
     }
@@ -365,6 +406,9 @@ public final class ShortcutsEditor extends VBox {
      * once, so that the registry reports the {@linkplain CommandRegistry#changedShortcutsProperty() changed keys} to
      * the application once. A recording that runs ends without a key first.
      *
+     * <p>Apply when {@link #hasConflicts()} is false, as the dialog does. While a conflict is left, the registry keeps
+     * the key the user chose and may leave the other command of the conflict without its key.
+     *
      * @since 1.1.0-RC2
      */
     public void apply() {
@@ -418,6 +462,28 @@ public final class ShortcutsEditor extends VBox {
     }
 
     /**
+     * Whether a key is on two or more commands of one context in the working copy, fixed commands included: only one
+     * of them could run on it. A window disables its own apply button while it is true, as the dialog does; while it
+     * is, {@link #apply()} may leave one of the commands of a conflict without its key.
+     *
+     * @return the has conflicts property
+     * @since 1.1.0-RC2
+     */
+    public ReadOnlyBooleanProperty hasConflictsProperty() {
+        return hasConflicts.getReadOnlyProperty();
+    }
+
+    /**
+     * Returns whether a key is on two or more commands of one context in the working copy.
+     *
+     * @return true while the working copy has a conflict
+     * @since 1.1.0-RC2
+     */
+    public boolean hasConflicts() {
+        return hasConflicts.get();
+    }
+
+    /**
      * Reads the registry's groups and commands into a new working copy.
      */
     private void rebuild() {
@@ -452,10 +518,13 @@ public final class ShortcutsEditor extends VBox {
     }
 
     /**
-     * Brings everything that depends on the working copy in line with it: the lines the list shows, the counter,
-     * whether there are changes, and the cells, which draw their lines again.
+     * Brings everything that depends on the working copy in line with it: the conflicts and overrides of every row,
+     * the lines the list shows, the counter, whether there are changes or conflicts, and the cells, which draw their
+     * lines again.
      */
     private void changed() {
+        // The clashes first: every row knows whether it is in a conflict before the editor picks the rows that show.
+        conflicts = ShortcutClashes.find(entries(), registry.getContexts());
         refreshItems();
         updateCounter();
         boolean changes = false;
@@ -465,6 +534,7 @@ public final class ShortcutsEditor extends VBox {
             }
         }
         hasChanges.set(changes);
+        hasConflicts.set(conflicts > 0);
         revision.set(revision.get() + 1);
     }
 
@@ -505,6 +575,17 @@ public final class ShortcutsEditor extends VBox {
         return group.getEntries();
     }
 
+    /**
+     * Every command's row, in the order of the groups and of the commands within them.
+     */
+    private List<ShortcutEntry> entries() {
+        List<ShortcutEntry> entries = new ArrayList<>();
+        for (ShortcutGroupEntry group : groups) {
+            entries.addAll(group.getEntries());
+        }
+        return entries;
+    }
+
     private ShortcutGroupEntry groupOf(ShortcutEntry entry) {
         for (ShortcutGroupEntry group : groups) {
             if (group.getEntries().contains(entry)) {
@@ -535,7 +616,8 @@ public final class ShortcutsEditor extends VBox {
         }
         commandCount.setText(count(commands, commandCountOneFormat, commandCountFormat));
         modifiedCount.setText(count(modified, modifiedCountOneFormat, modifiedCountFormat));
-        conflictCount.setText(count(0, conflictCountOneFormat, conflictCountFormat));
+        conflictCount.setText(count(conflicts, conflictCountOneFormat, conflictCountFormat));
+        conflictCount.pseudoClassStateChanged(CONFLICT, conflicts > 0);
         notAssignedCount.setText(count(notAssigned, notAssignedCountOneFormat, notAssignedCountFormat));
     }
 
@@ -584,6 +666,21 @@ public final class ShortcutsEditor extends VBox {
             entry.setShortcut(null);
             changed();
         }
+    }
+
+    /**
+     * The one-click fix of a conflict: removes the key from the other commands of the row's context that hold it in
+     * the working copy, except from fixed commands, whose keys never change.
+     *
+     * @param entry the row in a conflict
+     */
+    void removeFromOthers(ShortcutEntry entry) {
+        for (ShortcutEntry other : entry.getConflicts()) {
+            if (other.isChangeable()) {
+                other.setShortcut(null);
+            }
+        }
+        changed();
     }
 
     /**
@@ -1236,6 +1333,103 @@ public final class ShortcutsEditor extends VBox {
      */
     public void setResetTooltipText(String text) {
         resetTooltipText.set(text);
+    }
+
+    /**
+     * The hint after the key caps of a row in a conflict, naming the other commands of the same context on the same
+     * key (default <i>Also used by {0}</i>): {@code {0}} stands for their names, separated by commas.
+     *
+     * @return the conflict hint format property
+     * @since 1.1.0-RC2
+     */
+    public StringProperty conflictHintFormatProperty() {
+        return conflictHintFormat;
+    }
+
+    /**
+     * Returns the hint of a row in a conflict.
+     *
+     * @return the conflict hint format
+     * @since 1.1.0-RC2
+     */
+    public String getConflictHintFormat() {
+        return conflictHintFormat.get();
+    }
+
+    /**
+     * Sets the hint of a row in a conflict; {@code {0}} stands for the other commands' names.
+     *
+     * @param format the conflict hint format
+     * @since 1.1.0-RC2
+     */
+    public void setConflictHintFormat(String format) {
+        conflictHintFormat.set(format);
+    }
+
+    /**
+     * The one-click fix after the hint of a row in a conflict, which removes the key from the other commands the hint
+     * names (default <i>Remove there</i>). A fixed command keeps its key: a row whose conflict is only with fixed
+     * commands offers no fix.
+     *
+     * @return the conflict fix text property
+     * @since 1.1.0-RC2
+     */
+    public StringProperty conflictFixTextProperty() {
+        return conflictFixText;
+    }
+
+    /**
+     * Returns the text of the one-click fix of a conflict.
+     *
+     * @return the conflict fix text
+     * @since 1.1.0-RC2
+     */
+    public String getConflictFixText() {
+        return conflictFixText.get();
+    }
+
+    /**
+     * Sets the text of the one-click fix of a conflict.
+     *
+     * @param text the conflict fix text
+     * @since 1.1.0-RC2
+     */
+    public void setConflictFixText(String text) {
+        conflictFixText.set(text);
+    }
+
+    /**
+     * The hint after the key caps of a row whose key holds in a part of the window and overrides the same key of a
+     * command of the whole window or of a part around it (default <i>Overrides {0}</i>): {@code {0}} stands for the
+     * names of the commands it overrides, the innermost part's first, separated by commas. An override is no
+     * conflict: while the focus is in the part, its command runs on the key, elsewhere the other.
+     *
+     * @return the override hint format property
+     * @since 1.1.0-RC2
+     */
+    public StringProperty overrideHintFormatProperty() {
+        return overrideHintFormat;
+    }
+
+    /**
+     * Returns the hint of a row whose key overrides the key of a command around its part of the window.
+     *
+     * @return the override hint format
+     * @since 1.1.0-RC2
+     */
+    public String getOverrideHintFormat() {
+        return overrideHintFormat.get();
+    }
+
+    /**
+     * Sets the hint of a row whose key overrides the key of a command around its part of the window; {@code {0}}
+     * stands for the overridden commands' names.
+     *
+     * @param format the override hint format
+     * @since 1.1.0-RC2
+     */
+    public void setOverrideHintFormat(String format) {
+        overrideHintFormat.set(format);
     }
 
     /**
