@@ -36,8 +36,8 @@ import org.karthu.fx.form.SearchInput;
 import org.karthu.fx.form.search.SearchQuery;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -449,7 +449,8 @@ public final class ShortcutsEditor extends VBox {
     /**
      * Hands the working copy to the registry: every command whose key the user changed takes its new key, all at
      * once, so that the registry reports the {@linkplain CommandRegistry#changedShortcutsProperty() changed keys} to
-     * the application once. A recording that runs ends without a key first.
+     * the application once. A command the editor does not show, added to the registry after the editor read it, keeps
+     * its key. A recording that runs ends without a key first.
      *
      * <p>Apply when {@link #hasConflicts()} is false, as the dialog does. While a conflict is left, the registry keeps
      * the key the user chose and may leave the other command of the conflict without its key.
@@ -458,18 +459,13 @@ public final class ShortcutsEditor extends VBox {
      */
     public void apply() {
         cancelRecording(false);
-        // The registry takes the whole state as the keys that differ from their defaults: the working copy holds
-        // every key, the ones the user left as the registry had them.
-        Map<String, String> changed = new LinkedHashMap<>();
-        for (ShortcutGroupEntry group : groups) {
-            for (ShortcutEntry entry : group.getEntries()) {
-                if (entry.isChangeable() && entry.isModified()) {
-                    Shortcut shortcut = entry.getShortcut();
-                    changed.put(entry.getCommand().getId(), shortcut == null ? "" : shortcut.toText());
-                }
-            }
+        // The registry takes the whole state as the keys that differ from their defaults: the rows' keys, and the
+        // current keys of the commands that have no row.
+        Map<Command, Shortcut> keys = new HashMap<>();
+        for (ShortcutEntry entry : entries()) {
+            keys.put(entry.getCommand(), entry.getShortcut());
         }
-        registry.setChangedShortcuts(changed);
+        registry.setChangedShortcuts(registry.changedShortcuts(keys));
         changed();
     }
 

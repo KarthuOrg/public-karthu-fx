@@ -652,6 +652,24 @@ class ShortcutsEditorTest {
     }
 
     @Test
+    @DisplayName("apply changes only the commands the editor shows: one added later keeps the key the user gave it")
+    void applyKeepsTheKeysOfCommandsAddedLater() {
+        App app = new App();
+        ShortcutsEditor editor = shown(new ShortcutsEditor(app.registry));
+        Command resetZoom = app.registry.addCommand(app.view, "view.reset", "Reset zoom",
+                Shortcut.of(KeyCode.DIGIT0, CTRL), () -> { });
+        app.registry.setChangedShortcuts(Map.of("view.reset", "Ctrl+Alt+0"));
+        record(editor, "Save", keyPressed(KeyCode.K, "k", true, true, false));
+
+        editor.apply();
+
+        assertEquals(Shortcut.of(KeyCode.K, CTRL, SHIFT), app.save.getShortcut());
+        assertEquals(Shortcut.of(KeyCode.DIGIT0, CTRL, ALT), resetZoom.getShortcut());
+        assertEquals(Map.of("file.save", "Ctrl+Shift+K", "view.reset", "Ctrl+Alt+0"),
+                app.registry.getChangedShortcuts());
+    }
+
+    @Test
     @DisplayName("has changes follows the working copy: true after a change, false once it is undone")
     void hasChangesFollowsTheWorkingCopy() {
         ShortcutsEditor editor = shown(new ShortcutsEditor(new App().registry));

@@ -366,16 +366,29 @@ public final class CommandRegistry {
      * ones it was told last.
      */
     private void updateChangedShortcuts() {
-        Map<String, String> changed = new LinkedHashMap<>();
-        for (Command command : commands) {
-            Shortcut current = command.getShortcut();
-            if (!Objects.equals(current, command.getDefaultShortcut())) {
-                changed.put(command.getId(), current == null ? "" : current.toText());
-            }
-        }
+        Map<String, String> changed = changedShortcuts(Map.of());
         if (!changed.equals(changedShortcuts.get())) {
             changedShortcuts.set(Collections.unmodifiableMap(changed));
         }
+    }
+
+    /**
+     * The keys that differ from their defaults, as {@link #getChangedShortcuts()} gives them out, with some commands
+     * on other keys than their current ones: what {@link #setChangedShortcuts(Map)} takes to put those commands on
+     * those keys and leave every other command's key as it is.
+     *
+     * @param keys the other keys by command, null for a removed key; a command not in it keeps its current key
+     * @return the changed keys by command id, in the order of the commands
+     */
+    Map<String, String> changedShortcuts(Map<Command, Shortcut> keys) {
+        Map<String, String> changed = new LinkedHashMap<>();
+        for (Command command : commands) {
+            Shortcut key = keys.containsKey(command) ? keys.get(command) : command.getShortcut();
+            if (!Objects.equals(key, command.getDefaultShortcut())) {
+                changed.put(command.getId(), key == null ? "" : key.toText());
+            }
+        }
+        return changed;
     }
 
     /**
