@@ -360,22 +360,26 @@ public final class ShortcutsEditor extends VBox {
     // --- Working copy ----------------------------------------------------------------------------------
 
     /**
-     * Hands the working copy to the registry: every command whose key the user changed takes its new key. A recording
-     * that runs ends without a key first.
+     * Hands the working copy to the registry: every command whose key the user changed takes its new key, all at
+     * once, so that the registry reports the {@linkplain CommandRegistry#changedShortcutsProperty() changed keys} to
+     * the application once. A recording that runs ends without a key first.
      *
      * @since 1.1.0-RC2
      */
     public void apply() {
         cancelRecording(false);
-        Map<Command, Shortcut> changes = new LinkedHashMap<>();
+        // The registry takes the whole state as the keys that differ from their defaults: the working copy holds
+        // every key, the ones the user left as the registry had them.
+        Map<String, String> changed = new LinkedHashMap<>();
         for (ShortcutGroupEntry group : groups) {
             for (ShortcutEntry entry : group.getEntries()) {
-                if (entry.isChangeable() && entry.isChanged()) {
-                    changes.put(entry.getCommand(), entry.getShortcut());
+                if (entry.isChangeable() && entry.isModified()) {
+                    Shortcut shortcut = entry.getShortcut();
+                    changed.put(entry.getCommand().getId(), shortcut == null ? "" : shortcut.toText());
                 }
             }
         }
-        registry.applyShortcuts(changes);
+        registry.setChangedShortcuts(changed);
         changed();
     }
 

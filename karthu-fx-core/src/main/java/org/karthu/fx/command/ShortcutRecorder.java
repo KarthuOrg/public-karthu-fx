@@ -19,16 +19,13 @@ import java.util.Set;
 /**
  * The recording field of the shortcut editor: it takes the place of a row's key caps while the user records a new
  * key, holds the focus, and takes every key pressed in it. It shows the modifiers held down as caps, then
- * <i>Press keys…</i> or why the last key was refused, and <i>Esc to cancel</i> at its end. The first key the user's
- * rule accepts becomes the row's key; Esc without Ctrl and Alt ends the recording without a key.
+ * <i>Press keys…</i> or why the last key was refused, and <i>Esc to cancel</i> at its end. The first key the user may
+ * record ({@link Shortcut#isRecordable()}) becomes the row's key; Esc without Ctrl and Alt ends the recording without
+ * a key. A modifier key alone is no key: it shows as held.
  */
 final class ShortcutRecorder extends HBox {
 
     private static final PseudoClass REFUSED = PseudoClass.getPseudoClass("refused");
-
-    /** The function keys the user may record without Ctrl or Alt. */
-    private static final Set<KeyCode> FUNCTION_KEYS = EnumSet.of(KeyCode.F1, KeyCode.F2, KeyCode.F3, KeyCode.F4,
-            KeyCode.F5, KeyCode.F6, KeyCode.F7, KeyCode.F8, KeyCode.F9, KeyCode.F10, KeyCode.F11, KeyCode.F12);
 
     /** Keys that type no punctuation, recorded by the key beside the letters, the function and navigation keys. */
     private static final Set<KeyCode> NAMED_KEYS = EnumSet.of(KeyCode.ESCAPE, KeyCode.BACK_SPACE, KeyCode.DELETE,
@@ -120,7 +117,7 @@ final class ShortcutRecorder extends HBox {
         Shortcut shortcut = recordedShortcut(press);
         if (shortcut == null) {
             refusal = editor.getUnusableKeyText();
-        } else if (!userMayRecord(press)) {
+        } else if (!shortcut.isRecordable()) {
             refusal = ShortcutsEditor.fill(editor.getNeedsCtrlOrAltFormat(), shortcut.getDisplayText());
         } else {
             editor.recorded(shortcut);
@@ -173,18 +170,6 @@ final class ShortcutRecorder extends HBox {
     }
 
     /**
-     * The rule of what the user may record: F1 to F12 alone or with any modifiers, every other key, and every
-     * character, only with Ctrl or Alt; Shift alone is not enough. It binds what the user records, never the
-     * application's defaults.
-     *
-     * @param press a key press that is no modifier key
-     * @return true when the user may record the press
-     */
-    static boolean userMayRecord(KeyEvent press) {
-        return FUNCTION_KEYS.contains(press.getCode()) || press.isShortcutDown() || press.isAltDown();
-    }
-
-    /**
      * The key a press records: letters, digits, function keys and named keys by the key with Ctrl, Alt and Shift as
      * held; punctuation by the character it types, with Ctrl and Alt as held, since the key that types it differs
      * from layout to layout and Shift belongs to typing it.
@@ -200,7 +185,7 @@ final class ShortcutRecorder extends HBox {
                 return Shortcut.of(character, modifiers(press, false));
             }
         }
-        if (code == KeyCode.UNDEFINED || code.isModifierKey()) {
+        if (code == KeyCode.UNDEFINED || code.isModifierKey() || code == KeyCode.SHORTCUT) {
             return null;
         }
         return Shortcut.of(code, modifiers(press, true));

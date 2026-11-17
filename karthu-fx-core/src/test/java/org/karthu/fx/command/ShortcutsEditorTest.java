@@ -23,6 +23,7 @@ import org.karthu.fx.theme.ThemeManager;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -618,6 +619,23 @@ class ShortcutsEditorTest {
         assertEquals(Shortcut.of(KeyCode.N, CTRL), app.newWorkflow.getShortcut());
         assertFalse(editor.hasChanges());
         assertEquals("  Save *: [Ctrl] [Shift] [K]", line(row(editor, "Save")), "still modified: not the default");
+    }
+
+    @Test
+    @DisplayName("apply hands the registry every changed key at once, which it reports to the application once")
+    void applyIsReportedOnce() {
+        App app = new App();
+        ShortcutsEditor editor = shown(new ShortcutsEditor(app.registry));
+        List<Map<String, String>> reported = new ArrayList<>();
+        app.registry.changedShortcutsProperty().addListener((observable, before, now) -> reported.add(now));
+        record(editor, "Save", keyPressed(KeyCode.K, "k", true, true, false));
+        button(select(editor, "Open..."), "shortcuts-remove").fire();
+        record(editor, "Zoom in", keyPressed(KeyCode.PLUS, "+", false, true, true));
+
+        editor.apply();
+
+        assertEquals(List.of(Map.of("file.save", "Ctrl+Shift+K", "file.open", "", "view.zoomIn", "Ctrl+Alt++")),
+                reported);
     }
 
     @Test
