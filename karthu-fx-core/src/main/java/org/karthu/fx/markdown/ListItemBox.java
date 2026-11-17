@@ -115,15 +115,11 @@ final class ListItemBox extends VBox {
      * block without baseline.
      */
     private double markerY() {
-        Node block = firstBlock();
-        if (block == null) {
-            return snappedTopInset();
+        double baselineY = firstBaselineY();
+        if (Double.isNaN(baselineY)) {
+            return firstBlockTop();
         }
-        double baseline = block.getBaselineOffset();
-        if (baseline == BASELINE_OFFSET_SAME_AS_HEIGHT) {
-            return block.getLayoutY();
-        }
-        return block.getLayoutY() + block.getLayoutBounds().getMinY() + baseline - marker.getBaselineOffset();
+        return baselineY - marker.getBaselineOffset();
     }
 
     /**
@@ -131,16 +127,39 @@ final class ListItemBox extends VBox {
      * empty task or a first block without baseline.
      */
     private double taskBoxY(double height) {
+        double baselineY = firstBaselineY();
+        if (Double.isNaN(baselineY)) {
+            return firstBlockTop();
+        }
+        return snapPositionY(baselineY - LOWERCASE_MIDDLE * fontSize(firstBlock()) - height / 2);
+    }
+
+    /**
+     * The baseline of the first block's first line in this box, {@code NaN} for an empty item or a first block
+     * without baseline.
+     */
+    private double firstBaselineY() {
+        Node block = firstBlock();
+        if (block == null) {
+            return Double.NaN;
+        }
+        double baseline = block.getBaselineOffset();
+        if (baseline == BASELINE_OFFSET_SAME_AS_HEIGHT) {
+            return Double.NaN;
+        }
+        return block.getLayoutY() + block.getLayoutBounds().getMinY() + baseline;
+    }
+
+    /**
+     * Where the marker and the check box go without a baseline: the first block's top, the top inset for an empty
+     * item.
+     */
+    private double firstBlockTop() {
         Node block = firstBlock();
         if (block == null) {
             return snappedTopInset();
         }
-        double baseline = block.getBaselineOffset();
-        if (baseline == BASELINE_OFFSET_SAME_AS_HEIGHT) {
-            return block.getLayoutY();
-        }
-        double baselineY = block.getLayoutY() + block.getLayoutBounds().getMinY() + baseline;
-        return snapPositionY(baselineY - LOWERCASE_MIDDLE * fontSize(block) - height / 2);
+        return block.getLayoutY();
     }
 
     /**

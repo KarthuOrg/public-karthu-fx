@@ -66,7 +66,8 @@ import java.util.function.Consumer;
  * string, such as {@code java}, names the code's language, see <em>Code colours</em>), thematic breaks ({@code ---},
  * {@code ***}, {@code ___}), emphasis ({@code *x*}, {@code _x_}), strong emphasis ({@code **x**}, {@code __x__}), both
  * ({@code ***x***}), code spans, backslash escapes, links, GFM tables and GFM task list items ({@code - [ ] open},
- * {@code - [x] done}, see <em>Task lists</em>). Tabs are not expanded: indentation counts spaces only. Whatever it does not know stays visible as text; it never fails on any text.
+ * {@code - [x] done}, see <em>Task lists</em>). Tabs are not expanded: indentation counts spaces only. Whatever it
+ * does not know stays visible as text; it never fails on any text.
  *
  * <p>Links are inline links {@code [text](address)} and {@code [text](address "title")}, whose text may hold
  * emphasis and code, autolinks {@code <https://...>} (any scheme), and bare {@code http://} and {@code https://}
@@ -449,10 +450,10 @@ import java.util.function.Consumer;
  * does. It is drawn from the theme's check box colours, right-aligned against the item's text, its middle on the middle
  * of the first line's lowercase letters, and scales with the zoom. In a bullet list it takes the bullet's place, so the
  * text of task and plain items stays aligned. In an ordered list the number stands left of the box ({@code 3.} and the
- * box), and an ordered list with a task indents all its items further, so their text stays aligned too. A done item's
- * text
- * looks like any other text: the item's row carries {@code markdown-task-item}, and the pseudo-class {@code :checked}
- * while done, for a stylesheet that strikes done items through or dims them.
+ * box), and an ordered list with a task indents all its items further, so their text stays aligned too, and the
+ * numbers of its plain items stand where the numbers of its tasks do. A done item's text looks like any other text:
+ * the item's row carries {@code markdown-task-item}, and the pseudo-class {@code :checked} while done, for a
+ * stylesheet that strikes done items through or dims them.
  *
  * <p>The check box names its state in words, as its tooltip and as its accessible text: {@code Open} and {@code Done}
  * by default, {@link #taskOpenTextProperty()} and {@link #taskDoneTextProperty()}, which an application replaces to
@@ -749,13 +750,13 @@ import java.util.function.Consumer;
  *       list, the number and its delimiter ({@code 3.}, {@code 3)}) in an ordered list; a bullet task item has
  *       none</td></tr>
  *   <tr><td>{@code markdown-task-list}</td><td>beside {@code markdown-bullet-list} or {@code markdown-ordered-list}: a
- *       list with at least one task item; an ordered one indents its items further, for number and box</td></tr>
+ *       list with at least one task item; an ordered one indents its items further, for number and box, and pads
+ *       the numbers of its plain items so that they stand where its tasks' numbers do</td></tr>
  *   <tr><td>{@code markdown-task-item}</td><td>beside {@code markdown-list-item}: a task item's row, with the
  *       pseudo-class {@code :checked} while the task is done</td></tr>
  *   <tr><td>{@code markdown-task-box}</td><td>a task's check box in place of the bullet or right of the number, a
- *       {@code Region} drawn like
- *       the theme's check box, with a region {@code mark} inside it for the tick; with the pseudo-class
- *       {@code :checked} while the task is done</td></tr>
+ *       {@code Region} drawn like the theme's check box, with a region {@code mark} inside it for the tick; with the
+ *       pseudo-class {@code :checked} while the task is done</td></tr>
  *   <tr><td>{@code markdown-quote}</td><td>a block quote: a box of the quote's blocks, with a bar on its left</td></tr>
  *   <tr><td>{@code markdown-separator}</td><td>a thematic break, a horizontal {@code Separator}</td></tr>
  *   <tr><td>{@code markdown-code-block}</td><td>a fenced code block: a box with a {@code ScrollPane} of its own that

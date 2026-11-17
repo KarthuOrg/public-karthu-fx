@@ -47,6 +47,15 @@ public record ListItem(List<Block> blocks, Task task) {
     }
 
     /**
+     * Whether the item is a task, open or done.
+     *
+     * @return {@code false} for a plain item
+     */
+    public boolean isTask() {
+        return task != Task.NONE;
+    }
+
+    /**
      * Creates a plain item, no task.
      *
      * @param blocks the item's blocks in source order; empty for an empty item

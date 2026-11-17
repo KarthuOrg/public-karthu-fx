@@ -3098,11 +3098,21 @@ Text {
  * bullet item's 18px indent. In a numbered list the number stands left
  * of the box, so a numbered task list indents all its items by the
  * box and gap more (42px), and its numbers keep the room they have in
- * a plain numbered list. Drawn from the check box tokens of the
- * theme's CheckBox, without hover and with the default cursor: the
- * reader cannot tick it. The same colours inside a quote. */
+ * a plain numbered list. A plain item's number there takes the box and
+ * gap as padding (6 + 14 + 4 = 24px), so all numbers of the list stand
+ * in one column. Drawn from the check box tokens of the theme's
+ * CheckBox, without hover and with the default cursor: the reader
+ * cannot tick it. The same colours inside a quote. */
 .markdown-view .markdown-ordered-list.markdown-task-list > .markdown-list-item {
     -fx-padding: 0 0 0 42;
+}
+
+.markdown-view .markdown-ordered-list.markdown-task-list > .markdown-list-item > .markdown-list-marker {
+    -fx-padding: 0 24 0 0;
+}
+
+.markdown-view .markdown-ordered-list.markdown-task-list > .markdown-task-item > .markdown-list-marker {
+    -fx-padding: 0 6 0 0;
 }
 
 .markdown-view .markdown-task-box {
@@ -3124,6 +3134,7 @@ Text {
     -fx-border-color: -fx-accent-color;
 }
 
+/* The tick: the shape, size and lift of the theme check box's. */
 .markdown-view .markdown-task-box .mark {
     -fx-background-color: transparent;
     -fx-shape: "M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z";
@@ -3133,6 +3144,7 @@ Text {
     -fx-min-height: 10;
     -fx-max-width: 10;
     -fx-max-height: 10;
+    -fx-translate-y: -1;
 }
 
 .markdown-view .markdown-task-box:checked .mark {

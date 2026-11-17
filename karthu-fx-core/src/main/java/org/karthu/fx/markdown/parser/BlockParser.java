@@ -53,6 +53,11 @@ final class BlockParser {
      */
     static final int MAX_DEPTH = 100;
 
+    /**
+     * The length of a GFM task marker: {@code [}, one character, {@code ]}.
+     */
+    private static final int TASK_MARKER_LENGTH = 3;
+
     private final List<String> lines;
     private final BitSet lazyLines;
     private final int depth;
@@ -290,10 +295,11 @@ final class BlockParser {
      * @return the task marker, {@link ListItem.Task#NONE} if the line starts with none
      */
     static ListItem.Task taskMarker(String firstLine) {
-        if (firstLine.length() < 3 || firstLine.charAt(0) != '[' || firstLine.charAt(2) != ']') {
+        if (firstLine.length() < TASK_MARKER_LENGTH || firstLine.charAt(0) != '['
+                || firstLine.charAt(TASK_MARKER_LENGTH - 1) != ']') {
             return ListItem.Task.NONE;
         }
-        if (firstLine.length() > 3 && !Characters.isSpaceOrTab(firstLine.charAt(3))) {
+        if (firstLine.length() > TASK_MARKER_LENGTH && !Characters.isSpaceOrTab(firstLine.charAt(TASK_MARKER_LENGTH))) {
             return ListItem.Task.NONE;
         }
         return switch (firstLine.charAt(1)) {
@@ -314,7 +320,8 @@ final class BlockParser {
     private void taskParagraph(List<Block> blocks) {
         task = taskMarker;
         String firstLine = lines.get(index);
-        Paragraph paragraph = paragraph(firstLine.substring(Math.min(firstLine.length(), 4)));
+        // The text after the marker and the one space or tab that follows it; nothing for a marker alone.
+        Paragraph paragraph = paragraph(firstLine.substring(Math.min(firstLine.length(), TASK_MARKER_LENGTH + 1)));
         if (!paragraph.content().isEmpty()) {
             blocks.add(paragraph);
         }

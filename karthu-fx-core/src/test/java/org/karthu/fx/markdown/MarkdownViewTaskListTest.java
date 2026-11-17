@@ -32,7 +32,9 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.karthu.fx.markdown.MarkdownTestSupport.drag;
+import static org.karthu.fx.markdown.MarkdownTestSupport.isInside;
 import static org.karthu.fx.markdown.MarkdownTestSupport.layOut;
+import static org.karthu.fx.markdown.MarkdownTestSupport.paragraphs;
 import static org.karthu.fx.markdown.MarkdownTestSupport.recordCopies;
 import static org.karthu.fx.markdown.MarkdownTestSupport.relayOut;
 import static org.karthu.fx.markdown.MarkdownTestSupport.runAt;
@@ -40,7 +42,6 @@ import static org.karthu.fx.markdown.MarkdownTestSupport.sceneBounds;
 import static org.karthu.fx.markdown.MarkdownTestSupport.sceneCharacterBounds;
 import static org.karthu.fx.markdown.MarkdownTestSupport.scrollPane;
 import static org.karthu.fx.markdown.MarkdownTestSupport.shortcut;
-import static org.karthu.fx.markdown.MarkdownTestSupport.textFlows;
 import static org.karthu.fx.markdown.MarkdownTestSupport.textPoint;
 
 /**
@@ -98,6 +99,9 @@ class MarkdownViewTaskListTest {
         double baseline = sceneBaseline(paragraphs.get(0));
         double fontSize = ((Text) paragraphs.get(0).getChildren().getFirst()).getFont().getSize();
         assertEquals(baseline - fontSize / 4, boxBounds.getCenterY(), 0.51);
+        Bounds row = sceneBounds(item);
+        assertTrue(boxBounds.getMinY() >= row.getMinY() - 0.01 && boxBounds.getMaxY() <= row.getMaxY() + 0.01,
+                () -> "box " + boxBounds + " inside its row " + row);
     }
 
     @Test
@@ -147,6 +151,8 @@ class MarkdownViewTaskListTest {
         assertEquals(box.getMinX(), nine.getMaxX(), 0.51);
         assertTrue(sceneBounds(numbers.get(1)).getMinX() < nine.getMinX(), "10. reaches further left");
         assertEquals(nine.getMaxX(), sceneBounds(numbers.get(1)).getMaxX(), 0.51, "numbers end at the box");
+        assertEquals(numberEnd(numbers.get(0)), numberEnd(numbers.get(2)), 0.51,
+                "a plain item's number stands where the tasks' numbers do");
     }
 
     @Test
@@ -251,6 +257,7 @@ class MarkdownViewTaskListTest {
         assertEquals(fill((Region) ticked.lookup(".mark")), fill(tickedMark), "the tick in the theme's colour");
         assertEquals(Color.TRANSPARENT, fill(openMark), "no tick when open");
         assertEquals(tickedMark.getShape().getClass(), ((Region) ticked.lookup(".mark")).getShape().getClass());
+        assertEquals(ticked.lookup(".mark").getTranslateY(), tickedMark.getTranslateY());
     }
 
     @Test
@@ -292,6 +299,39 @@ class MarkdownViewTaskListTest {
         shortcut(view, KeyCode.C);
 
         assertEquals(List.of("- [ ] open\n- [x] done\n- plain\n  - [x] nested\n> - [ ] quoted", "pe"), copied);
+    }
+
+    @Test
+    @DisplayName("a selection over a task highlights its text, never its check box")
+    void selectionLeavesTheBoxAlone() {
+        MarkdownView view = layOut(new MarkdownView("- [ ] open\n- [x] done"));
+        List<Region> boxes = boxes(view);
+        Paint open = fill(boxes.get(0));
+        Paint done = fill(boxes.get(1));
+        TextFlow first = paragraphs(view).getFirst();
+
+        click(runAt(first, 0), textPoint(first, 0));
+        shortcut(view, KeyCode.A);
+        relayOut(view);
+
+        assertFalse(view.lookupAll(".markdown-selection").isEmpty(), "the text is highlighted");
+        for (Region box : boxes) {
+            assertTrue(box.lookupAll(".markdown-selection").isEmpty());
+        }
+        assertEquals(open, fill(boxes.get(0)));
+        assertEquals(done, fill(boxes.get(1)));
+    }
+
+    @Test
+    @DisplayName("a new version of the text with a task ticked shows it ticked")
+    void updateTicksATask() {
+        MarkdownView view = layOut(new MarkdownView("- [ ] open\n- plain"));
+
+        view.updateMarkdown("- [x] open\n- plain");
+        relayOut(view);
+
+        assertEquals(List.of(true), List.of(checked(boxes(view).getFirst())));
+        assertEquals(List.of("open", "plain"), texts(view));
     }
 
     @Test
@@ -391,10 +431,6 @@ class MarkdownViewTaskListTest {
         return markers;
     }
 
-    private static List<TextFlow> paragraphs(MarkdownView view) {
-        return textFlows(view, ".markdown-paragraph");
-    }
-
     private static List<String> texts(MarkdownView view) {
         List<String> texts = new ArrayList<>();
         for (TextFlow flow : paragraphs(view)) {
@@ -407,6 +443,13 @@ class MarkdownViewTaskListTest {
             texts.add(text.toString());
         }
         return texts;
+    }
+
+    /**
+     * Where a number label's text ends in the scene: its right edge without its right padding.
+     */
+    private static double numberEnd(Node number) {
+        return sceneBounds(number).getMaxX() - ((Region) number).getPadding().getRight();
     }
 
     private static double sceneBaseline(Node node) {
@@ -423,15 +466,6 @@ class MarkdownViewTaskListTest {
             index++;
         }
         return index;
-    }
-
-    private static boolean isInside(Node node, Node ancestor) {
-        for (Node parent = node.getParent(); parent != null; parent = parent.getParent()) {
-            if (parent == ancestor) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static Paint fill(Region region) {
