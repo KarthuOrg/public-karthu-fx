@@ -35,9 +35,10 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   boxes, in place of a bullet or beside a number, at any depth and inside quotes: open or ticked in
   the theme's check box colours, read only (a click changes nothing). The item's text starts after
   the marker, copying keeps the state (`- [ ] open`, `1. [x] done`), and the search finds the text,
-  never the brackets. Other
-  forms such as `[/]` stay text, as on GitHub. Style classes `markdown-task-list`,
-  `markdown-task-item` and `markdown-task-box`, with `:checked` while a task is done.
+  never the brackets. A check box names its state as its tooltip and accessible text, *Open* or
+  *Done*, translatable with `taskOpenTextProperty()` and `taskDoneTextProperty()`. Other forms such
+  as `[/]` stay text, as on GitHub. Style classes `markdown-task-list`, `markdown-task-item` and
+  `markdown-task-box`, with `:checked` while a task is done.
 
 ### Fixed
 

@@ -110,6 +110,12 @@ final class MarkdownRenderer {
     private final DocumentImages images;
 
     /**
+     * The texts that name an open and a done task's check box, bound so that a change applies to the boxes shown.
+     */
+    private final ObservableValue<String> taskOpenText;
+    private final ObservableValue<String> taskDoneText;
+
+    /**
      * The quotes and list items around the block being rendered, the outermost first.
      */
     private final List<BlockContainer> containers = new ArrayList<>();
@@ -125,10 +131,13 @@ final class MarkdownRenderer {
      * @param documentSelection the selection across the document, given the segments in document order
      * @param coloring          which pieces of a code block the view colours
      * @param images            the view's images, which create and load the blocks of images
+     * @param taskOpenText      the tooltip and accessible text of an open task's check box
+     * @param taskDoneText      the tooltip and accessible text of a done task's check box
      */
     MarkdownRenderer(Consumer<String> linkAction, Consumer<String> copyAction, ObservableValue<String> copyCodeText,
                      Consumer<SelectionHolder> selectionAction, DocumentSelection documentSelection,
-                     CodeColoring coloring, DocumentImages images) {
+                     CodeColoring coloring, DocumentImages images, ObservableValue<String> taskOpenText,
+                     ObservableValue<String> taskDoneText) {
         this.linkAction = linkAction;
         this.copyAction = copyAction;
         this.copyCodeText = copyCodeText;
@@ -136,6 +145,8 @@ final class MarkdownRenderer {
         this.documentSelection = documentSelection;
         this.coloring = coloring;
         this.images = images;
+        this.taskOpenText = taskOpenText;
+        this.taskDoneText = taskDoneText;
     }
 
     /**
@@ -370,7 +381,8 @@ final class MarkdownRenderer {
         TaskBox taskBox = null;
         String copied = copiedMarker;
         if (item.task() != ListItem.Task.NONE) {
-            taskBox = new TaskBox(item.task() == ListItem.Task.DONE);
+            boolean done = item.task() == ListItem.Task.DONE;
+            taskBox = new TaskBox(done, done ? taskDoneText : taskOpenText);
             copied = copiedMarker + (item.task() == ListItem.Task.DONE ? " [x]" : " [ ]");
         }
         Label marker = null;

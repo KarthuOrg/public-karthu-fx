@@ -4,10 +4,13 @@ import javafx.event.Event;
 import javafx.event.EventType;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.scene.AccessibleAttribute;
+import javafx.scene.AccessibleRole;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Labeled;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -307,6 +310,44 @@ class MarkdownViewTaskListTest {
     }
 
     @Test
+    @DisplayName("a check box names its state, Open or Done, in its tooltip and its accessible text, and is a check box"
+            + " for a screen reader, selected while done")
+    void stateInWords() {
+        MarkdownView view = layOut(new MarkdownView("- [ ] open\n1. [x] done"));
+        List<Region> boxes = boxes(view);
+
+        assertEquals("Open", view.getTaskOpenText());
+        assertEquals("Done", view.getTaskDoneText());
+        assertEquals(List.of("Open", "Done"), List.of(tooltip(boxes.get(0)), tooltip(boxes.get(1))));
+        assertEquals(List.of("Open", "Done"), List.of(boxes.get(0).getAccessibleText(),
+                boxes.get(1).getAccessibleText()));
+        assertEquals(AccessibleRole.CHECK_BOX, boxes.get(0).getAccessibleRole());
+        assertEquals(Boolean.FALSE, boxes.get(0).queryAccessibleAttribute(AccessibleAttribute.SELECTED));
+        assertEquals(Boolean.TRUE, boxes.get(1).queryAccessibleAttribute(AccessibleAttribute.SELECTED));
+    }
+
+    @Test
+    @DisplayName("an application translates the two texts, and a change reaches the check boxes already shown and those"
+            + " of a later text")
+    void translatedTexts() {
+        MarkdownView view = layOut(new MarkdownView("- [ ] open\n- [x] done"));
+        List<Region> shown = boxes(view);
+
+        view.setTaskOpenText("Offen");
+        view.taskDoneTextProperty().set("Erledigt");
+
+        assertEquals(List.of("Offen", "Erledigt"), List.of(tooltip(shown.get(0)), tooltip(shown.get(1))));
+        assertEquals(List.of("Offen", "Erledigt"), List.of(shown.get(0).getAccessibleText(),
+                shown.get(1).getAccessibleText()));
+        view.setMarkdown("1. [x] later");
+        relayOut(view);
+        Region later = boxes(view).getFirst();
+        assertEquals("Erledigt", tooltip(later));
+        assertEquals("Erledigt", later.getAccessibleText());
+        assertEquals("Offen", view.getTaskOpenText());
+    }
+
+    @Test
     @DisplayName("the check box scales with the zoom")
     void zoom() {
         MarkdownView view = layOut(new MarkdownView("- [x] done"));
@@ -325,6 +366,13 @@ class MarkdownViewTaskListTest {
             boxes.add((Region) box);
         }
         return boxes;
+    }
+
+    /**
+     * The text of the tooltip installed on a node.
+     */
+    private static String tooltip(Node node) {
+        return ((Tooltip) node.getProperties().get("javafx.scene.control.Tooltip")).getText();
     }
 
     private static boolean checked(Node node) {

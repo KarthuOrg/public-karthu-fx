@@ -454,6 +454,10 @@ import java.util.function.Consumer;
  * looks like any other text: the item's row carries {@code markdown-task-item}, and the pseudo-class {@code :checked}
  * while done, for a stylesheet that strikes done items through or dims them.
  *
+ * <p>The check box names its state in words, as its tooltip and as its accessible text: {@code Open} and {@code Done}
+ * by default, {@link #taskOpenTextProperty()} and {@link #taskDoneTextProperty()}, which an application replaces to
+ * match its language. For a screen reader the box is a check box, selected while the task is done.
+ *
  * <h2>Copying</h2>
  *
  * <p>A code block has a copy button in its top right corner, laid over the code so that it stays in place when the
@@ -869,6 +873,8 @@ public class MarkdownView extends BaseComponent {
     private static final String DEFAULT_COPY_TEXT = "Copy";
     private static final String DEFAULT_COPY_WITH_HEADER_TEXT = "Copy with header";
     private static final String DEFAULT_SELECT_COLUMN_TEXT = "Select column";
+    private static final String DEFAULT_TASK_OPEN_TEXT = "Open";
+    private static final String DEFAULT_TASK_DONE_TEXT = "Done";
     private static final String DEFAULT_ZOOM_OUT_TEXT = "Zoom out";
     private static final String DEFAULT_ZOOM_IN_TEXT = "Zoom in";
     private static final String DEFAULT_ZOOM_LEVELS_TEXT = "Zoom levels";
@@ -900,6 +906,10 @@ public class MarkdownView extends BaseComponent {
             DEFAULT_COPY_WITH_HEADER_TEXT);
     private final StringProperty selectColumnText = new SimpleStringProperty(this, "selectColumnText",
             DEFAULT_SELECT_COLUMN_TEXT);
+    private final StringProperty taskOpenText = new SimpleStringProperty(this, "taskOpenText",
+            DEFAULT_TASK_OPEN_TEXT);
+    private final StringProperty taskDoneText = new SimpleStringProperty(this, "taskDoneText",
+            DEFAULT_TASK_DONE_TEXT);
     private final DoubleProperty zoom = new ZoomProperty(this);
     private final BooleanProperty zoomBarVisible = new SimpleBooleanProperty(this, "zoomBarVisible", true);
     private final StringProperty zoomOutText = new SimpleStringProperty(this, "zoomOutText", DEFAULT_ZOOM_OUT_TEXT);
@@ -981,7 +991,7 @@ public class MarkdownView extends BaseComponent {
 
     private final MarkdownRenderer renderer = new MarkdownRenderer(address -> followLink(address),
             text -> copy(text), copyCodeText, holder -> selectionStarted(holder), documentSelection, codeColoring,
-            images);
+            images, taskOpenText, taskDoneText);
 
     /**
      * The zoom at work: applies the zoom property to the document, keeping the reader's place, and zooms for the
@@ -2217,6 +2227,72 @@ public class MarkdownView extends BaseComponent {
      */
     public final void setSelectColumnText(String text) {
         selectColumnText.set(text);
+    }
+
+    /**
+     * The text that names an open task's check box ({@code - [ ]}), {@code Open} by default: the box's tooltip and its
+     * accessible text, which a screen reader announces with the check box. A change applies to the boxes already
+     * shown at once. See <em>Task lists</em> in the class description.
+     *
+     * @return the text property of an open task's check box
+     * @since 1.1.0-RC2
+     */
+    public final StringProperty taskOpenTextProperty() {
+        return taskOpenText;
+    }
+
+    /**
+     * Returns the text that names an open task's check box.
+     *
+     * @return the text, {@code Open} by default
+     * @since 1.1.0-RC2
+     */
+    public final String getTaskOpenText() {
+        return taskOpenText.get();
+    }
+
+    /**
+     * Sets the text that names an open task's check box, its tooltip and accessible text, for example to match the
+     * application's language.
+     *
+     * @param text the text
+     * @since 1.1.0-RC2
+     */
+    public final void setTaskOpenText(String text) {
+        taskOpenText.set(text);
+    }
+
+    /**
+     * The text that names a done task's check box ({@code - [x]}), {@code Done} by default: the box's tooltip and its
+     * accessible text, which a screen reader announces with the check box. A change applies to the boxes already
+     * shown at once. See <em>Task lists</em> in the class description.
+     *
+     * @return the text property of a done task's check box
+     * @since 1.1.0-RC2
+     */
+    public final StringProperty taskDoneTextProperty() {
+        return taskDoneText;
+    }
+
+    /**
+     * Returns the text that names a done task's check box.
+     *
+     * @return the text, {@code Done} by default
+     * @since 1.1.0-RC2
+     */
+    public final String getTaskDoneText() {
+        return taskDoneText.get();
+    }
+
+    /**
+     * Sets the text that names a done task's check box, its tooltip and accessible text, for example to match the
+     * application's language.
+     *
+     * @param text the text
+     * @since 1.1.0-RC2
+     */
+    public final void setTaskDoneText(String text) {
+        taskDoneText.set(text);
     }
 
     /**
