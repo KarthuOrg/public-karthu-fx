@@ -1,6 +1,7 @@
 package org.karthu.fx.command;
 
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
@@ -9,6 +10,7 @@ import javafx.scene.input.KeyCharacterCombination;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
@@ -306,6 +308,39 @@ class CharacterKeyTest {
             assertEquals(1, zoomIn.runs(), "Ctrl+Shift+" + key);
             content.fireEvent(press("", key, false, true, false));
             assertEquals(1, zoomIn.runs(), "Ctrl+" + key + " without Shift");
+        });
+    }
+
+    @Test
+    @DisplayName("a command on Ctrl++ in a context runs on the plus key and the keypad's plus inside the context;"
+            + " outside, neither key runs it, on its own or through the bound item's accelerator")
+    void characterKeyInAContext() throws InterruptedException {
+        RunCounter zoomIn = new RunCounter();
+        onFxThread(() -> {
+            Button inDocument = new Button("in the document");
+            StackPane document = new StackPane(inDocument);
+            Button outside = new Button("outside");
+            VBox root = new VBox(document, outside);
+            Scene scene = themedScene(root);
+            CommandRegistry registry = new CommandRegistry(scene);
+            MenuItem zoomInItem = new MenuItem("Zoom In");
+            registry.addCommand(registry.addGroup("view", "View"),
+                    registry.addContext("document", "Document", document), "document.zoomIn", "Zoom In",
+                    Shortcut.of('+', CTRL), zoomIn).bind(zoomInItem);
+            addMenuBar(root, zoomInItem);
+            assertNotNull(scene.getAccelerators().get(zoomInItem.getAccelerator()), "the item's accelerator acts");
+
+            outside.requestFocus();
+            scene.getFocusOwner().fireEvent(press("+", KeyCode.PLUS, false, true, false));
+            scene.getFocusOwner().fireEvent(press("", KeyCode.ADD, false, true, false));
+            scene.getFocusOwner().fireEvent(press("", KeyCode.PLUS, true, true, false));
+            assertEquals(0, zoomIn.runs());
+
+            inDocument.requestFocus();
+            scene.getFocusOwner().fireEvent(press("+", KeyCode.PLUS, false, true, false));
+            scene.getFocusOwner().fireEvent(press("", KeyCode.ADD, false, true, false));
+            scene.getFocusOwner().fireEvent(press("", KeyCode.PLUS, true, true, false));
+            assertEquals(3, zoomIn.runs());
         });
     }
 
