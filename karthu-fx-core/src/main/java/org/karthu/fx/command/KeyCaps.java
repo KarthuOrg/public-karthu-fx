@@ -14,11 +14,6 @@ import java.util.List;
  */
 final class KeyCaps {
 
-    /**
-     * The modifiers as the display text starts with them, in the order JavaFX writes them on Windows and Linux.
-     */
-    private static final List<String> MODIFIERS = List.of("Ctrl", "Alt", "Shift");
-
     private KeyCaps() {
     }
 
@@ -33,10 +28,11 @@ final class KeyCaps {
     static List<String> partsOf(Shortcut shortcut) {
         String rest = shortcut.getDisplayText();
         List<String> parts = new ArrayList<>();
-        for (String modifier : MODIFIERS) {
-            String prefix = modifier + "+";
+        // The display text starts with the modifiers in the order of the constants, each named by its word.
+        for (Shortcut.Modifier modifier : Shortcut.Modifier.values()) {
+            String prefix = modifier.text() + "+";
             if (rest.startsWith(prefix) && rest.length() > prefix.length()) {
-                parts.add(modifier);
+                parts.add(modifier.text());
                 rest = rest.substring(prefix.length());
             }
         }

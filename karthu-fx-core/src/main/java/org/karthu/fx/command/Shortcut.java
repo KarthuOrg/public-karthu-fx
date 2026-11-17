@@ -556,5 +556,15 @@ public final class Shortcut {
         Modifier(String text) {
             this.text = text;
         }
+
+        /**
+         * Returns the modifier's word: the text form's, and the one the display text names it by on Windows and
+         * Linux, where the display text writes the modifiers in the constants' order too.
+         *
+         * @return the word, such as {@code Ctrl}
+         */
+        String text() {
+            return text;
+        }
     }
 }

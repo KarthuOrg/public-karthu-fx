@@ -45,11 +45,8 @@ final class ShortcutRecorder extends HBox {
 
     private final Label message = new Label();
 
-    private boolean ctrl;
-
-    private boolean alt;
-
-    private boolean shift;
+    /** The modifiers held down, which show as caps. */
+    private final Set<Shortcut.Modifier> heldModifiers = EnumSet.noneOf(Shortcut.Modifier.class);
 
     /** Why the last key was refused; null while it was none. */
     private String refusal;
@@ -87,9 +84,7 @@ final class ShortcutRecorder extends HBox {
      * Starts a recording: no modifier held, no key refused.
      */
     void start() {
-        ctrl = false;
-        alt = false;
-        shift = false;
+        heldModifiers.clear();
         refusal = null;
         update();
     }
@@ -107,10 +102,10 @@ final class ShortcutRecorder extends HBox {
             update();
             return;
         }
-        ctrl = press.isShortcutDown();
-        alt = press.isAltDown();
-        shift = press.isShiftDown();
-        if (code == KeyCode.ESCAPE && !ctrl && !alt) {
+        setHeld(Shortcut.Modifier.CTRL, press.isShortcutDown());
+        setHeld(Shortcut.Modifier.ALT, press.isAltDown());
+        setHeld(Shortcut.Modifier.SHIFT, press.isShiftDown());
+        if (code == KeyCode.ESCAPE && !press.isShortcutDown() && !press.isAltDown()) {
             editor.cancelRecording(true);
             return;
         }
@@ -143,24 +138,28 @@ final class ShortcutRecorder extends HBox {
      */
     private void hold(KeyEvent event, boolean pressed) {
         KeyCode code = event.getCode();
-        ctrl = code == KeyCode.CONTROL ? pressed : event.isShortcutDown();
-        alt = code == KeyCode.ALT ? pressed : event.isAltDown();
-        shift = code == KeyCode.SHIFT ? pressed : event.isShiftDown();
+        setHeld(Shortcut.Modifier.CTRL, code == KeyCode.CONTROL ? pressed : event.isShortcutDown());
+        setHeld(Shortcut.Modifier.ALT, code == KeyCode.ALT ? pressed : event.isAltDown());
+        setHeld(Shortcut.Modifier.SHIFT, code == KeyCode.SHIFT ? pressed : event.isShiftDown());
+    }
+
+    /** Shows a modifier as held down or no longer. */
+    private void setHeld(Shortcut.Modifier modifier, boolean down) {
+        if (down) {
+            heldModifiers.add(modifier);
+        } else {
+            heldModifiers.remove(modifier);
+        }
     }
 
     /**
-     * Shows the held modifiers and the prompt or the reason of the last refusal.
+     * Shows the held modifiers, in the order of the constants as a key's caps show them, and the prompt or the reason
+     * of the last refusal.
      */
     private void update() {
         List<String> modifiers = new ArrayList<>();
-        if (ctrl) {
-            modifiers.add("Ctrl");
-        }
-        if (alt) {
-            modifiers.add("Alt");
-        }
-        if (shift) {
-            modifiers.add("Shift");
+        for (Shortcut.Modifier modifier : heldModifiers) {
+            modifiers.add(modifier.text());
         }
         KeyCaps.show(held, modifiers);
         held.setVisible(!modifiers.isEmpty());

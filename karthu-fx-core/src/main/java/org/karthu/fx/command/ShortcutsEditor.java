@@ -572,7 +572,7 @@ public final class ShortcutsEditor extends VBox {
      */
     private void changed() {
         // The clashes first: every row knows whether it is in a conflict before the editor picks the rows that show.
-        conflicts = ShortcutClashes.find(entries(), registry.getContexts());
+        conflicts = ShortcutClashes.find(entries(), registry);
         refreshItems();
         updateCounter();
         boolean changes = false;

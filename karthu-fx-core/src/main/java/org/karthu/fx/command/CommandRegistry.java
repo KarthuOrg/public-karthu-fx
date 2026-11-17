@@ -602,12 +602,13 @@ public final class CommandRegistry {
 
     /**
      * The contexts that hold the focus on a node: the contexts of the node and its parents, the innermost first, and
-     * last the window's.
+     * last the window's. The keys of a press are looked for in them in this order, and the contexts around a context
+     * are the ones that hold its node's parent.
      *
      * @param focused the node with the focus, null for none
      * @return the contexts
      */
-    private List<CommandContext> contextsHolding(Node focused) {
+    List<CommandContext> contextsHolding(Node focused) {
         List<CommandContext> holding = new ArrayList<>();
         for (Node node = focused; node != null; node = node.getParent()) {
             CommandContext context = contextsByNode.get(node);

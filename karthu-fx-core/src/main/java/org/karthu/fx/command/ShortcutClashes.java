@@ -1,7 +1,5 @@
 package org.karthu.fx.command;
 
-import javafx.scene.Node;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -30,10 +28,10 @@ final class ShortcutClashes {
      * Finds the clashes of the rows' keys in the working copy and sets them on every row.
      *
      * @param entries  every command's row
-     * @param contexts every context of the registry, the window's among them
+     * @param registry the registry of the commands, which knows the contexts around each context
      * @return the number of conflicts: of keys that two or more commands of one context hold
      */
-    static int find(List<ShortcutEntry> entries, List<CommandContext> contexts) {
+    static int find(List<ShortcutEntry> entries, CommandRegistry registry) {
         Map<Slot, List<ShortcutEntry>> holders = new HashMap<>();
         for (ShortcutEntry entry : entries) {
             Shortcut shortcut = entry.getShortcut();
@@ -53,7 +51,10 @@ final class ShortcutClashes {
                 conflicts++;
             }
         }
-        Map<CommandContext, List<CommandContext>> enclosing = enclosingContexts(contexts);
+        Map<CommandContext, List<CommandContext>> enclosing = new HashMap<>();
+        for (CommandContext context : registry.getContexts()) {
+            enclosing.put(context, enclosingContexts(context, registry));
+        }
         for (ShortcutEntry entry : entries) {
             List<ShortcutEntry> others = new ArrayList<>();
             List<ShortcutEntry> overridden = new ArrayList<>();
@@ -78,34 +79,14 @@ final class ShortcutClashes {
     }
 
     /**
-     * The contexts around each context, the innermost first: the contexts of the ancestors of its node, then the
-     * window's. The window's context has none around it.
+     * The contexts around a context, the innermost first: those that hold the focus on its node's parent, as the
+     * registry asks them for a key, the window's last. The window's context has none around it.
      */
-    private static Map<CommandContext, List<CommandContext>> enclosingContexts(List<CommandContext> contexts) {
-        Map<Node, CommandContext> byNode = new HashMap<>();
-        CommandContext window = null;
-        for (CommandContext context : contexts) {
-            if (context.getNode() == null) {
-                window = context;
-            } else {
-                byNode.put(context.getNode(), context);
-            }
+    private static List<CommandContext> enclosingContexts(CommandContext context, CommandRegistry registry) {
+        if (context == registry.getWindowContext()) {
+            return List.of();
         }
-        Map<CommandContext, List<CommandContext>> enclosing = new HashMap<>();
-        for (CommandContext context : contexts) {
-            List<CommandContext> around = new ArrayList<>();
-            if (context != window) {
-                for (Node node = context.getNode().getParent(); node != null; node = node.getParent()) {
-                    CommandContext outer = byNode.get(node);
-                    if (outer != null) {
-                        around.add(outer);
-                    }
-                }
-                around.add(window);
-            }
-            enclosing.put(context, around);
-        }
-        return enclosing;
+        return registry.contextsHolding(context.getNode().getParent());
     }
 
     /**
