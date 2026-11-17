@@ -48,6 +48,14 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   its disabled state, and a menu item shows the command's key as its accelerator. The display text
   of a command's key is a property (*Ctrl+S*, empty without a key), so tooltips and prompts that
   name the key are built from it.
+  A `CommandContext` names a part of the window, such as a document area or a canvas, bound to a
+  node: its commands run while the focus is in that node, and there they win over the window's
+  commands on the same key. Contexts nest as their nodes do, the innermost asked first, and a
+  disabled command leaves its key to the next one outward. A menu item of such a command shows its
+  key, which runs the command only inside its context. Fixed commands document the keys a component
+  owns (*Copy* on Ctrl+C in a document): their keys never change, and without an action they leave
+  the key to the component. While a text input has the focus, no command runs on Ctrl+Alt with a
+  key that types a character, so typing `@`, `{` or `|` with AltGr never runs a command.
 
 ### Fixed
 
