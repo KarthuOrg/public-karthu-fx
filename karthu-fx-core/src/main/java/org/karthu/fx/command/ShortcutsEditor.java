@@ -92,8 +92,9 @@ import java.util.Objects;
  * press on some keyboard layouts without being equal, such as Ctrl, Shift and the {@code 1} key and <i>Ctrl++</i> on a
  * Swiss keyboard. So can two characters, since a character runs with Shift or without: Ctrl, Shift and the {@code =}
  * key are <i>Ctrl+=</i> and <i>Ctrl++</i> on a US keyboard, Ctrl, Shift and the {@code +} key <i>Ctrl++</i> and
- * <i>Ctrl+*</i> on a German one, and on such a press the command added first runs. Which presses those are depends on
- * the user's layout, so the editor does not find such a clash.
+ * <i>Ctrl+*</i> on a German one, and on such a press the command added first runs. Without Shift they do not clash:
+ * a character's fallback gives way to the key's own meaning, so the {@code =} key runs <i>Ctrl+=</i> before
+ * <i>Ctrl++</i>. Which presses those are depends on the user's layout, so the editor does not find such a clash.
  *
  * <p><b>Recording.</b> Enter, a double-click on a row or its pencil starts recording: a field takes the place of the
  * key caps, shows the modifiers held down, <i>Press keys…</i> and <i>Esc to cancel</i>. The first key the user may

@@ -18,6 +18,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.karthu.fx.command.CommandTestSupport.RunCounter;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -31,7 +32,8 @@ import static org.karthu.fx.command.Shortcut.Modifier.SHIFT;
 
 /**
  * Commands on punctuation characters and on digit keys, fired by key presses as the keyboard layouts send them: the
- * character's key with and without Shift, the key that types it with Shift, and the numeric keypad's key.
+ * character's key with and without Shift, the key that types it with Shift, with and without Shift, and the numeric
+ * keypad's key.
  *
  * <p>A key press carries its key code and its text, the character the key types; on Windows the character without
  * Shift, and a platform may send no text while Ctrl is down. The tests send both forms.
@@ -125,7 +127,7 @@ class CharacterKeyTest {
 
     @Test
     @DisplayName("Ctrl++ runs on Ctrl, Shift and the key that types + with Shift on the keyboard layout (= on a US one,"
-            + " 1 on a Swiss one); the same key without Shift types another character and does not run it")
+            + " 1 on a Swiss one)")
     void plusTypedWithShift() {
         KeyCode key = keyTypingWithShift('+');
         Assumptions.assumeTrue(key != null, "the toolkit knows no key of the main keyboard for +");
@@ -137,22 +139,36 @@ class CharacterKeyTest {
 
         // On Windows the text of a key press is the key's character without Shift, which is not + where + needs Shift.
         content.fireEvent(press("", key, true, true, false));
-        assertEquals(1, zoomIn.runs(), () -> "Ctrl+Shift+" + key);
 
-        Assumptions.assumeTrue(key != KeyCode.PLUS, "the layout types + without Shift");
-        content.fireEvent(press("", key, false, true, false));
-        assertEquals(1, zoomIn.runs(), () -> "Ctrl+" + key + " without Shift");
+        assertEquals(1, zoomIn.runs(), () -> "Ctrl+Shift+" + key);
+    }
+
+    @ParameterizedTest(name = "with its text {0}")
+    @DisplayName("Ctrl++ does not run on Ctrl and a digit key without Shift that types + with Shift: Ctrl and 1 on a"
+            + " Swiss keyboard is Ctrl+1")
+    @ValueSource(booleans = {true, false})
+    void plusOnADigitKeyWithoutShift(boolean withText) {
+        KeyCode key = keyTypingWithShift('+');
+        Assumptions.assumeTrue(key != null && key.isDigitKey(), "the layout types + with Shift on no digit key");
+        Label content = new Label("content");
+        CommandRegistry registry = new CommandRegistry(themedScene(new VBox(content)));
+        RunCounter zoomIn = new RunCounter();
+        registry.addCommand(registry.addGroup("view", "View"), "view.zoomIn", "Zoom In", Shortcut.of('+', CTRL),
+                zoomIn);
+
+        content.fireEvent(press(withText ? key.getChar() : "", key, false, true, false));
+
+        assertEquals(0, zoomIn.runs(), () -> "Ctrl+" + key + " without Shift");
     }
 
     @ParameterizedTest(name = "{1} with the text ''{0}'', Shift {2}, Ctrl {3}, Alt {4}")
     @DisplayName("Ctrl++ does not run on a press that does not type + with Ctrl alone: + without Ctrl, + with Ctrl"
-            + " and Alt as AltGr sends it, = and 1 without Shift, another character, the keypad's other keys")
+            + " and Alt as AltGr sends it, 1 without Shift, another character, the keypad's other keys")
     @CsvSource({
             "+, PLUS, false, false, false",
             "+, PLUS, false, true, true",
             "+, ADD, false, false, false",
             "+, ADD, false, true, true",
-            "=, EQUALS, false, true, false",
             "1, DIGIT1, false, true, false",
             "-, MINUS, false, true, false",
             "-, SUBTRACT, false, true, false",
@@ -168,6 +184,140 @@ class CharacterKeyTest {
         content.fireEvent(press(text, code, shift, ctrl, alt));
 
         assertEquals(0, zoomIn.runs());
+    }
+
+    // --- The key that types a character with Shift, pressed without Shift ------------------------------
+
+    @ParameterizedTest(name = "with the text ''{0}''")
+    @DisplayName("on a US keyboard Ctrl++ runs on Ctrl and = without Shift too, as in a web browser: = is the key that"
+            + " types + with Shift there")
+    @ValueSource(strings = {"=", ""})
+    void plusOnTheEqualsKeyOfAUsKeyboard(String text) {
+        Assumptions.assumeTrue(keyTypingWithShift('+') == KeyCode.EQUALS, "not a US layout: + is not Shift and =");
+        Label content = new Label("content");
+        CommandRegistry registry = new CommandRegistry(themedScene(new VBox(content)));
+        RunCounter zoomIn = new RunCounter();
+        registry.addCommand(registry.addGroup("view", "View"), "view.zoomIn", "Zoom In", Shortcut.of('+', CTRL),
+                zoomIn);
+
+        content.fireEvent(press(text, KeyCode.EQUALS, false, true, false));
+
+        assertEquals(1, zoomIn.runs());
+    }
+
+    @ParameterizedTest(name = "with the text ''{0}''")
+    @DisplayName("Ctrl+_ runs on Ctrl and the minus key without Shift too, the key that types _ with Shift on a Swiss,"
+            + " German and US keyboard")
+    @ValueSource(strings = {"-", ""})
+    void characterOnItsShiftedKeyWithoutShift(String text) {
+        Assumptions.assumeTrue(keyTypingWithShift('_') == KeyCode.MINUS, "the layout types _ on another key");
+        Label content = new Label("content");
+        CommandRegistry registry = new CommandRegistry(themedScene(new VBox(content)));
+        RunCounter command = new RunCounter();
+        registry.addCommand(registry.addGroup("edit", "Edit"), "edit.command", "Command", Shortcut.of('_', CTRL),
+                command);
+
+        content.fireEvent(press(text, KeyCode.MINUS, false, true, false));
+
+        assertEquals(1, command.runs());
+    }
+
+    @ParameterizedTest(name = "Ctrl {0}, Alt {1}")
+    @DisplayName("the minus key without Shift runs Ctrl+_ with Ctrl alone only: not without Ctrl, nor with Alt, nor"
+            + " with Ctrl and Alt as AltGr sends it")
+    @CsvSource({
+            "false, false",
+            "false, true",
+            "true, true"
+    })
+    void shiftedKeyWithoutShiftNeedsTheModifiers(boolean ctrl, boolean alt) {
+        Assumptions.assumeTrue(keyTypingWithShift('_') == KeyCode.MINUS, "the layout types _ on another key");
+        Label content = new Label("content");
+        CommandRegistry registry = new CommandRegistry(themedScene(new VBox(content)));
+        RunCounter command = new RunCounter();
+        registry.addCommand(registry.addGroup("edit", "Edit"), "edit.command", "Command", Shortcut.of('_', CTRL),
+                command);
+
+        content.fireEvent(press("-", KeyCode.MINUS, false, ctrl, alt));
+
+        assertEquals(0, command.runs());
+    }
+
+    @Test
+    @DisplayName("a character the layout types on a letter key does not run on the letter: a command on the euro sign"
+            + " does not run on Ctrl+E of a German or Swiss keyboard, which type the euro sign with AltGr and E")
+    void characterOnALetterKey() {
+        KeyCode key = keyTypingWithShift('\u20AC');
+        Assumptions.assumeTrue(key != null && key.isLetterKey(), "the layout types the euro sign on no letter key");
+        Label content = new Label("content");
+        CommandRegistry registry = new CommandRegistry(themedScene(new VBox(content)));
+        RunCounter command = new RunCounter();
+        registry.addCommand(registry.addGroup("edit", "Edit"), "edit.command", "Command",
+                Shortcut.of('\u20AC', CTRL), command);
+
+        content.fireEvent(press("", key, false, true, false));
+
+        assertEquals(0, command.runs(), () -> "Ctrl+" + key);
+    }
+
+    @ParameterizedTest(name = "with the text ''{0}''")
+    @DisplayName("Ctrl and the minus key without Shift run Ctrl+-, not Ctrl+_ added before it: the character a key"
+            + " types without Shift wins over the one it types with Shift")
+    @ValueSource(strings = {"-", ""})
+    void theKeysOwnCharacterWins(String text) {
+        Assumptions.assumeTrue(keyTypingWithShift('_') == KeyCode.MINUS, "the layout types _ on another key");
+        Label content = new Label("content");
+        CommandRegistry registry = new CommandRegistry(themedScene(new VBox(content)));
+        CommandGroup edit = registry.addGroup("edit", "Edit");
+        RunCounter underscore = new RunCounter();
+        RunCounter minus = new RunCounter();
+        registry.addCommand(edit, "edit.underscore", "Underscore", Shortcut.of('_', CTRL), underscore);
+        registry.addCommand(edit, "edit.minus", "Minus", Shortcut.of('-', CTRL), minus);
+
+        content.fireEvent(press(text, KeyCode.MINUS, false, true, false));
+
+        assertEquals(1, minus.runs());
+        assertEquals(0, underscore.runs());
+    }
+
+    @ParameterizedTest(name = "with the text ''{0}''")
+    @DisplayName("on a US keyboard Ctrl and = without Shift run Ctrl+=, not Ctrl++ added before it")
+    @ValueSource(strings = {"=", ""})
+    void equalsWinsOverPlusOnAUsKeyboard(String text) {
+        Assumptions.assumeTrue(keyTypingWithShift('+') == KeyCode.EQUALS, "not a US layout: + is not Shift and =");
+        Label content = new Label("content");
+        CommandRegistry registry = new CommandRegistry(themedScene(new VBox(content)));
+        CommandGroup view = registry.addGroup("view", "View");
+        RunCounter zoomIn = new RunCounter();
+        RunCounter equals = new RunCounter();
+        registry.addCommand(view, "view.zoomIn", "Zoom In", Shortcut.of('+', CTRL), zoomIn);
+        registry.addCommand(view, "view.equals", "Equals", Shortcut.of('=', CTRL), equals);
+
+        content.fireEvent(press(text, KeyCode.EQUALS, false, true, false));
+
+        assertEquals(1, equals.runs());
+        assertEquals(0, zoomIn.runs());
+    }
+
+    @Test
+    @DisplayName("the character a key types without Shift wins in every context: with the focus in a part of the window"
+            + " that has Ctrl+_, Ctrl and the minus key without Shift run the window's Ctrl+-")
+    void theKeysOwnCharacterWinsOverAPart() {
+        Assumptions.assumeTrue(keyTypingWithShift('_') == KeyCode.MINUS, "the layout types _ on another key");
+        Button inDocument = new Button("in the document");
+        StackPane document = new StackPane(inDocument);
+        CommandRegistry registry = new CommandRegistry(themedScene(new VBox(document)));
+        CommandGroup edit = registry.addGroup("edit", "Edit");
+        RunCounter underscore = new RunCounter();
+        RunCounter minus = new RunCounter();
+        registry.addCommand(edit, registry.addContext("document", "Document", document), "document.underscore",
+                "Underscore", Shortcut.of('_', CTRL), underscore);
+        registry.addCommand(edit, "edit.minus", "Minus", Shortcut.of('-', CTRL), minus);
+
+        inDocument.fireEvent(press("-", KeyCode.MINUS, false, true, false));
+
+        assertEquals(1, minus.runs());
+        assertEquals(0, underscore.runs());
     }
 
     // --- Digits and other keys -----------------------------------------------------------------------
@@ -286,12 +436,12 @@ class CharacterKeyTest {
     }
 
     @Test
-    @DisplayName("with the bound item in the window's menu bar, Ctrl+Shift and the key that types + with Shift run"
-            + " Ctrl++ once; the same key without Shift runs it neither on its own nor through the item's accelerator")
+    @DisplayName("with the bound item in the window's menu bar, Ctrl+Shift and the digit key that types + with Shift"
+            + " run Ctrl++ once; the same key without Shift runs it neither on its own nor through the item's"
+            + " accelerator")
     void menuBarAcceleratorFollowsTheLayout() throws InterruptedException {
         KeyCode key = keyTypingWithShift('+');
-        Assumptions.assumeTrue(key != null && key != KeyCode.PLUS,
-                "the layout types + without Shift, or the toolkit knows no key for it");
+        Assumptions.assumeTrue(key != null && key.isDigitKey(), "the layout types + with Shift on no digit key");
         RunCounter zoomIn = new RunCounter();
         onFxThread(() -> {
             Label content = new Label("content");
@@ -308,6 +458,28 @@ class CharacterKeyTest {
             assertEquals(1, zoomIn.runs(), "Ctrl+Shift+" + key);
             content.fireEvent(press("", key, false, true, false));
             assertEquals(1, zoomIn.runs(), "Ctrl+" + key + " without Shift");
+        });
+    }
+
+    @Test
+    @DisplayName("with the bound item in the window's menu bar, Ctrl and the minus key without Shift run Ctrl+_ once")
+    void menuBarRunsTheShiftedKeyWithoutShiftOnce() throws InterruptedException {
+        Assumptions.assumeTrue(keyTypingWithShift('_') == KeyCode.MINUS, "the layout types _ on another key");
+        RunCounter command = new RunCounter();
+        onFxThread(() -> {
+            Label content = new Label("content");
+            VBox root = new VBox(content);
+            Scene scene = themedScene(root);
+            CommandRegistry registry = new CommandRegistry(scene);
+            MenuItem item = new MenuItem("Command");
+            registry.addCommand(registry.addGroup("edit", "Edit"), "edit.command", "Command", Shortcut.of('_', CTRL),
+                    command).bind(item);
+            addMenuBar(root, item);
+            assertNotNull(scene.getAccelerators().get(item.getAccelerator()), "the item's accelerator acts");
+
+            content.fireEvent(press("-", KeyCode.MINUS, false, true, false));
+
+            assertEquals(1, command.runs());
         });
     }
 

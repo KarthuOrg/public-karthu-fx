@@ -203,7 +203,9 @@ final class ShortcutRecorder extends HBox {
 
     /**
      * The character a press types, tried with each of {@link #CHARACTERS} as a shortcut on the press, so that it
-     * takes the same keys a command on that character runs on. Without Shift the press's text may name a character
+     * takes the same keys a command on that character runs on, a character's fallback aside
+     * ({@link Shortcut#matches(KeyEvent)}): Ctrl and {@code =} record <i>Ctrl+=</i> on a US keyboard, though they run
+     * <i>Ctrl++</i> where no command is on <i>Ctrl+=</i>. Without Shift the press's text may name a character
      * the list does not hold, such as a letter with an accent. With Shift the text cannot be trusted (Windows sends
      * the key's character without Shift), so the key alone decides: first a character the layout types on it with
      * Shift, then one it types on it either way, such as the keypad's {@code +}.

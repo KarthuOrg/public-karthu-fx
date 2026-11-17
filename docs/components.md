@@ -301,11 +301,15 @@ the user changes in a dialog. No new dependency.
   Shift (`Shortcut.of(KeyCode.S, CTRL)`), or a punctuation character with Ctrl and Alt
   (`Shortcut.of('+', CTRL)`). A character runs on whichever key types it on the user's keyboard,
   with Shift or without, and on the numeric keypad's key for it: *Ctrl++* runs on every plus key
-  of a Swiss, German or US keyboard, so an application catches no variants of its own. A digit
-  runs on the keypad's digit too. Ctrl is the platform's shortcut key. `isRecordable()` says
-  whether a user may choose a key: F1 to F12 alone or with any modifiers, every other key only
-  with Ctrl or Alt. The application's own defaults may be any key, such as Delete or Esc on a
-  canvas.
+  of a Swiss, German or US keyboard, so an application catches no variants of its own. The key
+  that types the character with Shift runs it without Shift too, as a fallback: Ctrl and `=` on
+  a US keyboard run *Ctrl++*, as they zoom in a web browser. The fallback gives way to the key's
+  own meaning: never a letter or a digit key (Ctrl and `1` on a Swiss keyboard, where `+` is
+  Shift and `1`, stay *Ctrl+1*), and a command on the character the key types without Shift,
+  such as *Ctrl+=*, runs before it. A digit runs on the keypad's digit too. Ctrl is the
+  platform's shortcut key. `isRecordable()` says whether a user may choose a key: F1 to F12
+  alone or with any modifiers, every other key only with Ctrl or Alt. The application's own
+  defaults may be any key, such as Delete or Esc on a canvas.
 - **Parts of the window.** A `CommandContext` (`addContext`) names a part of the window, such as a
   document area or a canvas, by its node: its commands run while the focus is on that node or
   inside it, and win there over the commands of the window, and of parts around it, on the same

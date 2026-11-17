@@ -33,9 +33,15 @@ import java.util.Set;
  * <ul>
  *   <li>the main keyboard's key that types the character without Shift;</li>
  *   <li>where the layout types the character with Shift, the key that types it, with Shift: <i>Ctrl++</i> runs on
- *       Ctrl, Shift and {@code =} on a US keyboard, not on Ctrl and {@code =}, which types another character;</li>
+ *       Ctrl, Shift and {@code =} on a US keyboard;</li>
  *   <li>the numeric keypad's key that types the character, for {@code +}, {@code -}, {@code *} and {@code /}.</li>
  * </ul>
+ * <p>The key that types the character with Shift also runs the shortcut without Shift, as a fallback: Ctrl and
+ * {@code =} on a US keyboard run <i>Ctrl++</i>, as they zoom in a web browser. The fallback gives way to the key's own
+ * meaning. It is never a letter or a digit key, which mean themselves: Ctrl and {@code 1} on a Swiss keyboard, where
+ * {@code +} is Shift plus {@code 1}, are <i>Ctrl+1</i>, never <i>Ctrl++</i>. And a command whose key the press is, or
+ * whose character it types, runs before a command whose fallback the press is, whichever was added first: with a
+ * command on <i>Ctrl+=</i>, Ctrl and {@code =} on a US keyboard run that one.
  * <p>So a command on <i>Ctrl++</i> runs on whichever plus key the user presses, and an application catches no
  * variants of its own. Shift belongs to typing a character, so it is no modifier of one. A key JavaFX names after a
  * character, such as {@link KeyCode#PLUS}, is a key like the others: it runs on that key alone, so give punctuation as
@@ -358,13 +364,31 @@ public final class Shortcut {
 
     /**
      * Whether a key press is this shortcut: its key with exactly its modifiers, a digit's keypad digit too, or a key
-     * that types its character (see the class's description).
+     * that types its character (see the class's description). The fallback of a character is not:
+     * {@link #matchesAsFallback(KeyEvent)}.
      *
      * @param event a key press
      * @return true when the press is this shortcut
      */
     boolean matches(KeyEvent event) {
+        if (combination instanceof CharacterCombination typed) {
+            return typed.types(event);
+        }
         return combination.match(event) || keypadDigit != null && keypadDigit.match(event);
+    }
+
+    /**
+     * Whether a key press is the fallback of this shortcut's character: the key the layout types the character on
+     * with Shift, pressed without Shift and with exactly the shortcut's Ctrl and Alt, unless that key is a letter or a
+     * digit key. It runs the shortcut only where no shortcut {@linkplain #matches(KeyEvent) is the press}: Ctrl and
+     * {@code =} on a US keyboard run <i>Ctrl++</i>, unless a command is on <i>Ctrl+=</i>. A shortcut on a key has no
+     * fallback.
+     *
+     * @param event a key press
+     * @return true when the press is this shortcut's fallback
+     */
+    boolean matchesAsFallback(KeyEvent event) {
+        return combination instanceof CharacterCombination typed && typed.isFallback(event);
     }
 
     /**
@@ -425,7 +449,8 @@ public final class Shortcut {
      * layout types the character on whether the press holds the Shift the layout needs for it or not, so Ctrl plus
      * {@code 1} on a Swiss keyboard, where {@code +} is Shift plus {@code 1}, would be Ctrl plus {@code +}; and it
      * misses the keypad's key. It is the bound menu items' accelerator too, so that a press the registry leaves runs
-     * no command through a menu item either.
+     * no command through a menu item either: it matches the fallback as well, every press the registry may run the
+     * shortcut on.
      */
     private static final class CharacterCombination extends KeyCombination {
 
@@ -450,6 +475,13 @@ public final class Shortcut {
         private final KeyCharacterCombination shifted;
 
         /**
+         * The same key with Shift up, the fallback's. As JavaFX does not say which Shift or AltGr the layout needs on
+         * the key, it is any key that types the character, also one that types it with AltGr ({@code |} is AltGr plus
+         * {@code <} on a German keyboard) or, for a character JavaFX names no key after, without Shift.
+         */
+        private final KeyCharacterCombination unshifted;
+
+        /**
          * Creates the combination of a character with JavaFX's modifiers for the shortcut's, Shift not among them.
          */
         CharacterCombination(char character, KeyCombination.Modifier[] modifiers) {
@@ -458,6 +490,16 @@ public final class Shortcut {
             this.mainKey = MAIN_KEYS.get(character);
             this.keypadKey = KEYPAD_KEYS.get(character);
             this.shifted = new KeyCharacterCombination(this.character, with(modifiers, KeyCombination.SHIFT_DOWN));
+            this.unshifted = new KeyCharacterCombination(this.character, modifiers);
+        }
+
+        /**
+         * Whether a key press types the character with the modifiers or is its fallback: every press the registry
+         * may run the shortcut on.
+         */
+        @Override
+        public boolean match(KeyEvent event) {
+            return types(event) || isFallback(event);
         }
 
         /**
@@ -465,13 +507,22 @@ public final class Shortcut {
          * code or by the press's text, or the keypad's key, Shift down or not; or the key the layout types it on with
          * Shift, Shift down.
          */
-        @Override
-        public boolean match(KeyEvent event) {
+        boolean types(KeyEvent event) {
             if (!super.match(event)) {
                 return false;
             }
             KeyCode code = event.getCode();
             return code == mainKey || code == keypadKey || character.equals(event.getText()) || shifted.match(event);
+        }
+
+        /**
+         * Whether a key press is the fallback: the key the layout types the character on with Shift, pressed without
+         * Shift and with the modifiers, unless it is a letter or a digit key. Such a key means its own letter or digit:
+         * Ctrl plus {@code 1} is <i>Ctrl+1</i> on a Swiss keyboard, where {@code +} is Shift plus {@code 1}.
+         */
+        boolean isFallback(KeyEvent event) {
+            KeyCode code = event.getCode();
+            return !code.isLetterKey() && !code.isDigitKey() && unshifted.match(event);
         }
 
         /** The modifiers, then the character: <i>Ctrl++</i>. */

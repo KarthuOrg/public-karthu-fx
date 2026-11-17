@@ -34,7 +34,11 @@ import java.util.Set;
  * {@linkplain CommandContext contexts} that hold the focus are asked from the innermost outward: first those of the
  * innermost part of the window the focus is in, then those of the parts around it, last those of the whole window,
  * and within a context the one added first. So a command of a part wins over a command of the whole window on the same
- * key while the focus is in the part, and only there. A disabled command does not take its key, nor does a
+ * key while the focus is in the part, and only there. A key means the character it types first, in every context: a
+ * command whose key the press is, or whose character it types, runs before a command whose character's
+ * {@linkplain Shortcut fallback} the press is, the key that types that character with Shift pressed without Shift. So
+ * Ctrl and {@code =} on a US keyboard run a command on <i>Ctrl+=</i> before one on <i>Ctrl++</i>, and run
+ * <i>Ctrl++</i> only where no command takes them otherwise. A disabled command does not take its key, nor does a
  * {@linkplain Command#isFixed() fixed} one without an action: the key goes on outward. Two commands of one context
  * with the same default key are a fault of the application, which the registry logs as a warning when the second is
  * added: only one of them can run on the key.
@@ -539,14 +543,17 @@ public final class CommandRegistry {
         // spinner hands its keys on to.
         Node target = event.getTarget() instanceof Node node ? node : null;
         if (!isTypedWithAltGr(event, target)) {
-            for (CommandContext context : contextsHolding(target)) {
-                for (Command command : commands) {
-                    if (command.getContext() == context && command.isPressed(event)) {
-                        command.execute();
-                        event.consume();
-                        return;
-                    }
-                }
+            List<CommandContext> holding = contextsHolding(target);
+            // A key means the character it types first, in every context: a character's fallback, the key that types
+            // it with Shift pressed without Shift, takes only a press no command takes otherwise.
+            Command pressed = pressedCommand(event, holding, false);
+            if (pressed == null) {
+                pressed = pressedCommand(event, holding, true);
+            }
+            if (pressed != null) {
+                pressed.execute();
+                event.consume();
+                return;
             }
         }
         // The scene consumes a key that is an accelerator with an action, whatever its item does, a disabled one
@@ -557,6 +564,28 @@ public final class CommandRegistry {
                 return;
             }
         }
+    }
+
+    /**
+     * The command a key press runs, looked for in the contexts from the innermost outward, within a context the one
+     * added first.
+     *
+     * @param event    a key press
+     * @param holding  the contexts that hold the focus, the innermost first
+     * @param fallback whether to look for a command whose key the press is the fallback of
+     *                 ({@link Command#isPressedAsFallback(KeyEvent)}) instead of one whose key it is
+     * @return the command, null when none runs on the press
+     */
+    private Command pressedCommand(KeyEvent event, List<CommandContext> holding, boolean fallback) {
+        for (CommandContext context : holding) {
+            for (Command command : commands) {
+                if (command.getContext() == context
+                        && (fallback ? command.isPressedAsFallback(event) : command.isPressed(event))) {
+                    return command;
+                }
+            }
+        }
+        return null;
     }
 
     /**

@@ -298,6 +298,18 @@ public final class Command {
     }
 
     /**
+     * Whether a key press runs the command where it runs no other: the command is enabled, has an action and a key on
+     * a character, and the press is that character's fallback ({@link Shortcut#matchesAsFallback(KeyEvent)}).
+     *
+     * @param event a key press
+     * @return true when the press is the fallback of the command's key
+     */
+    boolean isPressedAsFallback(KeyEvent event) {
+        Shortcut current = shortcut.get();
+        return !isDisabled() && action != null && current != null && current.matchesAsFallback(event);
+    }
+
+    /**
      * Whether a combination is the very accelerator the command's bound menu items show: the object, not an equal one.
      * A menu puts its item's accelerator into its scene's accelerators as the item holds it, so the registry tells an
      * item of its own from an accelerator the application put on the same key.

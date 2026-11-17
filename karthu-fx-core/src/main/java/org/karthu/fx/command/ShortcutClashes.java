@@ -16,8 +16,9 @@ import java.util.Map;
  * on some keyboard layouts without being equal, such as Ctrl, Shift and the {@code 1} key and <i>Ctrl++</i> on a Swiss
  * keyboard. So can two characters, since a character runs with Shift or without: <i>Ctrl+=</i> and <i>Ctrl++</i> both
  * run on Ctrl, Shift and the {@code =} key of a US keyboard, <i>Ctrl++</i> and <i>Ctrl+*</i> on Ctrl, Shift and the
- * {@code +} key of a German one, where the command added first takes the press. Which presses those are depends on
- * the layout, so such keys are not found.
+ * {@code +} key of a German one, where the command added first takes the press. Without Shift they do not clash: a
+ * character's fallback gives way to the key's own meaning, so the {@code =} key runs <i>Ctrl+=</i> before
+ * <i>Ctrl++</i>. Which presses those are depends on the layout, so such keys are not found.
  */
 final class ShortcutClashes {
 

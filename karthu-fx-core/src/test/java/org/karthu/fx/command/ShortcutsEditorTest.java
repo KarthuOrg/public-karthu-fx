@@ -18,6 +18,8 @@ import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.karthu.fx.form.SearchInput;
 import org.karthu.fx.theme.ThemeManager;
 
@@ -547,6 +549,22 @@ class ShortcutsEditorTest {
         assertShortcutColumn(editor, "Save", "[Ctrl] [+] Also used by Zoom in <Remove there>");
         editor.apply();
         assertEquals(Shortcut.of('+', CTRL), app.save.getShortcut());
+    }
+
+    @ParameterizedTest(name = "with the text ''{0}''")
+    @DisplayName("on a US keyboard Ctrl and = without Shift record Ctrl+=, the character the key types, though the key"
+            + " runs Ctrl++ where no command is on Ctrl+=")
+    @ValueSource(strings = {"=", ""})
+    void unshiftedKeyIsRecordedByItsOwnCharacter(String text) {
+        Assumptions.assumeTrue(keyTypingWithShift('+') == KeyCode.EQUALS, "not a US layout: + is not Shift and =");
+        App app = new App();
+        ShortcutsEditor editor = shown(new ShortcutsEditor(app.registry));
+
+        record(editor, "Save", keyPressed(KeyCode.EQUALS, text, false, true, false));
+
+        assertShortcutColumn(editor, "Save", "[Ctrl] [=]");
+        editor.apply();
+        assertEquals(Shortcut.of('=', CTRL), app.save.getShortcut());
     }
 
     // --- Removing and resetting ------------------------------------------------------------------------

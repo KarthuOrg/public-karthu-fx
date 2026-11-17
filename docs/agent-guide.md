@@ -417,8 +417,10 @@ registry.changedShortcutsProperty().addListener(
   accelerator; `bind(button)` the action and the disabled state. A fixed command without an
   action cannot be bound.
 - `Shortcut.of(KeyCode, ...)` for letters, digits, function and named keys; `Shortcut.of(char,
-  ...)` for punctuation, which runs with Shift or without and on the numeric keypad's key. A
-  digit also runs on the keypad's digit.
+  ...)` for punctuation, which runs with Shift or without and on the numeric keypad's key, and
+  without Shift also on the key that types it with Shift unless that is a letter or digit key
+  (Ctrl and `=` on a US keyboard run *Ctrl++*; a command on *Ctrl+=* wins there). A digit also
+  runs on the keypad's digit.
 - `saved` stands for what the application's *Save* does, `storedKeys` and `storeKeys` for its
   own settings. The kept map holds only the keys that differ from their defaults
   (`file.save=Ctrl+Shift+S`, an empty text for a removed key). Hand it back once, after every
