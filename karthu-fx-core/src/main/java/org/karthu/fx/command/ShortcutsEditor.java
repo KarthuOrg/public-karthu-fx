@@ -279,10 +279,14 @@ public final class ShortcutsEditor extends VBox {
     private final List<ShortcutGroupEntry> groups = new ArrayList<>();
 
     /**
-     * The listeners on the registry's commands, held here since the commands hold them weakly: an editor the
-     * application drops does not live on in the registry.
+     * The listener on the names of the registry's groups, contexts and commands, held here since the names hold it
+     * weakly: an editor the application drops does not live on in the registry. A new one with every working copy, so
+     * that the old one goes.
      */
-    private final List<Object> registryListeners = new ArrayList<>();
+    private InvalidationListener nameListener;
+
+    /** The listeners on the keys of the registry's commands, one per row, held here as the name listener is. */
+    private final List<ChangeListener<Shortcut>> keyListeners = new ArrayList<>();
 
     /** The number of keys that two or more commands of one context hold in the working copy. */
     private int conflicts;
@@ -535,24 +539,23 @@ public final class ShortcutsEditor extends VBox {
      * Reads the registry's groups and commands into a new working copy.
      */
     private void rebuild() {
-        registryListeners.clear();
+        keyListeners.clear();
         groups.clear();
         Map<CommandGroup, ShortcutGroupEntry> byGroup = new IdentityHashMap<>();
-        InvalidationListener nameChanged = observable -> changed();
-        registryListeners.add(nameChanged);
+        nameListener = observable -> changed();
         for (CommandGroup group : registry.getGroups()) {
             ShortcutGroupEntry entry = new ShortcutGroupEntry(group);
             groups.add(entry);
             byGroup.put(group, entry);
-            group.nameProperty().addListener(new WeakInvalidationListener(nameChanged));
+            group.nameProperty().addListener(new WeakInvalidationListener(nameListener));
         }
         for (CommandContext context : registry.getContexts()) {
-            context.nameProperty().addListener(new WeakInvalidationListener(nameChanged));
+            context.nameProperty().addListener(new WeakInvalidationListener(nameListener));
         }
         for (Command command : registry.getCommands()) {
             ShortcutEntry entry = new ShortcutEntry(command);
             byGroup.get(command.getGroup()).add(entry);
-            command.nameProperty().addListener(new WeakInvalidationListener(nameChanged));
+            command.nameProperty().addListener(new WeakInvalidationListener(nameListener));
             // A key the registry changes reaches the row while the user has not changed it.
             ChangeListener<Shortcut> keyChanged = (observable, oldKey, newKey) -> {
                 if (Objects.equals(entry.getShortcut(), oldKey)) {
@@ -560,7 +563,7 @@ public final class ShortcutsEditor extends VBox {
                 }
                 changed();
             };
-            registryListeners.add(keyChanged);
+            keyListeners.add(keyChanged);
             command.shortcutProperty().addListener(new WeakChangeListener<>(keyChanged));
         }
     }
@@ -577,11 +580,9 @@ public final class ShortcutsEditor extends VBox {
         updateCounter();
         boolean changes = false;
         boolean modified = false;
-        for (ShortcutGroupEntry group : groups) {
-            for (ShortcutEntry entry : group.getEntries()) {
-                changes = changes || entry.isChanged();
-                modified = modified || entry.isModified();
-            }
+        for (ShortcutEntry entry : entries()) {
+            changes = changes || entry.isChanged();
+            modified = modified || entry.isModified();
         }
         hasChanges.set(changes);
         hasConflicts.set(conflicts > 0);
@@ -718,21 +719,18 @@ public final class ShortcutsEditor extends VBox {
      * a key.
      */
     private void updateCounter() {
-        int commands = 0;
+        List<ShortcutEntry> entries = entries();
         int modified = 0;
         int notAssigned = 0;
-        for (ShortcutGroupEntry group : groups) {
-            for (ShortcutEntry entry : group.getEntries()) {
-                commands++;
-                if (entry.isModified()) {
-                    modified++;
-                }
-                if (entry.getShortcut() == null) {
-                    notAssigned++;
-                }
+        for (ShortcutEntry entry : entries) {
+            if (entry.isModified()) {
+                modified++;
+            }
+            if (entry.getShortcut() == null) {
+                notAssigned++;
             }
         }
-        commandCount.setText(count(commands, commandCountOneFormat, commandCountFormat));
+        commandCount.setText(count(entries.size(), commandCountOneFormat, commandCountFormat));
         modifiedCount.setText(count(modified, modifiedCountOneFormat, modifiedCountFormat));
         conflictCount.setText(count(conflicts, conflictCountOneFormat, conflictCountFormat));
         conflictCount.pseudoClassStateChanged(CONFLICT, conflicts > 0);
@@ -824,9 +822,7 @@ public final class ShortcutsEditor extends VBox {
     private void resetAll() {
         cancelRecording(false);
         for (ShortcutEntry entry : entries()) {
-            if (entry.isChangeable()) {
-                entry.setShortcut(entry.getCommand().getDefaultShortcut());
-            }
+            entry.reset();
         }
         changed();
     }
@@ -838,7 +834,7 @@ public final class ShortcutsEditor extends VBox {
      */
     void reset(ShortcutEntry entry) {
         if (entry.isChangeable()) {
-            entry.setShortcut(entry.getCommand().getDefaultShortcut());
+            entry.reset();
             changed();
         }
     }

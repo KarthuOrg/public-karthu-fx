@@ -22,7 +22,9 @@ import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * A line of the shortcut editor's list, drawn from the editor's working copy: a group's line (the fold arrow, the
@@ -31,20 +33,6 @@ import java.util.List;
  * the editor's working copy changes, so that a cell the list reuses for another line shows that line's state.
  */
 final class ShortcutCell extends ListCell<ShortcutListItem> {
-
-    private static final PseudoClass MODIFIED = PseudoClass.getPseudoClass("modified");
-
-    private static final PseudoClass NOT_ASSIGNED = PseudoClass.getPseudoClass("not-assigned");
-
-    private static final PseudoClass FIXED = PseudoClass.getPseudoClass("fixed");
-
-    private static final PseudoClass RECORDING = PseudoClass.getPseudoClass("recording");
-
-    private static final PseudoClass COLLAPSED = PseudoClass.getPseudoClass("collapsed");
-
-    private static final PseudoClass CONFLICT = PseudoClass.getPseudoClass("conflict");
-
-    private static final PseudoClass OVERRIDE = PseudoClass.getPseudoClass("override");
 
     private static final String ROW_CLASS = "shortcuts-row";
 
@@ -211,7 +199,7 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
 
     private void drawEmpty() {
         getStyleClass().removeAll(ROW_CLASS, GROUP_ROW_CLASS);
-        setPseudoClasses(false, false, false, false, false, false, false);
+        showStates(EnumSet.noneOf(LineState.class));
         setGraphic(null);
     }
 
@@ -221,7 +209,7 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
             getStyleClass().add(GROUP_ROW_CLASS);
         }
         boolean open = editor.isOpen(group);
-        setPseudoClasses(false, false, false, false, !open, false, false);
+        showStates(open ? EnumSet.noneOf(LineState.class) : EnumSet.of(LineState.COLLAPSED));
         arrow.setIconCode(open ? BootstrapIcons.CHEVRON_DOWN : BootstrapIcons.CHEVRON_RIGHT);
         groupName.setText(group.getGroup().getName());
         groupCount.setText(Integer.toString(editor.shownCount(group)));
@@ -240,9 +228,26 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
         boolean recording = editor.isRecording(entry);
         boolean modified = entry.isModified();
         Shortcut shortcut = entry.getShortcut();
-        boolean conflict = entry.isInConflict();
-        boolean override = !entry.getOverridden().isEmpty();
-        setPseudoClasses(modified, shortcut == null, !changeable, recording, false, conflict, override);
+        Set<LineState> states = EnumSet.noneOf(LineState.class);
+        if (modified) {
+            states.add(LineState.MODIFIED);
+        }
+        if (shortcut == null) {
+            states.add(LineState.NOT_ASSIGNED);
+        }
+        if (!changeable) {
+            states.add(LineState.FIXED);
+        }
+        if (recording) {
+            states.add(LineState.RECORDING);
+        }
+        if (entry.isInConflict()) {
+            states.add(LineState.CONFLICT);
+        }
+        if (!entry.getOverridden().isEmpty()) {
+            states.add(LineState.OVERRIDE);
+        }
+        showStates(states);
 
         name.setText(command.getName());
         modifiedDot.setVisible(modified);
@@ -324,15 +329,14 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
         }
     }
 
-    private void setPseudoClasses(boolean modified, boolean notAssigned, boolean fixed, boolean recording,
-            boolean collapsed, boolean conflict, boolean override) {
-        pseudoClassStateChanged(MODIFIED, modified);
-        pseudoClassStateChanged(NOT_ASSIGNED, notAssigned);
-        pseudoClassStateChanged(FIXED, fixed);
-        pseudoClassStateChanged(RECORDING, recording);
-        pseudoClassStateChanged(COLLAPSED, collapsed);
-        pseudoClassStateChanged(CONFLICT, conflict);
-        pseudoClassStateChanged(OVERRIDE, override);
+    /**
+     * Shows the states of the cell's line as its pseudo-classes: those given, and none of the others, which a line
+     * the cell showed before may have left.
+     */
+    private void showStates(Set<LineState> states) {
+        for (LineState state : LineState.values()) {
+            pseudoClassStateChanged(state.pseudoClass, states.contains(state));
+        }
     }
 
     /**
@@ -349,6 +353,33 @@ final class ShortcutCell extends ListCell<ShortcutListItem> {
         } else if (item instanceof ShortcutEntry entry && event.getClickCount() == 2
                 && !editor.isInRecorder(event.getTarget())) {
             editor.startRecording(entry);
+        }
+    }
+
+    /**
+     * A state of a line that its cell shows as a pseudo-class, documented in the editor's JavaDoc and STYLEGUIDE.md:
+     * {@code :collapsed} on a group's line, the others on a command's row.
+     */
+    private enum LineState {
+        /** The command's key differs from its default. */
+        MODIFIED("modified"),
+        /** The command has no key. */
+        NOT_ASSIGNED("not-assigned"),
+        /** The command is fixed. */
+        FIXED("fixed"),
+        /** The row records a new key. */
+        RECORDING("recording"),
+        /** The group is folded. */
+        COLLAPSED("collapsed"),
+        /** The command's key is another command's of the same context too. */
+        CONFLICT("conflict"),
+        /** The command's key overrides a command of an enclosing context. */
+        OVERRIDE("override");
+
+        private final PseudoClass pseudoClass;
+
+        LineState(String name) {
+            this.pseudoClass = PseudoClass.getPseudoClass(name);
         }
     }
 }

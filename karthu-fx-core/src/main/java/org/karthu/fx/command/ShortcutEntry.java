@@ -58,6 +58,16 @@ final class ShortcutEntry implements ShortcutListItem {
     }
 
     /**
+     * Puts the command's default key back in the working copy. A fixed command's row keeps its key, which is its
+     * default.
+     */
+    void reset() {
+        if (isChangeable()) {
+            shortcut = command.getDefaultShortcut();
+        }
+    }
+
+    /**
      * Whether the user may change the command's key: not for a fixed command.
      *
      * @return true for a command that is not fixed
