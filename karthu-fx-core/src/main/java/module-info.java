@@ -19,8 +19,8 @@
  * ({@link org.karthu.fx.form.SearchInput}) and one with a popup of suggestions
  * ({@link org.karthu.fx.form.SuggestionInput}), and commands with their keys
  * ({@link org.karthu.fx.command.CommandRegistry}, {@link org.karthu.fx.command.Command},
- * {@link org.karthu.fx.command.Shortcut}), which run when their keys are pressed in a window and drive the menu items
- * and buttons bound to them.
+ * {@link org.karthu.fx.command.Shortcut}), which run when their keys are pressed in a window or in a part of it
+ * ({@link org.karthu.fx.command.CommandContext}) and drive the menu items and buttons bound to them.
  *
  * <p>The module requires only {@code slf4j-api} for logging; the consuming application provides
  * the binding.
