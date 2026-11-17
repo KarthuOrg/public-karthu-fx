@@ -1,15 +1,20 @@
 package org.karthu.fx.command;
 
+import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -27,7 +32,9 @@ import java.util.Set;
  * innermost part of the window the focus is in, then those of the parts around it, last those of the whole window,
  * and within a context the one added first. So a command of a part wins over a command of the whole window on the same
  * key while the focus is in the part, and only there. A disabled command does not take its key, nor does a
- * {@linkplain Command#isFixed() fixed} one without an action: the key goes on outward.
+ * {@linkplain Command#isFixed() fixed} one without an action: the key goes on outward. Two commands of one context
+ * with the same default key are a fault of the application, which the registry logs as a warning when the second is
+ * added: only one of them can run on the key.
  *
  * <p>The registry hears a key only after the focused control and its parents had it: a control that consumes a key
  * keeps it, so a focused text field keeps its editing keys, such as Ctrl+C, Ctrl+V or Ctrl+Z, and a command on such a
@@ -39,6 +46,16 @@ import java.util.Set;
  *
  * <p>A bound menu item shows its command's key as its accelerator, but only the registry runs a command on its key:
  * once, and only where the key holds.
+ *
+ * <p><b>Keeping the user's keys.</b> The registry stores nothing. It gives out the keys that differ from their
+ * defaults, {@link #getChangedShortcuts()}, as a map from command id to the key's
+ * {@linkplain Shortcut#toText() text form}, an empty text for a removed key, such as
+ * {@code file.save=Ctrl+Shift+S}. The application keeps that map where it keeps its other settings, writes it again
+ * whenever {@link #changedShortcutsProperty()} changes, and hands it back on the next start with
+ * {@link #setChangedShortcuts(Map)}, to each registry when it has several windows. Since only the changes are kept, a
+ * new default of a later version of the application reaches every user who left that key alone. Taking a map back is
+ * tolerant: an entry the registry cannot use costs only itself. {@link #resetShortcuts()} puts every key back to its
+ * default.
  *
  * <p>Like the scene, the registry and its commands are used on the JavaFX Application Thread.
  *
@@ -66,9 +83,25 @@ public final class CommandRegistry {
 
     private final Set<String> groupIds = new HashSet<>();
 
-    private final Set<String> commandIds = new HashSet<>();
+    /** The commands by their ids. */
+    private final Map<String, Command> commandsById = new HashMap<>();
 
     private final Set<String> contextIds = new HashSet<>();
+
+    /**
+     * Where skipped entries of a stored list and clashing defaults are reported: the SLF4J logger named after the
+     * registry's class, as karthu-fx-core logs everywhere, a recorder in tests.
+     */
+    private Logger logger = LoggerFactory.getLogger(CommandRegistry.class);
+
+    private final ReadOnlyObjectWrapper<Map<String, String>> changedShortcuts =
+            new ReadOnlyObjectWrapper<>(this, "changedShortcuts", Map.of());
+
+    /**
+     * Whether the registry is changing several keys at once: the application hears the changed keys once, after the
+     * last, never a state in between.
+     */
+    private boolean changingKeys;
 
     /**
      * Creates the registry of a window and installs it on the window's scene.
@@ -228,7 +261,7 @@ public final class CommandRegistry {
                         Runnable action, boolean fixed) {
         Objects.requireNonNull(group, "group");
         Objects.requireNonNull(context, "context");
-        checkId(id, commandIds, "command");
+        checkId(id, commandsById.keySet(), "command");
         Objects.requireNonNull(name, "name");
         if (!groups.contains(group)) {
             throw new IllegalArgumentException("the group " + group.getId() + " is not one of this registry's");
@@ -237,9 +270,34 @@ public final class CommandRegistry {
             throw new IllegalArgumentException("the context " + context.getId() + " is not one of this registry's");
         }
         Command command = new Command(group, context, id, name, defaultShortcut, action, fixed);
+        warnOfClashingDefault(command);
         commands.add(command);
-        commandIds.add(id);
+        commandsById.put(id, command);
+        command.shortcutProperty().addListener(observable -> {
+            if (!changingKeys) {
+                updateChangedShortcuts();
+            }
+        });
         return command;
+    }
+
+    /**
+     * Logs a warning when a new command's default key is the default of a command added before in the same context:
+     * a fault of the application, since only one of them can run on the key there. Once, for the first such command.
+     */
+    private void warnOfClashingDefault(Command added) {
+        Shortcut defaultShortcut = added.getDefaultShortcut();
+        if (defaultShortcut == null) {
+            return;
+        }
+        for (Command command : commands) {
+            if (command.getContext() == added.getContext() && defaultShortcut.equals(command.getDefaultShortcut())) {
+                logger.warn("The default shortcut {} of the command '{}' is the default of the command '{}' in the"
+                        + " same context '{}' too", defaultShortcut.toText(), added.getId(), command.getId(),
+                        added.getContext().getId());
+                return;
+            }
+        }
     }
 
     /**
@@ -260,6 +318,169 @@ public final class CommandRegistry {
      */
     public List<Command> getCommands() {
         return Collections.unmodifiableList(commands);
+    }
+
+    /**
+     * The keys that differ from their defaults, the ones an application keeps: see {@link #getChangedShortcuts()}. It
+     * changes whenever they do: when a command's key changes, and once when a map is taken back or the keys are reset,
+     * never with the keys in between. An application listens to it to write the map to its settings.
+     *
+     * @return the changed shortcuts property, its value an unmodifiable map
+     * @since 1.1.0-RC2
+     */
+    public ReadOnlyObjectProperty<Map<String, String>> changedShortcutsProperty() {
+        return changedShortcuts.getReadOnlyProperty();
+    }
+
+    /**
+     * Returns the keys that differ from their defaults: a map from command id to the key's
+     * {@linkplain Shortcut#toText() text form} ({@code file.save=Ctrl+Shift+S}), or to an empty text where the command
+     * has no key though it has a default ({@code file.open=}), in the order of the commands. A command whose key is its
+     * default, and a fixed command, is not in it.
+     *
+     * @return the changed keys, an unmodifiable map; empty while every key is its default
+     * @since 1.1.0-RC2
+     */
+    public Map<String, String> getChangedShortcuts() {
+        return changedShortcuts.get();
+    }
+
+    /**
+     * Sets the changed keys anew from the commands' keys, and so tells the application, when they differ from the
+     * ones it was told last.
+     */
+    private void updateChangedShortcuts() {
+        Map<String, String> changed = new LinkedHashMap<>();
+        for (Command command : commands) {
+            Shortcut current = command.getShortcut();
+            if (!Objects.equals(current, command.getDefaultShortcut())) {
+                changed.put(command.getId(), current == null ? "" : current.toText());
+            }
+        }
+        if (!changed.equals(changedShortcuts.get())) {
+            changedShortcuts.set(Collections.unmodifiableMap(changed));
+        }
+    }
+
+    /**
+     * Takes back the keys that differ from their defaults, as {@link #getChangedShortcuts()} gave them out: every
+     * command the map names gets the key its text names, none for an empty text, and every other command its default.
+     * Then {@link #changedShortcutsProperty()} changes once, if the keys did.
+     *
+     * <p>Taking a map back is tolerant, so that an application hands it over as it kept it, after an update of the
+     * application too. An entry is skipped, and logged as a warning, when it names no command of the registry, when
+     * its text is not a shortcut's {@linkplain Shortcut#parse(String) text form} or a shortcut a user may not
+     * {@linkplain Shortcut#isRecordable() record}, or when it names a {@linkplain Command#isFixed() fixed} command; an
+     * entry without an id or a text too. The command of a skipped entry keeps its default, and the other entries
+     * apply.
+     *
+     * <p>A key the user chose stays when it is the default of another command in the same context, such as a new
+     * default of a later version: the other command is left without a key, which counts as a change of its key. A
+     * fixed command keeps its key, and keys of other contexts are not touched.
+     *
+     * @param changed the changed keys by command id, as {@link #getChangedShortcuts()} gives them out
+     * @throws NullPointerException when the map is null
+     * @since 1.1.0-RC2
+     */
+    public void setChangedShortcuts(Map<String, String> changed) {
+        Objects.requireNonNull(changed, "changed");
+        // The keys the entries give, a removed key as null; a command without a usable entry gets its default.
+        Map<Command, Shortcut> chosen = new HashMap<>();
+        for (Map.Entry<String, String> entry : changed.entrySet()) {
+            String id = entry.getKey();
+            String text = entry.getValue();
+            Command command = id == null ? null : commandsById.get(id);
+            if (command == null) {
+                logger.warn("A stored shortcut of an unknown command '{}' is skipped: '{}'", id, text);
+            } else if (text == null) {
+                logger.warn("The stored shortcut of the command '{}' has no text and is skipped", id);
+            } else if (command.isFixed()) {
+                logger.warn("The command '{}' is fixed, so its stored shortcut '{}' is skipped", id, text);
+            } else if (text.isEmpty()) {
+                chosen.put(command, null);
+            } else {
+                Shortcut shortcut = read(id, text);
+                if (shortcut != null) {
+                    chosen.put(command, shortcut);
+                }
+            }
+        }
+        changingKeys = true;
+        try {
+            for (Command command : commands) {
+                if (chosen.containsKey(command)) {
+                    command.setShortcut(chosen.get(command));
+                } else if (isTakenByChosenKey(command, chosen)) {
+                    command.setShortcut(null);
+                } else {
+                    command.setShortcut(command.getDefaultShortcut());
+                }
+            }
+        } finally {
+            changingKeys = false;
+        }
+        updateChangedShortcuts();
+    }
+
+    /**
+     * Puts every command's key back to its default: {@link #getChangedShortcuts()} is empty afterwards, and
+     * {@link #changedShortcutsProperty()} changes once, if any key did.
+     *
+     * @since 1.1.0-RC2
+     */
+    public void resetShortcuts() {
+        // No key changed: every command gets its default, the application hears the change once.
+        setChangedShortcuts(Map.of());
+    }
+
+    /**
+     * Whether a command without a stored entry loses its default to a stored key: another command of its context
+     * has its default as a key the user chose. The user's key stays, the command is left without one. A fixed
+     * command keeps its key whatever the user chose.
+     */
+    private static boolean isTakenByChosenKey(Command command, Map<Command, Shortcut> chosen) {
+        Shortcut defaultShortcut = command.getDefaultShortcut();
+        if (command.isFixed() || defaultShortcut == null) {
+            return false;
+        }
+        for (Map.Entry<Command, Shortcut> entry : chosen.entrySet()) {
+            Command other = entry.getKey();
+            if (other.getContext() == command.getContext() && defaultShortcut.equals(entry.getValue())
+                    && !defaultShortcut.equals(other.getDefaultShortcut())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Reads the text of a stored entry: the shortcut, or null, logged, when the text is not one or the user may not
+     * record it.
+     */
+    private Shortcut read(String id, String text) {
+        Shortcut shortcut;
+        try {
+            shortcut = Shortcut.parse(text);
+        } catch (IllegalArgumentException unreadable) {
+            logger.warn("The stored shortcut '{}' of the command '{}' cannot be read and is skipped: {}", text, id,
+                    unreadable.getMessage());
+            return null;
+        }
+        if (!shortcut.isRecordable()) {
+            logger.warn("The stored shortcut '{}' of the command '{}' is not one a user may record and is skipped",
+                    text, id);
+            return null;
+        }
+        return shortcut;
+    }
+
+    /**
+     * Replaces where skipped entries and clashing defaults are reported.
+     *
+     * @param logger the logger from now on
+     */
+    void setLogger(Logger logger) {
+        this.logger = logger;
     }
 
     /**

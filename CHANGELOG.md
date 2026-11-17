@@ -60,6 +60,17 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   owns (*Copy* on Ctrl+C in a document): their keys never change, and without an action they leave
   the key to the component. While a text input has the focus, no command runs on Ctrl+Alt with a
   key that types a character, so typing `@`, `{` or `|` with AltGr never runs a command.
+  The user's keys outlive a restart without the library touching a file: the registry gives out
+  the keys that differ from their defaults as a map from command id to a text
+  (`file.save=Ctrl+Shift+S`, an empty text for a removed key), reports every change through
+  `changedShortcutsProperty()`, takes such a map back with `setChangedShortcuts`, where an entry it
+  cannot use is skipped and logged while the others apply, and puts every key back with
+  `resetShortcuts()`. Only changes are kept, so a new default reaches every user who left that key
+  alone. A key's text form (`Shortcut.toText()`, `Shortcut.parse`) is the same in every language:
+  the modifiers in the order Ctrl, Alt, Shift, then JavaFX's name of the key or the character
+  (*Ctrl+Page Up*, *Ctrl+Plus* for the key, *Ctrl++* for the character). `Shortcut.isRecordable()`
+  says whether a user may choose a key: F1 to F12 as they are, every other key only with Ctrl or
+  Alt. Two defaults on one key in one context are logged as a warning.
 
 ### Fixed
 

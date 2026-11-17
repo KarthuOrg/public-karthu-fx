@@ -5,7 +5,8 @@
  * {@link org.karthu.fx.command.Shortcut}) and an action, and binds its menu items and buttons to them. The registry
  * runs a command when its key is pressed in the window, or, for a command of a
  * {@linkplain org.karthu.fx.command.CommandContext context} such as a document area, while the focus is in that part
- * of the window.
+ * of the window. It gives out the keys the user changed as texts, which the application keeps in its settings and
+ * hands back on the next start.
  *
  * @since 1.1.0-RC2
  */

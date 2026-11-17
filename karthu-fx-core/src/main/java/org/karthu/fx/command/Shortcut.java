@@ -43,6 +43,35 @@ import java.util.Set;
  *
  * <p>Ctrl stands for the platform's shortcut key, which is Ctrl on Windows and Linux.
  *
+ * <p><b>Text form.</b> {@link #toText()} writes a shortcut as the text an application keeps in its settings, and
+ * {@link #parse(String)} reads it back. The text is the same in every language and on every keyboard layout: the
+ * modifiers in the order {@code Ctrl}, {@code Alt}, {@code Shift}, each followed by {@code +}, then the key's name or
+ * the character.
+ * <pre>
+ *   shortcut = [ "Ctrl+" ] [ "Alt+" ] [ "Shift+" ] ( key name | character )
+ * </pre>
+ * <ul>
+ *   <li>A key is written by JavaFX's name of it, {@link KeyCode#getName()}, the name JavaFX's
+ *       {@link KeyCombination#valueOf(String)} reads too: a letter as its capital, a digit as the digit, the other keys
+ *       by their names, spaces included: {@code Ctrl+Shift+S}, {@code F5}, {@code Ctrl+0}, {@code Alt+Left},
+ *       {@code Ctrl+Page Up}, {@code Ctrl+Numpad 0}, {@code Esc}, {@code Ctrl+Backspace}.</li>
+ *   <li>A character is written as itself, one character that is neither a letter A to Z nor a digit:
+ *       {@code Ctrl++}, {@code Ctrl+-}, {@code Ctrl+Alt+#}. It never has {@code Shift}.</li>
+ *   <li>The keys JavaFX names after a character are told from the character by their names: {@code Ctrl+Plus} is the
+ *       key {@link KeyCode#PLUS}, {@code Ctrl+Add} the numeric keypad's plus, {@link KeyCode#ADD}, and {@code Ctrl++}
+ *       the character {@code +}, which runs on both and on the plus key of every layout.</li>
+ * </ul>
+ * <p>{@code Ctrl} always stands for the platform's shortcut key. A text is read only as it is written: lower case, the
+ * modifiers in another order, spaces around the parts, or a key's display text where its name differs
+ * ({@code Escape} for {@code Esc}, {@code Numpad0} for {@code Numpad 0}) are not a shortcut's text form. The display
+ * text, {@link #getDisplayText()}, is for the user to read, the text form for an application to keep.
+ *
+ * <p><b>What a user may record.</b> An application gives its commands any shortcuts as their defaults, such as Delete
+ * or Esc on a canvas. A user who changes a command's key may choose a shortcut only when {@link #isRecordable()} says
+ * so: a function key F1 to F12, alone or with any modifiers, and every other key and every character only with Ctrl or
+ * Alt, Shift alone not being enough. So a plain letter, Esc, Tab, Enter, Space and Backspace are refused without Ctrl
+ * or Alt: typing and moving through a window need them. A modifier key alone is no shortcut at all.
+ *
  * @since 1.1.0-RC2
  */
 public final class Shortcut {
@@ -109,6 +138,13 @@ public final class Shortcut {
             KeyCode.DIGIT9, KeyCode.NUMPAD9);
 
     /**
+     * The function keys a user may record without Ctrl or Alt: they type nothing, and no control takes them for
+     * itself.
+     */
+    private static final Set<KeyCode> FUNCTION_KEYS = EnumSet.of(KeyCode.F1, KeyCode.F2, KeyCode.F3, KeyCode.F4,
+            KeyCode.F5, KeyCode.F6, KeyCode.F7, KeyCode.F8, KeyCode.F9, KeyCode.F10, KeyCode.F11, KeyCode.F12);
+
+    /**
      * The key; null when the shortcut is on a character.
      */
     private final KeyCode key;
@@ -148,14 +184,15 @@ public final class Shortcut {
      * @param modifiers the modifiers held down with it, none for the key alone
      * @return the shortcut
      * @throws NullPointerException     when the key, the modifiers or one of them is null
-     * @throws IllegalArgumentException when the key is a modifier key itself, such as {@link KeyCode#CONTROL}, or
-     *                                  {@link KeyCode#UNDEFINED}
+     * @throws IllegalArgumentException when the key is a modifier key itself, such as {@link KeyCode#CONTROL} or
+     *                                  {@link KeyCode#SHORTCUT}, or {@link KeyCode#UNDEFINED}
      * @since 1.1.0-RC2
      */
     public static Shortcut of(KeyCode key, Modifier... modifiers) {
         Objects.requireNonNull(key, "key");
         Objects.requireNonNull(modifiers, "modifiers");
-        if (key == KeyCode.UNDEFINED || key.isModifierKey()) {
+        // JavaFX's key for the platform's shortcut key is a modifier too, though isModifierKey() does not say so.
+        if (key == KeyCode.UNDEFINED || key == KeyCode.SHORTCUT || key.isModifierKey()) {
             throw new IllegalArgumentException("not a key a shortcut can be on: " + key);
         }
         Set<Modifier> down = modifierSet(modifiers);
@@ -235,6 +272,79 @@ public final class Shortcut {
      */
     public String getDisplayText() {
         return combination.getDisplayText();
+    }
+
+    /**
+     * Reads a shortcut from its text form, as {@link #toText()} writes it (see the class's description):
+     * {@code Ctrl+Shift+S}, {@code F5}, {@code Ctrl+Page Up}, {@code Ctrl++}. It reads any shortcut, also one a user
+     * may not record: see {@link #isRecordable()}.
+     *
+     * @param text the text form
+     * @return the shortcut
+     * @throws NullPointerException     when the text is null
+     * @throws IllegalArgumentException when the text is not a shortcut's text form: not written as the class's
+     *                                  description says, a key JavaFX does not name so, a modifier key alone, or a
+     *                                  character with Shift
+     * @since 1.1.0-RC2
+     */
+    public static Shortcut parse(String text) {
+        Objects.requireNonNull(text, "text");
+        Set<Modifier> down = EnumSet.noneOf(Modifier.class);
+        String rest = text;
+        // The modifiers in their fixed order: one in another order stays in the rest, which then names no key.
+        for (Modifier modifier : Modifier.values()) {
+            String prefix = modifier.text + "+";
+            // Something must follow the prefix: the + of "Ctrl++" is the character, not a separator.
+            if (rest.length() > prefix.length() && rest.startsWith(prefix)) {
+                down.add(modifier);
+                rest = rest.substring(prefix.length());
+            }
+        }
+        Modifier[] modifiers = down.toArray(new Modifier[0]);
+        if (rest.length() == 1 && !isKeyOfItsOwn(rest.charAt(0))) {
+            return of(rest.charAt(0), modifiers);
+        }
+        KeyCode key = KeyCode.getKeyCode(rest);
+        if (key == null) {
+            throw new IllegalArgumentException("not a shortcut's text: " + text);
+        }
+        return of(key, modifiers);
+    }
+
+    /**
+     * Returns the shortcut in its text form, the one an application keeps in its settings and {@link #parse(String)}
+     * reads back (see the class's description): the same in every language and on every keyboard layout.
+     *
+     * @return the text form, such as {@code Ctrl+Shift+S}, {@code F5}, {@code Ctrl+Plus} for the key or
+     *         {@code Ctrl++} for the character
+     * @since 1.1.0-RC2
+     */
+    public String toText() {
+        StringBuilder text = new StringBuilder();
+        for (Modifier modifier : modifiers) {
+            text.append(modifier.text).append('+');
+        }
+        if (key != null) {
+            text.append(key.getName());
+        } else {
+            text.append(character.charValue());
+        }
+        return text.toString();
+    }
+
+    /**
+     * Returns whether a user may choose the shortcut as a command's key: a function key F1 to F12, alone or with any
+     * modifiers, or any other key or character with Ctrl or Alt. A plain letter, or Esc, Tab, Enter, Space or
+     * Backspace without Ctrl or Alt, are not, and Shift alone is not enough. The rule binds what a user records and
+     * the keys an application takes back from its settings
+     * ({@link CommandRegistry#setChangedShortcuts(java.util.Map)}), never the defaults an application gives its
+     * commands.
+     *
+     * @return true when a user may record it
+     * @since 1.1.0-RC2
+     */
+    public boolean isRecordable() {
+        return FUNCTION_KEYS.contains(key) || modifiers.contains(Modifier.CTRL) || modifiers.contains(Modifier.ALT);
     }
 
     /**
@@ -415,14 +525,14 @@ public final class Shortcut {
          *
          * @since 1.1.0-RC2
          */
-        CTRL,
+        CTRL("Ctrl"),
 
         /**
          * The Alt key.
          *
          * @since 1.1.0-RC2
          */
-        ALT,
+        ALT("Alt"),
 
         /**
          * The Shift key. A modifier of a key only: a character's shortcut runs with Shift or without, as the
@@ -430,6 +540,21 @@ public final class Shortcut {
          *
          * @since 1.1.0-RC2
          */
-        SHIFT
+        SHIFT("Shift");
+
+        /**
+         * The modifier's word in the text form: JavaFX's names of the Ctrl, Alt and Shift keys, {@code Ctrl} also for
+         * the platform's shortcut key, which JavaFX calls {@code Shortcut}. The constants' order is the text form's.
+         */
+        private final String text;
+
+        /**
+         * Creates a modifier with its word in the text form.
+         *
+         * @param text the word
+         */
+        Modifier(String text) {
+            this.text = text;
+        }
     }
 }
