@@ -47,12 +47,11 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   user's keyboard layout, with Shift or without, and on the numeric keypad's key for it: *Ctrl++*
   runs on every plus key of a Swiss, German or US keyboard, so an application catches no variants
   of its own. A digit key runs on the keypad's digit too (*Ctrl+0*). A command runs when its key
-  is pressed anywhere
-  in the window, never while it is disabled, and a focused text field keeps its own editing keys
-  (Ctrl+C, X, V, A, Z). A menu item or a button bound to a command with `bind` takes its action and
-  its disabled state, and a menu item shows the command's key as its accelerator. The display text
-  of a command's key is a property (*Ctrl+S*, empty without a key), so tooltips and prompts that
-  name the key are built from it.
+  is pressed anywhere in the window, never while it is disabled, and a focused text field keeps its
+  own editing keys (Ctrl+C, X, V, A, Z). A menu item or a button bound to a command with `bind`
+  takes its action and its disabled state, and a menu item shows the command's key as its
+  accelerator. The display text of a command's key is a property (*Ctrl+S*, empty without a key),
+  so tooltips and prompts that name the key are built from it.
   A `CommandContext` names a part of the window, such as a document area or a canvas, bound to a
   node: its commands run while the focus is in that node, and there they win over the window's
   commands on the same key. Contexts nest as their nodes do, the innermost asked first, and a
