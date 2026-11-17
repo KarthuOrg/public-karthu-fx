@@ -39,6 +39,7 @@ Only these packages are API. Anything else in the jar is internal and not export
 | `org.karthu.fx.theme` | `ThemeManager`, `StageIcons` |
 | `org.karthu.fx.form` | form inputs, the form row, search fields |
 | `org.karthu.fx.markdown` | `MarkdownView` and what an application plugs into it |
+| `org.karthu.fx.command` | `CommandRegistry`, `Command`, `Shortcut`, the `ShortcutsDialog` and `ShortcutsEditor` (from 1.1.0-RC2) |
 | `org.karthu.fx.dialog` | `CustomDialog` |
 | `org.karthu.fx.settings` | settings dialog and its model |
 | `org.karthu.fx.components` | `ToggleSwitch`, `TwinColumnSelector`, `KeyValueEditor` |
@@ -67,8 +68,9 @@ Keep these; most mistakes come from breaking one of them.
 7. **A form input's value is what the user typed.** `NumberInput` keeps a text that is no number;
    read the number with `toNumber()`. `PathInput` keeps the text; read the path with `toPath()`.
 8. **The library stores nothing**, except `ConfigService` (window place and locale, Java
-   Preferences) and a `DirectoryMemory` the application sets up. Settings, form values and the
-   Markdown text are the application's to keep.
+   Preferences) and a `DirectoryMemory` the application sets up. Settings, form values, the
+   Markdown text and the keys the user chose (`CommandRegistry.getChangedShortcuts()`) are the
+   application's to keep.
 9. **Every text a component shows is a property with an English default.** For another language,
    set the properties (`setPromptText`, `setAddText`, `setCopyText` and so on).
 10. **JavaFX Application Thread only**, as with every JavaFX control.
@@ -83,6 +85,19 @@ Keep these; most mistakes come from breaking one of them.
     a binding of `markdownProperty()`, show another document, from the top. `updateMarkdown` keeps
     the reader's place and the pictures, as wanted when a changed file is read again; it throws
     while the text property is bound.
+14. **Every key of the application goes through one `CommandRegistry` per window.** Register each
+    command once, with an id, a name, a group, a default key and its action, and bind its menu
+    items and buttons with `command.bind(...)`. Do not set an accelerator, an `onAction` or a
+    disabled binding of a bound control yourself, and do not catch the application's keys in key
+    handlers or scene accelerators beside the registry: the user's keys would not reach them.
+15. **A key that holds only in a part of the window is a command of a `CommandContext`** on that
+    part's node, not a key handler on the node. A key a component handles itself, such as Ctrl+C
+    in a `MarkdownView`, is a fixed command without an action (`addFixedCommand`), so that the
+    dialog shows it and finds a clash with it.
+16. **A text that names a key is built from `shortcutDisplayTextProperty()`**, never written out
+    (*Open (Ctrl+O)*), and leaves the key out while the text is empty, since the user may remove
+    or change any key. Punctuation is a character, `Shortcut.of('+', Shortcut.Modifier.CTRL)`,
+    never `KeyCode.PLUS`: the character runs on whichever key types it on the user's keyboard.
 
 ## 3. Which component for what
 
@@ -107,6 +122,9 @@ Keep these; most mistakes come from breaking one of them.
 | On/off | `ToggleSwitch` |
 | Choosing and ordering several items out of many | `TwinColumnSelector<T>` |
 | A list of key-value pairs, such as HTTP headers | `KeyValueEditor` |
+| Menu items, buttons and keys of the application's commands, keys the user may change | `CommandRegistry` with `Command`s |
+| A dialog in which the user changes the keys | `ShortcutsDialog` |
+| The same on a settings page of the application's own | `ShortcutsEditor` |
 | Window position and size kept between runs | `ConfigService`, `WindowState` |
 | The window's icon | `StageIcons.setIcon(stage, image)` |
 
@@ -350,6 +368,85 @@ upwards.selectedProperty().addListener((observable, wasOn, isOn) ->
 - Translate the arrows' tooltips with `setPreviousMatchText` and `setNextMatchText`, the counter
   with `setMatchCountFormat` (*{0} of {1}*, as for a list).
 
+### Commands and their keys
+
+```java
+MarkdownView documentView = new MarkdownView("# Notes");
+Button saveButton = new Button("Save");
+MenuItem saveItem = new MenuItem("Save");
+Scene scene = new Scene(new VBox(saveButton, documentView));
+List<String> saved = new ArrayList<>();
+
+CommandRegistry registry = new CommandRegistry(scene);
+CommandGroup file = registry.addGroup("file", "File");
+CommandGroup view = registry.addGroup("view", "View");
+CommandContext inDocument = registry.addContext("document", "Document", documentView);
+
+Command save = registry.addCommand(file, "file.save", "Save",
+        Shortcut.of(KeyCode.S, Shortcut.Modifier.CTRL), () -> saved.add(documentView.getMarkdown()));
+registry.addCommand(view, "view.zoom-in", "Zoom in", Shortcut.of('+', Shortcut.Modifier.CTRL),
+        () -> documentView.setZoom(documentView.getZoom() + 0.25));
+registry.addFixedCommand(view, inDocument, "document.copy", "Copy",
+        Shortcut.of(KeyCode.C, Shortcut.Modifier.CTRL), null);
+save.bind(saveItem);
+save.bind(saveButton);
+Tooltip saveTip = new Tooltip();
+saveTip.textProperty().bind(Bindings.when(save.shortcutDisplayTextProperty().isEmpty())
+        .then("Save")
+        .otherwise(Bindings.concat("Save (", save.shortcutDisplayTextProperty(), ")")));
+saveButton.setTooltip(saveTip);
+
+registry.setChangedShortcuts(storedKeys());
+registry.changedShortcutsProperty().addListener(
+        (observable, oldKeys, newKeys) -> storeKeys(newKeys));
+```
+
+- From 1.1.0-RC2 on. One registry per window, created for its scene before the scene is shown.
+  Groups and commands show in the dialog in the order they are added; an id is stable, since it
+  names the command in the kept keys.
+- A command runs when its key is pressed anywhere in the window, never while it is disabled
+  (`setDisabled`, or bind `disabledProperty()`): a disabled command leaves its key to the next
+  command outward. A focused text field keeps its own editing keys (Ctrl+C, X, V, A, Z).
+- `addContext` names a part of the window by its node. Its commands, added with the
+  `addCommand` that takes a context, run while the focus is inside that node and win over the
+  window's commands on the same key there; contexts nest as their nodes do.
+- `bind(menuItem)` gives the item the command's action, disabled state and current key as its
+  accelerator; `bind(button)` the action and the disabled state. A fixed command without an
+  action cannot be bound.
+- `Shortcut.of(KeyCode, ...)` for letters, digits, function and named keys; `Shortcut.of(char,
+  ...)` for punctuation, which runs with Shift or without and on the numeric keypad's key. A
+  digit also runs on the keypad's digit.
+- `saved` stands for what the application's *Save* does, `storedKeys` and `storeKeys` for its
+  own settings. The kept map holds only
+  the keys that differ from their defaults (`file.save=Ctrl+Shift+S`, an empty text for a removed
+  key). Hand it back once, after every command is added; an entry the registry cannot use is
+  skipped and logged, so do not check it yourself. `resetShortcuts()` puts every key back.
+
+### The keys dialog and the editor
+
+```java
+MenuItem keyboardShortcuts = new MenuItem("Keyboard shortcuts");
+keyboardShortcuts.setOnAction(event -> new ShortcutsDialog(owner, registry).showAndWait());
+
+ShortcutsEditor editor = new ShortcutsEditor(registry);
+Button applyKeys = new Button("Apply");
+applyKeys.disableProperty().bind(editor.hasChangesProperty().not().or(editor.hasConflictsProperty()));
+applyKeys.setOnAction(event -> editor.apply());
+Button discardKeys = new Button("Discard");
+discardKeys.disableProperty().bind(editor.hasChangesProperty().not());
+discardKeys.setOnAction(event -> editor.discard());
+```
+
+- `ShortcutsDialog` is the dialog: its *Apply* hands the user's changes to the registry, which
+  reports them through `changedShortcutsProperty()`, so the keys are kept by the listener above.
+  `showAndWait()` says whether the user applied. Give it the owner window, as every karthu-fx
+  dialog.
+- `ShortcutsEditor` is the dialog's content as a node, for a settings page of the application's
+  own: it works on a copy of the keys until `apply()`, and `discard()` drops the copy. Keep
+  *Apply* disabled while `hasConflicts()` is true, as the dialog does.
+- Every text of the dialog and the editor is a property with an English default
+  (`setTitle`, `setSearchPromptText`, `setNotAssignedText` and so on).
+
 ### Controls
 
 ```java
@@ -447,3 +544,6 @@ if (result == SettingsDialogResult.OK) {
 - Numbers and paths are read with `toNumber()` and `toPath()`, and the empty case is handled.
 - Nothing from a package outside section 1 is imported.
 - Dialogs are `CustomDialog`s with an owner, not `Alert`s.
+- Every key of the application is a command of the window's `CommandRegistry`, menu items and
+  buttons are bound to their commands, and no text names a key that it does not take from
+  `shortcutDisplayTextProperty()`.

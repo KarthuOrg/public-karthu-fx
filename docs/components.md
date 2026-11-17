@@ -11,6 +11,7 @@ documented in the JavaDoc; the style classes, pseudo-classes and colour tokens a
 - [Controls](#controls)
 - [Markdown view](#markdown-view)
 - [Form fields](#form-fields)
+- [Commands and keyboard shortcuts](#commands-and-keyboard-shortcuts)
 - [Icons](#icons)
 
 ## Theming
@@ -272,6 +273,95 @@ one page per type (*Text Input*, *Password Input*, *Number Input*, *Combo Input*
 Input*, *Text Area Input*, *Path Input*, *Cron Input*, *Search Input*) with every state and a field
 to try out; the *Search Input* page also filters a list and shows person cards built from the
 public API. A search field connected to a Markdown view is on the *Markdown* page.
+
+## Commands and keyboard shortcuts
+
+Package `org.karthu.fx.command` (from 1.1.0-RC2): the commands of a window and their keys, which
+the user changes in a dialog. No new dependency.
+
+- **Commands.** An application creates a `CommandRegistry` for its window's scene, one per window,
+  and adds its groups (`addGroup`: an id and a translatable name, shown in the order they are
+  added) and its commands: each `Command` with an id, stable and unique in the registry, a
+  translatable name, a group, a default key or none, and its action. A command runs when its key
+  is pressed anywhere in the window, once, and never while it is disabled (`disabledProperty()`):
+  a disabled command leaves its key to the next command outward. A control that consumes a key
+  keeps it, so a focused text field keeps its editing keys (Ctrl+C, X, V, A, Z), and while a text
+  input has the focus no command runs on Ctrl+Alt with a key that types a character, so typing
+  `@` or `{` with AltGr never runs one.
+- **Bound controls.** `bind(menuItem)` gives a menu item the command's action, its disabled state
+  and its current key as the accelerator, following every change of the key; `bind(button)` gives
+  a button, a toggle button or a hyperlink the action and the disabled state. The display text of
+  the current key is a property, `shortcutDisplayTextProperty()` (*Ctrl+S*, empty without a key),
+  from which an application builds the tooltips and prompts that name a key, so they never name
+  one that no longer works.
+- **Keys.** A `Shortcut` is one key combination: a key, such as a letter, a digit, a function key
+  or a named key (the arrows, Home, Delete, the keys of the numeric keypad), with Ctrl, Alt and
+  Shift (`Shortcut.of(KeyCode.S, CTRL)`), or a punctuation character with Ctrl and Alt
+  (`Shortcut.of('+', CTRL)`). A character runs on whichever key types it on the user's keyboard,
+  with Shift or without, and on the numeric keypad's key for it: *Ctrl++* runs on every plus key
+  of a Swiss, German or US keyboard, so an application catches no variants of its own. A digit
+  runs on the keypad's digit too. Ctrl is the platform's shortcut key. `isRecordable()` says
+  whether a user may choose a key: F1 to F12 alone or with any modifiers, every other key only
+  with Ctrl or Alt. The application's own defaults may be any key, such as Delete or Esc on a
+  canvas.
+- **Parts of the window.** A `CommandContext` (`addContext`) names a part of the window, such as a
+  document area or a canvas, by its node: its commands run while the focus is on that node or
+  inside it, and win there over the commands of the window, and of parts around it, on the same
+  key. Parts nest as their nodes do, the innermost asked first. A menu item of such a command
+  shows its key, which runs the command only inside its part. A fixed command
+  (`addFixedCommand`) shows a key a component owns, such as *Copy* on Ctrl+C in a document: its
+  key never changes, it counts in the dialog's clashes, and without an action it leaves the key to
+  the component.
+- **Keeping the keys.** The registry stores nothing. `getChangedShortcuts()` gives out the keys
+  that differ from their defaults as a map from command id to a text (`file.save=Ctrl+Shift+S`,
+  an empty text for a removed key), `changedShortcutsProperty()` reports every change, and
+  `setChangedShortcuts` takes such a map back on the next start, to each window's registry when
+  the application has several. Taking it back is tolerant: an entry the registry cannot use (an
+  unknown command, an unreadable text, a key the user may not choose, a fixed command) is skipped
+  and logged, and the command keeps its default. A key the user chose stays when a later version
+  gives another command of the same part that key as its default; the other command is then left
+  without one. Only changes are kept, so a new default reaches every user who left that key
+  alone, and `resetShortcuts()` puts every key back. The text form, `Shortcut.toText()` and
+  `Shortcut.parse`, is the same in every language: the modifiers in the order Ctrl, Alt, Shift,
+  then JavaFX's name of the key or the character (`Ctrl+Shift+S`, `F5`, `Ctrl+Page Up`, `Ctrl++`).
+- **The dialog.** `ShortcutsDialog` (`new ShortcutsDialog(owner, registry).showAndWait()`) is a
+  modal window with the normal title bar, the theme and the owner's icons, centred on its owner,
+  room for about 30 commands before the list scrolls. On top a search field, the filters *All*,
+  *Modified* and *Conflicts* and *Reset all*; then the columns *Command* and *Shortcut*; then
+  every command in its group, the groups with their counts and folding with a click, each command
+  with its key as key caps or *Not assigned*, and a small mark with the part's name where its key
+  holds only in a part of the window; at the bottom a counter (*30 commands · 1 modified · 1
+  conflict · 1 not assigned*), *Cancel* and *Apply*. The search finds a command by its name, its
+  group, its part or its key (`ctrl+0` finds both commands of a clash on Ctrl+0), ignoring case
+  and accents as the search fields do, and shows the groups with matches open and hides the
+  others, each group counting the commands that show; *Modified* shows the keys that differ from
+  their defaults, also those set in an earlier session, *Conflicts* the clashes, and an empty
+  result says *No matching commands*. *Reset all* puts every key back to its default, for the
+  dialog until *Apply*. Enter, a double-click or the pencil records a new key:
+  the field shows the modifiers held, *Press keys…* and *Esc to cancel*, and the first key the
+  user may choose becomes the command's key, punctuation by its character. A refused key says why
+  while recording goes on; Esc, a click elsewhere or leaving the field cancel. The ×, Delete or
+  Backspace remove a key, and a key that differs from its default carries a dot and a reset
+  button. A key on two commands of one part, fixed ones included, marks both rows in red with
+  *Also used by …* and a one-click fix, *Remove there*, and *Apply* waits until no conflict is
+  left. A key of a part that a command around it holds too is no conflict: the row names the
+  command it overrides there. *Apply* hands the changes to the registry, which reports them once;
+  *Cancel* and closing the window drop them.
+- **The editor.** `ShortcutsEditor` is the dialog's content as a node, for a settings page in the
+  application's own window. It works on a copy of the keys: `apply()` hands the copy to the
+  registry, `discard()` drops it and shows every command again, the search cleared and *All*
+  chosen, and `hasChangesProperty()` and `hasConflictsProperty()` enable the page's own buttons.
+- **Texts and styling.** Every text of the dialog and the editor is a property with an English
+  default, the counter's parts as formats with a form for a count of one (*{0} conflict*, *{0}
+  conflicts*). Colours come from the theme's existing tokens; the style classes and
+  pseudo-classes (`shortcuts-row` with `:modified`, `:conflict`, `:override` and the others) are
+  listed in [`STYLEGUIDE.md`](../STYLEGUIDE.md) (*Shortcuts editor and dialog*).
+- **In the showcase.** The *Shortcuts* page in the group *Navigation* is a small example
+  application of 30 commands in six groups, some without a key and one fixed, with a menu bar, a
+  toolbar whose tooltips name the keys, a note field and a document as parts of the window with
+  keys of their own, and two switches that disable a command. It reads out the last command that
+  ran and the text list the application would keep, hands a stored list with entries it cannot use
+  back to the registry, opens the dialog, and holds the editor in a card with buttons of its own.
 
 ## Icons
 

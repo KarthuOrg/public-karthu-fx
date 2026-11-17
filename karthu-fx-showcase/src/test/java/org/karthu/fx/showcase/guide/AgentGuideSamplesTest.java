@@ -1,17 +1,21 @@
 package org.karthu.fx.showcase.guide;
 
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -20,6 +24,13 @@ import javafx.stage.Window;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.karthu.fx.command.Command;
+import org.karthu.fx.command.CommandContext;
+import org.karthu.fx.command.CommandGroup;
+import org.karthu.fx.command.CommandRegistry;
+import org.karthu.fx.command.Shortcut;
+import org.karthu.fx.command.ShortcutsDialog;
+import org.karthu.fx.command.ShortcutsEditor;
 import org.karthu.fx.components.KeyValueEditor;
 import org.karthu.fx.components.KeyValueEntry;
 import org.karthu.fx.components.ToggleSwitch;
@@ -332,6 +343,87 @@ class AgentGuideSamplesTest {
         assertEquals("", searchField.getText(), "the field follows the view");
         assertEquals(-1, document.getSearchMatchIndex());
         assertEquals(2, reader.getChildren().size());
+    }
+
+    @Test
+    @DisplayName("Commands: a registry for the window, groups, a context, bound controls, a tooltip, the kept keys")
+    void commands() {
+        MarkdownView documentView = new MarkdownView("# Notes");
+        Button saveButton = new Button("Save");
+        MenuItem saveItem = new MenuItem("Save");
+        Scene scene = new Scene(new VBox(saveButton, documentView));
+        List<String> saved = new ArrayList<>();
+
+        CommandRegistry registry = new CommandRegistry(scene);
+        CommandGroup file = registry.addGroup("file", "File");
+        CommandGroup view = registry.addGroup("view", "View");
+        CommandContext inDocument = registry.addContext("document", "Document", documentView);
+
+        Command save = registry.addCommand(file, "file.save", "Save",
+                Shortcut.of(KeyCode.S, Shortcut.Modifier.CTRL), () -> saved.add(documentView.getMarkdown()));
+        registry.addCommand(view, "view.zoom-in", "Zoom in", Shortcut.of('+', Shortcut.Modifier.CTRL),
+                () -> documentView.setZoom(documentView.getZoom() + 0.25));
+        registry.addFixedCommand(view, inDocument, "document.copy", "Copy",
+                Shortcut.of(KeyCode.C, Shortcut.Modifier.CTRL), null);
+        save.bind(saveItem);
+        save.bind(saveButton);
+        Tooltip saveTip = new Tooltip();
+        saveTip.textProperty().bind(Bindings.when(save.shortcutDisplayTextProperty().isEmpty())
+                .then("Save")
+                .otherwise(Bindings.concat("Save (", save.shortcutDisplayTextProperty(), ")")));
+        saveButton.setTooltip(saveTip);
+
+        registry.setChangedShortcuts(storedKeys());
+        registry.changedShortcutsProperty().addListener(
+                (observable, oldKeys, newKeys) -> storeKeys(newKeys));
+
+        assertEquals("Save (Ctrl+Shift+S)", saveTip.getText(), "the stored key, handed back");
+        assertEquals("Ctrl+Shift+S", saveItem.getAccelerator().getDisplayText());
+        saveButton.requestFocus();
+        saveButton.fireEvent(new KeyEvent(KeyEvent.KEY_PRESSED, "", "", KeyCode.S, true, true, false, false));
+        assertEquals(List.of("# Notes"), saved);
+        registry.resetShortcuts();
+        assertEquals("Save (Ctrl+S)", saveTip.getText());
+        assertEquals(Map.of(), keptKeys, "the application heard the keys change and kept them");
+    }
+
+    @Test
+    @DisplayName("Shortcuts editor: the dialog's content on a page of the application's own, with its own buttons")
+    void shortcutsEditor() {
+        CommandRegistry registry = new CommandRegistry(new Scene(new VBox()));
+        CommandGroup file = registry.addGroup("file", "File");
+        registry.addCommand(file, "file.open", "Open", Shortcut.of(KeyCode.O, Shortcut.Modifier.CTRL), () -> { });
+
+        ShortcutsEditor editor = new ShortcutsEditor(registry);
+        Button applyKeys = new Button("Apply");
+        applyKeys.disableProperty().bind(editor.hasChangesProperty().not().or(editor.hasConflictsProperty()));
+        applyKeys.setOnAction(event -> editor.apply());
+        Button discardKeys = new Button("Discard");
+        discardKeys.disableProperty().bind(editor.hasChangesProperty().not());
+        discardKeys.setOnAction(event -> editor.discard());
+
+        assertTrue(applyKeys.isDisabled(), "nothing changed yet");
+        assertTrue(discardKeys.isDisabled());
+    }
+
+    /** Stands for the application's own storage of the keys the user changed. */
+    private static Map<String, String> storedKeys() {
+        return Map.of("file.save", "Ctrl+Shift+S");
+    }
+
+    /** What the application kept last, by {@link #storeKeys(Map)}. */
+    private Map<String, String> keptKeys;
+
+    /** Stands for the application's own storage of the keys the user changed. */
+    private void storeKeys(Map<String, String> keys) {
+        keptKeys = keys;
+    }
+
+    /** Compiled only: the dialog is a window. */
+    @SuppressWarnings("unused")
+    private static void shortcutsDialog(Window owner, CommandRegistry registry) {
+        MenuItem keyboardShortcuts = new MenuItem("Keyboard shortcuts");
+        keyboardShortcuts.setOnAction(event -> new ShortcutsDialog(owner, registry).showAndWait());
     }
 
     @Test

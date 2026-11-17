@@ -11,8 +11,8 @@ JavaFX components with a dark theme of their own, and a showcase application tha
 ## What it is
 
 - **A demonstration.** It shows what JavaFX components built with an AI assistant look like:
-  themed dialogs, a settings dialog, form inputs, a Markdown view and a few custom controls, all in
-  one theme, Nebula Dark.
+  themed dialogs, a settings dialog, form inputs, a Markdown view, commands with keyboard
+  shortcuts the user can change, and a few custom controls, all in one theme, Nebula Dark.
 - **A showcase application.** Every component and every themed standard control has a page to
   click through.
 - **Free to read and to copy from.** The licence is MIT-0: take what is useful, no attribution

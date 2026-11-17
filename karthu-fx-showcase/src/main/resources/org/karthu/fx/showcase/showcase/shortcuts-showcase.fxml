@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- The page of the command registry. The registry belongs to the window's scene, so the controller fills the cards
+     when the page first enters the showcase's window. -->
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.ShortcutsShowcaseController"
+      fx:id="page"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Shortcuts" styleClass="showcase-page-title"/>
+    <Label text="Commands and their keys, package org.karthu.fx.command. An application registers its commands once with a CommandRegistry for its window, each with an id, a name, a group, a context, a default key and an action. A menu item or a button bound to a command takes its action and its disabled state, a menu item also its key. The user changes the keys in the ShortcutsDialog, or in a ShortcutsEditor on a page of the application's own, and the registry hands the application the keys that differ from their defaults as a short text list to keep."
+           styleClass="showcase-page-description" wrapText="true"/>
+
+    <!-- The example application -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="An example application" styleClass="showcase-card-title"/>
+        <Label text="Thirty commands in six groups, as an application registers them. The whole page is the application's window: its commands run on their keys wherever the focus is on the page. The document and the note field are parts of the window with keys of their own, which win over the window's while the focus is inside them: Ctrl+F in the document runs Find in document, elsewhere Find…; Ctrl+D in the note field inserts the date, elsewhere it runs Duplicate; Esc clears the note. The note field keeps its own editing keys, such as Ctrl+Z and Ctrl+V. Copy is the document's own key, a fixed command in the dialog; Export as PDF…, Fit to width and About have no key. The tooltips, the menus and the note's prompt name the current keys, and the View commands zoom the document. Switch a command off: its controls grey out, and its key goes to the next command outward."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <VBox fx:id="exampleContainer" spacing="8"/>
+        <FlowPane fx:id="exampleSwitches" hgap="16" vgap="8"/>
+        <Label fx:id="lastCommandLabel" text="Last command: none yet"/>
+    </VBox>
+
+    <!-- The stored text list -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="The keys the application keeps" styleClass="showcase-card-title"/>
+        <Label text="The registry stores nothing. It gives out the keys that differ from their defaults as a text list, an empty text for a removed key, and reports every change: the lines below follow it, as the application's settings file would. Hand back a stored list takes back a list as an application reads it on its next start: file.save-as=Ctrl+Alt+S, edit.duplicate= (removed), view.fit-width=Ctrl+0, file.print=Ctrl+P (no such command) and search.replace=ctrl+h (not the text form). The two entries it cannot use are skipped and logged, and Ctrl+0 stays with Fit to width, where the user put it, so Actual size loses it. Reset all keys puts every key back to its default."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <Label fx:id="storedListLabel"/>
+        <HBox fx:id="storedListButtons" spacing="8"/>
+    </VBox>
+
+    <!-- The dialog -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="The dialog" styleClass="showcase-card-title"/>
+        <Label text="ShortcutsDialog, what a menu entry such as Help > Keyboard shortcuts… opens: every command in its group with its key, a search field, the filters All, Modified and Conflicts, Reset all, and a counter. Select a command and press Enter, double-click it or click its pencil, then press the new keys; Esc cancels. A key that another command of the same context holds shows both rows in red, and Apply waits until the conflict is resolved. A key of the document or the note field that the window holds too names the command it overrides there. Cancel drops every change."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <HBox fx:id="dialogButtons" spacing="8"/>
+        <Label fx:id="dialogResultLabel"/>
+    </VBox>
+
+    <!-- The embedded editor -->
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="The editor on a page of your own" styleClass="showcase-card-title"/>
+        <Label text="ShortcutsEditor, the dialog's content as a node, here with buttons of the page's own: Apply hands the changes to the registry and Discard drops them, both while the editor has changes, Apply only while it has no conflict. The editor follows the registry: a key the dialog or the list above changes shows here at once, unless you changed that command here."
+               styleClass="showcase-page-description" wrapText="true"/>
+        <VBox fx:id="editorContainer" spacing="8"/>
+    </VBox>
+
+</VBox>

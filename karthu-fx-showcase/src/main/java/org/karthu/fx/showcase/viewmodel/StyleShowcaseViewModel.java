@@ -64,6 +64,7 @@ public class StyleShowcaseViewModel {
                 new ShowcaseItem("Pagination", "pagination-showcase.fxml", "Navigation", BootstrapIcons.THREE_DOTS),
                 new ShowcaseItem("Menu Bar", "menu-bar-showcase.fxml", "Navigation", BootstrapIcons.LIST),
                 new ShowcaseItem("Context Menu", "context-menu-showcase.fxml", "Navigation", BootstrapIcons.MENU_APP),
+                new ShowcaseItem("Shortcuts", "shortcuts-showcase.fxml", "Navigation", BootstrapIcons.KEYBOARD),
                 new ShowcaseItem("Icons", "icons-showcase.fxml", "Data Display", BootstrapIcons.EMOJI_SMILE),
                 new ShowcaseItem("Settings Dialog", "settings-dialog-showcase.fxml", "Feedback", BootstrapIcons.GEAR),
                 new ShowcaseItem("Job Scheduler", "job-scheduler-showcase.fxml", "Examples", BootstrapIcons.ALARM)

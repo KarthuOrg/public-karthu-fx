@@ -91,6 +91,10 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   `hasConflictsProperty()`, for a settings page in the application's own window. Every text of both
   is a property with an English default; the style classes and pseudo-classes are listed in
   STYLEGUIDE.md.
+  The showcase's *Shortcuts* page is a small example application to try all of it: 30 commands
+  with a menu bar, a toolbar, a document and a note field with keys of their own, read-outs of the
+  last command and of the kept keys, the dialog and the editor. `docs/components.md` describes the
+  package, and the agent guide has its rules and a tested sample.
 
 ### Fixed
 
