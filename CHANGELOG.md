@@ -31,6 +31,14 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   in pixels at 100 % that the zoom scales. Unset, the theme's padding of `markdown-document` holds
   as before. A view narrower than both margins and 300 pixels of text shrinks them in their
   proportion, so the text keeps 300 pixels and nothing scrolls sideways.
+- `MarkdownView` shows GFM task list items (`- [ ] open`, `- [x] done`, `1. [X] done`) as check
+  boxes, in place of a bullet or beside a number, at any depth and inside quotes: open or ticked in
+  the theme's check box colours, read only (a click changes nothing). The item's text starts after
+  the marker, copying keeps the state (`- [ ] open`, `1. [x] done`), and the search finds the text,
+  never the brackets. A check box names its state as its tooltip and accessible text, *Open* or
+  *Done*, translatable with `taskOpenTextProperty()` and `taskDoneTextProperty()`. Other forms such
+  as `[/]` stay text, as on GitHub. Style classes `markdown-task-list`, `markdown-task-item` and
+  `markdown-task-box`, with `:checked` while a task is done.
 
 ### Fixed
 

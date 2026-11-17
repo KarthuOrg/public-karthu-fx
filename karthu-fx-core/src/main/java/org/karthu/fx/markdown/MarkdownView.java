@@ -65,8 +65,9 @@ import java.util.function.Consumer;
  * deep (deeper, a marker stays text), fenced code blocks (three or more backticks or tildes; the first word of the info
  * string, such as {@code java}, names the code's language, see <em>Code colours</em>), thematic breaks ({@code ---},
  * {@code ***}, {@code ___}), emphasis ({@code *x*}, {@code _x_}), strong emphasis ({@code **x**}, {@code __x__}), both
- * ({@code ***x***}), code spans, backslash escapes, links and GFM tables. Tabs are not expanded: indentation counts
- * spaces only. Whatever it does not know stays visible as text; it never fails on any text.
+ * ({@code ***x***}), code spans, backslash escapes, links, GFM tables and GFM task list items ({@code - [ ] open},
+ * {@code - [x] done}, see <em>Task lists</em>). Tabs are not expanded: indentation counts spaces only. Whatever it
+ * does not know stays visible as text; it never fails on any text.
  *
  * <p>Links are inline links {@code [text](address)} and {@code [text](address "title")}, whose text may hold
  * emphasis and code, autolinks {@code <https://...>} (any scheme), and bare {@code http://} and {@code https://}
@@ -432,6 +433,32 @@ import java.util.function.Consumer;
  * whole column. A rectangle spans the shown columns in their shown order and the rows in their shown order. A sort
  * clears the table's selection. A click on a link in a cell follows the link and selects the cell.
  *
+ * <h2>Task lists</h2>
+ *
+ * <p>A list item that starts with a GFM task marker is a task and shows a check box ({@code markdown-task-box})
+ * instead of its bullet, or beside its number: open for {@code [ ]}, ticked for {@code [x]} and {@code [X]}. The
+ * marker counts only at the very start of the item's first paragraph, on the list marker's line, with exactly one
+ * space, {@code x} or {@code X} between the brackets, followed by a space, a tab or the end of the line; the item's
+ * text starts after it. Anything else stays text, as on GitHub: other characters between the brackets
+ * ({@code [/]}, {@code [-]}), a bracket followed by anything but white space ({@code [x](address)} is a link), an
+ * escaped bracket ({@code \[x]}), a marker later in the text or on a later line, and one outside a list item. An item
+ * with the marker alone ({@code - [ ]}) is an empty task, its check box alone. Tasks show in bullet and ordered lists
+ * at any depth, in loose lists and inside quotes.
+ *
+ * <p>The check box only shows the state: the reader cannot tick it, and the view never changes its source. It has no
+ * hover effect, no hand cursor and no keyboard focus, and a press on it starts a selection as a press beside the text
+ * does. It is drawn from the theme's check box colours, right-aligned against the item's text, its middle on the middle
+ * of the first line's lowercase letters, and scales with the zoom. In a bullet list it takes the bullet's place, so the
+ * text of task and plain items stays aligned. In an ordered list the number stands left of the box ({@code 3.} and the
+ * box), and an ordered list with a task indents all its items further, so their text stays aligned too, and the
+ * numbers of its plain items stand where the numbers of its tasks do. A done item's text looks like any other text:
+ * the item's row carries {@code markdown-task-item}, and the pseudo-class {@code :checked} while done, for a
+ * stylesheet that strikes done items through or dims them.
+ *
+ * <p>The check box names its state in words, as its tooltip and as its accessible text: {@code Open} and {@code Done}
+ * by default, {@link #taskOpenTextProperty()} and {@link #taskDoneTextProperty()}, which an application replaces to
+ * match its language. For a screen reader the box is a check box, selected while the task is done.
+ *
  * <h2>Copying</h2>
  *
  * <p>A code block has a copy button in its top right corner, laid over the code so that it stays in place when the
@@ -495,7 +522,8 @@ import java.util.function.Consumer;
  * order, the shown columns in their shown order, cells joined by a tab (as <em>Copy with header</em> writes them);
  * blocks are separated by a line feed, a heading or a paragraph from its neighbours by a blank line (a tight list's
  * items are no paragraphs here); a list item starts with its marker ({@code - } for a bullet, the number and delimiter
- * such as {@code 3. } in an ordered list) and its further lines, like a nested list's items and the lines of code or a
+ * such as {@code 3. } in an ordered list, a task's followed by its task marker, {@code - [ ] } or {@code 3. [x] }, so
+ * the copy keeps the state) and its further lines, like a nested list's items and the lines of code or a
  * table inside it, are indented by two spaces per level; each line in a quote starts with {@code > }, a blank line
  * inside it with {@code >}. A block selected only in part gives its selected part, with its marker or prefix only if
  * the selection includes its first character; a selection within one code or source block gives its characters
@@ -719,7 +747,16 @@ import java.util.function.Consumer;
  *   <tr><td>{@code markdown-list-item}</td><td>an item row: a box of the item's blocks, indented by its left
  *       padding, which holds the marker</td></tr>
  *   <tr><td>{@code markdown-list-marker}</td><td>an item's marker, a {@code Label}: <code>&bull;</code> in a bullet
- *       list, the number and its delimiter ({@code 3.}, {@code 3)}) in an ordered list</td></tr>
+ *       list, the number and its delimiter ({@code 3.}, {@code 3)}) in an ordered list; a bullet task item has
+ *       none</td></tr>
+ *   <tr><td>{@code markdown-task-list}</td><td>beside {@code markdown-bullet-list} or {@code markdown-ordered-list}: a
+ *       list with at least one task item; an ordered one indents its items further, for number and box, and pads
+ *       the numbers of its plain items so that they stand where its tasks' numbers do</td></tr>
+ *   <tr><td>{@code markdown-task-item}</td><td>beside {@code markdown-list-item}: a task item's row, with the
+ *       pseudo-class {@code :checked} while the task is done</td></tr>
+ *   <tr><td>{@code markdown-task-box}</td><td>a task's check box in place of the bullet or right of the number, a
+ *       {@code Region} drawn like the theme's check box, with a region {@code mark} inside it for the tick; with the
+ *       pseudo-class {@code :checked} while the task is done</td></tr>
  *   <tr><td>{@code markdown-quote}</td><td>a block quote: a box of the quote's blocks, with a bar on its left</td></tr>
  *   <tr><td>{@code markdown-separator}</td><td>a thematic break, a horizontal {@code Separator}</td></tr>
  *   <tr><td>{@code markdown-code-block}</td><td>a fenced code block: a box with a {@code ScrollPane} of its own that
@@ -837,6 +874,8 @@ public class MarkdownView extends BaseComponent {
     private static final String DEFAULT_COPY_TEXT = "Copy";
     private static final String DEFAULT_COPY_WITH_HEADER_TEXT = "Copy with header";
     private static final String DEFAULT_SELECT_COLUMN_TEXT = "Select column";
+    private static final String DEFAULT_TASK_OPEN_TEXT = "Open";
+    private static final String DEFAULT_TASK_DONE_TEXT = "Done";
     private static final String DEFAULT_ZOOM_OUT_TEXT = "Zoom out";
     private static final String DEFAULT_ZOOM_IN_TEXT = "Zoom in";
     private static final String DEFAULT_ZOOM_LEVELS_TEXT = "Zoom levels";
@@ -868,6 +907,10 @@ public class MarkdownView extends BaseComponent {
             DEFAULT_COPY_WITH_HEADER_TEXT);
     private final StringProperty selectColumnText = new SimpleStringProperty(this, "selectColumnText",
             DEFAULT_SELECT_COLUMN_TEXT);
+    private final StringProperty taskOpenText = new SimpleStringProperty(this, "taskOpenText",
+            DEFAULT_TASK_OPEN_TEXT);
+    private final StringProperty taskDoneText = new SimpleStringProperty(this, "taskDoneText",
+            DEFAULT_TASK_DONE_TEXT);
     private final DoubleProperty zoom = new ZoomProperty(this);
     private final BooleanProperty zoomBarVisible = new SimpleBooleanProperty(this, "zoomBarVisible", true);
     private final StringProperty zoomOutText = new SimpleStringProperty(this, "zoomOutText", DEFAULT_ZOOM_OUT_TEXT);
@@ -949,7 +992,7 @@ public class MarkdownView extends BaseComponent {
 
     private final MarkdownRenderer renderer = new MarkdownRenderer(address -> followLink(address),
             text -> copy(text), copyCodeText, holder -> selectionStarted(holder), documentSelection, codeColoring,
-            images);
+            images, taskOpenText, taskDoneText);
 
     /**
      * The zoom at work: applies the zoom property to the document, keeping the reader's place, and zooms for the
@@ -2185,6 +2228,72 @@ public class MarkdownView extends BaseComponent {
      */
     public final void setSelectColumnText(String text) {
         selectColumnText.set(text);
+    }
+
+    /**
+     * The text that names an open task's check box ({@code - [ ]}), {@code Open} by default: the box's tooltip and its
+     * accessible text, which a screen reader announces with the check box. A change applies to the boxes already
+     * shown at once. See <em>Task lists</em> in the class description.
+     *
+     * @return the text property of an open task's check box
+     * @since 1.1.0-RC2
+     */
+    public final StringProperty taskOpenTextProperty() {
+        return taskOpenText;
+    }
+
+    /**
+     * Returns the text that names an open task's check box.
+     *
+     * @return the text, {@code Open} by default
+     * @since 1.1.0-RC2
+     */
+    public final String getTaskOpenText() {
+        return taskOpenText.get();
+    }
+
+    /**
+     * Sets the text that names an open task's check box, its tooltip and accessible text, for example to match the
+     * application's language.
+     *
+     * @param text the text
+     * @since 1.1.0-RC2
+     */
+    public final void setTaskOpenText(String text) {
+        taskOpenText.set(text);
+    }
+
+    /**
+     * The text that names a done task's check box ({@code - [x]}), {@code Done} by default: the box's tooltip and its
+     * accessible text, which a screen reader announces with the check box. A change applies to the boxes already
+     * shown at once. See <em>Task lists</em> in the class description.
+     *
+     * @return the text property of a done task's check box
+     * @since 1.1.0-RC2
+     */
+    public final StringProperty taskDoneTextProperty() {
+        return taskDoneText;
+    }
+
+    /**
+     * Returns the text that names a done task's check box.
+     *
+     * @return the text, {@code Done} by default
+     * @since 1.1.0-RC2
+     */
+    public final String getTaskDoneText() {
+        return taskDoneText.get();
+    }
+
+    /**
+     * Sets the text that names a done task's check box, its tooltip and accessible text, for example to match the
+     * application's language.
+     *
+     * @param text the text
+     * @since 1.1.0-RC2
+     */
+    public final void setTaskDoneText(String text) {
+        taskDoneText.set(text);
     }
 
     /**

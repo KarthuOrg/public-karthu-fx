@@ -110,6 +110,12 @@ final class MarkdownRenderer {
     private final DocumentImages images;
 
     /**
+     * The texts that name an open and a done task's check box, bound so that a change applies to the boxes shown.
+     */
+    private final ObservableValue<String> taskOpenText;
+    private final ObservableValue<String> taskDoneText;
+
+    /**
      * The quotes and list items around the block being rendered, the outermost first.
      */
     private final List<BlockContainer> containers = new ArrayList<>();
@@ -125,10 +131,13 @@ final class MarkdownRenderer {
      * @param documentSelection the selection across the document, given the segments in document order
      * @param coloring          which pieces of a code block the view colours
      * @param images            the view's images, which create and load the blocks of images
+     * @param taskOpenText      the tooltip and accessible text of an open task's check box
+     * @param taskDoneText      the tooltip and accessible text of a done task's check box
      */
     MarkdownRenderer(Consumer<String> linkAction, Consumer<String> copyAction, ObservableValue<String> copyCodeText,
                      Consumer<SelectionHolder> selectionAction, DocumentSelection documentSelection,
-                     CodeColoring coloring, DocumentImages images) {
+                     CodeColoring coloring, DocumentImages images, ObservableValue<String> taskOpenText,
+                     ObservableValue<String> taskDoneText) {
         this.linkAction = linkAction;
         this.copyAction = copyAction;
         this.copyCodeText = copyCodeText;
@@ -136,6 +145,8 @@ final class MarkdownRenderer {
         this.documentSelection = documentSelection;
         this.coloring = coloring;
         this.images = images;
+        this.taskOpenText = taskOpenText;
+        this.taskDoneText = taskDoneText;
     }
 
     /**
@@ -316,9 +327,9 @@ final class MarkdownRenderer {
     }
 
     private Node bulletList(BulletList list) {
-        VBox box = listBox("markdown-bullet-list", list.tight());
+        VBox box = listBox("markdown-bullet-list", list.tight(), list.items());
         for (ListItem item : list.items()) {
-            box.getChildren().add(listItem(BULLET, "-", list.tight(), item));
+            box.getChildren().add(listItem(BULLET, "-", true, list.tight(), item));
         }
         return box;
     }
@@ -327,11 +338,11 @@ final class MarkdownRenderer {
      * An ordered list: the items count on from the list's start number, each marker the number and the delimiter.
      */
     private Node orderedList(OrderedList list) {
-        VBox box = listBox("markdown-ordered-list", list.tight());
+        VBox box = listBox("markdown-ordered-list", list.tight(), list.items());
         long number = list.start();
         for (ListItem item : list.items()) {
             String marker = number + String.valueOf(list.delimiter());
-            box.getChildren().add(listItem(marker, marker, list.tight(), item));
+            box.getChildren().add(listItem(marker, marker, false, list.tight(), item));
             number++;
         }
         return box;
@@ -339,26 +350,53 @@ final class MarkdownRenderer {
 
     /**
      * The box of a list's item rows. A loose list (CommonMark: blank lines between its items or their blocks) gets
-     * the {@code loose} pseudo-class, so the theme spaces its items and their blocks like paragraphs.
+     * the {@code loose} pseudo-class, so the theme spaces its items and their blocks like paragraphs. A list with a
+     * task item gets {@code markdown-task-list}, so the theme can make room for the check boxes.
+     *
+     * @param items the items whose tasks show check boxes
      */
-    private static VBox listBox(String styleClass, boolean tight) {
+    private static VBox listBox(String styleClass, boolean tight, List<ListItem> items) {
         VBox box = new VBox();
         box.getStyleClass().add(styleClass);
         box.pseudoClassStateChanged(LOOSE, !tight);
+        for (ListItem item : items) {
+            if (item.isTask()) {
+                box.getStyleClass().add("markdown-task-list");
+                break;
+            }
+        }
         return box;
     }
 
     /**
      * An item row: the marker as shown, and the item's blocks, rendered inside the item as their container, whose
      * copied text starts with the marker as written for copying ({@code -} for a bullet).
+     *
+     * <p>A task item shows its check box in place of a bullet, or beside its number. Its copied marker carries the
+     * task marker as GFM writes it ({@code - [ ]}, {@code 1. [x]}), so the copy keeps the state.
+     *
+     * @param markerText      the marker as shown: the bullet, or an ordered item's number and delimiter
+     * @param boxTakesMarker  whether a task's check box takes the marker's place, as it takes a bullet's; else the
+     *                        marker stays beside the box
      */
-    private Node listItem(String markerText, String copiedMarker, boolean tight, ListItem item) {
-        Label marker = new Label(markerText);
-        marker.getStyleClass().add("markdown-list-marker");
-        containers.add(new BlockContainer.Item(copiedMarker, tight));
+    private Node listItem(String markerText, String copiedMarker, boolean boxTakesMarker, boolean tight,
+                          ListItem item) {
+        TaskBox taskBox = null;
+        String copied = copiedMarker;
+        if (item.isTask()) {
+            boolean done = item.task() == ListItem.Task.DONE;
+            taskBox = new TaskBox(done, done ? taskDoneText : taskOpenText);
+            copied = copiedMarker + (done ? " [x]" : " [ ]");
+        }
+        Label marker = null;
+        if (taskBox == null || !boxTakesMarker) {
+            marker = new Label(markerText);
+            marker.getStyleClass().add("markdown-list-marker");
+        }
+        containers.add(new BlockContainer.Item(copied, tight));
         List<Node> blocks = renderBlocks(item.blocks());
         containers.removeLast();
-        return new ListItemBox(marker, blocks);
+        return new ListItemBox(marker, taskBox, blocks);
     }
 
     /**

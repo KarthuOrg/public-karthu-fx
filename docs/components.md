@@ -56,8 +56,8 @@ require `javafx.web`, so no browser engine ships with the application.
 
 - **What it renders.** Headings, paragraphs, bold, italic, inline code, nested lists, block quotes,
   fenced code blocks with a copy button, links and bare URLs (a click goes to the application's
-  handler), thematic breaks and GFM tables. HTML blocks and indented code show as their source
-  lines.
+  handler), thematic breaks, GFM tables and GFM task lists, whose items show check boxes, open or
+  ticked, that the reader cannot tick. HTML blocks and indented code show as their source lines.
 - **Selecting and copying.** The reader selects text with the mouse across blocks as in a browser
   and copies it with Ctrl+C as plain text, code blocks and whole tables included.
 - **Tables.** GFM tables show as `TableView`s that share the view's width, show all their rows and

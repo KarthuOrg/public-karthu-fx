@@ -313,7 +313,10 @@ view.updateMarkdown("# Release notes\n\nNow with search.\n\nSee [the guide](http
   Do not pad the view or a box around it for this.
 - The view scrolls by itself: do not put it into a `ScrollPane`. Give it the room it may grow into
   (`VBox.setVgrow(view, Priority.ALWAYS)`).
-- It renders a subset of CommonMark with GFM tables; raw HTML shows as source.
+- It renders a subset of CommonMark with GFM tables and GFM task lists; raw HTML shows as source.
+- Task list items (`- [ ] open`, `- [x] done`) show as check boxes the reader cannot tick: the
+  view never changes its text and has no event for a click on them. Their tooltip, also the
+  screen reader's text, is `setTaskOpenText` and `setTaskDoneText`.
 
 ### Search in a Markdown view
 
