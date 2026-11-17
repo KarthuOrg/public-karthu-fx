@@ -401,9 +401,9 @@ registry.changedShortcutsProperty().addListener(
         (observable, oldKeys, newKeys) -> storeKeys(newKeys));
 ```
 
-- From 1.1.0-RC2 on. One registry per window, created for its scene before the scene is shown.
-  Groups and commands show in the dialog in the order they are added; an id is stable, since it
-  names the command in the kept keys.
+- From 1.1.0-RC2 on. One registry per window, for its scene; a second one for the same scene is
+  refused. Groups and commands show in the dialog in the order they are added; an id is stable,
+  since it names the command in the kept keys.
 - A command runs when its key is pressed anywhere in the window, never while it is disabled
   (`setDisabled`, or bind `disabledProperty()`): a disabled command leaves its key to the next
   command outward. A focused text field keeps its own editing keys (Ctrl+C, X, V, A, Z).
@@ -417,10 +417,10 @@ registry.changedShortcutsProperty().addListener(
   ...)` for punctuation, which runs with Shift or without and on the numeric keypad's key. A
   digit also runs on the keypad's digit.
 - `saved` stands for what the application's *Save* does, `storedKeys` and `storeKeys` for its
-  own settings. The kept map holds only
-  the keys that differ from their defaults (`file.save=Ctrl+Shift+S`, an empty text for a removed
-  key). Hand it back once, after every command is added; an entry the registry cannot use is
-  skipped and logged, so do not check it yourself. `resetShortcuts()` puts every key back.
+  own settings. The kept map holds only the keys that differ from their defaults
+  (`file.save=Ctrl+Shift+S`, an empty text for a removed key). Hand it back once, after every
+  command is added; an entry the registry cannot use is skipped and logged, so do not check it
+  yourself. `resetShortcuts()` puts every key back.
 
 ### The keys dialog and the editor
 
