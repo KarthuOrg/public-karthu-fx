@@ -263,6 +263,18 @@ public final class CommandRegistry {
     }
 
     /**
+     * Sets the keys of commands, as the shortcut editor applies its working copy: the one way the user's keys reach
+     * the commands.
+     *
+     * @param shortcuts the new key of each command, null for none; no fixed command among them
+     */
+    void applyShortcuts(Map<Command, Shortcut> shortcuts) {
+        for (Map.Entry<Command, Shortcut> change : shortcuts.entrySet()) {
+            change.getKey().setShortcut(change.getValue());
+        }
+    }
+
+    /**
      * Refuses an id that is null, blank or taken.
      */
     private static void checkId(String id, Set<String> taken, String kind) {

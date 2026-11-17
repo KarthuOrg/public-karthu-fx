@@ -459,6 +459,73 @@ the CheckBox keep the theme's own rules.
 | `key-value-delete` | a row's delete `Button`, also `icon-button`, Bootstrap `X` | icon 16px in `-fx-text-secondary-color`, `-fx-status-error` on hover |
 | `key-value-add` | the add `Button`, Bootstrap `PLUS` | the theme's button, icon 14px in `-fx-text-color` |
 
+**Shortcuts editor and dialog** (`ShortcutsEditor`, `ShortcutsDialog`, package `org.karthu.fx.command`) —
+the user's view of a window's commands and their keys: a bar (search field, the segmented filters
+*All / Modified / Conflicts*, *Reset all*), a header row naming the columns in capitals, the list of
+group lines and command rows, and a footer with the counter and, in the dialog, *Cancel* and *Apply*.
+Rows are 22px high (`-fx-fixed-cell-size`), room for about 30 commands in the dialog's 760 × 660.
+The command column takes 55 % of the list's width in the header and in every row, and both indent
+the names by 26px, so the titles stand over the columns. Rules in `base.css` under *Shortcuts
+editor*, colours through the theme's tokens only, no token of its own: `-fx-surface-color` (the
+editor, the dialog), `-fx-canvas-color` (the band of a group's line), `-fx-control-border` (the
+header's and footer's lines, the filters' frame, the key caps' and the context mark's frames),
+`-fx-button-color` (the key caps, the chosen filter), `-fx-text-color`, `-fx-text-secondary-color`
+(the column titles, the group's count, *Not assigned*, the context mark, the field's hint, the
+counter, the row's icons), `-fx-accent-color` (the modified dot, the reset icon, the recording
+field's frame), `-fx-control-inner-background` (the recording field), `-fx-status-error` (a refused
+key's reason, the × under the pointer), `-fx-hover-color` and, through the list, `-fx-selection-color`
+and `-fx-selection-text-color`. The key caps and the segmented filters are no public controls; their
+style classes, like all the others here, are a public contract, also listed in the classes' JavaDoc:
+renaming one is a breaking change.
+
+| Style class | On | Look |
+|---|---|---|
+| `shortcuts-editor` | the editor, a `VBox`: bar, header, list, footer | `-fx-surface-color` |
+| `shortcuts-dialog` | the dialog's content, a `VBox` around the editor | `-fx-surface-color` |
+| `shortcuts-bar` | the bar, an `HBox` | padding 8, spacing 8 |
+| `shortcuts-search` | the search field, a `SearchInput` (keeps `form-search-input`) | the search input's |
+| `shortcuts-filter` | the segmented filters, an `HBox` of three `ToggleButton`s in one toggle group | joined: one 1px `-fx-control-border` frame, radius 3 at the ends, `-fx-text-secondary-color` text on `-fx-surface-color`, `-fx-hover-color` under the pointer |
+| `shortcuts-filter-all`, `shortcuts-filter-modified`, `shortcuts-filter-conflicts` | the filters, each a `ToggleButton` | the chosen one (`:selected`) bold in `-fx-text-color` on `-fx-button-color` |
+| `shortcuts-reset-all` | *Reset all*, a `Button` | flat: transparent, bold, `-fx-hover-color` under the pointer |
+| `shortcuts-header` | the header row, an `HBox` | padding `4 8 4 0`, 1px `-fx-control-border` lines above and below; its labels 11px bold `-fx-text-secondary-color` |
+| `shortcuts-header-command`, `shortcuts-header-shortcut` | the column titles, `Label`s, in capitals | the command title indented 26px |
+| `shortcuts-list` | the list, a `ListView` (keeps `list-view`) | cells 22px high, padding `0 8 0 0` |
+| `shortcuts-group-row` | a group's line, a list cell | a `-fx-canvas-color` band; the list's hover and selection |
+| `shortcuts-group-content` | the group line's content, an `HBox`: arrow, name, count | padding `0 0 0 8`, spacing 6 |
+| `shortcuts-group-arrow` | its fold arrow, a Bootstrap `CHEVRON_DOWN` icon, `CHEVRON_RIGHT` while folded | 12px, `-fx-text-secondary-color` |
+| `shortcuts-group-name`, `shortcuts-group-count` | its name and the number of its commands, `Label`s | the name bold, the count `-fx-text-secondary-color` |
+| `shortcuts-row` | a command's row, a list cell | the list's cell, its hover and selection |
+| `shortcuts-command-column` | the row's command column, an `HBox`: name, dot, mark | padding `0 8 0 26`, spacing 6 |
+| `shortcuts-command-name` | the command's name, a `Label` | `-fx-text-color` |
+| `shortcuts-modified-dot` | the dot after the name of a modified command, a `Region` | a 6px circle in `-fx-accent-color` |
+| `shortcuts-context-mark` | the context's name after the name of a command whose key holds only in a part of the window, a `Label` | 10px, `-fx-text-secondary-color`, 1px `-fx-control-border` frame, radius 3 |
+| `shortcuts-shortcut-column` | the row's shortcut column, a `StackPane` holding the key caps, *Not assigned* or the recording field | left aligned, grows |
+| `shortcuts-key-caps` | a key's caps, an `HBox` | spacing 3 |
+| `shortcuts-key-cap` | one cap, a `Label`: a modifier, the key's name or the character | 11px, padding `0 5`, `-fx-button-color` in a 1px `-fx-control-border` frame, radius 3 |
+| `shortcuts-not-assigned` | *Not assigned*, a `Label` | `-fx-text-secondary-color` |
+| `shortcuts-row-content` | the row's content, an `HBox`: the columns and the buttons | — |
+| `shortcuts-edit`, `shortcuts-remove`, `shortcuts-reset` | the pencil (Bootstrap `PENCIL`), the × (`X`) and the reset (`ARROW_COUNTERCLOCKWISE`), `Button`s beside `icon-button`, not focus traversable | icons 13px in `-fx-text-secondary-color`, the × in `-fx-status-error` under the pointer, the reset in `-fx-accent-color`; pencil and × on the row under the pointer and the selected row, the reset on a modified row, none on a fixed row |
+| `shortcuts-recorder` | the recording field, an `HBox` in the shortcut column: the held modifiers as key caps, the message, the hint | `-fx-control-inner-background` in a 1px `-fx-accent-color` frame, radius 3, spacing 6 |
+| `shortcuts-recorder-message` | *Press keys…* or a refused key's reason, a `Label` | `-fx-text-color` |
+| `shortcuts-recorder-hint` | *Esc to cancel* at the field's end, a `Label` | `-fx-text-secondary-color` |
+| `shortcuts-footer` | the footer, an `HBox`: counter, then the buttons | padding 8, spacing 8, a 1px `-fx-control-border` line above |
+| `shortcuts-count` | the counter, an `HBox` of `Label`s | `-fx-text-secondary-color` |
+| `shortcuts-count-commands`, `shortcuts-count-modified`, `shortcuts-count-conflicts`, `shortcuts-count-not-assigned` | the counter's parts | — |
+| `shortcuts-count-separator` | the ` · ` between the parts | — |
+| `shortcuts-footer-buttons` | the footer's buttons, an `HBox` at its right end | spacing 8; buttons at least 80px wide |
+| `shortcuts-dialog-cancel` | the dialog's *Cancel*, a `Button`, the cancel button (Esc) | the theme's button |
+| `shortcuts-dialog-apply` | the dialog's *Apply*, a `Button` beside `primary-button`, not a default button (Enter records a key) | the theme's primary button |
+
+| Pseudo-class | On | Look |
+|---|---|---|
+| `:modified` | `shortcuts-row`, while the key differs from the command's default | the modified dot and the reset button show |
+| `:not-assigned` | `shortcuts-row`, while the command has no key | *Not assigned* in place of the key caps |
+| `:fixed` | `shortcuts-row` of a fixed command | no pencil, × or reset |
+| `:recording` | `shortcuts-row`, while it records a new key | the recording field in place of the key caps, no buttons |
+| `:collapsed` | `shortcuts-group-row`, while the group is folded | the arrow points right; the group's rows are not in the list |
+| `:refused` | `shortcuts-recorder`, while it shows why the last key was refused | the message in `-fx-status-error` |
+| `:selected`, `:hover` | `shortcuts-row`, `shortcuts-group-row` (the list cell's own) | the list's selection and hover; the row's pencil and × show |
+
 **Form fields** (package `org.karthu.fx.form`) — a collection of standardized form inputs that
 look and behave alike: text, password, number (with spinner arrows), combo, editable combo, text
 area, path and cron, each in the same shell, and the form row that holds any of them. Every input

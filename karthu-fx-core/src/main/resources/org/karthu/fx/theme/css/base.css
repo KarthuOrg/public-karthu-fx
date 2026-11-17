@@ -2230,6 +2230,238 @@ Text {
 }
 
 /* ===================================================================
+ * Shortcuts editor (ShortcutsEditor, package org.karthu.fx.command) and
+ * the dialog around it (ShortcutsDialog): a bar with the search field,
+ * the segmented filters and Reset all; a header naming the columns; the
+ * list of group lines and command rows; and a footer with the counter
+ * and the dialog's buttons. The style classes and pseudo-classes are a
+ * documented contract (STYLEGUIDE.md, ShortcutsEditor's JavaDoc);
+ * colours are the theme's tokens, no token of its own. The command
+ * column is as wide in the header as in the rows (the editor sets it),
+ * and both indent the names alike, so the titles stand over the
+ * columns. Inside the list the theme's .list-view .list-cell .text rule
+ * fills every text, so the muted texts set the fill of their .text.
+ * =================================================================== */
+.shortcuts-editor {
+    -fx-background-color: -fx-surface-color;
+}
+
+.shortcuts-dialog {
+    -fx-background-color: -fx-surface-color;
+}
+
+/* --- Bar ------------------------------------------------------------- */
+.shortcuts-bar {
+    -fx-padding: 8;
+    -fx-spacing: 8;
+}
+
+/* The filters as one segmented control: joined buttons in one frame,
+ * the chosen one raised in the button colour and bold. */
+.shortcuts-filter .toggle-button {
+    -fx-background-color: -fx-surface-color;
+    -fx-background-radius: 0;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1 0 1 1;
+    -fx-border-radius: 0;
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-padding: 4 10;
+}
+
+.shortcuts-filter .toggle-button:hover {
+    -fx-background-color: -fx-hover-color;
+}
+
+.shortcuts-filter .toggle-button:selected {
+    -fx-background-color: -fx-button-color;
+    -fx-text-fill: -fx-text-color;
+    -fx-font-weight: bold;
+}
+
+.shortcuts-filter .shortcuts-filter-all {
+    -fx-background-radius: 3 0 0 3;
+    -fx-border-radius: 3 0 0 3;
+}
+
+.shortcuts-filter .shortcuts-filter-conflicts {
+    -fx-background-radius: 0 3 3 0;
+    -fx-border-width: 1;
+    -fx-border-radius: 0 3 3 0;
+}
+
+/* Reset all: a flat text button, as the icon buttons are flat. */
+.shortcuts-bar .shortcuts-reset-all {
+    -fx-background-color: transparent;
+    -fx-font-weight: bold;
+}
+
+.shortcuts-bar .shortcuts-reset-all:hover {
+    -fx-background-color: -fx-hover-color;
+}
+
+/* --- Header ------------------------------------------------------------ */
+.shortcuts-header {
+    -fx-padding: 4 8 4 0;
+    -fx-border-color: -fx-control-border transparent -fx-control-border transparent;
+    -fx-border-width: 1 0 1 0;
+}
+
+.shortcuts-header .label {
+    -fx-text-fill: -fx-text-secondary-color;
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+/* The same indent as the names in the rows. */
+.shortcuts-header .shortcuts-header-command {
+    -fx-padding: 0 8 0 26;
+}
+
+/* --- List ---------------------------------------------------------------
+ * Rows of 22px: about 30 commands fit the dialog without scrolling. A
+ * cell starts at the list's left edge, so that the command column lines
+ * up with the header's. */
+.shortcuts-list {
+    -fx-fixed-cell-size: 22;
+}
+
+.shortcuts-list .list-cell {
+    -fx-padding: 0 8 0 0;
+}
+
+/* A group's line: a darker band with the fold arrow, the name in bold
+ * and the number of its commands muted. */
+.shortcuts-list .shortcuts-group-row {
+    -fx-background-color: -fx-canvas-color;
+}
+
+.shortcuts-group-content {
+    -fx-padding: 0 0 0 8;
+    -fx-spacing: 6;
+}
+
+.shortcuts-group-content .shortcuts-group-arrow {
+    -fx-icon-size: 12;
+    -fx-icon-color: -fx-text-secondary-color;
+}
+
+.shortcuts-group-content .shortcuts-group-name {
+    -fx-font-weight: bold;
+}
+
+.shortcuts-list .shortcuts-group-count .text {
+    -fx-fill: -fx-text-secondary-color;
+}
+
+/* A command's row: the command column (name, modified dot, context
+ * mark), the shortcut column, then the row's buttons. */
+.shortcuts-command-column {
+    -fx-padding: 0 8 0 26;
+    -fx-spacing: 6;
+}
+
+.shortcuts-modified-dot {
+    -fx-background-color: -fx-accent-color;
+    -fx-background-radius: 3;
+    -fx-min-width: 6;
+    -fx-pref-width: 6;
+    -fx-max-width: 6;
+    -fx-min-height: 6;
+    -fx-pref-height: 6;
+    -fx-max-height: 6;
+}
+
+.shortcuts-context-mark {
+    -fx-font-size: 10px;
+    -fx-padding: 0 4;
+    -fx-border-color: -fx-control-border;
+    -fx-border-width: 1;
+    -fx-border-radius: 3;
+}
+
+.shortcuts-list .shortcuts-context-mark .text,
+.shortcuts-list .shortcuts-not-assigned .text {
+    -fx-fill: -fx-text-secondary-color;
+}
+
+/* Key caps: small framed caps in the button colour. */
+.shortcuts-key-caps {
+    -fx-spacing: 3;
+    -fx-alignment: center-left;
+}
+
+.shortcuts-key-cap {
+    -fx-background-color: -fx-control-border, -fx-button-color;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3, 2;
+    -fx-padding: 0 5;
+    -fx-font-size: 11px;
+}
+
+/* The row's buttons: the theme's icon buttons, small and quiet; the x
+ * in the error colour under the pointer, the reset in the accent. */
+.shortcuts-row-content .icon-button {
+    -fx-padding: 2 4;
+}
+
+.shortcuts-row-content .icon-button .ikonli-font-icon {
+    -fx-icon-size: 13;
+    -fx-icon-color: -fx-text-secondary-color;
+}
+
+.shortcuts-row-content .shortcuts-remove:hover .ikonli-font-icon {
+    -fx-icon-color: -fx-status-error;
+}
+
+.shortcuts-row-content .shortcuts-reset .ikonli-font-icon {
+    -fx-icon-color: -fx-accent-color;
+}
+
+/* --- Recording field ----------------------------------------------------
+ * Framed in the accent on the inner background: the held modifiers as
+ * caps, the prompt, and the hint at the end muted; a refused key's reason
+ * in the error colour. */
+.shortcuts-recorder {
+    -fx-background-color: -fx-accent-color, -fx-control-inner-background;
+    -fx-background-insets: 0, 1;
+    -fx-background-radius: 3, 2;
+    -fx-padding: 1 6 1 2;
+    -fx-spacing: 6;
+}
+
+.shortcuts-list .shortcuts-recorder .shortcuts-recorder-message .text {
+    -fx-fill: -fx-text-color;
+}
+
+.shortcuts-list .shortcuts-recorder .shortcuts-recorder-hint .text {
+    -fx-fill: -fx-text-secondary-color;
+}
+
+.shortcuts-list .shortcuts-recorder:refused .shortcuts-recorder-message .text {
+    -fx-fill: -fx-status-error;
+}
+
+/* --- Footer --------------------------------------------------------------- */
+.shortcuts-footer {
+    -fx-padding: 8;
+    -fx-spacing: 8;
+    -fx-border-color: -fx-control-border transparent transparent transparent;
+    -fx-border-width: 1 0 0 0;
+}
+
+.shortcuts-count .label {
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+.shortcuts-footer-buttons {
+    -fx-spacing: 8;
+}
+
+.shortcuts-footer-buttons .button {
+    -fx-min-width: 80;
+}
+
+/* ===================================================================
  * Form fields (package org.karthu.fx.form) — the shell of every input
  * (FieldShell, style class form-frame), the single-line text frame on
  * it (FieldFrame) and the inputs built on them. The style classes and

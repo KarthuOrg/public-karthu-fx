@@ -60,6 +60,20 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   owns (*Copy* on Ctrl+C in a document): their keys never change, and without an action they leave
   the key to the component. While a text input has the focus, no command runs on Ctrl+Alt with a
   key that types a character, so typing `@`, `{` or `|` with AltGr never runs a command.
+  The user changes the keys in a `ShortcutsDialog` (`new ShortcutsDialog(owner, registry)
+  .showAndWait()`): every command in its group, with its key as key caps, *Not assigned* without
+  one, and a small mark with the context's name for a key that holds only in a part of the window;
+  groups show their counts and fold with a click. Enter, a double-click or the pencil records a new
+  key: the field shows the modifiers held down, and the first key the user may record becomes the
+  command's key, punctuation by its character (*Ctrl++* whichever key types the plus). F1 to F12
+  may be recorded alone, every other key needs Ctrl or Alt; a refused key says why while recording
+  goes on, and Esc, a click elsewhere or leaving the field cancel. The ×, Delete or Backspace
+  remove a key; a key that differs from its default carries a dot and a reset button. A counter
+  shows the commands, the modified ones and those without a key. *Apply* hands the changes to the
+  registry, *Cancel* and closing the window drop them. The same content is a node of its own,
+  `ShortcutsEditor`, with `apply()`, `discard()` and `hasChangesProperty()`, for a settings page in
+  the application's own window. Every text of both is a property with an English default; the
+  style classes and pseudo-classes are listed in STYLEGUIDE.md.
 
 ### Fixed
 

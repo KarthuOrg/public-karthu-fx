@@ -20,7 +20,9 @@
  * ({@link org.karthu.fx.form.SuggestionInput}), and commands with their keys
  * ({@link org.karthu.fx.command.CommandRegistry}, {@link org.karthu.fx.command.Command},
  * {@link org.karthu.fx.command.Shortcut}), which run when their keys are pressed in a window or in a part of it
- * ({@link org.karthu.fx.command.CommandContext}) and drive the menu items and buttons bound to them.
+ * ({@link org.karthu.fx.command.CommandContext}) and drive the menu items and buttons bound to them, and whose keys
+ * the user changes in a dialog ({@link org.karthu.fx.command.ShortcutsDialog}) or in its content placed in a window
+ * of the application ({@link org.karthu.fx.command.ShortcutsEditor}).
  *
  * <p>The module requires only {@code slf4j-api} for logging; the consuming application provides
  * the binding.
