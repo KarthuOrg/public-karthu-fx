@@ -1,6 +1,8 @@
 package org.karthu.fx.showcase.controller;
 
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Pos;
@@ -10,6 +12,9 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.Toggle;
+import javafx.scene.control.ToggleButton;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
@@ -19,6 +24,8 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import org.karthu.fx.dialog.CustomDialog;
 import org.karthu.fx.showcase.viewmodel.ShowcaseItem;
 import org.karthu.fx.showcase.viewmodel.StyleShowcaseViewModel;
+import org.karthu.fx.theme.Appearance;
+import org.karthu.fx.theme.ThemeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,8 +56,55 @@ public class StyleShowcaseController {
     @FXML
     private ProgressBar progressBar;
 
+    @FXML
+    private ToggleButton lightScheme;
+
+    @FXML
+    private ToggleButton darkScheme;
+
+    @FXML
+    private ToggleButton systemScheme;
+
+    private final ToggleGroup schemes = new ToggleGroup();
+
+    /** Shows a choice of the theme's scheme made elsewhere on the switch. Held here: the theme holds it weakly. */
+    private final ChangeListener<Appearance> showChoice = (observable, oldChoice, newChoice) -> showScheme(newChoice);
+
     private StyleShowcaseViewModel viewModel;
     private final Map<String, Parent> pageCache = new HashMap<>();
+
+    /**
+     * Binds the scheme switch of the toolbar to the theme's choice, in both directions: a choice on the switch is the
+     * choice of every window, and a choice made elsewhere shows on the switch. Called by the FXML loader.
+     */
+    @FXML
+    private void initialize() {
+        lightScheme.setUserData(Appearance.LIGHT);
+        darkScheme.setUserData(Appearance.DARK);
+        systemScheme.setUserData(Appearance.SYSTEM);
+        lightScheme.setToggleGroup(schemes);
+        darkScheme.setToggleGroup(schemes);
+        systemScheme.setToggleGroup(schemes);
+        showScheme(ThemeManager.getAppearance());
+
+        schemes.selectedToggleProperty().addListener((observable, oldToggle, newToggle) -> {
+            if (newToggle == null) {
+                // A click on the chosen one unselects it: the switch always shows a choice.
+                oldToggle.setSelected(true);
+            } else {
+                ThemeManager.setAppearance((Appearance) newToggle.getUserData());
+            }
+        });
+        ThemeManager.appearanceProperty().addListener(new WeakChangeListener<>(showChoice));
+    }
+
+    private void showScheme(Appearance appearance) {
+        for (Toggle toggle : schemes.getToggles()) {
+            if (toggle.getUserData() == appearance) {
+                schemes.selectToggle(toggle);
+            }
+        }
+    }
 
     /**
      * Initializes this controller with the given ViewModel.

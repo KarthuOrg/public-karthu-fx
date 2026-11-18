@@ -7,6 +7,7 @@
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.ToggleButton?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
@@ -29,6 +30,14 @@
             </MenuBar>
             <HBox styleClass="showcase-toolbar" alignment="CENTER_LEFT" spacing="8">
                 <Label text="Component Showcase" styleClass="showcase-title"/>
+                <Region HBox.hgrow="ALWAYS"/>
+                <!-- The colour scheme of every window, bound to the theme's choice -->
+                <Label text="Theme"/>
+                <HBox alignment="CENTER_LEFT" spacing="4">
+                    <ToggleButton fx:id="lightScheme" text="Light"/>
+                    <ToggleButton fx:id="darkScheme" text="Dark"/>
+                    <ToggleButton fx:id="systemScheme" text="System"/>
+                </HBox>
             </HBox>
         </VBox>
     </top>
