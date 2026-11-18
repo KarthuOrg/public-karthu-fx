@@ -25,61 +25,66 @@ import java.util.Optional;
  * fallback chain passes: an annotation carries {@code code-annotation} and {@code code-keyword}, a constant
  * {@code code-constant}, {@code code-literal} and {@code code-number}. So an own rule for {@code code-keyword} (an
  * underline, say) also reaches annotations, and one for {@code code-annotation} only them. The defaults are colours
- * only, no bold, no italic, each readable on the code background {@code -fx-code-background-color}. Bold and italic
- * from an own rule show only when the code font has those faces: JavaFX finds none of a variable font such as
- * "Cascadia Mono".
+ * only, no bold, no italic, each readable on the code background {@code -fx-code-background-color}. Each colour
+ * scheme of the theme, Nebula Dark and Nebula Light, has base colours of its own, and in both a fine variable refers
+ * to its fallback. Bold and italic from an own rule show only when the code font has those faces: JavaFX finds none
+ * of a variable font such as "Cascadia Mono".
  *
  * <p>Categories are never removed; new fine categories with a fallback may be added.
  */
 public enum CodeCategory {
 
     /**
-     * Comments. Style class {@code code-comment}, variable {@code -fx-code-comment-color}, default {@code #8a90a8}.
+     * Comments. Style class {@code code-comment}, variable {@code -fx-code-comment-color}, default {@code #8a90a8} in
+     * Nebula Dark, {@code #5E6475} in Nebula Light.
      */
     COMMENT(true, null),
 
     /**
      * Keywords of a language. Style class {@code code-keyword}, variable {@code -fx-code-keyword-color}, default
-     * {@code #c88bff}.
+     * {@code #c88bff} in Nebula Dark, {@code #7A3EC0} in Nebula Light.
      */
     KEYWORD(true, null),
 
     /**
      * Text in quotes. Style class {@code code-string}, variable {@code -fx-code-string-color}, default
-     * {@code #e0a84c}.
+     * {@code #e0a84c} in Nebula Dark, {@code #875A10} in Nebula Light.
      */
     STRING(true, null),
 
     /**
-     * Numbers. Style class {@code code-number}, variable {@code -fx-code-number-color}, default {@code #ff9e64}.
+     * Numbers. Style class {@code code-number}, variable {@code -fx-code-number-color}, default {@code #ff9e64} in
+     * Nebula Dark, {@code #A84A10} in Nebula Light.
      */
     NUMBER(true, null),
 
     /**
-     * Type names. Style class {@code code-type}, variable {@code -fx-code-type-color}, default {@code #4cd38a}.
+     * Type names. Style class {@code code-type}, variable {@code -fx-code-type-color}, default {@code #4cd38a} in
+     * Nebula Dark, {@code #15703F} in Nebula Light.
      */
     TYPE(true, null),
 
     /**
      * A name followed by {@code (}. Style class {@code code-function}, variable {@code -fx-code-function-color},
-     * default {@code #5d9bff}.
+     * default {@code #5d9bff} in Nebula Dark, {@code #1F56B3} in Nebula Light.
      */
     FUNCTION(true, null),
 
     /**
      * Variables: Bash variables, SQL parameters, YAML anchors. Style class {@code code-variable}, variable
-     * {@code -fx-code-variable-color}, default {@code #ff8fa3}.
+     * {@code -fx-code-variable-color}, default {@code #ff8fa3} in Nebula Dark, {@code #B0284D} in Nebula Light.
      */
     VARIABLE(true, null),
 
     /**
      * Keys in JSON and YAML. Style class {@code code-property}, variable {@code -fx-code-property-color}, default
-     * {@code #7b8cff}.
+     * {@code #7b8cff} in Nebula Dark, {@code #3B4CC0} in Nebula Light.
      */
     PROPERTY(true, null),
 
     /**
-     * XML and HTML tags. Style class {@code code-tag}, variable {@code -fx-code-tag-color}, default {@code #ff8fa3}.
+     * XML and HTML tags. Style class {@code code-tag}, variable {@code -fx-code-tag-color}, default {@code #ff8fa3} in
+     * Nebula Dark, {@code #B0284D} in Nebula Light.
      */
     TAG(true, null),
 

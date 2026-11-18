@@ -1,6 +1,7 @@
 /*
  * Base stylesheet - structure, density, and component rules.
- * Color token values are defined in dark.css (Nebula Dark).
+ * Color token values are defined in dark.css (Nebula Dark) and light.css (Nebula Light), which define the same
+ * tokens: ThemeManager loads the one of the scheme in effect after this file.
  */
 
 /* Root and typography */
@@ -2509,12 +2510,13 @@ Text {
  * (FieldShell, style class form-frame), the single-line text frame on
  * it (FieldFrame) and the inputs built on them. The style classes and
  * pseudo-classes are a documented contract (STYLEGUIDE.md, the classes'
- * JavaDoc); colours are tokens from dark.css, sizes come from the text
- * field above. Sections: the frame, its trailing icons, the type's own
- * controls, its leading graphic, its states (warning and error, drop
- * target, read-only), one section per input (text, password, number and
- * its spinner arrows, combo, editable combo, text area, path, cron), the
- * search input and the suggestion input, then the binding and the row.
+ * JavaDoc); colours are tokens of the scheme's stylesheet (dark.css or
+ * light.css), sizes come from the text field above. Sections: the
+ * frame, its trailing icons, the type's own controls, its leading
+ * graphic, its states (warning and error, drop target, read-only), one
+ * section per input (text, password, number and its spinner arrows,
+ * combo, editable combo, text area, path, cron), the search input and
+ * the suggestion input, then the binding and the row.
  * =================================================================== */
 
 /* --- Frame (FieldShell, FieldFrame) ---------------------------------
@@ -3240,7 +3242,8 @@ Text {
 /* ===================================================================
  * Markdown view (MarkdownView) — sizes, spacing and fonts. The style
  * classes are a documented contract (STYLEGUIDE.md, MarkdownView's
- * JavaDoc); colours are tokens from dark.css.
+ * JavaDoc); colours are tokens of the scheme's stylesheet (dark.css or
+ * light.css).
  * =================================================================== */
 
 /* The view frames itself like a text area: raised bg + 1px border. */
@@ -3498,12 +3501,12 @@ Text {
 /* Code coloured by its language: each run of a piece carries the
  * code- class of its category and of every category its fallback chain
  * passes (an annotation code-annotation and code-keyword). Each class
- * takes its fill from its variable (dark.css). The base classes come
- * first and the fine ones after them, a fine class after the one it
- * falls back to, so the finest class of a run wins. Three classes in
- * each selector and their place after the quote rules: a coloured block
- * inside a quote keeps its colours. Colour only, no weight or style:
- * an application's own rule on a class may add them. */
+ * takes its fill from its variable (dark.css or light.css). The base
+ * classes come first and the fine ones after them, a fine class after
+ * the one it falls back to, so the finest class of a run wins. Three
+ * classes in each selector and their place after the quote rules: a
+ * coloured block inside a quote keeps its colours. Colour only, no
+ * weight or style: an application's own rule on a class may add them. */
 .markdown-view .markdown-code-block .code-comment {
     -fx-fill: -fx-code-comment-color;
 }

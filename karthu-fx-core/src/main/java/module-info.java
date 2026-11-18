@@ -1,8 +1,9 @@
 /**
- * Karthu FX: a JavaFX component library with its own theme, Nebula Dark (see
+ * Karthu FX: a JavaFX component library with its own theme in two colour schemes, Nebula Light and Nebula Dark (see
  * <a href="https://github.com/KarthuOrg/public-karthu-fx/blob/main/STYLEGUIDE.md">STYLEGUIDE.md</a>).
  *
- * <p>It provides theming ({@link org.karthu.fx.theme.ThemeManager}), configuration persistence
+ * <p>It provides theming ({@link org.karthu.fx.theme.ThemeManager}, in the scheme an application chooses as an
+ * {@link org.karthu.fx.theme.Appearance}), configuration persistence
  * ({@link org.karthu.fx.config.ConfigService}), themed dialogs ({@link org.karthu.fx.dialog.CustomDialog}),
  * a settings dialog ({@link org.karthu.fx.settings.SettingsDialog}), custom controls
  * ({@link org.karthu.fx.components.ToggleSwitch}, {@link org.karthu.fx.components.TwinColumnSelector},

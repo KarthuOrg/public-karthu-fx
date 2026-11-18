@@ -320,62 +320,66 @@ import java.util.function.Consumer;
  * <p><b>Categories.</b> Every piece belongs to one of 23 categories ({@link CodeCategory}). Nine base categories have
  * a colour of their own, so nine colours colour every language completely. The fourteen fine ones take the colour of
  * the category they fall back to until they are set themselves, three of them the code colour
- * {@code -fx-code-text-color}. Each category is a CSS variable of the theme and a style class:
+ * {@code -fx-code-text-color}. Each category is a CSS variable of the theme, with a colour in each of its two colour
+ * schemes, Nebula Dark and Nebula Light ({@link org.karthu.fx.theme.ThemeManager}), and a style class:
  * <table>
  *   <caption>Categories of coloured code</caption>
- *   <tr><th>Category</th><th>Marks</th><th>Variable</th><th>Default</th><th>Style classes of its runs</th></tr>
+ *   <tr><th>Category</th><th>Marks</th><th>Variable</th><th>Nebula Dark</th><th>Nebula Light</th>
+ *       <th>Style classes of its runs</th></tr>
  *   <tr><td>comment</td><td>comments</td><td>{@code -fx-code-comment-color}</td><td>{@code #8a90a8}</td>
- *       <td>{@code code-comment}</td></tr>
+ *       <td>{@code #5E6475}</td><td>{@code code-comment}</td></tr>
  *   <tr><td>keyword</td><td>keywords of a language</td><td>{@code -fx-code-keyword-color}</td>
- *       <td>{@code #c88bff}</td><td>{@code code-keyword}</td></tr>
+ *       <td>{@code #c88bff}</td><td>{@code #7A3EC0}</td><td>{@code code-keyword}</td></tr>
  *   <tr><td>string</td><td>text in quotes</td><td>{@code -fx-code-string-color}</td><td>{@code #e0a84c}</td>
- *       <td>{@code code-string}</td></tr>
+ *       <td>{@code #875A10}</td><td>{@code code-string}</td></tr>
  *   <tr><td>number</td><td>numbers</td><td>{@code -fx-code-number-color}</td><td>{@code #ff9e64}</td>
- *       <td>{@code code-number}</td></tr>
+ *       <td>{@code #A84A10}</td><td>{@code code-number}</td></tr>
  *   <tr><td>type</td><td>type names</td><td>{@code -fx-code-type-color}</td><td>{@code #4cd38a}</td>
- *       <td>{@code code-type}</td></tr>
+ *       <td>{@code #15703F}</td><td>{@code code-type}</td></tr>
  *   <tr><td>function</td><td>a name followed by {@code (}</td><td>{@code -fx-code-function-color}</td>
- *       <td>{@code #5d9bff}</td><td>{@code code-function}</td></tr>
+ *       <td>{@code #5d9bff}</td><td>{@code #1F56B3}</td><td>{@code code-function}</td></tr>
  *   <tr><td>variable</td><td>Bash variables, SQL parameters, YAML anchors and aliases</td>
- *       <td>{@code -fx-code-variable-color}</td><td>{@code #ff8fa3}</td><td>{@code code-variable}</td></tr>
+ *       <td>{@code -fx-code-variable-color}</td><td>{@code #ff8fa3}</td><td>{@code #B0284D}</td>
+ *       <td>{@code code-variable}</td></tr>
  *   <tr><td>property</td><td>keys in JSON and YAML</td><td>{@code -fx-code-property-color}</td>
- *       <td>{@code #7b8cff}</td><td>{@code code-property}</td></tr>
+ *       <td>{@code #7b8cff}</td><td>{@code #3B4CC0}</td><td>{@code code-property}</td></tr>
  *   <tr><td>tag</td><td>XML and HTML tags</td><td>{@code -fx-code-tag-color}</td><td>{@code #ff8fa3}</td>
- *       <td>{@code code-tag}</td></tr>
+ *       <td>{@code #B0284D}</td><td>{@code code-tag}</td></tr>
  *   <tr><td>doc</td><td>documentation comments such as Javadoc</td><td>{@code -fx-code-doc-color}</td>
- *       <td>as comment</td><td>{@code code-doc}, {@code code-comment}</td></tr>
+ *       <td>as comment</td><td>as comment</td><td>{@code code-doc}, {@code code-comment}</td></tr>
  *   <tr><td>annotation</td><td>Java annotations</td><td>{@code -fx-code-annotation-color}</td><td>as keyword</td>
- *       <td>{@code code-annotation}, {@code code-keyword}</td></tr>
+ *       <td>as keyword</td><td>{@code code-annotation}, {@code code-keyword}</td></tr>
  *   <tr><td>literal</td><td>{@code true}, {@code false}, {@code null}, SQL's {@code NULL}</td>
- *       <td>{@code -fx-code-literal-color}</td><td>as number</td>
+ *       <td>{@code -fx-code-literal-color}</td><td>as number</td><td>as number</td>
  *       <td>{@code code-literal}, {@code code-number}</td></tr>
  *   <tr><td>constant</td><td>Java names in capitals only, at least two characters</td>
- *       <td>{@code -fx-code-constant-color}</td><td>as literal</td>
+ *       <td>{@code -fx-code-constant-color}</td><td>as literal</td><td>as literal</td>
  *       <td>{@code code-constant}, {@code code-literal}, {@code code-number}</td></tr>
  *   <tr><td>escape</td><td>escapes in strings, XML entities</td><td>{@code -fx-code-escape-color}</td>
- *       <td>as string</td><td>{@code code-escape}, {@code code-string}</td></tr>
+ *       <td>as string</td><td>as string</td><td>{@code code-escape}, {@code code-string}</td></tr>
  *   <tr><td>attribute</td><td>XML and HTML attribute names</td><td>{@code -fx-code-attribute-color}</td>
- *       <td>as number</td><td>{@code code-attribute}, {@code code-number}</td></tr>
+ *       <td>as number</td><td>as number</td><td>{@code code-attribute}, {@code code-number}</td></tr>
  *   <tr><td>operator</td><td>operators</td><td>{@code -fx-code-operator-color}</td><td>the code colour</td>
- *       <td>{@code code-operator}</td></tr>
+ *       <td>the code colour</td><td>{@code code-operator}</td></tr>
  *   <tr><td>punctuation</td><td>brackets, separators</td><td>{@code -fx-code-punctuation-color}</td>
- *       <td>the code colour</td><td>{@code code-punctuation}</td></tr>
+ *       <td>the code colour</td><td>the code colour</td><td>{@code code-punctuation}</td></tr>
  *   <tr><td>heading</td><td>Markdown headings</td><td>{@code -fx-code-heading-color}</td><td>as function</td>
- *       <td>{@code code-heading}, {@code code-function}</td></tr>
+ *       <td>as function</td><td>{@code code-heading}, {@code code-function}</td></tr>
  *   <tr><td>link</td><td>Markdown links and addresses</td><td>{@code -fx-code-link-color}</td><td>as property</td>
- *       <td>{@code code-link}, {@code code-property}</td></tr>
+ *       <td>as property</td><td>{@code code-link}, {@code code-property}</td></tr>
  *   <tr><td>code</td><td>Markdown inline code and fences</td><td>{@code -fx-code-code-color}</td><td>as string</td>
- *       <td>{@code code-code}, {@code code-string}</td></tr>
+ *       <td>as string</td><td>{@code code-code}, {@code code-string}</td></tr>
  *   <tr><td>list</td><td>Markdown list markers</td><td>{@code -fx-code-list-color}</td><td>as keyword</td>
- *       <td>{@code code-list}, {@code code-keyword}</td></tr>
+ *       <td>as keyword</td><td>{@code code-list}, {@code code-keyword}</td></tr>
  *   <tr><td>quote</td><td>Markdown quote lines</td><td>{@code -fx-code-quote-color}</td><td>as comment</td>
- *       <td>{@code code-quote}, {@code code-comment}</td></tr>
+ *       <td>as comment</td><td>{@code code-quote}, {@code code-comment}</td></tr>
  *   <tr><td>emphasis</td><td>Markdown emphasis and strong emphasis</td><td>{@code -fx-code-emphasis-color}</td>
- *       <td>the code colour</td><td>{@code code-emphasis}</td></tr>
+ *       <td>the code colour</td><td>the code colour</td><td>{@code code-emphasis}</td></tr>
  * </table>
  *
- * <p><b>Changing colours.</b> The variables are defined at the theme's root, a base one with its colour, a fine one as
- * a reference to the variable it falls back to ({@code -fx-code-annotation-color: -fx-code-keyword-color}). An
+ * <p><b>Changing colours.</b> The variables are defined at the theme's root, in the stylesheet of each scheme, a base
+ * one with the scheme's colour, a fine one in both schemes as a reference to the variable it falls back to
+ * ({@code -fx-code-annotation-color: -fx-code-keyword-color}). An
  * application changes them as any colour of the theme, for one view with {@code setStyle} or for all views with a
  * stylesheet, and the view shows the change at once, without a new text. JavaFX resolves a reference from the
  * coloured run upwards, so a base colour set on one view also changes that view's fine categories that still fall back
@@ -692,8 +696,9 @@ import java.util.function.Consumer;
  * with a margin. A fully visible match scrolls nothing, so going through the matches on screen is calm. A search
  * without matches leaves the view where it is. A search set before the view is laid out scrolls at its first layout.
  *
- * <p><b>Marks.</b> Every match but the current one is marked in a muted amber ({@code markdown-search-match}), the
- * current one in amber behind a dark text ({@code markdown-search-current}): highlights like the selection's, in two
+ * <p><b>Marks.</b> Every match but the current one is marked in a quiet amber ({@code markdown-search-match}), muted
+ * behind the light text in Nebula Dark, pale behind the dark text in Nebula Light, and the current one in a full amber
+ * behind a dark text in both schemes ({@code markdown-search-current}): highlights like the selection's, in two
  * layers over the text of a heading, a paragraph, a code or source block or a table's header or body cell, which show
  * the matched characters again in the highlight's text colour; in a table cell too only the matched characters. The
  * selection lies above both, so the search never hides it, and the search never changes it: in a selected table cell
@@ -844,16 +849,17 @@ import java.util.function.Consumer;
  * the copy buttons, {@code -fx-markdown-table-row-odd}, the colour of a table's odd rows, the colours of coloured
  * code, one per {@link CodeCategory category} (see <em>Code colours</em>), and the colours of the search's marks:
  * {@code -fx-markdown-search-color} and {@code -fx-markdown-search-text-color}, the highlight and the characters of
- * every match but the current one, a muted amber behind the text colour, and {@code -fx-markdown-search-current-color}
- * and {@code -fx-markdown-search-current-text-color}, those of the current match, amber behind a dark text, both
- * apart from the blue of the selection. A selection, of
+ * every match but the current one, a quiet amber behind the text colour (muted in Nebula Dark, pale in Nebula Light),
+ * and {@code -fx-markdown-search-current-color} and {@code -fx-markdown-search-current-text-color}, those of the
+ * current match, a full amber behind a dark text, both apart from the blue of the selection. Links take the theme's
+ * {@code -fx-link-color}. A selection, of
  * characters or of table cells, takes the theme's {@code -fx-selection-color} and {@code -fx-selection-text-color},
  * as a selected row of a list does. The view's content lies on the theme's raised surface,
  * {@code -fx-raised-color}. A table's rows take the field colour of the theme's tables, {@code -fx-field-color}, the
  * odd ones too: inside the view the theme's {@code -fx-table-row-odd} is {@code -fx-markdown-table-row-odd}, which
  * the theme sets to the rows' colour. Images add no token: an image's placeholder and error box and the open button
  * take {@code -fx-code-background-color} and {@code -fx-text-secondary-color}, an image in a table cell
- * {@code -fx-accent-color}, and the full size window {@code -fx-canvas-color} and, for its bar,
+ * {@code -fx-link-color}, and the full size window {@code -fx-canvas-color} and, for its bar,
  * {@code -fx-surface-color}.
  *
  * <p>Code is shown in the first installed of "JetBrains Mono NL", "Cascadia Mono" and "Consolas", families that draw
