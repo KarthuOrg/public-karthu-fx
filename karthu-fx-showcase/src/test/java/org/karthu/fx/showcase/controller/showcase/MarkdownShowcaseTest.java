@@ -40,6 +40,7 @@ import org.karthu.fx.markdown.CodeCategory;
 import org.karthu.fx.markdown.ImageLoader;
 import org.karthu.fx.markdown.MarkdownView;
 import org.karthu.fx.markdown.SearchDirection;
+import org.karthu.fx.theme.Appearance;
 import org.karthu.fx.theme.ThemeManager;
 import org.kordamp.ikonli.javafx.FontIcon;
 
@@ -419,6 +420,51 @@ class MarkdownShowcaseTest {
         assertEquals(first, css.getText());
         assertEquals(theme, fills(view), "the theme's look again");
         assertEquals(1, view.getStylesheets().size(), "one stylesheet of the card at a time");
+    }
+
+    /**
+     * The card holds the colours of the scheme in effect, so that its first text leaves the theme's look in Light
+     * too. A switch of the scheme gives a card that still holds the other scheme's colours the new ones, and leaves a
+     * card changed by hand as it is.
+     */
+    @Test
+    @DisplayName("the card holds the colours of the scheme in effect, follows a switch while unchanged, and Defaults"
+            + " restores the scheme's text")
+    void codeColorsFollowTheScheme() throws IOException {
+        ThemeManager.setAppearance(Appearance.LIGHT);
+        try {
+            Parent root = layOut();
+            MarkdownView view = view(root);
+            TextArea css = codeColors(root);
+            String light = css.getText();
+            assertTrue(light.contains("    -fx-code-keyword-color: #7A3EC0;\n"), light);
+            assertTrue(light.contains("    -fx-code-annotation-color: -fx-code-keyword-color;\n"), light);
+            Map<CodeCategory, Paint> withCard = fills(view);
+            List<String> sheets = new ArrayList<>(view.getStylesheets());
+            view.getStylesheets().clear();
+            root.applyCss();
+            assertEquals(fills(view), withCard, "the light text sets the theme's light colours");
+            view.getStylesheets().setAll(sheets);
+            root.applyCss();
+
+            ThemeManager.setAppearance(Appearance.DARK);
+            root.applyCss();
+            assertTrue(css.getText().contains("    -fx-code-keyword-color: #c88bff;\n"), css.getText());
+            assertEquals(Color.web("#c88bff"), fills(view).get(CodeCategory.KEYWORD), "the dark keyword");
+
+            css.setText(css.getText().replace("#c88bff", "#ff0000"));
+            ThemeManager.setAppearance(Appearance.LIGHT);
+            root.applyCss();
+            assertTrue(css.getText().contains("    -fx-code-keyword-color: #ff0000;\n"), "a changed card stays");
+            assertEquals(Color.web("#ff0000"), fills(view).get(CodeCategory.KEYWORD));
+
+            assertInstanceOf(Button.class, root.lookup("#codeColorsDefaults")).fire();
+            root.applyCss();
+            assertEquals(light, css.getText(), "Defaults gives the light text");
+            assertEquals(withCard, fills(view), "and the theme's light look");
+        } finally {
+            ThemeManager.setAppearance(Appearance.DARK);
+        }
     }
 
     @Test

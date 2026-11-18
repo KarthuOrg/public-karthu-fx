@@ -1,5 +1,8 @@
 package org.karthu.fx.showcase.controller.showcase;
 
+import javafx.application.ColorScheme;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.WeakChangeListener;
 import javafx.fxml.FXML;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.Label;
@@ -13,6 +16,7 @@ import org.karthu.fx.form.ComboInput;
 import org.karthu.fx.form.SearchInput;
 import org.karthu.fx.markdown.MarkdownView;
 import org.karthu.fx.markdown.SearchDirection;
+import org.karthu.fx.theme.ThemeManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +38,8 @@ import java.util.Locale;
  * internet (<i>Images from the internet</i>, off at first, so the page sends no request by itself). <i>Insert a line at
  * the top</i> beside them gives the view a new version of its text, which keeps the reader's place. Below them the
  * <i>Margins</i> switch gives the view the margins of two sliders, live, and a read-out shows them. The <i>Code
- * colours</i> card below holds the CSS of the view's code colours, which the view takes at every change, and a
- * <i>Defaults</i> button.
+ * colours</i> card below holds the CSS of the view's code colours in the scheme in effect, which the view takes at every
+ * change, and a <i>Defaults</i> button.
  */
 public class MarkdownShowcaseController {
 
@@ -50,11 +54,11 @@ public class MarkdownShowcaseController {
     private static final String SAMPLE_IMAGE = "/org/karthu/fx/showcase/showcase/images/badge.png";
 
     /**
-     * The text of the <i>Code colours</i> card at first and after <i>Defaults</i>: one rule for the page's view with
-     * the 23 colour variables of coloured code as the theme sets them, the nine base ones with their colours, the
-     * fourteen fine ones with the variable they fall back to. Applied, it changes nothing.
+     * The text of the <i>Code colours</i> card in Nebula Dark, at first and after <i>Defaults</i>: one rule for the
+     * page's view with the 23 colour variables of coloured code as the theme sets them, the nine base ones with their
+     * colours, the fourteen fine ones with the variable they fall back to. Applied, it changes nothing.
      */
-    static final String DEFAULT_CODE_COLORS = """
+    static final String DARK_CODE_COLORS = """
             .markdown-view {
                 -fx-code-comment-color: #8a90a8;
                 -fx-code-keyword-color: #c88bff;
@@ -65,6 +69,38 @@ public class MarkdownShowcaseController {
                 -fx-code-variable-color: #ff8fa3;
                 -fx-code-property-color: #7b8cff;
                 -fx-code-tag-color: #ff8fa3;
+                -fx-code-doc-color: -fx-code-comment-color;
+                -fx-code-annotation-color: -fx-code-keyword-color;
+                -fx-code-literal-color: -fx-code-number-color;
+                -fx-code-constant-color: -fx-code-literal-color;
+                -fx-code-escape-color: -fx-code-string-color;
+                -fx-code-attribute-color: -fx-code-number-color;
+                -fx-code-operator-color: -fx-code-text-color;
+                -fx-code-punctuation-color: -fx-code-text-color;
+                -fx-code-heading-color: -fx-code-function-color;
+                -fx-code-link-color: -fx-code-property-color;
+                -fx-code-code-color: -fx-code-string-color;
+                -fx-code-list-color: -fx-code-keyword-color;
+                -fx-code-quote-color: -fx-code-comment-color;
+                -fx-code-emphasis-color: -fx-code-text-color;
+            }
+            """;
+
+    /**
+     * The text of the <i>Code colours</i> card in Nebula Light: the same rule with the light scheme's nine base colours.
+     * Applied, it changes nothing either.
+     */
+    static final String LIGHT_CODE_COLORS = """
+            .markdown-view {
+                -fx-code-comment-color: #5E6475;
+                -fx-code-keyword-color: #7A3EC0;
+                -fx-code-string-color: #875A10;
+                -fx-code-number-color: #A84A10;
+                -fx-code-type-color: #15703F;
+                -fx-code-function-color: #1F56B3;
+                -fx-code-variable-color: #B0284D;
+                -fx-code-property-color: #3B4CC0;
+                -fx-code-tag-color: #B0284D;
                 -fx-code-doc-color: -fx-code-comment-color;
                 -fx-code-annotation-color: -fx-code-keyword-color;
                 -fx-code-literal-color: -fx-code-number-color;
@@ -108,6 +144,16 @@ public class MarkdownShowcaseController {
     /** How many lines <i>Insert a line at the top</i> has inserted, which numbers the next one. */
     private int insertedLines;
 
+    /**
+     * Gives the <i>Code colours</i> card the colours of a new scheme while it still holds the old scheme's, so that it
+     * keeps the theme's look; a text changed by hand stays. The theme holds it weakly, through the page.
+     */
+    private final ChangeListener<ColorScheme> schemeListener = (observable, oldScheme, newScheme) -> {
+        if (codeColorsArea.getText().equals(codeColors(oldScheme))) {
+            codeColorsArea.setText(codeColors(newScheme));
+        }
+    };
+
     @FXML
     private void initialize() {
         view = new MarkdownView();
@@ -141,7 +187,8 @@ public class MarkdownShowcaseController {
 
         codeColorsArea.textProperty().addListener(
                 (observable, oldText, newText) -> applyCodeColors(view, newText));
-        codeColorsArea.setText(DEFAULT_CODE_COLORS);
+        codeColorsArea.setText(codeColors(ThemeManager.getColorScheme()));
+        ThemeManager.colorSchemeProperty().addListener(new WeakChangeListener<>(schemeListener));
     }
 
     /**
@@ -206,11 +253,19 @@ public class MarkdownShowcaseController {
     }
 
     /**
-     * <i>Defaults</i>: brings back the card's first text, and with it the theme's look.
+     * <i>Defaults</i>: brings back the card's first text in the scheme in effect, and with it the theme's look.
      */
     @FXML
     private void restoreCodeColors() {
-        codeColorsArea.setText(DEFAULT_CODE_COLORS);
+        codeColorsArea.setText(codeColors(ThemeManager.getColorScheme()));
+    }
+
+    /** The <i>Code colours</i> card's text that leaves the look of a scheme as the theme sets it. */
+    private static String codeColors(ColorScheme scheme) {
+        if (scheme == ColorScheme.LIGHT) {
+            return LIGHT_CODE_COLORS;
+        }
+        return DARK_CODE_COLORS;
     }
 
     /**
