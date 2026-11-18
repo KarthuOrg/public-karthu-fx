@@ -1,12 +1,16 @@
 package org.karthu.fx.showcase.guide;
 
+import javafx.application.ColorScheme;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.Scene;
+import javafx.scene.canvas.Canvas;
+import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Label;
@@ -19,6 +23,7 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.junit.jupiter.api.BeforeAll;
@@ -65,6 +70,7 @@ import org.karthu.fx.settings.SettingGroup;
 import org.karthu.fx.settings.SettingsDialog;
 import org.karthu.fx.settings.SettingsDialogResult;
 import org.karthu.fx.settings.SettingsModel;
+import org.karthu.fx.theme.Appearance;
 import org.karthu.fx.theme.ThemeManager;
 
 import java.io.IOException;
@@ -73,6 +79,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -87,8 +94,8 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 /**
  * The code samples of {@code docs/agent-guide.md}, compiled and run against the library as an application sees it:
  * from another module, through the exported API alone. A sample that would show a window (a dialog) is compiled
- * only. Whoever changes a sample changes it in the guide too, and the other way round: the first test holds the
- * guide to this class, line by line.
+ * only, and the guide's stylesheet sample is applied as the application's stylesheet. Whoever changes a sample
+ * changes it in the guide too, and the other way round: the first test holds the guide to this class, line by line.
  */
 class AgentGuideSamplesTest {
 
@@ -114,7 +121,7 @@ class AgentGuideSamplesTest {
             Path.of("src", "test", "java", "org", "karthu", "fx", "showcase", "guide", "AgentGuideSamplesTest.java");
 
     @Test
-    @DisplayName("every line of every Java sample in the guide's section Samples stands in this class")
+    @DisplayName("every line of every Java and CSS sample in the guide's section Samples stands in this class")
     void guideShowsTheseSamples() throws IOException {
         List<String> here = new ArrayList<>();
         for (String line : Files.readAllLines(SAMPLES, StandardCharsets.UTF_8)) {
@@ -127,7 +134,7 @@ class AgentGuideSamplesTest {
             if (line.startsWith("## ")) {
                 inSamples = line.startsWith("## 4. Samples");
             } else if (inSamples && line.startsWith("```")) {
-                inCode = !inCode && line.startsWith("```java");
+                inCode = !inCode && (line.startsWith("```java") || line.startsWith("```css"));
             } else if (inSamples && inCode && !line.isBlank()) {
                 assertTrue(here.contains(line.strip()), "the guide shows a line this class does not hold: " + line);
                 checked++;
@@ -144,6 +151,117 @@ class AgentGuideSamplesTest {
         ThemeManager.apply(scene);
 
         assertEquals(2, scene.getStylesheets().size());
+    }
+
+    @Test
+    @DisplayName("Colour scheme: Dark without a choice, the stored choice at start, a setting that changes it")
+    void colorScheme() {
+        assertEquals(Appearance.DARK, ThemeManager.getAppearance(), "without a choice the scheme is Dark");
+        try {
+            ThemeManager.setAppearance(Appearance.valueOf(storedAppearance()));
+            Scene scene = new Scene(new VBox(), 1000, 700);
+            ThemeManager.apply(scene);
+
+            ComboInput<Appearance> theme = new ComboInput<>();
+            theme.getItems().setAll(Appearance.values());
+            theme.setDisplayText(appearance -> switch (appearance) {
+                case LIGHT -> "Light";
+                case DARK -> "Dark";
+                case SYSTEM -> "System";
+            });
+            theme.setValue(ThemeManager.getAppearance());
+            theme.valueProperty().addListener((observable, oldChoice, newChoice) -> {
+                ThemeManager.setAppearance(newChoice);
+                storeAppearance(newChoice.name());
+            });
+
+            assertEquals(Appearance.SYSTEM, ThemeManager.getAppearance(), "the stored choice");
+            theme.setValue(Appearance.LIGHT);
+            assertEquals(ColorScheme.LIGHT, ThemeManager.getColorScheme(), "the user's choice is in effect");
+            assertTrue(scene.getStylesheets().get(1).endsWith("/light.css"),
+                    "the scene follows: " + scene.getStylesheets());
+            assertEquals("LIGHT", keptAppearance, "the application kept the choice");
+        } finally {
+            ThemeManager.setAppearance(Appearance.DARK);
+        }
+    }
+
+    /** Stands for the application's own storage of the scheme the user chose. */
+    private static String storedAppearance() {
+        return "SYSTEM";
+    }
+
+    /** What the application kept last, by {@link #storeAppearance(String)}. */
+    private String keptAppearance;
+
+    /** Stands for the application's own storage of the scheme the user chose. */
+    private void storeAppearance(String appearance) {
+        keptAppearance = appearance;
+    }
+
+    /** The guide's sample of an application's own stylesheet: a colour of its own with a value per scheme. */
+    private static final String APP_CSS = """
+            .root:dark {
+                -app-tag-color: #3b3360;
+            }
+
+            .root:light {
+                -app-tag-color: #e2dcf5;
+            }
+
+            .tag {
+                -fx-background-color: -app-tag-color;
+                -fx-background-radius: 3;
+                -fx-padding: 0 6 0 6;
+            }
+            """;
+
+    @Test
+    @DisplayName("Own colours: a token of the application's own per scheme, and a colour drawn in code that follows")
+    void ownColors() {
+        ChangeListener<ColorScheme> listener = null;
+        try {
+            Label draft = new Label("Draft");
+            draft.getStyleClass().add("tag");
+            Scene scene = new Scene(new VBox(draft));
+            ThemeManager.apply(scene);
+            scene.getStylesheets().add(appStylesheet());
+
+            Canvas chart = new Canvas(200, 80);
+            ChangeListener<ColorScheme> redraw = (observable, oldScheme, newScheme) -> drawChart(chart, newScheme);
+            ThemeManager.colorSchemeProperty().addListener(redraw);
+            drawChart(chart, ThemeManager.getColorScheme());
+            listener = redraw;
+
+            scene.getRoot().applyCss();
+            assertEquals(Color.web("#3b3360"), draft.getBackground().getFills().get(0).getFill(), "the tag in Dark");
+            assertEquals(Color.web("#5fb3d9"), chart.getGraphicsContext2D().getFill(), "the chart in Dark");
+
+            ThemeManager.setAppearance(Appearance.LIGHT);
+            scene.getRoot().applyCss();
+            assertEquals(Color.web("#e2dcf5"), draft.getBackground().getFills().get(0).getFill(), "the tag in Light");
+            assertEquals(Color.web("#1d6a8c"), chart.getGraphicsContext2D().getFill(), "the chart in Light");
+            assertTrue(scene.getStylesheets().get(2).startsWith("data:"), "the application's stylesheet stays last");
+        } finally {
+            ThemeManager.setAppearance(Appearance.DARK);
+            if (listener != null) {
+                ThemeManager.colorSchemeProperty().removeListener(listener);
+            }
+        }
+    }
+
+    /** Stands for the address of the application's own stylesheet: the guide's sample, as a data address. */
+    private static String appStylesheet() {
+        return "data:text/css;base64," + Base64.getEncoder().encodeToString(APP_CSS.getBytes(StandardCharsets.UTF_8));
+    }
+
+    /** The guide's sample of a colour set in code: a chart drawn on a canvas in a colour per scheme. */
+    private static void drawChart(Canvas chart, ColorScheme scheme) {
+        Color bars = scheme == ColorScheme.LIGHT ? Color.web("#1d6a8c") : Color.web("#5fb3d9");
+        GraphicsContext pen = chart.getGraphicsContext2D();
+        pen.clearRect(0, 0, chart.getWidth(), chart.getHeight());
+        pen.setFill(bars);
+        pen.fillRect(10, 20, 30, 60);
     }
 
     @Test

@@ -36,7 +36,7 @@ Only these packages are API. Anything else in the jar is internal and not export
 
 | Package | Holds |
 |---|---|
-| `org.karthu.fx.theme` | `ThemeManager`, `StageIcons` |
+| `org.karthu.fx.theme` | `ThemeManager`, `Appearance` (from 1.1.0-RC2), `StageIcons` |
 | `org.karthu.fx.form` | form inputs, the form row, search fields |
 | `org.karthu.fx.markdown` | `MarkdownView` and what an application plugs into it |
 | `org.karthu.fx.command` | `CommandRegistry`, `Command`, `Shortcut`, the `ShortcutsDialog` and `ShortcutsEditor` (from 1.1.0-RC2) |
@@ -57,44 +57,51 @@ Keep these; most mistakes come from breaking one of them.
    in is `ThemeManager`.
 3. **Do not hardcode colours or sizes.** Use the theme's tokens (`-fx-accent-color` and the
    others) and style classes, all listed in [`STYLEGUIDE.md`](../STYLEGUIDE.md). The style classes
-   and pseudo-classes a component documents are a contract and safe to style against.
-4. **Use the standard JavaFX controls as they are.** `Button`, `TableView`, `TabPane` and the
+   and pseudo-classes a component documents are a contract and safe to style against. The tokens
+   have a value in both colour schemes; a colour the theme does not have is a token of the
+   application's own with a value under `.root:light` and one under `.root:dark`.
+4. **Choose the colour scheme through `ThemeManager.setAppearance`:** Light, Dark (the default) or
+   System, once at start before the first window is shown and again whenever the user changes it.
+   Every themed scene follows by itself: never apply the theme again or swap stylesheets for it.
+   A colour set in code follows `ThemeManager.colorSchemeProperty()`, the scheme in effect, never
+   the `Appearance`, since System says nothing about the colours.
+5. **Use the standard JavaFX controls as they are.** `Button`, `TableView`, `TabPane` and the
    rest are themed. Do not wrap or restyle them to "match"; they already do.
-5. **In a form, use the form inputs, each in a `FormField`.** Do not mix raw `TextField`s into a
+6. **In a form, use the form inputs, each in a `FormField`.** Do not mix raw `TextField`s into a
    form built from `FormField`s: heights, frames and states would differ.
-6. **The library never validates.** The application checks the values and sets the messages of
+7. **The library never validates.** The application checks the values and sets the messages of
    the row (`FormField.getMessages()`); the row then colours the input. The one exception is
    `CronInput`, which checks its expression and reports about it itself.
-7. **A form input's value is what the user typed.** `NumberInput` keeps a text that is no number;
+8. **A form input's value is what the user typed.** `NumberInput` keeps a text that is no number;
    read the number with `toNumber()`. `PathInput` keeps the text; read the path with `toPath()`.
-8. **The library stores nothing**, except `ConfigService` (window place and locale, Java
+9. **The library stores nothing**, except `ConfigService` (window place and locale, Java
    Preferences) and a `DirectoryMemory` the application sets up. Settings, form values, the
-   Markdown text and the keys the user chose (`CommandRegistry.getChangedShortcuts()`) are the
-   application's to keep.
-9. **Every text a component shows is a property with an English default.** For another language,
-   set the properties (`setPromptText`, `setAddText`, `setCopyText` and so on).
-10. **JavaFX Application Thread only**, as with every JavaFX control.
-11. **Create the components in code.** The showcase builds them in its controllers; that is the
+   Markdown text, the colour scheme and the keys the user chose
+   (`CommandRegistry.getChangedShortcuts()`) are the application's to keep.
+10. **Every text a component shows is a property with an English default.** For another language,
+    set the properties (`setPromptText`, `setAddText`, `setCopyText` and so on).
+11. **JavaFX Application Thread only**, as with every JavaFX control.
+12. **Create the components in code.** The showcase builds them in its controllers; that is the
     tested way.
-12. **Search a Markdown view through a `SearchInput`** connected with `search(view)`, in the
+13. **Search a Markdown view through a `SearchInput`** connected with `search(view)`, in the
     application's own bar beside the view. The field and the view's search text then stay equal,
     and the field counts the matches and goes through them; do not bind the view's search text
     yourself as well. The view takes no keys for its search: Ctrl+F and F3 are the application's
     to add, if it wants them.
-13. **A new version of the shown Markdown text goes through `updateMarkdown`.** `setMarkdown`, and
+14. **A new version of the shown Markdown text goes through `updateMarkdown`.** `setMarkdown`, and
     a binding of `markdownProperty()`, show another document, from the top. `updateMarkdown` keeps
     the reader's place and the pictures, as wanted when a changed file is read again; it throws
     while the text property is bound.
-14. **Every key of the application goes through one `CommandRegistry` per window.** Register each
+15. **Every key of the application goes through one `CommandRegistry` per window.** Register each
     command once, with an id, a name, a group, a default key and its action, and bind its menu
     items and buttons with `command.bind(...)`. Do not set an accelerator, an `onAction` or a
     disabled binding of a bound control yourself, and do not catch the application's keys in key
     handlers or scene accelerators beside the registry: the user's keys would not reach them.
-15. **A key that holds only in a part of the window is a command of a `CommandContext`** on that
+16. **A key that holds only in a part of the window is a command of a `CommandContext`** on that
     part's node, not a key handler on the node. A key a component handles itself, such as Ctrl+C
     in a `MarkdownView`, is a fixed command without an action (`addFixedCommand`), so that the
     dialog shows it and finds a clash with it.
-16. **A text that names a key is built from `shortcutDisplayTextProperty()`**, never written out
+17. **A text that names a key is built from `shortcutDisplayTextProperty()`**, never written out
     (*Open (Ctrl+O)*), and leaves the key out while the text is empty, since the user may remove
     or change any key. Punctuation is a character, `Shortcut.of('+', Shortcut.Modifier.CTRL)`,
     never `KeyCode.PLUS`: the character runs on whichever key types it on the user's keyboard.
@@ -128,6 +135,8 @@ Keep these; most mistakes come from breaking one of them.
 | Menu items, buttons and keys of the application's commands, keys the user may change | `CommandRegistry` with `Command`s |
 | A dialog in which the user changes the keys | `ShortcutsDialog` |
 | The same on a settings page of the application's own | `ShortcutsEditor` |
+| Light, dark or the operating system's colour scheme | `ThemeManager.setAppearance(Appearance)` |
+| A colour of the application's own, in both schemes | a token of its own under `.root:light` and `.root:dark`; in code `ThemeManager.colorSchemeProperty()` |
 | Window position and size kept between runs | `ConfigService`, `WindowState` |
 | The window's icon | `StageIcons.setIcon(stage, image)` |
 
@@ -151,6 +160,98 @@ stage.show();
 
 `config` is a `ConfigService` the application creates once and starts with `initialize()`. Leave
 it out if the window's place need not be kept.
+
+### Colour scheme
+
+```java
+ThemeManager.setAppearance(Appearance.valueOf(storedAppearance()));
+Scene scene = new Scene(new VBox(), 1000, 700);
+ThemeManager.apply(scene);
+
+ComboInput<Appearance> theme = new ComboInput<>();
+theme.getItems().setAll(Appearance.values());
+theme.setDisplayText(appearance -> switch (appearance) {
+    case LIGHT -> "Light";
+    case DARK -> "Dark";
+    case SYSTEM -> "System";
+});
+theme.setValue(ThemeManager.getAppearance());
+theme.valueProperty().addListener((observable, oldChoice, newChoice) -> {
+    ThemeManager.setAppearance(newChoice);
+    storeAppearance(newChoice.name());
+});
+```
+
+- From 1.1.0-RC2 on. The theme has two colour schemes, Nebula Light and Nebula Dark, with the
+  same shapes and sizes. `LIGHT` and `DARK` fix the scheme; `SYSTEM` follows the light or dark
+  setting of the operating system, also when the user changes it while the application runs, and
+  is Dark where the system reports none. Without a choice the scheme is `DARK`.
+- Set the stored choice before the first window is shown, so that it never appears in the other
+  scheme. `storedAppearance` and `storeAppearance` stand for the application's own settings: the
+  library keeps the choice only while the application runs. `setAppearance(null)` throws.
+- The choice holds for the whole application. A change restyles at once every scene the theme was
+  applied to, shown or not, with its open menus, popups and tooltips and karthu-fx's own dialogs:
+  do not apply the theme again, and do not swap stylesheets yourself.
+- `ThemeManager.getColorScheme()` and `colorSchemeProperty()` give the scheme in effect,
+  `ColorScheme.LIGHT` or `ColorScheme.DARK`, System resolved.
+
+### Colours of the application's own
+
+```css
+.root:dark {
+    -app-tag-color: #3b3360;
+}
+
+.root:light {
+    -app-tag-color: #e2dcf5;
+}
+
+.tag {
+    -fx-background-color: -app-tag-color;
+    -fx-background-radius: 3;
+    -fx-padding: 0 6 0 6;
+}
+```
+
+```java
+Label draft = new Label("Draft");
+draft.getStyleClass().add("tag");
+Scene scene = new Scene(new VBox(draft));
+ThemeManager.apply(scene);
+scene.getStylesheets().add(appStylesheet());
+
+Canvas chart = new Canvas(200, 80);
+ChangeListener<ColorScheme> redraw = (observable, oldScheme, newScheme) -> drawChart(chart, newScheme);
+ThemeManager.colorSchemeProperty().addListener(redraw);
+drawChart(chart, ThemeManager.getColorScheme());
+```
+
+```java
+private static void drawChart(Canvas chart, ColorScheme scheme) {
+    Color bars = scheme == ColorScheme.LIGHT ? Color.web("#1d6a8c") : Color.web("#5fb3d9");
+    GraphicsContext pen = chart.getGraphicsContext2D();
+    pen.clearRect(0, 0, chart.getWidth(), chart.getHeight());
+    pen.setFill(bars);
+    pen.fillRect(10, 20, 30, 60);
+}
+```
+
+- Take the theme's tokens first (`-fx-text-color`, `-fx-surface-color`, `-fx-accent-color` and the
+  others): they have a value in each scheme, so a rule that uses only them works in both. The
+  label's text above stays the theme's.
+- A colour the theme does not have is a token of the application's own, with a name the theme
+  does not use (never `-fx-`), defined under `.root:dark` and under `.root:light`; the rules use
+  the token. The theme sets the pseudo-class `dark` or `light` on the root of every scene it
+  themes, also on a root that replaces it.
+- Add the application's stylesheets after `ThemeManager.apply`, which replaces the scene's
+  stylesheets. A change of the scheme replaces only the theme's colour stylesheet and leaves the
+  application's in place. `appStylesheet()` stands for the address of the application's
+  stylesheet, such as `getClass().getResource("app.css").toExternalForm()`.
+- A colour set in code, such as one drawn on a `Canvas`, follows `colorSchemeProperty()`; its
+  listener runs once every themed scene has the new scheme. Decide by the scheme in effect, never
+  by the `Appearance`: `SYSTEM` says nothing about the colours. The property lives as long as the
+  application, so remove the listener when its window closes
+  (`ThemeManager.colorSchemeProperty().removeListener(redraw)`), or it keeps the window's nodes.
 
 ### A form row with validation
 
@@ -543,7 +644,10 @@ if (result == SettingsDialogResult.OK) {
 
 ## 6. Before you call it done
 
-- Every `Scene` the application creates goes through `ThemeManager.apply`.
+- Every `Scene` the application creates goes through `ThemeManager.apply`, and the application's
+  own stylesheets are added after it.
+- A colour of the application's own has a value in both schemes, under `.root:light` and
+  `.root:dark`, and a colour set in code follows `ThemeManager.colorSchemeProperty()`.
 - No colour, font size or border is hardcoded where a token or a style class exists.
 - Form inputs sit in `FormField`s; required fields and wrong values produce a `FieldMessage`.
 - Numbers and paths are read with `toNumber()` and `toPath()`, and the empty case is handled.
