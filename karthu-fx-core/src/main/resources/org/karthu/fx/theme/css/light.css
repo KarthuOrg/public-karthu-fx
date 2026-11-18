@@ -21,8 +21,8 @@
     /* Every editable surface: fields, their dropdown lists and popups, list and table bodies. White, apart from the
      * grey window */
     -fx-field-color: #FFFFFF;
-    /* A raised surface: the content area of the Markdown view, a step darker than the window */
-    -fx-raised-color: #DCDDE1;
+    /* A raised surface: the content area of the Markdown view, lighter than the window, not white */
+    -fx-raised-color: #EEEFF2;
 
     /* Text colors */
     -fx-text-color: #1F2230;

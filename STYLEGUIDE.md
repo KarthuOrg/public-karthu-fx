@@ -59,7 +59,7 @@ Nebula Light.
 | `-fx-surface-color` | panels, tool and menu bars, tab headers, dialogs, the status bar, cards | `#24273c` | `#E4E5E8` | `-app-bg-surface` | background; in light the same grey as the window, so the chrome reads as one surface |
 | `-fx-readonly-bg` | read-only text fields, text areas and form fields | `#1e202f` | `#DCDDE1` *proposed* | — | background, grey as the design's field that cannot be edited (`-app-bg-raised`); text on it 11.6:1, the warning outline 4.4:1, the error outline 3.8:1, the focus outline 3.5:1 |
 | `-fx-field-color` | every editable surface: text fields, password fields, combo and choice boxes, date pickers, spinners, text areas, the form fields, the zoom group, dropdown lists, context menus, the date picker's and the suggestion popup, list, tree and table bodies and the rows of tables | `-fx-surface-color` | `#FFFFFF` | `-app-bg-field` | background, white (the design's ivory replaced); text on it 15.8:1, `-fx-control-border` against it 1.7:1, below 3:1 |
-| `-fx-raised-color` | a raised surface: the Markdown view's content area | `-fx-surface-color` | `#DCDDE1` | `-app-bg-raised` | background; text on it 11.6:1, `-fx-text-secondary-color` 4.4:1, below 4.5:1 |
+| `-fx-raised-color` | a raised surface: the Markdown view's content area | `-fx-surface-color` | `#EEEFF2` (lighter than the design's `#DCDDE1`) | `-app-bg-raised` | background; text on it 13.7:1, `-fx-text-secondary-color` 5.1:1, inline code 5.4:1, links 6.0:1 |
 
 ### Text
 | Token | Use | Dark | Light | Design | Contrast in light |

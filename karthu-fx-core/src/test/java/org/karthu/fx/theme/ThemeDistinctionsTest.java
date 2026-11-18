@@ -43,7 +43,7 @@ class ThemeDistinctionsTest {
     private static final Color LIGHT_WINDOW = Color.web("#E4E5E8");
     private static final Color LIGHT_FIELD = Color.web("#FFFFFF");
     private static final Color LIGHT_BORDER = Color.web("#C2C4CC");
-    private static final Color LIGHT_RAISED = Color.web("#DCDDE1");
+    private static final Color LIGHT_RAISED = Color.web("#EEEFF2");
     private static final Color LIGHT_TEXT = Color.web("#1F2230");
 
     @BeforeAll
