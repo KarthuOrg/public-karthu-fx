@@ -136,23 +136,57 @@ that take its value, with today's dark value and the light value. A value marked
 derived, not given by the design. Contrast after WCAG, against the background the colour sits on
 (text 4.5:1, borders and focus 3:1). A token of `dark.css` without a row here still holds its dark
 value in `light.css`, marked `derive: dark value` there; a token that refers to another keeps the
-reference in both schemes.
+reference in both schemes. Where Nebula Light tells apart places that share one colour in Nebula
+Dark, they take a token of their own: in `dark.css` it holds the value or computation the places
+had (a dark value in the table that names a token or a `derive` is that one), so Nebula Dark looks
+as before.
 
 | Design token | karthu-fx token | Dark (today) | Light | Proposed | Contrast (light) |
 |---|---|---|---|---|---|
 | `-app-bg-window` | `-fx-background-color` | `#1b1d30` | `#E4E5E8` | | background |
 | `-app-bg-surface` | `-fx-surface-color`, `-fx-base` | `#24273c` | `#E4E5E8` | | background |
+| `-app-bg-raised` | `-fx-raised-color`: the Markdown view's content area | `-fx-surface-color` | `#DCDDE1` | | background; text on it 11.6:1, `-fx-text-secondary-color` 4.3:1, below 4.5:1 |
+| `-app-bg-field` | `-fx-field-color`: text fields, password fields, combo and choice boxes, date pickers, spinners, text areas, the form fields, the zoom group, dropdown lists, context menus, the date picker's and the suggestion popup, list, tree and table bodies and the rows of tables (and, in `light.css`, `-fx-markdown-table-row-odd`) | `-fx-surface-color` | `#F3F1E8` | | background; text on it 14.0:1, `-fx-control-border` against it 1.5:1, below 3:1 |
+| `-app-bg-field` | `-fx-keycap-color`: the key caps of the shortcuts editor | `-fx-button-color` | `#F3F1E8` | | background; text on it 14.0:1 |
 | `-app-text` | `-fx-text-color`, `-fx-mark-color` | `#d6d9e6` | `#1F2230` | | 12.5:1 on window and surface, 10.5:1 on hover |
 | `-app-text-strong` | `-fx-selection-text-color` | `#eef1fb` | `#1F2230` | | 11.6:1 on selection |
 | `-app-text-muted` | `-fx-text-secondary-color` | `#8a90a8` | `#5E6475` | | 4.7:1 on window and surface; 3.9:1 on hover, below 4.5:1 |
+| `-app-text-placeholder` | `-fx-text-placeholder-color`: prompt texts, *Not assigned* in the shortcuts editor | `-fx-text-secondary-color` | `#5A5F6E` | | 5.6:1 on the field surface |
+| `-app-text-disabled` | `-fx-text-disabled-color`: a disabled menu item's text, a disabled link's | `-fx-text-secondary-color` | `#7C8090` | | 3.5:1 on the field surface before the dimming of a disabled control (disabled text exempt) |
 | `-app-border` | `-fx-control-border` | `#42486e` | `#C2C4CC` | | 1.4:1 against window and surface, below 3:1 |
+| `-app-divider-row` | `-fx-row-divider-color`: the lines between table rows and between a table's columns | `-fx-control-border` | `#DADCE1` | | 1.2:1 against the field surface, below 3:1 (a hairline, no boundary) |
 | `-app-bg-hover` | `-fx-button-hover-color`, `-fx-hover-color` | `#394160`, `rgba(139,152,255,0.09)` | `#D0D3DA` | | background |
+| `-app-bg-pressed` | `-fx-button-pressed-color` | `#475078` | `#C4C7D0` | *proposed* (by the design) | background; text on it 9.4:1 |
 | `-app-bg-selected` | `-fx-selection-color`, `-fx-selection-bar` | `#33488a` | `#D3DDF2` | | background |
+| `-app-bg-selected-neutral` | `-fx-selection-neutral-color`: the cron input's format selector | `-fx-button-color` | `#D3DDF2` | | background; text on it 11.6:1 |
 | `-app-focus` | `-fx-accent-color`, `-fx-focus-color` | `#7b8cff` | `#2F6FD6` | | 3.8:1 against window and surface; white text on it 4.8:1 |
-| `-app-accent-bg` | `-fx-accent-tint-color` | `rgba(123,140,255,0.16)` | `#D6E2F8` | | background; `-fx-accent-color` on it 3.7:1, below 4.5:1 |
+| `-app-accent-bg` | `-fx-accent-tint-color` | `rgba(123,140,255,0.16)` | `#D6E2F8` | | background |
+| `-app-accent-text` | `-fx-accent-tint-text-color`: the binding chip's name and x, the bound `{}` icon | `-fx-accent-color` | `#1B4C9E` | | 6.3:1 on the accent tint |
 | `-app-primary` | `-fx-status-normal` | `#4cd38a` | `#1A7F4B` | | as text 4.0:1 on window, below 4.5:1 |
+| `-app-primary-hover` | `-fx-status-normal-hover`: a success button under the pointer | `derive(-fx-status-normal, 15%)` | `#15703F` | | white text on it 6.1:1 |
+| `-app-primary-pressed` | `-fx-status-normal-pressed`: a pressed success button | `derive(-fx-status-normal, -12%)` | `#116236` | *proposed* (by the design) | white text on it 7.4:1 |
 | `-app-on-primary` | `-fx-status-button-text-color` | `#1b1d2d` | `#FFFFFF` | | 5.0:1 on `-fx-status-normal`, 6.5:1 on `-fx-status-error` |
-| `-app-danger-text` | `-fx-status-error` | `#e56a86` | `#B3261E` | | 5.2:1 on window and surface |
+| `-app-danger-text` | `-fx-status-error` | `#e56a86` | `#B3261E` | | 5.2:1 on window and surface, 5.8:1 on the field surface |
+| `-app-danger-border` | `-fx-danger-border`: the danger button's outline | `-fx-control-border` | `#E0B4B0` | | 1.5:1 against window and surface, below 3:1 (the fill bounds the button) |
+| `-app-danger-border-hover` | `-fx-danger-border-hover`: the danger button's outline under the pointer and pressed | `-fx-control-border` | `#D99A95` | | 1.9:1 against window and surface, below 3:1 (the fill bounds the button) |
+| `-app-danger-text-hover` | `-fx-danger-text-hover-color`: the icon of a destructive icon button under the pointer (a key-value row's delete, a shortcut's remove) | `-fx-status-error` | `#9C1F18` | | 5.3:1 on hover |
+| `-app-danger-text-hover` | `-fx-status-error-hover`: a danger button's fill under the pointer | `derive(-fx-status-error, 15%)` | `#9C1F18` | | white text on it 8.0:1 |
+| — | `-fx-status-error-pressed`: a pressed danger button's fill | `derive(-fx-status-error, -12%)` | `#8A1D17` | *proposed* | white text on it 9.3:1 |
+| `-app-error-border` | `-fx-error-border`: the outline of a field with an error, of a key-value key marked missing or duplicate, of a missing binding chip and of a conflicting key cap | `-fx-status-error` | `#C9372C` | | 4.6:1 against the field surface |
+| `-app-keycap-border` | `-fx-keycap-border`: the key caps' outline | `-fx-control-border` | `#B4B7C1` | | 1.8:1 against the field surface, below 3:1 |
+| — | `-fx-status-running-hover`, `-fx-status-paused-hover`, `-fx-status-info-hover`: the running, warning and info buttons under the pointer | `derive(<status>, 15%)` | `derive(<status>, -12%)` | *proposed* | darker under the pointer, as the primary green; follows the status colour |
+| — | `-fx-status-running-pressed`, `-fx-status-paused-pressed`, `-fx-status-info-pressed`: those buttons pressed | `derive(<status>, -12%)` | `derive(<status>, -23%)` | *proposed* | follows the status colour |
+| (popup shadow) | `-fx-shadow-color`: the shadow of menus, popups and the slider's thumb | `rgba(0,0,0,0.2)` | `rgba(31,34,48,0.18)` | | a shadow; offsets and radii as in dark |
+| — | `-fx-shadow-strong-color`: the focused slider thumb's shadow | `rgba(0,0,0,0.3)` | `rgba(31,34,48,0.27)` | *proposed* | a shadow, one and a half times the other, as in dark |
+
+Design tokens without a karthu-fx token of their own: `-app-border-subtle` is the border in light,
+so those lines keep `-fx-control-border`; `-app-text-strong` is `-fx-selection-text-color`, and a
+hovered item's text is the text colour, which is the same in light; `-app-danger-bg-hover` and
+`-app-danger-bg-pressed` are the fills of an outlined Cancel button, and the theme's danger button
+stays filled (its fills are the status error's under the pointer and pressed);
+`-app-border-disabled`, `-app-icon-disabled` and `-app-bg-button-disabled` have no place, since the
+theme dims a disabled control as a whole and keeps its colours; the raised group headers of a list
+are the shortcuts editor's group lines, on `-fx-canvas-color`, which follows `-app-bg-canvas`.
 
 ---
 
@@ -181,19 +215,21 @@ hover→`-fx-button-hover-color`, pressed→`-fx-button-pressed-color`.
 `.icon-button` transparent, hover→`-fx-hover-color`. Disabled → opacity 0.5, default cursor.
 Semantic buttons `.success-button .running-button .warning-button .danger-button .info-button`
 fill the matching status token with `-fx-status-button-text-color` text;
-hover/pressed are `derive(token, ±%)` — no extra hex.
+hover/pressed fill `-fx-status-<status>-hover` / `-pressed` (in dark `derive(token, ±%)`);
+the danger button's outline is `-fx-danger-border` (`-fx-danger-border-hover` on hover and pressed).
 
-**Text fields / combo / spinner** — bg `-fx-surface-color`, 1px `-fx-control-border`,
-radius 3, prompt text `-fx-text-secondary-color`. Focus swaps border to `-fx-accent-color`.
+**Text fields / combo / spinner** — bg `-fx-field-color`, 1px `-fx-control-border`,
+radius 3, prompt text `-fx-text-placeholder-color`. Focus swaps border to `-fx-accent-color`.
 Read-only → `-fx-readonly-bg`. Disabled text field (and password field) → opacity 0.5, default
 cursor, as a disabled button.
 
-**TreeView / ListView** — surface bg, transparent cells; hover `-fx-hover-color`,
+**TreeView / ListView** — `-fx-field-color` bg, transparent cells; hover `-fx-hover-color`,
 selected `-fx-selection-color` with `-fx-selection-text-color`. Disclosure arrow is
 `-fx-text-color`, rotates 90° when expanded. Keep the 2px accent left-marker look for
 the active nav item.
 
-**TableView** — surface bg, 1px border, radius 3. Column header uses `-fx-button-color`,
+**TableView** — `-fx-field-color` bg and rows, 1px border, radius 3, the lines between rows and
+columns `-fx-row-divider-color`. Column header uses `-fx-button-color`,
 bold `-fx-text-color`, the sort arrow `-fx-text-color`; zebra via `-fx-table-row-odd`. Row hover
 `-fx-hover-color`, selected `-fx-selection-color` (+ `:selected:hover` = `-fx-selection-hover-color`).
 With cell selection (`getSelectionModel().setCellSelectionEnabled(true)`) a selected cell looks
@@ -216,9 +252,10 @@ radius). Selected tab: 2px accent underline and bold `-fx-text-color` label; ina
 labels `-fx-text-secondary-color`, brightening to `-fx-text-color` on hover. The tab
 content area has no border. Close button tints to `-fx-text-color` on hover.
 
-**Menus / context menu** — surface bg, 1px border, radius 3, soft drop shadow
-`dropshadow(gaussian, rgba(0,0,0,0.2), 8, 0, 0, 2)`. Item hover/focus → `-fx-hover-color`.
-Shortcuts in secondary color; destructive items use `-fx-status-error`.
+**Menus / context menu** — `-fx-field-color` bg, 1px border, radius 3, soft drop shadow
+`dropshadow(gaussian, -fx-shadow-color, 8, 0, 0, 2)`. Item hover/focus → `-fx-hover-color`.
+Shortcuts in secondary color; destructive items use `-fx-status-error`; a disabled item's text
+`-fx-text-disabled-color`.
 
 **Scrollbars** — fixed 12px breadth (explicit `-fx-pref-width`/`-fx-pref-height`;
 without it the bars collapse to zero because the arrows are shaped away); track
@@ -258,18 +295,19 @@ JavaDoc: renaming one is a breaking change. Sizes, spacing and fonts in `base.cs
 through tokens: the view's own, `-fx-code-text-color`, `-fx-code-background-color`,
 `-fx-markdown-table-row-odd`, the 23 `-fx-code-<category>-color` of coloured code and the four
 `-fx-markdown-search-` tokens of the search's marks (§2, Markdown view), and the theme's
+`-fx-raised-color` (the view's content), `-fx-field-color` (the zoom group, the rows of tables),
 `-fx-surface-color`, `-fx-control-border`, `-fx-text-color`, `-fx-text-secondary-color`,
 `-fx-accent-color`, `-fx-hover-color`, `-fx-button-pressed-color`, `-fx-selection-color`,
 `-fx-selection-text-color` and, in the full size window of images, `-fx-canvas-color`. Inside
-the view a table's `-fx-table-row-odd` is `-fx-markdown-table-row-odd`, which `dark.css` sets to
-`-fx-surface-color` (no zebra stripes).
+the view a table's `-fx-table-row-odd` is `-fx-markdown-table-row-odd`, which the theme sets to
+the rows' colour (no zebra stripes).
 Images add no token. Two pseudo-classes: `:loose` on a list, `:focus-within` on the zoom bar's group.
 
 | Style class | On | Look |
 |---|---|---|
-| `markdown-view` | the view | surface bg, 1px `-fx-control-border`, radius 3; preferred size 480 x 360 plus the frame and the zoom bar while it shows, like a text area's (set by the view, not by its content) |
+| `markdown-view` | the view | `-fx-raised-color` bg, 1px `-fx-control-border`, radius 3; preferred size 480 x 360 plus the frame and the zoom bar while it shows, like a text area's (set by the view, not by its content) |
 | `markdown-zoom-bar` | the zoom bar on top of the view, outside its scroll pane (it does not scroll) | the tool bar's density: padding 4, 4px between its parts; transparent on the view's background; a 1px `-fx-control-border` line below it (a border); from the left the zoom group, the slider and *Reset*, one line at every width |
-| `markdown-zoom-group` | the zoom group: one frame around minus, the percent field with its chevron, and plus | drawn as a text field's frame (`-fx-control-border`, `-fx-surface-color`, radius 3), padding 1, exactly as high as a text field; `:focus-within`, the focus border in `-fx-accent-color`, while the field has the focus or the list of zoom levels is open (the bar sets it for the open list) |
+| `markdown-zoom-group` | the zoom group: one frame around minus, the percent field with its chevron, and plus | drawn as a text field's frame (`-fx-control-border`, `-fx-field-color`, radius 3), padding 1, exactly as high as a text field; `:focus-within`, the focus border in `-fx-accent-color`, while the field has the focus or the list of zoom levels is open (the bar sets it for the open list) |
 | `markdown-zoom-out`, `markdown-zoom-in` | minus and plus, `Button`s that also carry `icon-button`, with the Bootstrap `DASH` and `PLUS` icons | the theme's icon button as high as the group's inside, padding `0 6`, hover `-fx-hover-color`, pressed `-fx-button-pressed-color`; icons 14px in `-fx-text-color`; the group's 1px dividers are their borders in `-fx-control-border` (right of minus, left of plus); disabled at 50 % and 200 %, only the icon dimmed (opacity 0.5, as a disabled icon button's), so the divider keeps full contrast |
 | `markdown-zoom-field` | the percent field, a `TextField` | borderless and transparent inside the group, padding `3 1 3 6`, the text (`125%`) right-aligned in the theme's UI font; exactly as wide as `200%` |
 | `markdown-zoom-levels` | the chevron in the field's cell, a `Button` that also carries `icon-button`, with the Bootstrap `CHEVRON_DOWN` icon | no divider before it; padding `0 5 0 3`; icon 10px in `-fx-text-secondary-color`, `-fx-text-color` on hover; opens the list of zoom levels, a popup with the combo box popup's class `combo-box-popup`, so it has the theme's popup list look (`.combo-box-popup .list-view`: the current preset in `-fx-selection-color`) |
@@ -479,9 +517,9 @@ the CheckBox keep the theme's own rules.
 | `key-value-row-inactive` | a row whose pair is switched off | its key and value fields at opacity 0.5, still editable; the CheckBox at full strength |
 | `key-value-enabled` | a row's `CheckBox` | the theme's check box |
 | `key-value-key`, `key-value-value` | a row's text fields; the value a `PasswordField` while the row is masked | the theme's text field; read-only (`:readonly`) when the editor is not editable |
-| `key-value-key-missing`, `key-value-key-duplicate` | a key field: an active row with a value but no key, unless `emptyKeyAllowed`; a key another active row has too, while duplicates are forbidden (the empty key counts with `emptyKeyAllowed`) | 1px `-fx-status-error` border, also while focused; marks only, input is never refused |
+| `key-value-key-missing`, `key-value-key-duplicate` | a key field: an active row with a value but no key, unless `emptyKeyAllowed`; a key another active row has too, while duplicates are forbidden (the empty key counts with `emptyKeyAllowed`) | 1px `-fx-error-border` border, also while focused; marks only, input is never refused |
 | `key-value-lock` | a row's lock, a `ToggleButton` bound to the entry's masked flag, Bootstrap `UNLOCK` / `LOCK` | flat like `icon-button` (transparent, hover `-fx-hover-color`, no accent fill when selected); icon 14px in `-fx-text-secondary-color`, closed in `-fx-accent-color` |
-| `key-value-delete` | a row's delete `Button`, also `icon-button`, Bootstrap `X` | icon 16px in `-fx-text-secondary-color`, `-fx-status-error` on hover |
+| `key-value-delete` | a row's delete `Button`, also `icon-button`, Bootstrap `X` | icon 16px in `-fx-text-secondary-color`, `-fx-danger-text-hover-color` on hover |
 | `key-value-add` | the add `Button`, Bootstrap `PLUS` | the theme's button, icon 14px in `-fx-text-color` |
 
 **Shortcuts editor and dialog** (`ShortcutsEditor`, `ShortcutsDialog`, package `org.karthu.fx.command`) —
@@ -493,16 +531,18 @@ open groups beside two folded ones, and the list scrolls beyond.
 The command column takes 55 % of the list's width in the header and in every row, and both indent
 the names by 26px, so the titles stand over the columns. Rules in `base.css` under *Shortcuts
 editor*, colours through the theme's tokens only, no token of its own: `-fx-surface-color` (the
-editor, the dialog), `-fx-canvas-color` (the band of a group's line), `-fx-control-border` (the
-header's and footer's lines, the filters' frame, the key caps' and the context mark's frames),
-`-fx-button-color` (the key caps, the chosen filter), `-fx-text-color`, `-fx-text-secondary-color`
-(the column titles, the group's count, *Not assigned*, the context mark, the field's hint, an
+editor, the dialog), `-fx-field-color` (through the list, its body), `-fx-canvas-color` (the band
+of a group's line), `-fx-control-border` (the header's and footer's lines, the filters' frame, the
+context mark's frame), `-fx-keycap-border` and `-fx-keycap-color` (the key caps' frame and fill),
+`-fx-button-color` (the chosen filter), `-fx-text-color`, `-fx-text-secondary-color`
+(the column titles, the group's count, the context mark, the field's hint, an
 override's hint, the counter, the row's icons, and through the list's placeholder the empty list's
-text), `-fx-accent-color` (the modified dot, the reset icon, the recording field's frame, a
-conflict's fix, `-fx-accent-hover-color` under the pointer),
-`-fx-control-inner-background` (the recording field), `-fx-status-error` (a refused key's reason, the
-× under the pointer, a conflict's key caps and hint, the counter's conflicts), `-fx-hover-color` and,
-through the list, `-fx-selection-color` and `-fx-selection-text-color`. The key caps and the segmented filters are no public controls; their
+text), `-fx-text-placeholder-color` (*Not assigned*), `-fx-accent-color` (the modified dot, the
+reset icon, the recording field's frame, a conflict's fix, `-fx-accent-hover-color` under the
+pointer), `-fx-control-inner-background` (the recording field), `-fx-status-error` (a refused key's
+reason, a conflict's key letters and hint, the counter's conflicts), `-fx-error-border` (a
+conflict's key cap frames), `-fx-danger-text-hover-color` (the × under the pointer),
+`-fx-hover-color` and, through the list, `-fx-selection-color` and `-fx-selection-text-color`. The key caps and the segmented filters are no public controls; their
 style classes, like all the others here, are a public contract, also listed in the classes' JavaDoc:
 renaming one is a breaking change.
 
@@ -531,12 +571,12 @@ renaming one is a breaking change.
 | `shortcuts-shortcut-column` | the row's shortcut column, a `StackPane` holding the key line, *Not assigned* or the recording field | left aligned, grows |
 | `shortcuts-key-line` | the key line, an `HBox`: the key caps, then the hint and the fix | spacing 8 |
 | `shortcuts-key-caps` | a key's caps, an `HBox` | spacing 3 |
-| `shortcuts-key-cap` | one cap, a `Label`: a modifier, the key's name or the character | 11px, padding `0 5`, `-fx-button-color` in a 1px `-fx-control-border` frame, radius 3; in a conflict framed and lettered in `-fx-status-error` |
+| `shortcuts-key-cap` | one cap, a `Label`: a modifier, the key's name or the character | 11px, padding `0 5`, `-fx-keycap-color` in a 1px `-fx-keycap-border` frame, radius 3; in a conflict framed in `-fx-error-border` and lettered in `-fx-status-error` |
 | `shortcuts-hint` | the hint after the key caps, a `Label`: *Also used by …* naming the other commands of a conflict, else *Overrides …* naming the commands of enclosing contexts the key overrides; shows only then | `-fx-text-secondary-color`; in a conflict `-fx-status-error`, also on the selected row; shrinks with an ellipsis |
 | `shortcuts-fix` | the conflict's one-click fix after the hint, a `Hyperlink`, not focus traversable: *Remove there* takes the key from the other commands; shows only while one of them is not fixed | the theme's link, `-fx-accent-color`, `-fx-accent-hover-color` under the pointer, no padding |
-| `shortcuts-not-assigned` | *Not assigned*, a `Label` | `-fx-text-secondary-color` |
+| `shortcuts-not-assigned` | *Not assigned*, a `Label` | `-fx-text-placeholder-color` |
 | `shortcuts-row-content` | the row's content, an `HBox`: the columns and the buttons | — |
-| `shortcuts-edit`, `shortcuts-remove`, `shortcuts-reset` | the pencil (Bootstrap `PENCIL`), the × (`X`) and the reset (`ARROW_COUNTERCLOCKWISE`), `Button`s beside `icon-button`, not focus traversable | icons 13px in `-fx-text-secondary-color`, the × in `-fx-status-error` under the pointer, the reset in `-fx-accent-color`; pencil and × on the row under the pointer and the selected row, the reset on a modified row, none on a fixed row |
+| `shortcuts-edit`, `shortcuts-remove`, `shortcuts-reset` | the pencil (Bootstrap `PENCIL`), the × (`X`) and the reset (`ARROW_COUNTERCLOCKWISE`), `Button`s beside `icon-button`, not focus traversable | icons 13px in `-fx-text-secondary-color`, the × in `-fx-danger-text-hover-color` under the pointer, the reset in `-fx-accent-color`; pencil and × on the row under the pointer and the selected row, the reset on a modified row, none on a fixed row |
 | `shortcuts-recorder` | the recording field, an `HBox` in the shortcut column: the held modifiers as key caps, the message, the hint | `-fx-control-inner-background` in a 1px `-fx-accent-color` frame, radius 3, spacing 6 |
 | `shortcuts-recorder-message` | *Press keys…* or a refused key's reason, a `Label` | `-fx-text-color` |
 | `shortcuts-recorder-hint` | *Esc to cancel* at the field's end, a `Label` | `-fx-text-secondary-color` |
@@ -584,15 +624,17 @@ graphic, its states: warning and error, drop target, read-only; then one section
 password, number and its spinner arrows, combo, editable combo, text area, path, cron, the search
 input and the suggestion input; then the binding and the row); colours
 through the theme's tokens only, for every input: `-fx-control-border` (borders, the divider, the
-line above the popup's footer), `-fx-surface-color` (also the suggestion popup), `-fx-readonly-bg`
-(read-only), `-fx-accent-color` (focus, drop target, the binding, the search's marks),
-`-fx-text-color`, `-fx-text-secondary-color` (prompts, muted icons, details, the search's counter,
-the popup's *No matches* and footer), `-fx-status-error`
-(errors), `-fx-status-paused` (warnings, the theme's warning colour, the search's counter with no
+line above the popup's footer), `-fx-field-color` (also the suggestion popup), `-fx-readonly-bg`
+(read-only), `-fx-accent-color` (focus, drop target, the search's marks),
+`-fx-text-color`, `-fx-text-placeholder-color` (prompts), `-fx-text-secondary-color` (muted icons,
+details, the search's counter, the popup's *No matches* and footer), `-fx-status-error`
+(error messages, the required mark, a missing chip's text), `-fx-error-border` (the borders of
+errors), `-fx-status-paused` (warnings, the theme's warning colour, the search's counter with no
 match), `-fx-selection-color` and `-fx-selection-text-color` (the popup's preselected row),
-`-fx-accent-tint-color` (the binding, the one token added for the collection) and, through
-`icon-button`, `-fx-hover-color` (also the revealed eye and the popup's row under the pointer), and the button's `-fx-button-color`,
-`-fx-button-hover-color` and `-fx-button-pressed-color` (the cron input's format selector). No input
+`-fx-accent-tint-color` and `-fx-accent-tint-text-color` (the binding) and, through
+`icon-button`, `-fx-hover-color` (also the revealed eye and the popup's row under the pointer), and
+`-fx-selection-neutral-color`, the button's `-fx-button-hover-color` and `-fx-button-pressed-color`
+(the cron input's format selector). No input
 has a token of its own. The style
 classes and pseudo-classes are a public contract, also listed in the classes' JavaDoc: renaming one
 is a breaking change. Like every karthu-fx control, the components are used on the JavaFX
@@ -725,7 +767,7 @@ path input overrides.
 
 | Style class | On | Look |
 |---|---|---|
-| `form-frame` | the shell (every input type), a `Region` | the text field's, from the rule it shares with `.text-field`: `-fx-surface-color` with a 1px `-fx-control-border` (background layers, insets `0, 1`), radius 3; its own padding `0 3 0 0` in every state (the room after the last trailing node, left out by the layout while there is none, as while read-only without icons); on one line it grows in width, never in height |
+| `form-frame` | the shell (every input type), a `Region` | the text field's, from the rule it shares with `.text-field`: `-fx-field-color` with a 1px `-fx-control-border` (background layers, insets `0, 1`), radius 3; its own padding `0 3 0 0` in every state (the room after the last trailing node, left out by the layout while there is none, as while read-only without icons); on one line it grows in width, never in height |
 | `form-shell-content` | the content, the control the type wraps | dimmed once with a disabled shell (opacity 1 inside it); a type removes its control's own frame and background in its own rules |
 | `form-frame-text` | a frame's inner `TextField` (keeps `text-field`, also `form-shell-content`) | no border, no background, also while focused; the text field's padding from `.text-field` (`4`), so the text sits where it sits in a plain text field |
 | `form-frame-icon` | each trailing icon, a `Button` that also carries `icon-button`, graphic only; also a type's own icon-like control styled with `styleAsIcon(...)` | the theme's icon button (transparent, hover `-fx-hover-color`, hand cursor, radius 3) with padding `3`; icon 14px in `-fx-text-secondary-color`, `-fx-text-color` on hover; its tooltip on hover names its shortcut where it has one (the chevrons and the spinner arrows have no tooltip, as JavaFX's combo box and spinner) |
@@ -737,7 +779,7 @@ path input overrides.
 | `:focus-within` | `form-frame` (JavaFX's own) | 1px `-fx-accent-color` border around text and icons together, the focused text field's |
 | `:disabled` | `form-frame` | opacity 0.5, as a disabled button; the content (`form-shell-content`, a frame's inner text field), the leading graphic and the icons keep opacity 1, and so do the parts JavaFX's own rules would dim again inside it (a combo box's cell and editor, a text area's grip, the chip), so the shell is dimmed once, not twice (opacity multiplies down the scene graph) |
 | `:warning` | `form-frame`, while its state is `WARNING` | 1px `-fx-status-paused` border around text and icons, also while focused (it replaces the focus border) |
-| `:error` | `form-frame`, while its state is `ERROR` | 1px `-fx-status-error` border around text and icons, also while focused (it replaces the focus border) |
+| `:error` | `form-frame`, while its state is `ERROR` | 1px `-fx-error-border` border around text and icons, also while focused (it replaces the focus border) |
 | `:drop-target` | `form-frame`, while a drag the input accepts hovers over it (the shell's, set by the input through the shell's protected `setDropTarget`, as the path input does; a refused drag sets nothing) | 1px `-fx-accent-color` border around text and icons, as the focus border; during the drag it replaces the warning and error borders, also while focused |
 | `:readonly` | `form-frame`, while the input is read-only | the read-only text field's background, `-fx-readonly-bg`, with its 1px `-fx-control-border`; no padding of its own: without icons the layout leaves out the frame's room after them, and an own control that stays (the eye, the grip) keeps it; the focus border and the warning and error borders stay, on the read-only background; the icons are not shown |
 
@@ -950,7 +992,7 @@ text starts, 4px in as in every input; read-only, the display text is shown as t
 copy in place of the combo box, without chevron and `{}`. Disabled, the shown value is dimmed once,
 as a disabled text field's text: JavaFX's own stylesheet dims a disabled list cell that shows a
 chosen entry, so the cell keeps opacity 1 inside the dimmed shell. Rules in `base.css` under *Combo
-input*; tokens: `-fx-text-secondary-color` (the prompt), and the frame's. Every combo box that is a
+input*; tokens: `-fx-text-placeholder-color` (the prompt), and the frame's. Every combo box that is a
 shell's content (`form-shell-content`) loses its own look there, and its cells keep opacity 1 in a
 disabled shell, so the editable combo input shares the rules, as it shares the one rule of the text
 in place of the combo box (`form-combo-text`).
@@ -964,7 +1006,7 @@ in place of the combo box (`form-combo-text`).
 
 | Pseudo-class | On | Look |
 |---|---|---|
-| `:prompt` | `form-combo-display`, while it shows the prompt text (no value) | `-fx-text-secondary-color`, a text field's prompt colour |
+| `:prompt` | `form-combo-display`, while it shows the prompt text (no value) | `-fx-text-placeholder-color`, a text field's prompt colour |
 
 *Editable combo input* (`EditableComboInput`): free text with suggestions, a shell around an editable
 `ComboBox<String>` whose own frame, background, padding and arrow are hidden by the combo input's
@@ -1115,14 +1157,14 @@ stays usable while bound (only the expression binds). While the format is fixed 
 read-only, the format's name stands in its place as plain muted text, without chevron and hover, and
 nothing opens. Read-only: the text selectable and copyable, `{}` hidden, the info line as usual.
 Disabled: text, selector and `{}` dimmed once with the whole row (`:input-disabled`), the info line
-included. Rules in `base.css` under *Cron input*; tokens: the frame's, and `-fx-button-color`,
-`-fx-button-hover-color`, `-fx-button-pressed-color` (the selector), `-fx-text-color` (its name),
+included. Rules in `base.css` under *Cron input*; tokens: the frame's, and
+`-fx-selection-neutral-color`, `-fx-button-hover-color`, `-fx-button-pressed-color` (the selector), `-fx-text-color` (its name),
 `-fx-text-secondary-color` (its chevron, the plain format text); no token of its own.
 
 | Style class | On | Look |
 |---|---|---|
 | `form-cron-input` | the input, beside `form-frame`; its text field carries the frame's `form-frame-text` | the frame's; the text in the monospace family at the frame's size |
-| `form-cron-format` | the format selector, a `ComboBox` (keeps `combo-box`), an own control of the shell, shown while the format is selectable and the input not read-only | `-fx-button-color`, no border, radius 3, padding 0, `-fx-button-hover-color` under the pointer, `-fx-button-pressed-color` while its list shows; its cell padding `1 5 1 6`, the name in `-fx-text-color`, 4px gap, the chevron 10px in `-fx-text-secondary-color` (`-fx-text-color` under the pointer); JavaFX's arrow gone; opacity 1 in a disabled frame (dimmed once) |
+| `form-cron-format` | the format selector, a `ComboBox` (keeps `combo-box`), an own control of the shell, shown while the format is selectable and the input not read-only | `-fx-selection-neutral-color`, no border, radius 3, padding 0, `-fx-button-hover-color` under the pointer, `-fx-button-pressed-color` while its list shows; its cell padding `1 5 1 6`, the name in `-fx-text-color`, 4px gap, the chevron 10px in `-fx-text-secondary-color` (`-fx-text-color` under the pointer); JavaFX's arrow gone; opacity 1 in a disabled frame (dimmed once) |
 | `form-cron-format-text` | the format's name as plain text, a `Label`, an own control of the shell in the selector's place while the format is fixed or the input read-only | `-fx-text-secondary-color`, padding `0 6`, no background, no hover; opacity 1 in a disabled frame |
 
 A cron input has no pseudo-class of its own: the shell's `:warning`, `:error`, `:readonly`,
@@ -1293,7 +1335,7 @@ its mark).
 Rules in `base.css` under *Suggestion input*, after the search input's: the popup's frame, its list
 and rows, the line *No matches*, the marks in the popup and the footer; the chevron is drawn by the
 frame's trailing icon rules. Tokens: `-fx-control-border`
-(the popup's frame, the line above the footer), `-fx-surface-color` (the popup's frame),
+(the popup's frame, the line above the footer), `-fx-field-color` (the popup's frame),
 `-fx-hover-color` (a row under the pointer), `-fx-selection-color` and `-fx-selection-text-color` (the preselected row),
 `-fx-text-color` (a row's marks), `-fx-text-secondary-color` (*No matches*, the footer); no token of
 its own.
@@ -1302,7 +1344,7 @@ its own.
 |---|---|---|
 | `form-suggestion-input` | the field, beside `form-search-input` and `form-frame` | the search input's |
 | `form-suggestion-chevron` | the chevron (Bootstrap `CHEVRON_DOWN`), a `Button` beside `form-frame-icon` and `icon-button`, the shell's last own control, after the `×`, not focus traversable; tooltip *Show suggestions*; shown while turned on | the frame's trailing icon, as the combo input's `form-combo-chevron`; disabled while read-only (the icon button's opacity 0.5), dimmed once with a disabled field |
-| `form-suggestion-popup` | the popup's content, a `VBox` holding the list or the line | the popup's frame, as a combo box's list: `-fx-control-border` 1px around `-fx-surface-color`, radius 3, padding 1 |
+| `form-suggestion-popup` | the popup's content, a `VBox` holding the list or the line | the popup's frame, as a combo box's list: `-fx-control-border` 1px around `-fx-field-color`, radius 3, padding 1 |
 | `form-suggestion-list` | the popup's list, a `ListView` (keeps `list-view`), never focused; its rows list cells (`list-cell`), by default the item text through `highlight(...)`, else the application's cells | no frame, no background of its own; a row padding `4 8`, `-fx-hover-color` under the pointer, the preselected row (`:selected`) `-fx-selection-color` |
 | `form-suggestion-ellipsis` | the ellipsis of a default row whose text does not fit, a `TextFlow` beside `search-highlight` holding one run (`search-text`), shown only while the text is clipped | the look of the row's plain runs, by the rules of `search-highlight` and `search-text`; no rule of its own |
 | `form-suggestion-empty` | the line *No matches*, a `Label` in the list's place | `-fx-text-secondary-color`, padding `4 8` |
@@ -1344,14 +1386,15 @@ bound one checked), or the disabled *No variable fits* without candidates; while
 and *Remove binding* follow. Choosing an entry binds or switches, *Remove binding* unbinds; the
 user's binding, switching and unbinding clear the missing flag before they set the bound name.
 Rules in `base.css` under *Frame: binding*; tokens: `-fx-accent-tint-color` (added for the binding),
-`-fx-accent-color`, `-fx-status-error`, `-fx-surface-color`, `-fx-readonly-bg`, `-fx-hover-color`,
+`-fx-accent-tint-text-color`, `-fx-status-error`, `-fx-error-border`, `-fx-field-color`,
+`-fx-readonly-bg`, `-fx-hover-color`,
 `-fx-text-color`, `-fx-text-secondary-color`.
 
 | Style class | On | Look |
 |---|---|---|
-| `form-frame-bind` | the `{}` icon, beside `form-frame-icon` and `icon-button` | a trailing icon; while bound the icon in `-fx-accent-color` on `-fx-accent-tint-color` (the hover tint on top) |
-| `form-chip` | the chip, a `Label` with the bound name, over the hidden text, where the text starts | `-fx-accent-color` text on `-fx-accent-tint-color`, radius 3, padding `0 1 0 6` (`0 6 0 6` in a read-only frame, without the `×`); as high as the text, centred, never higher than the text field's content; shortened with an ellipsis when the room is short |
-| `form-chip-remove` | the chip's `×`, its graphic, a `Button` that also carries `icon-button`, not focus traversable; none in a read-only frame | padding `0 1`, radius 2, icon 12px in `-fx-accent-color`; tooltip *Remove binding* |
+| `form-frame-bind` | the `{}` icon, beside `form-frame-icon` and `icon-button` | a trailing icon; while bound the icon in `-fx-accent-tint-text-color` on `-fx-accent-tint-color` (the hover tint on top) |
+| `form-chip` | the chip, a `Label` with the bound name, over the hidden text, where the text starts | `-fx-accent-tint-text-color` text on `-fx-accent-tint-color`, radius 3, padding `0 1 0 6` (`0 6 0 6` in a read-only frame, without the `×`); as high as the text, centred, never higher than the text field's content; shortened with an ellipsis when the room is short |
+| `form-chip-remove` | the chip's `×`, its graphic, a `Button` that also carries `icon-button`, not focus traversable; none in a read-only frame | padding `0 1`, radius 2, icon 12px in `-fx-accent-tint-text-color`; tooltip *Remove binding* |
 | `form-binding-menu` | the binding list, a `ContextMenu` (keeps `context-menu`) | the theme's context menu |
 | `form-binding-candidate` | a candidate's entry, a `CheckMenuItem` whose graphic holds the texts | the theme's check menu item; its graphic 8px from the check |
 | `form-binding-name` | the candidate's name, a `Label` in the entry's graphic | `-fx-text-color` |
@@ -1362,7 +1405,7 @@ Rules in `base.css` under *Frame: binding*; tokens: `-fx-accent-tint-color` (add
 | Pseudo-class | On | Look |
 |---|---|---|
 | `:bound` | `form-frame`, while bound | the `{}` icon's bound look; the chip shows, the text is hidden |
-| `:missing` | `form-chip`, while the bound variable is missing | outlined: a 1px `-fx-status-error` border on `-fx-surface-color` (`-fx-readonly-bg` in a read-only frame), text and `×` in `-fx-status-error`; tooltip *This variable does not exist* |
+| `:missing` | `form-chip`, while the bound variable is missing | outlined: a 1px `-fx-error-border` border on `-fx-field-color` (`-fx-readonly-bg` in a read-only frame), text and `×` in `-fx-status-error`; tooltip *This variable does not exist* |
 | `:disabled` | `form-frame` | the chip and its `×` keep opacity 1 inside the dimmed frame, so they are dimmed once |
 
 ---
