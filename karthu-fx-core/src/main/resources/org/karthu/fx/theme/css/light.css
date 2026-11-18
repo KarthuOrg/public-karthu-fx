@@ -1,0 +1,136 @@
+/*
+ * Light theme - Nebula Light palette (cool grey chrome, dark ink, deep blue focus)
+ * Defines exactly the tokens of dark.css, in the same order and grouping, and the light counterpart of
+ * every rule of dark.css beyond .root: ThemeManager loads this stylesheet instead of dark.css, never on top of it.
+ * A token that refers to another token keeps the reference and follows that token. A value marked
+ * "derive: dark value" is still Nebula Dark's and has no light value yet.
+ */
+
+.root {
+    /* Background colors */
+    -fx-background-color: #E4E5E8;
+    -fx-background-color-selected: rgba(18, 19, 32, 0.78); /* derive: dark value */
+    -fx-canvas-color: #1b1d30; /* derive: dark value */
+    -fx-surface-color: #E4E5E8;
+    -fx-readonly-bg: #1e202f; /* derive: dark value */
+
+    /* Text colors */
+    -fx-text-color: #1F2230;
+    -fx-text-secondary-color: #5E6475;
+
+    /* Accent colors (blue) */
+    -fx-accent-color: #2F6FD6;
+    -fx-accent-hover-color: #8f9dff; /* derive: dark value */
+    -fx-accent-pressed-color: #6675ff; /* derive: dark value */
+    -fx-accent-text-color: #ffffff; /* derive: dark value */
+    /* An accent tint behind accent text: the binding chip and the bound {} icon of the form fields */
+    -fx-accent-tint-color: #D6E2F8;
+
+    /* Border colors */
+    -fx-control-border: #C2C4CC;
+
+    /* Button colors */
+    -fx-button-color: #2d334d; /* derive: dark value */
+    -fx-button-hover-color: #D0D3DA;
+    -fx-button-pressed-color: #475078; /* derive: dark value */
+
+    /* Selection colors (blue-tint) */
+    -fx-selection-color: #D3DDF2;
+    -fx-selection-hover-color: #3f57a4; /* derive: dark value */
+    -fx-selection-text-color: #1F2230;
+
+    /* Table colors */
+    -fx-table-row-odd: #2a2d41; /* derive: dark value */
+
+    /* Hover color */
+    -fx-hover-color: #D0D3DA;
+
+    /* Scrollbar colors */
+    -fx-scrollbar-color: #4a5078; /* derive: dark value */
+    -fx-scrollbar-hover-color: #6871ae; /* derive: dark value */
+    -fx-scrollbar-track-color: #1b1d30; /* derive: dark value */
+
+    /* Checkbox colors */
+    -fx-checkbox-bg: #1b1d2d; /* derive: dark value */
+    -fx-checkbox-border: #575f90; /* derive: dark value */
+    -fx-checkbox-border-hover: #6f78b0; /* derive: dark value */
+    -fx-checkbox-mark: #ffffff; /* derive: dark value */
+
+    /* Toggle switch colors */
+    -fx-switch-track-off: #42486e; /* derive: dark value */
+    -fx-switch-track-on: #6675ff; /* derive: dark value */
+    -fx-switch-thumb-off: #8a90a8; /* derive: dark value */
+    -fx-switch-thumb-on: #ffffff; /* derive: dark value */
+
+    /* Semantic status colors. Normal is the green of the primary action, error the red of danger text, and the
+     * text on a status fill is white, as on the primary fill. */
+    -fx-status-normal: #1A7F4B;
+    -fx-status-running: #3fd0a0; /* derive: dark value */
+    -fx-status-paused: #e0a84c; /* derive: dark value */
+    -fx-status-blocked: #c88bff; /* derive: dark value */
+    -fx-status-error: #B3261E;
+    -fx-status-info: #5d9bff; /* derive: dark value */
+    -fx-status-idle: #6b7192; /* derive: dark value */
+    -fx-status-button-text-color: #FFFFFF;
+
+    /* Warning colors */
+    -fx-warning-bg: #362f24; /* derive: dark value */
+    -fx-warning-text: #e0a84c; /* derive: dark value */
+
+    /* Markdown view colors: code, and the odd rows of tables (the surface: no zebra stripes) */
+    -fx-code-text-color: #8fd6c8; /* derive: dark value */
+    -fx-code-background-color: #1d1f33; /* derive: dark value */
+    -fx-markdown-table-row-odd: -fx-surface-color;
+
+    /* Markdown view: the marks of the search, every match and the current one, apart from the selection, which lies
+     * above both. */
+    -fx-markdown-search-color: derive(#e0a84c, -55%); /* derive: dark value */
+    -fx-markdown-search-text-color: -fx-text-color;
+    -fx-markdown-search-current-color: #e0a84c; /* derive: dark value */
+    -fx-markdown-search-current-text-color: #1b1d2d; /* derive: dark value */
+
+    /* Markdown view: the colours of code blocks coloured by their language, one per category
+     * (CodeCategory). The nine base categories have colours of their own, each to be readable on
+     * -fx-code-background-color. The fourteen fine ones refer to the variable they fall back to, as in
+     * dark.css. */
+    -fx-code-comment-color: #8a90a8; /* derive: dark value */
+    -fx-code-keyword-color: #c88bff; /* derive: dark value */
+    -fx-code-string-color: #e0a84c; /* derive: dark value */
+    -fx-code-number-color: #ff9e64; /* derive: dark value */
+    -fx-code-type-color: #4cd38a; /* derive: dark value */
+    -fx-code-function-color: #5d9bff; /* derive: dark value */
+    -fx-code-variable-color: #ff8fa3; /* derive: dark value */
+    -fx-code-property-color: #7b8cff; /* derive: dark value */
+    -fx-code-tag-color: #ff8fa3; /* derive: dark value */
+    -fx-code-doc-color: -fx-code-comment-color;
+    -fx-code-annotation-color: -fx-code-keyword-color;
+    -fx-code-literal-color: -fx-code-number-color;
+    -fx-code-constant-color: -fx-code-literal-color;
+    -fx-code-escape-color: -fx-code-string-color;
+    -fx-code-attribute-color: -fx-code-number-color;
+    -fx-code-operator-color: -fx-code-text-color;
+    -fx-code-punctuation-color: -fx-code-text-color;
+    -fx-code-heading-color: -fx-code-function-color;
+    -fx-code-link-color: -fx-code-property-color;
+    -fx-code-code-color: -fx-code-string-color;
+    -fx-code-list-color: -fx-code-keyword-color;
+    -fx-code-quote-color: -fx-code-comment-color;
+    -fx-code-emphasis-color: -fx-code-text-color;
+
+    /* Base color for JavaFX default styling: the surface, so that JavaFX derives dark text for the controls the
+     * theme does not style */
+    -fx-base: #E4E5E8;
+    -fx-control-inner-background: #1b1d30; /* derive: dark value */
+    -fx-focus-color: #2F6FD6;
+    -fx-faint-focus-color: rgba(123, 140, 255, 0.22); /* derive: dark value */
+    -fx-mark-color: #1F2230;
+    -fx-mark-highlight-color: #d6d9e6; /* derive: dark value */
+    -fx-selection-bar: #D3DDF2;
+    -fx-selection-bar-non-focused: #394160; /* derive: dark value */
+}
+
+/* Production Badge - light override */
+.detail-prod-badge {
+    -fx-background-color: #362f24; /* derive: dark value */
+    -fx-text-fill: #e0a84c; /* derive: dark value */
+}

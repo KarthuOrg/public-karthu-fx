@@ -12,7 +12,9 @@ import java.io.InputStream;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -47,14 +49,14 @@ class ThemeStylesheetsTest {
      * reports a lookup loop and drops the declaration, so the node keeps no value at all.
      */
     @Test
-    @DisplayName("no declaration of the theme's stylesheets sets a property to a lookup of itself")
+    @DisplayName("no declaration of the theme's stylesheets, in either scheme, sets a property to a lookup of itself")
     void noDeclarationLooksUpItself() throws IOException {
-        Scene scene = new Scene(new Region());
-        ThemeManager.apply(scene);
-        assertFalse(scene.getStylesheets().isEmpty(), "the theme put no stylesheet on the scene");
+        Set<String> stylesheets = new LinkedHashSet<>(stylesheets(Appearance.DARK));
+        stylesheets.addAll(stylesheets(Appearance.LIGHT));
+        assertEquals(3, stylesheets.size(), "base, dark and light: " + stylesheets);
 
         List<String> loops = new ArrayList<>();
-        for (String url : scene.getStylesheets()) {
+        for (String url : stylesheets) {
             String css = read(url);
             int declarations = 0;
             Matcher rule = RULE.matcher(blank(blank(css, COMMENT), STRING));
@@ -75,6 +77,65 @@ class ThemeStylesheetsTest {
         }
 
         assertEquals(List.of(), loops, "declarations that look up the property they set");
+    }
+
+    /**
+     * Nebula Light replaces Nebula Dark on a scene, it is never loaded on top of it: a token or rule that only one of
+     * them had would keep a value of the other scheme, or none at all.
+     */
+    @Test
+    @DisplayName("light.css defines exactly the tokens of dark.css, in its order, and has the counterpart of each of its"
+            + " other rules")
+    void lightMatchesDark() throws IOException {
+        String dark = schemeStylesheet(Appearance.DARK, "/dark.css");
+        String light = schemeStylesheet(Appearance.LIGHT, "/light.css");
+
+        List<String> darkRules = rules(read(dark));
+        List<String> lightRules = rules(read(light));
+
+        assertTrue(darkRules.getFirst().startsWith(".root {"), darkRules.getFirst());
+        assertTrue(darkRules.size() > 1, "dark.css has rules beyond .root: " + darkRules);
+        assertEquals(String.join("\n", darkRules), String.join("\n", lightRules));
+    }
+
+    /**
+     * The stylesheets the theme puts on a scene with the appearance chosen. The choice is Dark again afterwards.
+     */
+    private static List<String> stylesheets(Appearance appearance) {
+        ThemeManager.setAppearance(appearance);
+        try {
+            Scene scene = new Scene(new Region());
+            ThemeManager.apply(scene);
+            assertFalse(scene.getStylesheets().isEmpty(), "the theme put no stylesheet on the scene");
+            return new ArrayList<>(scene.getStylesheets());
+        } finally {
+            ThemeManager.setAppearance(Appearance.DARK);
+        }
+    }
+
+    private static String schemeStylesheet(Appearance appearance, String name) {
+        List<String> stylesheets = stylesheets(appearance);
+        String scheme = stylesheets.getLast();
+        assertTrue(scheme.endsWith(name), "the scheme's stylesheet comes last: " + stylesheets);
+        return scheme;
+    }
+
+    /**
+     * Each rule of a stylesheet as its selector and the names of the properties it declares, in order, one per line:
+     * {@code .root { -fx-text-color -fx-surface-color }}.
+     */
+    private static List<String> rules(String css) {
+        List<String> rules = new ArrayList<>();
+        Matcher rule = RULE.matcher(blank(blank(css, COMMENT), STRING));
+        while (rule.find()) {
+            StringBuilder names = new StringBuilder(rule.group(1).trim().replaceAll("\\s+", " ")).append(" {");
+            Matcher declaration = DECLARATION.matcher(rule.group(2));
+            while (declaration.find()) {
+                names.append(' ').append(declaration.group(1));
+            }
+            rules.add(names.append(" }").toString());
+        }
+        return rules;
     }
 
     private static boolean namesItself(String property, String value) {
