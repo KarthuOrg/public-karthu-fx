@@ -243,6 +243,14 @@ private static void drawChart(Canvas chart, ColorScheme scheme) {
   does not use (never `-fx-`), defined under `.root:dark` and under `.root:light`; the rules use
   the token. The theme sets the pseudo-class `dark` or `light` on the root of every scene it
   themes, also on a root that replaces it.
+- A control's popup (a context menu, a tooltip, a combo box's list) looks its colours up through
+  the control that owns it and finds these tokens. A plain `javafx.stage.Popup` does not: it is a
+  window with a scene of its own, whose root carries no `dark` or `light`, so a token defined only
+  under `.root:dark` and `.root:light` does not reach its content. Apply the theme to its scene as
+  well, `ThemeManager.apply(popup.getScene())` before it first shows: its root then carries the
+  pseudo-class and follows every change, and the popup takes its owner's stylesheets, the
+  application's included, each time it shows. Or define the tokens on a style class its content
+  carries, from the theme's own tokens, which reach it in both schemes.
 - Add the application's stylesheets after `ThemeManager.apply`, which replaces the scene's
   stylesheets. A change of the scheme replaces only the theme's colour stylesheet and leaves the
   application's in place. `appStylesheet()` stands for the address of the application's

@@ -1515,6 +1515,15 @@ Rules in `base.css` under *Frame: binding*; tokens: `-fx-accent-tint-color` (add
   `.root:dark`, and its rules use the token. Its stylesheets go on the scene after
   `ThemeManager.apply(Scene)`, which replaces the scene's stylesheets; a change of the scheme
   replaces only the scheme's stylesheet and leaves the application's in place.
+- The pseudo-class sits on the roots of themed scenes only. A control's popup (a context menu, a
+  tooltip, a combo box's list) looks its colours up through the control that owns it, so the
+  application's tokens reach it. A plain `javafx.stage.Popup` is a window with a scene of its own:
+  its content's styleable parents end at that scene's root, which carries no `:light` or `:dark`,
+  so a token the application defines only under `.root:light` and `.root:dark` does not reach it.
+  Theme the popup's scene too, `ThemeManager.apply(popup.getScene())` before it first shows: its
+  root then carries the pseudo-class and follows every change, and the popup takes its owner's
+  stylesheets, the application's included, each time it shows. Or define the tokens on a style
+  class the popup's content carries, from the theme's own tokens, which reach it in both schemes.
 - A new token goes into `dark.css` and `light.css` alike, at the same place: the two define the
   same tokens in the same order, which a test checks. A rule beyond `.root` in one (the production
   badge's) has its counterpart in the other.
