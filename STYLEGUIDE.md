@@ -2,7 +2,7 @@
 
 A compact, IDE-grade theme (Notepad++ / Eclipse density) in two colour schemes: **Nebula Dark**,
 with purple/blue-tinted dark surfaces — deliberately NOT flat black/gray — and **Nebula Light**,
-with a cool grey chrome, warm ivory fields and dark ink. Both share every shape, size and spacing;
+with a cool grey chrome, white fields and dark ink. Both share every shape, size and spacing;
 only the colours differ. Fully token-driven: the colours live in `dark.css` and `light.css`
 (`.root` variables, the same names in both); structure/density live in `base.css`. To restyle,
 change tokens — do not hardcode colors in component rules.
@@ -14,8 +14,9 @@ change tokens — do not hardcode colors in component rules.
   written with tokens works in both. An application chooses Light, Dark or System; without a
   choice the scheme is Dark (§5).
 - **Tinted, never flat.** In Nebula Dark every neutral carries a slight blue/indigo hue
-  (hue ≈ 260–265); Nebula Light's chrome is a cool grey and its editable surfaces a warm ivory.
-  Never use pure `#000`/`#808080` grays, and no field in pure white or pure black.
+  (hue ≈ 260–265); Nebula Light's chrome is a cool grey and its editable surfaces white.
+  Never use pure `#000`/`#808080` grays, and no field in pure black; pure white is Nebula Light's
+  field colour alone.
 - **Ultra-compact.** Table/list/tree rows ~20px, controls ~28px, radius 3px, 1px borders.
 - **One accent** (indigo `#7b8cff` in Dark, blue `#2F6FD6` in Light) for focus, primary actions
   and checked controls; selections in a quieter blue.
@@ -36,9 +37,10 @@ design's tokens* at the end of this section maps every one of them) and the cont
 Nebula Light.
 
 - **Dark** is Nebula Dark's value; the design tokens' dark values are not used.
-- **Light** is the light value of the design token in the *Design* column. *Proposed* marks a
-  value derived by the library rather than taken from the design tokens, following their logic
-  (warm ivory fields, the grey chrome, deep hues that read on light, darker under the pointer),
+- **Light** is the light value of the design token in the *Design* column, with one exception:
+  the field family, white where the design's `-app-bg-field` is an ivory (`#F3F1E8`). *Proposed*
+  marks a value derived by the library rather than taken from the design tokens, following their
+  logic (white fields, the grey chrome, deep hues that read on light, darker under the pointer),
   and a value the design tokens give only as a proposal.
 - **A value that names a token** refers to it, and JavaFX resolves the reference at the coloured
   node. Where Nebula Light tells apart places that share one colour in Nebula Dark, they take a
@@ -56,7 +58,7 @@ Nebula Light.
 | `-fx-canvas-color` | the area behind cards (so surface cards stand out), the group rows of the shortcuts editor, the settings dialog, the image window's image area | `#1b1d30` | `#DCDDE1` *proposed* | `-app-bg-canvas` | background, the design's canvas and raised grey, darker than the window as dark's canvas is darker than its surface; text on it 11.6:1, `-fx-text-secondary-color` 4.4:1, below 4.5:1 |
 | `-fx-surface-color` | panels, tool and menu bars, tab headers, dialogs, the status bar, cards | `#24273c` | `#E4E5E8` | `-app-bg-surface` | background; in light the same grey as the window, so the chrome reads as one surface |
 | `-fx-readonly-bg` | read-only text fields, text areas and form fields | `#1e202f` | `#DCDDE1` *proposed* | — | background, grey as the design's field that cannot be edited (`-app-bg-raised`); text on it 11.6:1, the warning outline 4.4:1, the error outline 3.8:1, the focus outline 3.5:1 |
-| `-fx-field-color` | every editable surface: text fields, password fields, combo and choice boxes, date pickers, spinners, text areas, the form fields, the zoom group, dropdown lists, context menus, the date picker's and the suggestion popup, list, tree and table bodies and the rows of tables | `-fx-surface-color` | `#F3F1E8` | `-app-bg-field` | background, a warm ivory, not white; text on it 14.0:1, `-fx-control-border` against it 1.5:1, below 3:1 |
+| `-fx-field-color` | every editable surface: text fields, password fields, combo and choice boxes, date pickers, spinners, text areas, the form fields, the zoom group, dropdown lists, context menus, the date picker's and the suggestion popup, list, tree and table bodies and the rows of tables | `-fx-surface-color` | `#FFFFFF` | `-app-bg-field` | background, white (the design's ivory replaced); text on it 15.8:1, `-fx-control-border` against it 1.7:1, below 3:1 |
 | `-fx-raised-color` | a raised surface: the Markdown view's content area | `-fx-surface-color` | `#DCDDE1` | `-app-bg-raised` | background; text on it 11.6:1, `-fx-text-secondary-color` 4.4:1, below 4.5:1 |
 
 ### Text
@@ -64,8 +66,8 @@ Nebula Light.
 |---|---|---|---|---|---|
 | `-fx-text-color` | primary text: labels, menu items, the text of inputs, icons on neutral buttons | `#d6d9e6` | `#1F2230` | `-app-text` | 12.5:1 on window and surface, 10.5:1 on hover |
 | `-fx-text-secondary-color` | secondary and muted text: form field labels, captions, helper text, counters, idle icons inside fields | `#8a90a8` | `#5E6475` | `-app-text-muted` | 4.7:1 on window and surface; 3.9:1 on hover, below 4.5:1 |
-| `-fx-text-placeholder-color` | prompt texts, *Not assigned* in the shortcuts editor | `-fx-text-secondary-color` | `#5A5F6E` | `-app-text-placeholder` | 5.6:1 on the field surface |
-| `-fx-text-disabled-color` | a disabled menu item's text, a disabled link's | `-fx-text-secondary-color` | `#7C8090` | `-app-text-disabled` | 3.5:1 on the field surface before the dimming of a disabled control (disabled text exempt) |
+| `-fx-text-placeholder-color` | prompt texts, *Not assigned* in the shortcuts editor | `-fx-text-secondary-color` | `#5A5F6E` | `-app-text-placeholder` | 6.4:1 on the field surface |
+| `-fx-text-disabled-color` | a disabled menu item's text, a disabled link's | `-fx-text-secondary-color` | `#7C8090` | `-app-text-disabled` | 3.9:1 on the field surface before the dimming of a disabled control (disabled text exempt) |
 
 ### Accent
 | Token | Use | Dark | Light | Design | Contrast in light |
@@ -76,13 +78,13 @@ Nebula Light.
 | `-fx-accent-text-color` | text on the accent fill (primary button, selected toggle button, the date picker's selected day) | `#ffffff` | `#FFFFFF` *proposed* | — | white, as on the primary fill; 4.8:1 on `-fx-accent-color` |
 | `-fx-accent-tint-color` | an accent tint behind accent text: the form fields' binding chip and bound `{}` icon | `rgba(123, 140, 255, 0.16)` | `#D6E2F8` | `-app-accent-bg` | background |
 | `-fx-accent-tint-text-color` | the text and icons on the accent tint: the binding chip's name and x, the bound `{}` icon | `-fx-accent-color` | `#1B4C9E` | `-app-accent-text` | 6.3:1 on the accent tint |
-| `-fx-link-color` | the Markdown view's links and images in table cells, hyperlinks, the shortcuts editor's fix | `-fx-accent-color` | `#1F56B3` *proposed* | `-app-link` | 5.5:1 on window and surface, 5.1:1 on the Markdown view's raised content, 6.1:1 on the field surface; a hyperlink under the pointer takes `-fx-accent-hover-color`, 4.7:1 on the window |
+| `-fx-link-color` | the Markdown view's links and images in table cells, hyperlinks, the shortcuts editor's fix | `-fx-accent-color` | `#1F56B3` *proposed* | `-app-link` | 5.5:1 on window and surface, 5.1:1 on the Markdown view's raised content, 6.9:1 on the field surface; a hyperlink under the pointer takes `-fx-accent-hover-color`, 4.7:1 on the window |
 
 ### Borders
 | Token | Use | Dark | Light | Design | Contrast in light |
 |---|---|---|---|---|---|
 | `-fx-control-border` | every border and divider: fields, buttons, popups, separators, the lines between bars | `#42486e` | `#C2C4CC` | `-app-border`, `-app-border-subtle` | 1.4:1 against window and surface, below 3:1 |
-| `-fx-row-divider-color` | the lines between table rows and between a table's columns | `-fx-control-border` | `#DADCE1` | `-app-divider-row` | 1.2:1 against the field surface, below 3:1 (a hairline, no boundary) |
+| `-fx-row-divider-color` | the lines between table rows and between a table's columns | `-fx-control-border` | `#DADCE1` | `-app-divider-row` | 1.4:1 against the field surface, 1.2:1 against the odd rows, below 3:1 (a hairline, no boundary) |
 
 ### Buttons
 | Token | Use | Dark | Light | Design | Contrast in light |
@@ -98,7 +100,7 @@ Nebula Light.
 | `-fx-selection-hover-color` | a selected table row or cell under the pointer | `#3f57a4` | `#C3D2F0` *proposed* | — | background, a step darker than the selection; text on it 10.4:1, a focused cell's accent outline 3.2:1 |
 | `-fx-selection-text-color` | text on the selection | `#eef1fb` | `#1F2230` | `-app-text-strong` | 11.6:1 on selection |
 | `-fx-selection-neutral-color` | a neutral selection: the cron input's format selector | `-fx-button-color` | `#D3DDF2` | `-app-bg-selected-neutral` | background; text on it 11.6:1 |
-| `-fx-table-row-odd` | the odd rows of tables and tree tables (zebra) | `#2a2d41` | `#EDEBE2` *proposed* | — | background, a shade under the ivory; text on it 13.2:1, `-fx-text-secondary-color` 4.9:1 |
+| `-fx-table-row-odd` | the odd rows of tables and tree tables (zebra) | `#2a2d41` | `#F2F3F5` *proposed* | — | background, a neutral light grey, 1.1:1 against the white rows; text on it 14.2:1, `-fx-text-secondary-color` 5.3:1 |
 | `-fx-hover-color` | rows, menu items, icon buttons and popup entries under the pointer; in dark a blue tint, NOT white | `rgba(139, 152, 255, 0.09)` | `#D0D3DA` | `-app-bg-hover` | background |
 
 ### Shadows and tooltips
@@ -106,8 +108,8 @@ Nebula Light.
 |---|---|---|---|---|---|
 | `-fx-shadow-color` | the shadow of menus, popups and the slider's thumb | `rgba(0, 0, 0, 0.2)` | `rgba(31, 34, 48, 0.18)` | (popup shadow) | a shadow; offsets and radii as in dark |
 | `-fx-shadow-strong-color` | the focused slider thumb's shadow | `rgba(0, 0, 0, 0.3)` | `rgba(31, 34, 48, 0.27)` *proposed* | — | a shadow, one and a half times the other, as in dark |
-| `-fx-tooltip-color` | a tooltip's background; JavaFX's own shape, padding, font and the shape of its shadow stay in both schemes | `rgba(30, 30, 30, 0.8)` (JavaFX's) | `#F3F1E8` *proposed* | `-app-bg-field` | background, the ivory of popups; 1.1:1 against the window, its shadow sets it apart |
-| `-fx-tooltip-text-color` | a tooltip's text | `#ffffff` (JavaFX's) | `#1F2230` *proposed* | `-app-text` | 14.0:1 on the tooltip |
+| `-fx-tooltip-color` | a tooltip's background; JavaFX's own shape, padding, font and the shape of its shadow stay in both schemes | `rgba(30, 30, 30, 0.8)` (JavaFX's) | `#FFFFFF` *proposed* | `-app-bg-field` | background, the white of popups (the design's ivory replaced); 1.3:1 against the window, its shadow sets it apart |
+| `-fx-tooltip-text-color` | a tooltip's text | `#ffffff` (JavaFX's) | `#1F2230` *proposed* | `-app-text` | 15.8:1 on the tooltip |
 | `-fx-tooltip-base-color` | the colour a tooltip's content derives its text colours from, the tooltip's `-fx-background` | `rgba(30, 30, 30)` (JavaFX's) | `-fx-tooltip-color` *proposed* | `-app-bg-field` | the tooltip's own colour, opaque, as in dark; JavaFX derives dark text on it |
 | `-fx-tooltip-shadow-color` | a tooltip's shadow, in JavaFX's shape (a three-pass box, radius 10, 3 pixels down) | `rgba(0, 0, 0, 0.5)` (JavaFX's) | `rgba(31, 34, 48, 0.18)` *proposed* | (popup shadow) | a shadow, the popups' ink at 18 percent |
 
@@ -117,9 +119,9 @@ Nebula Light.
 | `-fx-scrollbar-color` | the scroll bar's thumb | `#4a5078` | `#8F94A1` *proposed* | — | 2.2:1 against the track (2.1:1 in dark) |
 | `-fx-scrollbar-hover-color` | the thumb under the pointer | `#6871ae` | `#6F7484` *proposed* | — | 3.4:1 against the track |
 | `-fx-scrollbar-track-color` | the scroll bar's track, darker than the surface so the channel reads on surface-coloured content | `#1b1d30` | `#DCDDE1` *proposed* | — | background, the raised grey, darker than the surface as in dark |
-| `-fx-checkbox-bg` | the box of check boxes, radio buttons and the Markdown view's task boxes | `#1b1d2d` | `#F3F1E8` *proposed* | — | background, the field ivory |
-| `-fx-checkbox-border` | the box's outline | `#575f90` | `#767B8E` *proposed* | — | 3.7:1 against the box, 3.3:1 against window and surface |
-| `-fx-checkbox-border-hover` | the outline under the pointer | `#6f78b0` | `#5E6475` *proposed* | — | darker under the pointer; 5.2:1 against the box |
+| `-fx-checkbox-bg` | the box of check boxes, radio buttons and the Markdown view's task boxes | `#1b1d2d` | `#FFFFFF` *proposed* | — | background, the white of fields |
+| `-fx-checkbox-border` | the box's outline | `#575f90` | `#767B8E` *proposed* | — | 4.2:1 against the box, 3.3:1 against window and surface |
+| `-fx-checkbox-border-hover` | the outline under the pointer | `#6f78b0` | `#5E6475` *proposed* | — | darker under the pointer; 5.9:1 against the box |
 | `-fx-checkbox-mark` | the tick and the radio's dot on the accent | `#ffffff` | `#FFFFFF` *proposed* | — | 4.8:1 on the accent, 5.9:1 on its hover |
 | `-fx-switch-track-off` | a toggle switch's track, off | `#42486e` | `#C2C4CC` *proposed* | — | the border grey, as dark pairs it; 1.4:1 against window and surface, below 3:1 (its thumb shows the switch, 4.7:1) |
 | `-fx-switch-track-on` | the track, on | `#6675ff` | `#2F6FD6` *proposed* | — | the accent; 3.8:1 against window and surface |
@@ -130,12 +132,12 @@ Nebula Light.
 | Token | Use | Dark | Light | Design | Contrast in light |
 |---|---|---|---|---|---|
 | `-fx-status-normal` | NORMAL — healthy, scheduled; the success button's fill | `#4cd38a` | `#1A7F4B` | `-app-primary` | as text 4.0:1 on window, below 4.5:1; white text on it 5.0:1 |
-| `-fx-status-running` | RUNNING — executing now: running text and icons, the running button's fill | `#3fd0a0` | `#0A6E6A` *proposed* | — | a deep teal; as text 4.8:1 on window and surface, 5.4:1 on the field surface; white text on it 6.1:1 |
-| `-fx-status-paused` | PAUSED — manually held, also warning: paused and warning text and icons, the warning button's fill, a form field's warning outline and message | `#e0a84c` | `#875A10` *proposed* | — | a deep amber; as text 4.8:1 on window and surface, 5.3:1 on the field surface (also as outline); white text on it 6.0:1 |
-| `-fx-status-blocked` | BLOCKED — waiting on a dependency: blocked text and icons | `#c88bff` | `#7A3EC0` *proposed* | — | a deep violet; as text 5.1:1 on window and surface, 5.7:1 on the field surface |
-| `-fx-status-error` | ERROR — last run failed: error text and messages, the required marker, destructive menu items, the danger button's fill | `#e56a86` | `#B3261E` | `-app-danger-text` | 5.2:1 on window and surface, 5.8:1 on the field surface; white text on it 6.5:1 |
-| `-fx-status-info` | INFO: info icons, the info button's fill | `#5d9bff` | `#1F56B3` *proposed* | — | the design's link blue (`-app-link`); as text 5.5:1 on window and surface, 6.1:1 on the field surface; white text on it 6.9:1 |
-| `-fx-status-idle` | IDLE — no schedule: idle text and icons | `#6b7192` | `#5C6280` *proposed* | — | a grey indigo; as text 4.7:1 on window and surface, 5.3:1 on the field surface |
+| `-fx-status-running` | RUNNING — executing now: running text and icons, the running button's fill | `#3fd0a0` | `#0A6E6A` *proposed* | — | a deep teal; as text 4.8:1 on window and surface, 6.1:1 on the field surface; white text on it 6.1:1 |
+| `-fx-status-paused` | PAUSED — manually held, also warning: paused and warning text and icons, the warning button's fill, a form field's warning outline and message | `#e0a84c` | `#875A10` *proposed* | — | a deep amber; as text 4.8:1 on window and surface, 6.0:1 on the field surface (also as outline); white text on it 6.0:1 |
+| `-fx-status-blocked` | BLOCKED — waiting on a dependency: blocked text and icons | `#c88bff` | `#7A3EC0` *proposed* | — | a deep violet; as text 5.1:1 on window and surface, 6.4:1 on the field surface |
+| `-fx-status-error` | ERROR — last run failed: error text and messages, the required marker, destructive menu items, the danger button's fill | `#e56a86` | `#B3261E` | `-app-danger-text` | 5.2:1 on window and surface, 6.5:1 on the field surface; white text on it 6.5:1 |
+| `-fx-status-info` | INFO: info icons, the info button's fill | `#5d9bff` | `#1F56B3` *proposed* | — | the design's link blue (`-app-link`); as text 5.5:1 on window and surface, 6.9:1 on the field surface; white text on it 6.9:1 |
+| `-fx-status-idle` | IDLE — no schedule: idle text and icons | `#6b7192` | `#5C6280` *proposed* | — | a grey indigo; as text 4.7:1 on window and surface, 6.0:1 on the field surface |
 | `-fx-status-button-text-color` | text on the status fills (`.success-button` and its siblings) | `#1b1d2d` | `#FFFFFF` | `-app-on-primary` | 5.0:1 on `-fx-status-normal`, 6.5:1 on `-fx-status-error` |
 | `-fx-status-normal-hover` | a success button under the pointer | `derive(-fx-status-normal, 15%)` | `#15703F` | `-app-primary-hover` | white text on it 6.1:1 |
 | `-fx-status-normal-pressed` | a pressed success button | `derive(-fx-status-normal, -12%)` | `#116236` *proposed* | `-app-primary-pressed` | white text on it 7.4:1 |
@@ -154,9 +156,9 @@ Nebula Light.
 | `-fx-danger-border` | the danger button's outline | `-fx-control-border` | `#E0B4B0` | `-app-danger-border` | 1.5:1 against window and surface, below 3:1 (the fill bounds the button) |
 | `-fx-danger-border-hover` | the danger button's outline under the pointer and pressed | `-fx-control-border` | `#D99A95` | `-app-danger-border-hover` | 1.9:1 against window and surface, below 3:1 (the fill bounds the button) |
 | `-fx-danger-text-hover-color` | the icon of a destructive icon button under the pointer (a key-value row's delete, a shortcut's remove) | `-fx-status-error` | `#9C1F18` | `-app-danger-text-hover` | 5.3:1 on hover |
-| `-fx-error-border` | the outline of a field with an error, of a key-value key marked missing or duplicate, of a missing binding chip and of a conflicting key cap | `-fx-status-error` | `#C9372C` | `-app-error-border` | 4.6:1 against the field surface |
-| `-fx-keycap-border` | the outline of the key caps of the shortcuts editor | `-fx-control-border` | `#B4B7C1` | `-app-keycap-border` | 1.8:1 against the field surface, below 3:1 |
-| `-fx-keycap-color` | the fill of those key caps | `-fx-button-color` | `#F3F1E8` | `-app-bg-field` | background; text on it 14.0:1 |
+| `-fx-error-border` | the outline of a field with an error, of a key-value key marked missing or duplicate, of a missing binding chip and of a conflicting key cap | `-fx-status-error` | `#C9372C` | `-app-error-border` | 5.2:1 against the field surface |
+| `-fx-keycap-border` | the outline of the key caps of the shortcuts editor | `-fx-control-border` | `#B4B7C1` | `-app-keycap-border` | 2.0:1 against the field surface and the key cap, below 3:1 |
+| `-fx-keycap-color` | the fill of those key caps | `-fx-button-color` | `#FFFFFF` | `-app-bg-field` | background, white (the design's ivory replaced); text on it 15.8:1 |
 
 ### Warning
 | Token | Use | Dark | Light | Design | Contrast in light |
@@ -168,9 +170,9 @@ Nebula Light.
 ### Markdown view
 | Token | Use | Dark | Light | Design | Contrast in light |
 |---|---|---|---|---|---|
-| `-fx-code-text-color` | code in the Markdown view, inline and plain code in its blocks: a soft mint in dark, a deep teal in light, apart from the accent | `#8fd6c8` | `#0F6E5C` *proposed* | `-app-code` | 5.4:1 on the code background, 4.5:1 inline on the raised content |
-| `-fx-code-background-color` | the background of code and source blocks, of their copy button, of the image placeholders and error boxes and of the image open button | `#1d1f33` | `#F3F1E8` *proposed* | — | background, the ivory, lighter than the raised content (1.2:1) so blocks stand apart as in dark, where they are darker |
-| `-fx-markdown-table-row-odd` | the odd rows of a table in the Markdown view, its `-fx-table-row-odd`: the rows' own colour, no zebra stripes | `-fx-surface-color` | `-fx-field-color` | `-app-bg-field` | background; text on it 14.0:1 |
+| `-fx-code-text-color` | code in the Markdown view, inline and plain code in its blocks: a soft mint in dark, a deep teal in light, apart from the accent | `#8fd6c8` | `#0F6E5C` *proposed* | `-app-code` | 6.2:1 on the code background, 4.5:1 inline on the raised content |
+| `-fx-code-background-color` | the background of code and source blocks, of their copy button, of the image placeholders and error boxes and of the image open button | `#1d1f33` | `#FFFFFF` *proposed* | — | background, the white of fields, lighter than the raised content (1.4:1) so blocks stand apart as in dark, where they are darker |
+| `-fx-markdown-table-row-odd` | the odd rows of a table in the Markdown view, its `-fx-table-row-odd`: the rows' own colour, no zebra stripes | `-fx-surface-color` | `-fx-field-color` | `-app-bg-field` | background, the white of fields; text on it 15.8:1 |
 | `-fx-markdown-search-color` | the highlight of every match of the search but the current one: a muted amber in dark, a pale one in light, apart from the selection's blue | `derive(#e0a84c, -55%)` | `#F3D98A` *proposed* | — | background, a pale amber, apart from the selection's light blue by its hue; text on it 11.4:1 |
 | `-fx-markdown-search-text-color` | the characters of those matches, shown on their highlight | `-fx-text-color` | `-fx-text-color` | — | 11.4:1 on the match |
 | `-fx-markdown-search-current-color` | the highlight of the search's current match: the amber itself | `#e0a84c` | `#F0A93C` *proposed* | — | background, a full amber, 1.4:1 against the other matches' |
@@ -185,15 +187,15 @@ that view's fine ones that still refer to it.
 
 | Token | Use | Dark | Light | Design | Contrast in light |
 |---|---|---|---|---|---|
-| `-fx-code-comment-color` | comments (base) | `#8a90a8` | `#5E6475` *proposed* | — | the secondary text colour, as dark shares its own; 5.2:1 on the code background |
-| `-fx-code-keyword-color` | keywords of a language (base) | `#c88bff` | `#7A3EC0` *proposed* | — | the blocked violet, as dark shares it; 5.7:1 on the code background |
-| `-fx-code-string-color` | text in quotes (base) | `#e0a84c` | `#875A10` *proposed* | — | the paused amber, as dark shares it; 5.3:1 on the code background |
-| `-fx-code-number-color` | numbers (base) | `#ff9e64` | `#A84A10` *proposed* | — | a deep orange; 5.1:1 on the code background |
-| `-fx-code-type-color` | type names (base) | `#4cd38a` | `#15703F` *proposed* | — | the primary action's hover green (the primary green itself is 4.4:1 there); 5.4:1 on the code background |
-| `-fx-code-function-color` | a name followed by `(` (base) | `#5d9bff` | `#1F56B3` *proposed* | — | the info blue, as dark shares it; 6.1:1 on the code background |
-| `-fx-code-variable-color` | Bash variables, SQL parameters, YAML anchors (base) | `#ff8fa3` | `#B0284D` *proposed* | — | a deep rose; 5.7:1 on the code background |
-| `-fx-code-property-color` | keys in JSON and YAML (base) | `#7b8cff` | `#3B4CC0` *proposed* | — | an indigo of dark's hue (the accent itself is below 4.5:1 there); 6.2:1 on the code background |
-| `-fx-code-tag-color` | XML and HTML tags (base) | `#ff8fa3` | `#B0284D` *proposed* | — | the variable's rose, as in dark; 5.7:1 on the code background |
+| `-fx-code-comment-color` | comments (base) | `#8a90a8` | `#5E6475` *proposed* | — | the secondary text colour, as dark shares its own; 5.9:1 on the code background |
+| `-fx-code-keyword-color` | keywords of a language (base) | `#c88bff` | `#7A3EC0` *proposed* | — | the blocked violet, as dark shares it; 6.4:1 on the code background |
+| `-fx-code-string-color` | text in quotes (base) | `#e0a84c` | `#875A10` *proposed* | — | the paused amber, as dark shares it; 6.0:1 on the code background |
+| `-fx-code-number-color` | numbers (base) | `#ff9e64` | `#A84A10` *proposed* | — | a deep orange; 5.8:1 on the code background |
+| `-fx-code-type-color` | type names (base) | `#4cd38a` | `#15703F` *proposed* | — | the primary action's hover green (the primary green itself is 5.0:1 there, at the limit); 6.1:1 on the code background |
+| `-fx-code-function-color` | a name followed by `(` (base) | `#5d9bff` | `#1F56B3` *proposed* | — | the info blue, as dark shares it; 6.9:1 on the code background |
+| `-fx-code-variable-color` | Bash variables, SQL parameters, YAML anchors (base) | `#ff8fa3` | `#B0284D` *proposed* | — | a deep rose; 6.4:1 on the code background |
+| `-fx-code-property-color` | keys in JSON and YAML (base) | `#7b8cff` | `#3B4CC0` *proposed* | — | an indigo of dark's hue (the accent itself is 4.8:1 there, below 5.0:1); 7.0:1 on the code background |
+| `-fx-code-tag-color` | XML and HTML tags (base) | `#ff8fa3` | `#B0284D` *proposed* | — | the variable's rose, as in dark; 6.4:1 on the code background |
 | `-fx-code-doc-color` | documentation comments such as Javadoc (fine) | `-fx-code-comment-color` | `-fx-code-comment-color` | — | as its fallback |
 | `-fx-code-annotation-color` | Java annotations (fine) | `-fx-code-keyword-color` | `-fx-code-keyword-color` | — | as its fallback |
 | `-fx-code-literal-color` | `true`, `false`, `null`, SQL `NULL` (fine) | `-fx-code-number-color` | `-fx-code-number-color` | — | as its fallback |
@@ -216,7 +218,7 @@ control itself.
 | Token | Use | Dark | Light | Design | Contrast in light |
 |---|---|---|---|---|---|
 | `-fx-base` | JavaFX's base colour, from which it derives the controls the theme does not style | `#24273c` | `#E4E5E8` | `-app-bg-surface` | background; JavaFX derives dark text on it |
-| `-fx-control-inner-background` | the inner background of controls JavaFX styles itself, the shortcuts editor's recording field | `#1b1d30` | `#F3F1E8` *proposed* | `-app-bg-field` | background; text on it 14.0:1 |
+| `-fx-control-inner-background` | the inner background of controls JavaFX styles itself, the shortcuts editor's recording field | `#1b1d30` | `#FFFFFF` *proposed* | `-app-bg-field` | background, white (the design's ivory replaced); text on it 15.8:1 |
 | `-fx-focus-color` | JavaFX's focus colour | `#7b8cff` | `#2F6FD6` | `-app-focus` | 3.8:1 against window and surface |
 | `-fx-faint-focus-color` | JavaFX's faint focus halo, where the theme keeps it | `rgba(123, 140, 255, 0.22)` | `rgba(47, 111, 214, 0.22)` *proposed* | — | the focus blue at 22 percent, as in dark |
 | `-fx-mark-color` | the marks JavaFX draws: arrows, ticks | `#d6d9e6` | `#1F2230` | `-app-text` | 12.5:1 on window and surface |
@@ -233,7 +235,7 @@ without a karthu-fx token has no place in the library.
 | `-app-bg-window` | `-fx-background-color` |
 | `-app-bg-surface` | `-fx-surface-color`, `-fx-base` |
 | `-app-bg-raised` | `-fx-raised-color`. The design's group headers of a list are the shortcuts editor's group rows, on `-fx-canvas-color` |
-| `-app-bg-field` | `-fx-field-color`, `-fx-keycap-color`, `-fx-tooltip-color`, `-fx-tooltip-base-color`, `-fx-control-inner-background`, `-fx-markdown-table-row-odd` |
+| `-app-bg-field` | `-fx-field-color`, `-fx-keycap-color`, `-fx-tooltip-color`, `-fx-tooltip-base-color`, `-fx-control-inner-background`, `-fx-markdown-table-row-odd`. White, in place of the design's ivory |
 | `-app-bg-canvas` | `-fx-canvas-color` |
 | `-app-canvas-dot` | none: karthu-fx draws no canvas with a dot grid |
 | `-app-border` | `-fx-control-border` |

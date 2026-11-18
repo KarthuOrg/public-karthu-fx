@@ -9,7 +9,7 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 ### Added
 
 - Nebula Light, a light colour scheme beside Nebula Dark, with the same shapes, sizes and spacing:
-  a cool grey chrome, warm ivory fields, dark text and a deep blue focus, for every component and
+  a cool grey chrome, white fields, dark text and a deep blue focus, for every component and
   every themed standard control, the Markdown view's coloured code and search marks included.
   Nebula Dark keeps every colour.
 - `ThemeManager` changes the scheme while the application runs. `setAppearance(Appearance)` takes
