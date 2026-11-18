@@ -42,6 +42,9 @@
     -fx-accent-tint-color: #D6E2F8;
     /* The text and icons on the accent tint: the binding chip's name and x and the bound {} icon */
     -fx-accent-tint-text-color: #1B4C9E;
+    /* Links: the Markdown view's links and images in table cells, hyperlinks, the shortcuts editor's fix. A blue
+     * deeper than the accent, which reads as text on the window and on the raised content */
+    -fx-link-color: #1F56B3;
 
     /* Border colors */
     -fx-control-border: #C2C4CC;
@@ -71,6 +74,10 @@
      * shadow at one and a half times that, as in dark */
     -fx-shadow-color: rgba(31, 34, 48, 0.18);
     -fx-shadow-strong-color: rgba(31, 34, 48, 0.27);
+
+    /* Tooltip colors: a tooltip is a popup, so it lies on the ivory of popups with the dark text */
+    -fx-tooltip-color: #F3F1E8;
+    -fx-tooltip-text-color: #1F2230;
 
     /* Scrollbar colors: the track the raised grey, darker than the surface, a grey thumb on it, darker under the
      * pointer */

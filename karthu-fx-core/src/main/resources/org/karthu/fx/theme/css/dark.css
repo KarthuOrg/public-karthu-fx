@@ -32,6 +32,8 @@
     -fx-accent-tint-color: rgba(123, 140, 255, 0.16);
     /* The text and icons on the accent tint: the binding chip's name and x and the bound {} icon */
     -fx-accent-tint-text-color: -fx-accent-color;
+    /* Links: the Markdown view's links and images in table cells, hyperlinks, the shortcuts editor's fix */
+    -fx-link-color: -fx-accent-color;
 
     /* Border colors */
     -fx-control-border: #42486e;
@@ -59,6 +61,10 @@
     /* Shadow colors: menus, popups and the slider's thumb, and the focused thumb's stronger shadow */
     -fx-shadow-color: rgba(0, 0, 0, 0.2);
     -fx-shadow-strong-color: rgba(0, 0, 0, 0.3);
+
+    /* Tooltip colors: JavaFX's own translucent grey and white text */
+    -fx-tooltip-color: rgba(30, 30, 30, 0.8);
+    -fx-tooltip-text-color: #ffffff;
 
     /* Scrollbar colors */
     -fx-scrollbar-color: #4a5078;

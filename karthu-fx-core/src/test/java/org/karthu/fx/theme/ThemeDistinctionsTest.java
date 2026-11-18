@@ -3,9 +3,12 @@ package org.karthu.fx.theme;
 import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
+import javafx.scene.control.skin.TooltipSkin;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Effect;
 import javafx.scene.layout.Region;
@@ -144,6 +147,53 @@ class ThemeDistinctionsTest {
         assertEquals(swatch(root, "derive(#e56a86, 15%)"), fill(hovered, 1), "the fill on hover, lighter");
         assertEquals(DARK_BORDER, fill(pressed, 0), "the outline while pressed");
         assertEquals(swatch(root, "derive(#e56a86, -12%)"), fill(pressed, 1), "the fill while pressed, darker");
+    }
+
+    /**
+     * Links keep the accent in Dark, as before, and take a deeper blue than the accent in Light, which reads as text
+     * on the window and on the Markdown view's raised content.
+     */
+    @Test
+    @DisplayName("a hyperlink, the shortcuts editor's fix and a link of the Markdown view take the accent in Dark and"
+            + " the deep link blue in Light")
+    void links() {
+        Hyperlink hyperlink = new Hyperlink("A hyperlink");
+        MarkdownView view = new MarkdownView("A [link](https://example.org) in a paragraph.");
+        VBox root = themed(Appearance.DARK, hyperlink, view);
+        root.layout();
+        Text link = (Text) view.lookup(".markdown-link");
+
+        assertEquals(Color.web("#7b8cff"), hyperlink.getTextFill(), "the hyperlink");
+        assertEquals(Color.web("#7b8cff"), link.getFill(), "the Markdown view's link");
+
+        ThemeManager.setAppearance(Appearance.LIGHT);
+        root.applyCss();
+
+        assertEquals(Color.web("#1F56B3"), hyperlink.getTextFill(), "the hyperlink");
+        assertEquals(Color.web("#1F56B3"), link.getFill(), "the Markdown view's link");
+    }
+
+    /**
+     * A tooltip cannot be styled without showing it, so the label its skin shows stands in for it: the label carries
+     * the tooltip's style class, and the theme's rule for the class colours it as in the tooltip's own window. In
+     * Dark it keeps JavaFX's own translucent grey with white text, as before; in Light it lies on the ivory of popups
+     * with the dark text.
+     */
+    @Test
+    @DisplayName("a tooltip keeps JavaFX's translucent grey and white text in Dark and lies on the ivory of popups"
+            + " with the dark text in Light")
+    void tooltip() {
+        Label tip = (Label) new TooltipSkin(new Tooltip("A tip")).getNode();
+        VBox root = themed(Appearance.DARK, tip);
+
+        assertEquals(Color.rgb(30, 30, 30, 0.8), fill(tip, 0), "the background");
+        assertEquals(Color.WHITE, tip.getTextFill(), "the text");
+
+        ThemeManager.setAppearance(Appearance.LIGHT);
+        root.applyCss();
+
+        assertEquals(LIGHT_FIELD, fill(tip, 0), "the background");
+        assertEquals(LIGHT_TEXT, tip.getTextFill(), "the text");
     }
 
     /**

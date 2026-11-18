@@ -2430,7 +2430,7 @@ Text {
 }
 
 .shortcuts-list .shortcuts-fix .text {
-    -fx-fill: -fx-accent-color;
+    -fx-fill: -fx-link-color;
 }
 
 .shortcuts-list .shortcuts-fix:hover .text {
@@ -3323,12 +3323,12 @@ Text {
     -fx-fill: -fx-code-text-color;
 }
 
-/* Links: the accent colour, underlined while the pointer is over
+/* Links: the link colour, underlined while the pointer is over
  * them; the view sets the hand cursor and the address tooltip. After
  * the code rule, so code in a link takes the link's colour (and keeps
  * its monospace font). */
 .markdown-view .markdown-link {
-    -fx-fill: -fx-accent-color;
+    -fx-fill: -fx-link-color;
 }
 
 .markdown-view .markdown-link:hover {
@@ -3448,7 +3448,7 @@ Text {
 }
 
 .markdown-view .markdown-quote .markdown-link {
-    -fx-fill: -fx-accent-color;
+    -fx-fill: -fx-link-color;
 }
 
 .markdown-view .markdown-quote .markdown-list-marker {
@@ -3717,12 +3717,12 @@ Text {
  * selection's text colour, as the runs do. */
 .markdown-view .markdown-image-cell,
 .markdown-view .markdown-quote .markdown-image-cell {
-    -fx-fill: -fx-accent-color;
+    -fx-fill: -fx-link-color;
 }
 
 .markdown-view .ikonli-font-icon.markdown-image-cell {
     -fx-icon-size: 13;
-    -fx-icon-color: -fx-accent-color;
+    -fx-icon-color: -fx-link-color;
 }
 
 .markdown-view .markdown-table .table-cell:selected .ikonli-font-icon.markdown-image-cell,
@@ -4192,7 +4192,7 @@ Text {
 
 /* Hyperlink */
 .hyperlink {
-    -fx-text-fill: -fx-accent-color;
+    -fx-text-fill: -fx-link-color;
     -fx-border-color: transparent;
     -fx-padding: 2 0;
     -fx-cursor: hand;
@@ -4215,6 +4215,14 @@ Text {
 .hyperlink:focused {
     -fx-border-color: -fx-focus-color;
     -fx-border-width: 1;
+}
+
+/* Tooltip: JavaFX's own shape, padding, font and shadow; only its
+ * colours are the theme's. Its skin's label carries the tooltip's style
+ * class, so this rule colours the label too. */
+.tooltip {
+    -fx-background-color: -fx-tooltip-color;
+    -fx-text-fill: -fx-tooltip-text-color;
 }
 
 /* TreeTableView */
