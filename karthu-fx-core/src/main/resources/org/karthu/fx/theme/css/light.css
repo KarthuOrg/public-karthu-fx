@@ -2,8 +2,10 @@
  * Light theme - Nebula Light palette (cool grey chrome, dark ink, deep blue focus)
  * Defines exactly the tokens of dark.css, in the same order and grouping, and the light counterpart of
  * every rule of dark.css beyond .root: ThemeManager loads this stylesheet instead of dark.css, never on top of it.
- * A token that refers to another token keeps the reference and follows that token. A value marked
- * "derive: dark value" is still Nebula Dark's and has no light value yet.
+ * A token that refers to another token keeps the reference and follows that token, unless its places take a colour
+ * of their own here: a token that tells apart places sharing one colour in Nebula Dark refers to that colour in
+ * dark.css and has its light value here. A value marked "derive: dark value" is still Nebula Dark's and has no light
+ * value yet.
  */
 
 .root {
@@ -13,10 +15,19 @@
     -fx-canvas-color: #1b1d30; /* derive: dark value */
     -fx-surface-color: #E4E5E8;
     -fx-readonly-bg: #1e202f; /* derive: dark value */
+    /* Every editable surface: fields, their dropdown lists and popups, list and table bodies. A warm ivory, not
+     * white, apart from the grey window */
+    -fx-field-color: #F3F1E8;
+    /* A raised surface: the content area of the Markdown view, a step darker than the window */
+    -fx-raised-color: #DCDDE1;
 
     /* Text colors */
     -fx-text-color: #1F2230;
     -fx-text-secondary-color: #5E6475;
+    /* The prompt text of fields, and Not assigned in the shortcuts editor */
+    -fx-text-placeholder-color: #5A5F6E;
+    /* The text of a disabled menu item or link, dimmed with it */
+    -fx-text-disabled-color: #7C8090;
 
     /* Accent colors (blue) */
     -fx-accent-color: #2F6FD6;
@@ -25,25 +36,36 @@
     -fx-accent-text-color: #ffffff; /* derive: dark value */
     /* An accent tint behind accent text: the binding chip and the bound {} icon of the form fields */
     -fx-accent-tint-color: #D6E2F8;
+    /* The text and icons on the accent tint: the binding chip's name and x and the bound {} icon */
+    -fx-accent-tint-text-color: #1B4C9E;
 
     /* Border colors */
     -fx-control-border: #C2C4CC;
+    /* The hairlines between the rows of tables and lists, lighter than the border */
+    -fx-row-divider-color: #DADCE1;
 
     /* Button colors */
     -fx-button-color: #2d334d; /* derive: dark value */
     -fx-button-hover-color: #D0D3DA;
-    -fx-button-pressed-color: #475078; /* derive: dark value */
+    -fx-button-pressed-color: #C4C7D0;
 
     /* Selection colors (blue-tint) */
     -fx-selection-color: #D3DDF2;
     -fx-selection-hover-color: #3f57a4; /* derive: dark value */
     -fx-selection-text-color: #1F2230;
+    /* A neutral selection: the format selector of the cron input */
+    -fx-selection-neutral-color: #D3DDF2;
 
     /* Table colors */
     -fx-table-row-odd: #2a2d41; /* derive: dark value */
 
     /* Hover color */
     -fx-hover-color: #D0D3DA;
+
+    /* Shadow colors: menus, popups and the slider's thumb in the ink at 18 percent, and the focused thumb's stronger
+     * shadow at one and a half times that, as in dark */
+    -fx-shadow-color: rgba(31, 34, 48, 0.18);
+    -fx-shadow-strong-color: rgba(31, 34, 48, 0.27);
 
     /* Scrollbar colors */
     -fx-scrollbar-color: #4a5078; /* derive: dark value */
@@ -72,15 +94,42 @@
     -fx-status-info: #5d9bff; /* derive: dark value */
     -fx-status-idle: #6b7192; /* derive: dark value */
     -fx-status-button-text-color: #FFFFFF;
+    /* The fills of the buttons filled with a status colour, darker under the pointer and darker still while pressed:
+     * normal takes the primary action's hover and pressed greens, the others are 12 and 23 percent darker than
+     * their status colour, as those greens are, and follow it. */
+    -fx-status-normal-hover: #15703F;
+    -fx-status-normal-pressed: #116236;
+    -fx-status-running-hover: derive(-fx-status-running, -12%);
+    -fx-status-running-pressed: derive(-fx-status-running, -23%);
+    -fx-status-paused-hover: derive(-fx-status-paused, -12%);
+    -fx-status-paused-pressed: derive(-fx-status-paused, -23%);
+    -fx-status-error-hover: #9C1F18;
+    -fx-status-error-pressed: #8A1D17;
+    -fx-status-info-hover: derive(-fx-status-info, -12%);
+    -fx-status-info-pressed: derive(-fx-status-info, -23%);
+
+    /* Danger and error colors: the danger button's outline at rest and under the pointer or pressed, pale reds
+     * around its fill */
+    -fx-danger-border: #E0B4B0;
+    -fx-danger-border-hover: #D99A95;
+    /* The icon of a destructive icon button under the pointer, and the outline of a field with an error and of a
+     * conflicting key cap */
+    -fx-danger-text-hover-color: #9C1F18;
+    -fx-error-border: #C9372C;
+
+    /* Key cap colors: the outline and fill of the key caps of the shortcuts editor, the fill the field surface */
+    -fx-keycap-border: #B4B7C1;
+    -fx-keycap-color: #F3F1E8;
 
     /* Warning colors */
     -fx-warning-bg: #362f24; /* derive: dark value */
     -fx-warning-text: #e0a84c; /* derive: dark value */
 
-    /* Markdown view colors: code, and the odd rows of tables (the surface: no zebra stripes) */
+    /* Markdown view colors: code, and the odd rows of tables (the field surface of the even rows: no zebra
+     * stripes) */
     -fx-code-text-color: #8fd6c8; /* derive: dark value */
     -fx-code-background-color: #1d1f33; /* derive: dark value */
-    -fx-markdown-table-row-odd: -fx-surface-color;
+    -fx-markdown-table-row-odd: -fx-field-color;
 
     /* Markdown view: the marks of the search, every match and the current one, apart from the selection, which lies
      * above both. */

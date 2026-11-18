@@ -10,10 +10,18 @@
     -fx-canvas-color: #1b1d30;
     -fx-surface-color: #24273c;
     -fx-readonly-bg: #1e202f;
+    /* Every editable surface: fields, their dropdown lists and popups, list and table bodies */
+    -fx-field-color: -fx-surface-color;
+    /* A raised surface: the content area of the Markdown view */
+    -fx-raised-color: -fx-surface-color;
 
     /* Text colors */
     -fx-text-color: #d6d9e6;
     -fx-text-secondary-color: #8a90a8;
+    /* The prompt text of fields, and Not assigned in the shortcuts editor */
+    -fx-text-placeholder-color: -fx-text-secondary-color;
+    /* The text of a disabled menu item or link, dimmed with it */
+    -fx-text-disabled-color: -fx-text-secondary-color;
 
     /* Accent colors (indigo) */
     -fx-accent-color: #7b8cff;
@@ -22,9 +30,13 @@
     -fx-accent-text-color: #ffffff;
     /* An accent tint behind accent text: the binding chip and the bound {} icon of the form fields */
     -fx-accent-tint-color: rgba(123, 140, 255, 0.16);
+    /* The text and icons on the accent tint: the binding chip's name and x and the bound {} icon */
+    -fx-accent-tint-text-color: -fx-accent-color;
 
     /* Border colors */
     -fx-control-border: #42486e;
+    /* The hairlines between the rows of tables and lists */
+    -fx-row-divider-color: -fx-control-border;
 
     /* Button colors */
     -fx-button-color: #2d334d;
@@ -35,12 +47,18 @@
     -fx-selection-color: #33488a;
     -fx-selection-hover-color: #3f57a4;
     -fx-selection-text-color: #eef1fb;
+    /* A neutral selection: the format selector of the cron input */
+    -fx-selection-neutral-color: -fx-button-color;
 
     /* Table colors */
     -fx-table-row-odd: #2a2d41;
 
     /* Hover color (subtle blue tint, not white) */
     -fx-hover-color: rgba(139, 152, 255, 0.09);
+
+    /* Shadow colors: menus, popups and the slider's thumb, and the focused thumb's stronger shadow */
+    -fx-shadow-color: rgba(0, 0, 0, 0.2);
+    -fx-shadow-strong-color: rgba(0, 0, 0, 0.3);
 
     /* Scrollbar colors */
     -fx-scrollbar-color: #4a5078;
@@ -68,6 +86,29 @@
     -fx-status-info: #5d9bff;
     -fx-status-idle: #6b7192;
     -fx-status-button-text-color: #1b1d2d;
+    /* The fills of the buttons filled with a status colour, under the pointer (lighter) and while pressed (darker) */
+    -fx-status-normal-hover: derive(-fx-status-normal, 15%);
+    -fx-status-normal-pressed: derive(-fx-status-normal, -12%);
+    -fx-status-running-hover: derive(-fx-status-running, 15%);
+    -fx-status-running-pressed: derive(-fx-status-running, -12%);
+    -fx-status-paused-hover: derive(-fx-status-paused, 15%);
+    -fx-status-paused-pressed: derive(-fx-status-paused, -12%);
+    -fx-status-error-hover: derive(-fx-status-error, 15%);
+    -fx-status-error-pressed: derive(-fx-status-error, -12%);
+    -fx-status-info-hover: derive(-fx-status-info, 15%);
+    -fx-status-info-pressed: derive(-fx-status-info, -12%);
+
+    /* Danger and error colors: the danger button's outline at rest and under the pointer or pressed */
+    -fx-danger-border: -fx-control-border;
+    -fx-danger-border-hover: -fx-control-border;
+    /* The icon of a destructive icon button under the pointer, and the outline of a field with an error and of a
+     * conflicting key cap */
+    -fx-danger-text-hover-color: -fx-status-error;
+    -fx-error-border: -fx-status-error;
+
+    /* Key cap colors: the outline and fill of the key caps of the shortcuts editor */
+    -fx-keycap-border: -fx-control-border;
+    -fx-keycap-color: -fx-button-color;
 
     /* Warning colors */
     -fx-warning-bg: #362f24;

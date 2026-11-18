@@ -18,7 +18,7 @@
 
 /* Email list styles */
 .email-list {
-    -fx-background-color: -fx-surface-color;
+    -fx-background-color: -fx-field-color;
     -fx-border-color: -fx-control-border;
     -fx-border-width: 0 1 0 0;
 }
@@ -26,7 +26,7 @@
 .email-list .list-cell {
     -fx-background-color: transparent;
     -fx-padding: 4 8;
-    -fx-border-color: -fx-control-border;
+    -fx-border-color: -fx-row-divider-color;
     -fx-border-width: 0 0 1 0;
 }
 
@@ -147,7 +147,8 @@
     -fx-background-color: -fx-hover-color;
 }
 
-/* Semantic status buttons — filled with the status tokens, dark text */
+/* Semantic status buttons — filled with the status tokens, their text in -fx-status-button-text-color. The
+   fills under the pointer and while pressed are tokens of their own, as is the danger button's outline. */
 .success-button,
 .running-button,
 .warning-button,
@@ -161,24 +162,24 @@
 }
 
 .success-button         { -fx-background-color: -fx-control-border, -fx-status-normal; }
-.success-button:hover   { -fx-background-color: -fx-control-border, derive(-fx-status-normal, 15%); }
-.success-button:pressed { -fx-background-color: -fx-control-border, derive(-fx-status-normal, -12%); }
+.success-button:hover   { -fx-background-color: -fx-control-border, -fx-status-normal-hover; }
+.success-button:pressed { -fx-background-color: -fx-control-border, -fx-status-normal-pressed; }
 
 .running-button         { -fx-background-color: -fx-control-border, -fx-status-running; }
-.running-button:hover   { -fx-background-color: -fx-control-border, derive(-fx-status-running, 15%); }
-.running-button:pressed { -fx-background-color: -fx-control-border, derive(-fx-status-running, -12%); }
+.running-button:hover   { -fx-background-color: -fx-control-border, -fx-status-running-hover; }
+.running-button:pressed { -fx-background-color: -fx-control-border, -fx-status-running-pressed; }
 
 .warning-button         { -fx-background-color: -fx-control-border, -fx-status-paused; }
-.warning-button:hover   { -fx-background-color: -fx-control-border, derive(-fx-status-paused, 15%); }
-.warning-button:pressed { -fx-background-color: -fx-control-border, derive(-fx-status-paused, -12%); }
+.warning-button:hover   { -fx-background-color: -fx-control-border, -fx-status-paused-hover; }
+.warning-button:pressed { -fx-background-color: -fx-control-border, -fx-status-paused-pressed; }
 
-.danger-button          { -fx-background-color: -fx-control-border, -fx-status-error; }
-.danger-button:hover    { -fx-background-color: -fx-control-border, derive(-fx-status-error, 15%); }
-.danger-button:pressed  { -fx-background-color: -fx-control-border, derive(-fx-status-error, -12%); }
+.danger-button          { -fx-background-color: -fx-danger-border, -fx-status-error; }
+.danger-button:hover    { -fx-background-color: -fx-danger-border-hover, -fx-status-error-hover; }
+.danger-button:pressed  { -fx-background-color: -fx-danger-border-hover, -fx-status-error-pressed; }
 
 .info-button            { -fx-background-color: -fx-control-border, -fx-status-info; }
-.info-button:hover      { -fx-background-color: -fx-control-border, derive(-fx-status-info, 15%); }
-.info-button:pressed    { -fx-background-color: -fx-control-border, derive(-fx-status-info, -12%); }
+.info-button:hover      { -fx-background-color: -fx-control-border, -fx-status-info-hover; }
+.info-button:pressed    { -fx-background-color: -fx-control-border, -fx-status-info-pressed; }
 
 /* Toolbar */
 .tool-bar {
@@ -210,10 +211,10 @@
 }
 
 .context-menu {
-    -fx-background-color: -fx-surface-color;
+    -fx-background-color: -fx-field-color;
     -fx-border-color: -fx-control-border;
     -fx-border-width: 1;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 8, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, -fx-shadow-color, 8, 0, 0, 2);
 }
 
 .menu-item {
@@ -311,19 +312,19 @@
  * properties do not apply to the frame, a region. */
 .text-field,
 .form-frame {
-    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-color: -fx-control-border, -fx-field-color;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 3;
     -fx-padding: 4;
     -fx-text-fill: -fx-text-color;
-    -fx-prompt-text-fill: -fx-text-secondary-color;
+    -fx-prompt-text-fill: -fx-text-placeholder-color;
 }
 
 /* The frame's focus border shows while anything inside it has the
  * focus (:focus-within), around text and icons together. */
 .text-field:focused,
 .form-frame:focus-within {
-    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-color: -fx-accent-color, -fx-field-color;
     -fx-background-insets: 0, 1;
 }
 
@@ -345,7 +346,7 @@
 
 /* Password field - inherits from text-field */
 .password-field {
-    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-color: -fx-control-border, -fx-field-color;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 3;
     -fx-padding: 4;
@@ -353,13 +354,13 @@
 }
 
 .password-field:focused {
-    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-color: -fx-accent-color, -fx-field-color;
     -fx-background-insets: 0, 1;
 }
 
 /* ComboBox */
 .combo-box {
-    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-color: -fx-control-border, -fx-field-color;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 3;
     -fx-cursor: hand;
@@ -371,7 +372,7 @@
 }
 
 .combo-box:focused {
-    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-color: -fx-accent-color, -fx-field-color;
     -fx-background-insets: 0, 1;
 }
 
@@ -404,7 +405,7 @@
 }
 
 .combo-box-popup .list-view {
-    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-color: -fx-control-border, -fx-field-color;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 3;
     -fx-padding: 0;
@@ -432,7 +433,7 @@
 
 /* ChoiceBox */
 .choice-box {
-    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-color: -fx-control-border, -fx-field-color;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 3;
     -fx-cursor: hand;
@@ -444,7 +445,7 @@
 }
 
 .choice-box:focused {
-    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-color: -fx-accent-color, -fx-field-color;
     -fx-background-insets: 0, 1;
 }
 
@@ -465,7 +466,7 @@
 }
 
 .choice-box .context-menu {
-    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-color: -fx-control-border, -fx-field-color;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 3;
     -fx-padding: 0;
@@ -488,13 +489,13 @@
 
 /* DatePicker */
 .date-picker {
-    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-color: -fx-control-border, -fx-field-color;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 3;
 }
 
 .date-picker:focused {
-    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-color: -fx-accent-color, -fx-field-color;
     -fx-background-insets: 0, 1;
 }
 
@@ -524,13 +525,13 @@
 
 /* DatePicker popup */
 .date-picker-popup {
-    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-color: -fx-control-border, -fx-field-color;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 3;
 }
 
 .date-picker-popup > .month-year-pane {
-    -fx-background-color: -fx-surface-color;
+    -fx-background-color: -fx-field-color;
     -fx-padding: 6;
 }
 
@@ -569,7 +570,7 @@
 
 /* Calendar grid */
 .date-picker-popup > .calendar-grid {
-    -fx-background-color: -fx-surface-color;
+    -fx-background-color: -fx-field-color;
     -fx-padding: 4;
 }
 
@@ -648,12 +649,12 @@
 
 /* TableView */
 .table-view {
-    -fx-background-color: -fx-surface-color;
-    -fx-table-cell-border-color: -fx-control-border;
+    -fx-background-color: -fx-field-color;
+    -fx-table-cell-border-color: -fx-row-divider-color;
     -fx-border-color: -fx-control-border;
     -fx-border-width: 1;
     -fx-border-radius: 3;
-    -fx-control-inner-background: -fx-surface-color;
+    -fx-control-inner-background: -fx-field-color;
     -fx-control-inner-background-alt: -fx-table-row-odd;
     -fx-padding: 0;
 }
@@ -691,7 +692,7 @@
 }
 
 .table-view .corner {
-    -fx-background-color: -fx-surface-color;
+    -fx-background-color: -fx-field-color;
 }
 
 /* The header's menu button (setTableMenuButtonVisible(true)): the corner at
@@ -726,8 +727,8 @@
 }
 
 .table-row-cell {
-    -fx-background-color: -fx-surface-color;
-    -fx-border-color: -fx-control-border;
+    -fx-background-color: -fx-field-color;
+    -fx-border-color: -fx-row-divider-color;
     -fx-border-width: 0 0 1 0;
     -fx-padding: 0;
     -fx-cell-size: 20px;
@@ -790,7 +791,7 @@
 }
 
 .table-view:focused:cell-selection .table-row-cell .table-cell:focused {
-    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-color: -fx-accent-color, -fx-field-color;
     -fx-background-insets: 0, 1;
 }
 
@@ -844,7 +845,7 @@
 
 /* ListView */
 .list-view {
-    -fx-background-color: -fx-surface-color;
+    -fx-background-color: -fx-field-color;
     -fx-background-radius: 0;
     -fx-border-color: transparent;
     -fx-border-width: 0;
@@ -884,8 +885,8 @@
 
 /* TreeView */
 .tree-view {
-    -fx-background-color: -fx-surface-color;
-    -fx-control-inner-background: -fx-surface-color;
+    -fx-background-color: -fx-field-color;
+    -fx-control-inner-background: -fx-field-color;
     -fx-background-radius: 3;
     -fx-border-color: -fx-control-border;
     -fx-border-width: 1;
@@ -1040,7 +1041,7 @@
     -fx-background-radius: 50%;
     -fx-pref-width: 16;
     -fx-pref-height: 16;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.2), 2, 0, 0, 1);
+    -fx-effect: dropshadow(gaussian, -fx-shadow-color, 2, 0, 0, 1);
 }
 
 .slider > .thumb:hover {
@@ -1053,7 +1054,7 @@
 
 .slider:focused > .thumb {
     -fx-background-color: -fx-accent-color;
-    -fx-effect: dropshadow(gaussian, rgba(0,0,0,0.3), 4, 0, 0, 1);
+    -fx-effect: dropshadow(gaussian, -fx-shadow-strong-color, 4, 0, 0, 1);
 }
 
 .slider > .axis {
@@ -1168,19 +1169,19 @@
 
 /* Text area */
 .text-area {
-    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-color: -fx-control-border, -fx-field-color;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 3;
-    -fx-prompt-text-fill: -fx-text-secondary-color;
+    -fx-prompt-text-fill: -fx-text-placeholder-color;
 }
 
 .text-area .content {
-    -fx-background-color: -fx-surface-color;
+    -fx-background-color: -fx-field-color;
     -fx-text-fill: -fx-text-color;
 }
 
 .text-area:focused {
-    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-color: -fx-accent-color, -fx-field-color;
     -fx-background-insets: 0, 1;
 }
 
@@ -1345,11 +1346,11 @@ Text {
 
 /* Context Menu */
 .context-menu {
-    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-color: -fx-control-border, -fx-field-color;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 3;
     -fx-padding: 0;
-    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.2), 8, 0, 0, 2);
+    -fx-effect: dropshadow(gaussian, -fx-shadow-color, 8, 0, 0, 2);
 }
 
 .context-menu .separator,
@@ -1387,7 +1388,7 @@ Text {
 }
 
 .menu-item:disabled > .label {
-    -fx-text-fill: -fx-text-secondary-color;
+    -fx-text-fill: -fx-text-disabled-color;
 }
 
 /* Keyboard shortcut hints */
@@ -1986,13 +1987,13 @@ Text {
 
 /* Spinner */
 .spinner {
-    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-color: -fx-control-border, -fx-field-color;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 3, 2;
 }
 
 .spinner:focus-within {
-    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-color: -fx-accent-color, -fx-field-color;
     -fx-background-insets: 0, 1;
 }
 
@@ -2110,11 +2111,11 @@ Text {
     -fx-font-size: 11.5px;
 }
 
-/* List container: surface bg + 1px border + radius 6, painted with the
+/* List container: field bg + 1px border + radius 6, painted with the
  * two-layer background idiom (outer radius 6, inner 5 keeps the 1px border
  * even). Two classes beat the single-class .list-view rule. */
 .twin-column .twin-list {
-    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-color: -fx-control-border, -fx-field-color;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 6, 5;
     -fx-padding: 2;
@@ -2184,7 +2185,7 @@ Text {
 }
 
 .key-value-editor .key-value-delete:hover .ikonli-font-icon {
-    -fx-icon-color: -fx-status-error;
+    -fx-icon-color: -fx-danger-text-hover-color;
 }
 
 /* Lock: a toggle drawn as the theme's icon button (flat, no frame, no
@@ -2220,7 +2221,7 @@ Text {
  * after .text-field:focused and is as specific). */
 .key-value-editor .key-value-key-missing,
 .key-value-editor .key-value-key-duplicate {
-    -fx-background-color: -fx-status-error, -fx-surface-color;
+    -fx-background-color: -fx-error-border, -fx-field-color;
     -fx-background-insets: 0, 1;
 }
 
@@ -2379,19 +2380,22 @@ Text {
     -fx-border-radius: 3;
 }
 
-.shortcuts-list .shortcuts-context-mark .text,
-.shortcuts-list .shortcuts-not-assigned .text {
+.shortcuts-list .shortcuts-context-mark .text {
     -fx-fill: -fx-text-secondary-color;
 }
 
-/* Key caps: small framed caps in the button colour. */
+.shortcuts-list .shortcuts-not-assigned .text {
+    -fx-fill: -fx-text-placeholder-color;
+}
+
+/* Key caps: small framed caps in the key cap colours. */
 .shortcuts-key-caps {
     -fx-spacing: 3;
     -fx-alignment: center-left;
 }
 
 .shortcuts-key-cap {
-    -fx-background-color: -fx-control-border, -fx-button-color;
+    -fx-background-color: -fx-keycap-border, -fx-keycap-color;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 3, 2;
     -fx-padding: 0 5;
@@ -2407,7 +2411,7 @@ Text {
 /* A conflict: the key caps framed and lettered in the error colour, the
  * hint in the error colour too, also on the selected row. */
 .shortcuts-list .shortcuts-row:conflict .shortcuts-key-cap {
-    -fx-background-color: -fx-status-error, -fx-button-color;
+    -fx-background-color: -fx-error-border, -fx-keycap-color;
 }
 
 .shortcuts-list .shortcuts-row:conflict .shortcuts-key-cap .text,
@@ -2415,7 +2419,7 @@ Text {
     -fx-fill: -fx-status-error;
 }
 
-/* An override is no fault: its hint muted, as Not assigned. */
+/* An override is no fault: its hint muted. */
 .shortcuts-list .shortcuts-hint .text {
     -fx-fill: -fx-text-secondary-color;
 }
@@ -2445,7 +2449,7 @@ Text {
 }
 
 .shortcuts-row-content .shortcuts-remove:hover .ikonli-font-icon {
-    -fx-icon-color: -fx-status-error;
+    -fx-icon-color: -fx-danger-text-hover-color;
 }
 
 .shortcuts-row-content .shortcuts-reset .ikonli-font-icon {
@@ -2606,12 +2610,12 @@ Text {
  * colour. */
 .form-frame:warning,
 .form-frame:warning:focus-within {
-    -fx-background-color: -fx-status-paused, -fx-surface-color;
+    -fx-background-color: -fx-status-paused, -fx-field-color;
 }
 
 .form-frame:error,
 .form-frame:error:focus-within {
-    -fx-background-color: -fx-status-error, -fx-surface-color;
+    -fx-background-color: -fx-error-border, -fx-field-color;
 }
 
 /* --- Frame: drop target ----------------------------------------------
@@ -2625,7 +2629,7 @@ Text {
 .form-frame:warning:drop-target:focus-within,
 .form-frame:error:drop-target,
 .form-frame:error:drop-target:focus-within {
-    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-color: -fx-accent-color, -fx-field-color;
 }
 
 /* --- Frame: read-only -------------------------------------------------
@@ -2650,7 +2654,7 @@ Text {
 
 .form-frame:readonly:error,
 .form-frame:readonly:error:focus-within {
-    -fx-background-color: -fx-status-error, -fx-readonly-bg;
+    -fx-background-color: -fx-error-border, -fx-readonly-bg;
 }
 
 /* --- Text input (TextInput) ------------------------------------------
@@ -2754,7 +2758,7 @@ Text {
 }
 
 .form-combo-input .form-combo-display:prompt {
-    -fx-text-fill: -fx-text-secondary-color;
+    -fx-text-fill: -fx-text-placeholder-color;
 }
 
 .form-frame:disabled > .combo-box.form-shell-content > .list-cell {
@@ -2859,8 +2863,9 @@ Text {
  * (the family only: the size stays the frame's). After the text, before
  * {}, without a divider, the format selector (form-cron-format), an own
  * control of the shell: a small combo box without JavaFX's frame and
- * arrow, on the button background (-fx-button-color; under the pointer
- * -fx-button-hover-color, while its list shows -fx-button-pressed-color),
+ * arrow, on the neutral selection (-fx-selection-neutral-color; under the
+ * pointer -fx-button-hover-color, while its list shows
+ * -fx-button-pressed-color),
  * radius 3, the format's name in the text colour, then a small chevron
  * in the muted icon colour (the text colour under the pointer). Its cell
  * has 1px above and below, so the selector is lower than the frame,
@@ -2871,7 +2876,7 @@ Text {
  * dimmed once, not twice. */
 .form-frame .form-cron-format,
 .form-frame .form-cron-format:focused {
-    -fx-background-color: -fx-button-color;
+    -fx-background-color: -fx-selection-neutral-color;
     -fx-background-insets: 0;
     -fx-background-radius: 3;
     -fx-padding: 0;
@@ -2990,7 +2995,7 @@ Text {
  * while read-only and once with a disabled field. The popup's content
  * (form-suggestion-popup, a VBox) draws the popup's frame as a combo
  * box's list does: a 1px border in the control border colour around
- * the surface, radius 3. Inside it the list (form-suggestion-list, a
+ * the field surface, radius 3. Inside it the list (form-suggestion-list, a
  * ListView) without a frame or a background of its own, its rows as a
  * combo box's list rows: padding 4 8, the hover colour under the
  * pointer, the preselected row (:selected) in the selection colour. In
@@ -3001,7 +3006,7 @@ Text {
  * text colour like the rest of the row: these rules follow and outrank
  * the marks' look in an application's cells. No token of its own. */
 .form-suggestion-popup {
-    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-color: -fx-control-border, -fx-field-color;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 3;
     -fx-padding: 1;
@@ -3061,15 +3066,15 @@ Text {
 
 /* --- Frame: binding (FieldBinding) -----------------------------------
  * The {} icon (form-frame-bind) is the frame's last trailing icon.
- * While bound (:bound) it takes the bound look, the accent colour on
- * the accent tint, the input disables its own icons that act on the
- * value, and the chip (form-chip, a Label) lies over the hidden content
- * where its text starts: the bound name in the accent colour on the
- * accent tint, its small x (form-chip-remove, also icon-button) as its
- * graphic. The shell keeps the chip within its band (on one line the
- * content's height). A binding whose
- * variable is missing (:missing) draws the chip outlined in the error
- * colour. */
+ * While bound (:bound) it takes the bound look, the accent tint's text
+ * colour on the accent tint, the input disables its own icons that act
+ * on the value, and the chip (form-chip, a Label) lies over the hidden
+ * content where its text starts: the bound name in the accent tint's
+ * text colour on the accent tint, its small x (form-chip-remove, also
+ * icon-button) as its graphic. The shell keeps the chip within its band
+ * (on one line the content's height). A binding whose variable is
+ * missing (:missing) draws the chip outlined in the error border's
+ * colour, its text in the error colour. */
 .form-frame:bound .form-frame-bind {
     -fx-background-color: -fx-accent-tint-color;
 }
@@ -3080,7 +3085,7 @@ Text {
 
 .form-frame:bound .form-frame-bind .ikonli-font-icon,
 .form-frame:bound .form-frame-bind:hover .ikonli-font-icon {
-    -fx-icon-color: -fx-accent-color;
+    -fx-icon-color: -fx-accent-tint-text-color;
 }
 
 .form-frame .form-chip {
@@ -3089,7 +3094,7 @@ Text {
     -fx-background-radius: 3;
     -fx-padding: 0 1 0 6;
     -fx-graphic-text-gap: 2;
-    -fx-text-fill: -fx-accent-color;
+    -fx-text-fill: -fx-accent-tint-text-color;
 }
 
 .form-frame .form-chip-remove {
@@ -3099,11 +3104,11 @@ Text {
 
 .form-frame .form-chip-remove .ikonli-font-icon {
     -fx-icon-size: 12;
-    -fx-icon-color: -fx-accent-color;
+    -fx-icon-color: -fx-accent-tint-text-color;
 }
 
 .form-frame .form-chip:missing {
-    -fx-background-color: -fx-status-error, -fx-surface-color;
+    -fx-background-color: -fx-error-border, -fx-field-color;
     -fx-background-insets: 0, 1;
     -fx-text-fill: -fx-status-error;
 }
@@ -3119,7 +3124,7 @@ Text {
 }
 
 .form-frame:readonly .form-chip:missing {
-    -fx-background-color: -fx-status-error, -fx-readonly-bg;
+    -fx-background-color: -fx-error-border, -fx-readonly-bg;
 }
 
 /* Disabled: the chip and its x are dimmed with the frame, once. */
@@ -3238,9 +3243,9 @@ Text {
  * JavaDoc); colours are tokens from dark.css.
  * =================================================================== */
 
-/* The view frames itself like a text area: surface bg + 1px border. */
+/* The view frames itself like a text area: raised bg + 1px border. */
 .markdown-view {
-    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-color: -fx-control-border, -fx-raised-color;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 3, 2;
     -fx-padding: 1;
@@ -3800,7 +3805,7 @@ Text {
  * the view only. The rows take the document's 13px (the theme's
  * rows are 11.5px); the odd rows take the view's own token
  * -fx-markdown-table-row-odd in place of the theme's odd-row token
- * (dark.css makes it the surface: no zebra stripes). A row is as
+ * (the theme makes it the rows' colour: no zebra stripes). A row is as
  * tall as its tallest cell, the cell's
  * text wrapped to the column's width; -fx-cell-size is only the
  * floor of a row's height (below 24px JavaFX would give every row
@@ -3876,7 +3881,7 @@ Text {
     -fx-border-width: 0 0 1 0;
 }
 
-/* The zoom group: one frame drawn as a text field's (border, surface,
+/* The zoom group: one frame drawn as a text field's (border, field,
  * radius 3) around minus, the percent field with its chevron and plus.
  * Its 1px padding keeps the parts inside the frame, and the field's
  * vertical padding is 1px less than a text field's, so the group is
@@ -3884,14 +3889,14 @@ Text {
  * field has the focus or the list of zoom levels is open (the bar
  * sets :focus-within for the open list too). */
 .markdown-zoom-bar .markdown-zoom-group {
-    -fx-background-color: -fx-control-border, -fx-surface-color;
+    -fx-background-color: -fx-control-border, -fx-field-color;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 3, 2;
     -fx-padding: 1;
 }
 
 .markdown-zoom-bar .markdown-zoom-group:focus-within {
-    -fx-background-color: -fx-accent-color, -fx-surface-color;
+    -fx-background-color: -fx-accent-color, -fx-field-color;
 }
 
 /* The percent field: borderless and transparent inside the frame,
@@ -4203,7 +4208,7 @@ Text {
 }
 
 .hyperlink:disabled {
-    -fx-text-fill: -fx-text-secondary-color;
+    -fx-text-fill: -fx-text-disabled-color;
     -fx-opacity: 0.5;
 }
 
@@ -4214,7 +4219,7 @@ Text {
 
 /* TreeTableView */
 .tree-table-view {
-    -fx-background-color: -fx-surface-color;
+    -fx-background-color: -fx-field-color;
     -fx-border-color: -fx-control-border;
     -fx-border-width: 1;
     -fx-border-radius: 3;

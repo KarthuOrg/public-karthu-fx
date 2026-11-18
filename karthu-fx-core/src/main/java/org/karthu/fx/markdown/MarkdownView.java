@@ -848,10 +848,11 @@ import java.util.function.Consumer;
  * and {@code -fx-markdown-search-current-text-color}, those of the current match, amber behind a dark text, both
  * apart from the blue of the selection. A selection, of
  * characters or of table cells, takes the theme's {@code -fx-selection-color} and {@code -fx-selection-text-color},
- * as a selected row of a list does. A table's rows take the surface colour, the odd ones too: inside the view the
- * theme's {@code -fx-table-row-odd} is {@code -fx-markdown-table-row-odd}, which the theme sets to
- * {@code -fx-surface-color}. Images add no token: an image's placeholder and error box and the open button take
- * {@code -fx-code-background-color} and {@code -fx-text-secondary-color}, an image in a table cell
+ * as a selected row of a list does. The view's content lies on the theme's raised surface,
+ * {@code -fx-raised-color}. A table's rows take the field colour of the theme's tables, {@code -fx-field-color}, the
+ * odd ones too: inside the view the theme's {@code -fx-table-row-odd} is {@code -fx-markdown-table-row-odd}, which
+ * the theme sets to the rows' colour. Images add no token: an image's placeholder and error box and the open button
+ * take {@code -fx-code-background-color} and {@code -fx-text-secondary-color}, an image in a table cell
  * {@code -fx-accent-color}, and the full size window {@code -fx-canvas-color} and, for its bar,
  * {@code -fx-surface-color}.
  *

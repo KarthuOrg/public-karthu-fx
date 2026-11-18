@@ -51,11 +51,8 @@ class ThemeSchemeTest {
     private static final Color DARK_TEXT = Color.web("#d6d9e6");
 
     private static final Color LIGHT_WINDOW = Color.web("#E4E5E8");
-    private static final Color LIGHT_FIELD = Color.web("#E4E5E8");
+    private static final Color LIGHT_FIELD = Color.web("#F3F1E8");
     private static final Color LIGHT_TEXT = Color.web("#1F2230");
-
-    private static final Color DARK_SURFACE = Color.web("#24273c");
-    private static final Color LIGHT_SURFACE = Color.web("#E4E5E8");
 
     /**
      * An application's stylesheet that gives a colour of its own a value per scheme, keyed to the root's
@@ -253,12 +250,12 @@ class ThemeSchemeTest {
         root.applyCss();
         ListView<?> list = (ListView<?>) ((ComboBoxListViewSkin<?>) combo.getSkin()).getPopupContent();
         list.applyCss();
-        assertEquals(DARK_SURFACE, fill(list, 0));
+        assertEquals(DARK_FIELD, fill(list, 0));
 
         ThemeManager.setAppearance(Appearance.LIGHT);
 
         list.applyCss();
-        assertEquals(LIGHT_SURFACE, fill(list, 0));
+        assertEquals(LIGHT_FIELD, fill(list, 0));
     }
 
     @Test
