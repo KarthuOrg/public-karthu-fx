@@ -8,6 +8,41 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 
 ### Added
 
+- Nebula Light, a light colour scheme beside Nebula Dark, with the same shapes, sizes and spacing:
+  a cool grey chrome, warm ivory fields, dark text and a deep blue focus, for every component and
+  every themed standard control, the Markdown view's coloured code and search marks included.
+  Nebula Dark keeps every colour.
+- `ThemeManager` changes the scheme while the application runs. `setAppearance(Appearance)` takes
+  the new enum `Appearance`: `LIGHT`, `DARK` or `SYSTEM`, which follows the light or dark setting
+  of the operating system, also when it changes while the application runs, and is Dark where
+  the system reports none; `getAppearance()` and `appearanceProperty()` read the choice. Without
+  a choice the scheme is Dark, so an application that chooses nothing looks as before. A change
+  restyles at once every scene the theme was applied to, shown or not, with the open popups,
+  menus and tooltips of its windows and karthu-fx's own dialogs, and replaces only the scheme's
+  stylesheet, so the application's own stylesheets keep their places. `colorSchemeProperty()` and
+  `getColorScheme()` give the scheme in effect as JavaFX's `ColorScheme`, System resolved, for
+  colours an application sets in code. `apply(Scene)` keeps its contract.
+- The pseudo-classes `light` and `dark` on the root of every themed scene, the scheme in effect,
+  also on a root that replaces it: an application's stylesheet gives a colour of its own a value
+  per scheme under `.root:light` and `.root:dark`.
+- Colour tokens for the places Nebula Light tells apart, each with a value in both schemes and in
+  Nebula Dark the colour its places had: `-fx-field-color` (every editable surface),
+  `-fx-raised-color` (the Markdown view's content), `-fx-text-placeholder-color`,
+  `-fx-text-disabled-color`, `-fx-accent-tint-text-color`, `-fx-row-divider-color`,
+  `-fx-selection-neutral-color`, `-fx-shadow-color` and `-fx-shadow-strong-color`, the hover and
+  pressed fills of the status buttons (`-fx-status-normal-hover`, `-fx-status-normal-pressed` and
+  their siblings for running, paused, error and info), `-fx-danger-border`,
+  `-fx-danger-border-hover`, `-fx-danger-text-hover-color`, `-fx-error-border`,
+  `-fx-keycap-border` and `-fx-keycap-color`.
+- Links and tooltips take colours of their own: `-fx-link-color` (the Markdown view's links and
+  images in table cells, hyperlinks, the shortcuts editor's fix) and `-fx-tooltip-color` with
+  `-fx-tooltip-text-color` (a tooltip's background and text). In Nebula Dark links keep the accent
+  and tooltips JavaFX's own colours.
+- STYLEGUIDE.md lists every colour token with its value in both schemes, the contrast noted for
+  Nebula Light and the token of the colour design it follows. The agent guide shows how to choose
+  the scheme and how to give an application's own colours a value per scheme.
+- The showcase has a *Light* / *Dark* / *System* switch in its toolbar, which starts in Dark, and
+  its *Code colours* card holds the colours of the scheme in effect.
 - `MarkdownView` searches its text: an application sets the search text, reads the number of
   matches and the current match, goes to the next and the previous match in a `SearchDirection`
   and clears the search. Every match is marked, the current one apart, and the view scrolls to it.
@@ -103,6 +138,12 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   with a menu bar, a toolbar, a document and a note field with keys of their own, read-outs of the
   last command and of the kept keys, the dialog and the editor. `docs/components.md` describes the
   package, and the agent guide has its rules and a tested sample.
+
+### Changed
+
+- The theme has a third stylesheet, `light.css`, beside `base.css` and `dark.css`. A native image
+  that names the resources it includes one by one names `light.css` too, or the theme has no
+  colours to load for Light.
 
 ### Fixed
 
