@@ -41,7 +41,16 @@ import java.util.WeakHashMap;
  * when the scene's root is replaced, so that an application's own stylesheet gives its own colours a value per
  * scheme, for instance {@code .root:light { -my-color: #1f2230; }}.
  *
- * <p>Like all scene state, the theme manager is used on the JavaFX Application Thread only.
+ * <p>Threads: the theme manager changes scene state, which belongs to the JavaFX Application Thread, and is not safe
+ * for use from two threads at once. Once a themed scene is shown, choose the scheme and apply the theme on that thread
+ * only. Before, while the application starts (for instance in {@code Application.init()}) or in a test that shows no
+ * scene, one other thread may choose the scheme and apply the theme to scenes that are not shown, as JavaFX lets a
+ * scene be built off its thread, provided the JavaFX Application Thread does not use the theme manager meanwhile.
+ * JavaFX lets the platform's scheme be read on its Application Thread only, so {@link Appearance#SYSTEM} chosen on
+ * another thread before the theme was ever applied on the JavaFX Application Thread puts Nebula Dark in effect until
+ * it is: that first call there reads the platform's scheme and switches every themed scene to it. The listeners of
+ * {@link #appearanceProperty()} and {@link #colorSchemeProperty()} run on the thread that makes the change, the
+ * JavaFX Application Thread for a change the platform reports.
  */
 public final class ThemeManager {
 
@@ -121,7 +130,8 @@ public final class ThemeManager {
     }
 
     /**
-     * Chooses the scheme of the theme for the whole application. Every themed scene takes it at once.
+     * Chooses the scheme of the theme for the whole application. Every themed scene takes it at once. Called on the
+     * JavaFX Application Thread, or on another thread while no themed scene is shown, as the class description says.
      *
      * @param appearance the appearance, not null
      * @throws NullPointerException if the appearance is null
@@ -165,6 +175,9 @@ public final class ThemeManager {
      * already has JavaFX's skin by then changes skins: JavaFX's scroll pane skin
      * keeps listening to the content's size after it is replaced and reports an
      * error at every change, until it is garbage collected.
+     *
+     * <p>Called on the JavaFX Application Thread; while no themed scene is shown, also on another thread for a scene
+     * that is not shown, as the class description says.
      *
      * @param scene the scene to style, not null
      * @throws NullPointerException if the scene is null
