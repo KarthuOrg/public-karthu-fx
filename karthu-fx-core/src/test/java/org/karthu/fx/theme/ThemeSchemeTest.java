@@ -54,6 +54,9 @@ class ThemeSchemeTest {
     private static final Color LIGHT_FIELD = Color.web("#F3F1E8");
     private static final Color LIGHT_TEXT = Color.web("#1F2230");
 
+    /** How long the test of a scene nobody holds asks for garbage collections at most. */
+    private static final long COLLECTION_PATIENCE_SECONDS = 10;
+
     /**
      * An application's stylesheet that gives a colour of its own a value per scheme, keyed to the root's
      * pseudo-class.
@@ -258,17 +261,31 @@ class ThemeSchemeTest {
         assertEquals(LIGHT_FIELD, fill(list, 0));
     }
 
+    /**
+     * A collection may leave a weakly held object for a later one, so the test asks for collections until the scene
+     * is gone, for at most {@link #COLLECTION_PATIENCE_SECONDS} seconds: a scene the theme kept would stay for good.
+     */
     @Test
     @DisplayName("a themed scene nobody holds any more is not kept alive by the theme")
     void forgetsScenesNobodyHolds() throws InterruptedException {
-        WeakReference<Scene> scene = new WeakReference<>(new Themed().scene);
+        WeakReference<Scene> scene = themedSceneNobodyHolds();
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(COLLECTION_PATIENCE_SECONDS);
 
-        for (int i = 0; i < 100 && scene.get() != null; i++) {
+        while (scene.get() != null && System.nanoTime() < deadline) {
             System.gc();
-            Thread.sleep(10);
+            Thread.sleep(20);
         }
 
-        assertNull(scene.get());
+        assertNull(scene.get(), "the scene is still reachable after " + COLLECTION_PATIENCE_SECONDS
+                + " seconds of garbage collection");
+    }
+
+    /**
+     * A themed scene that nothing but the returned weak reference refers to: it is built in a method of its own, so
+     * that no variable of the test holds it.
+     */
+    private static WeakReference<Scene> themedSceneNobodyHolds() {
+        return new WeakReference<>(new Themed().scene);
     }
 
     private static void assertSchemeClass(Parent root, String expected) {
