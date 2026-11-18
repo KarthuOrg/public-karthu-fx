@@ -24,6 +24,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.karthu.fx.theme.Appearance;
+import org.karthu.fx.theme.ThemeManager;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -516,6 +518,37 @@ class MarkdownViewSearchTest {
         assertEquals(amber.getHue(), muted.getHue(), 1, "an amber");
         assertTrue(muted.getBrightness() < amber.getBrightness() - 0.2, "muted: darker than the current match's");
         assertNotEquals(themeColor(view, "-fx-selection-color"), muted, "apart from the selection's blue");
+    }
+
+    /**
+     * In Nebula Light the marks are highlighter colours behind the dark text: every match a pale amber, the current
+     * one a full amber, both apart from the selection's light blue.
+     */
+    @Test
+    @DisplayName("in Light every match is marked in a pale amber, the current one in a full amber, both behind the"
+            + " dark text and apart from the selection's blue")
+    void lightMarks() {
+        ThemeManager.setAppearance(Appearance.LIGHT);
+        try {
+            MarkdownView view = layOut(new MarkdownView("Anna and anna."));
+            TextFlow paragraph = paragraphs(view).getFirst();
+
+            view.setSearchText("anna");
+            relayOut(view);
+
+            Path matches = highlight(paragraph, "markdown-search-match");
+            Path current = highlight(paragraph, "markdown-search-current");
+            Color ink = Color.web("#1F2230");
+            assertEquals(Color.web("#F3D98A"), matches.getFill(), "every match");
+            assertEquals(Color.web("#F0A93C"), current.getFill(), "the current match");
+            assertCopiesIn(paragraph, matches, ink);
+            assertCopiesIn(paragraph, current, ink);
+            Paint selection = themeColor(view, "-fx-selection-color");
+            assertNotEquals(selection, matches.getFill(), "every match apart from the selection");
+            assertNotEquals(selection, current.getFill(), "the current match apart from the selection");
+        } finally {
+            ThemeManager.setAppearance(Appearance.DARK);
+        }
     }
 
     @Test

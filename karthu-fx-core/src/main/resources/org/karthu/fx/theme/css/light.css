@@ -4,17 +4,20 @@
  * every rule of dark.css beyond .root: ThemeManager loads this stylesheet instead of dark.css, never on top of it.
  * A token that refers to another token keeps the reference and follows that token, unless its places take a colour
  * of their own here: a token that tells apart places sharing one colour in Nebula Dark refers to that colour in
- * dark.css and has its light value here. A value marked "derive: dark value" is still Nebula Dark's and has no light
- * value yet.
+ * dark.css and has its light value here. Where dark.css computes a shade of another token, the light shade points the
+ * way light needs (darker under the pointer) and follows that token too.
  */
 
 .root {
-    /* Background colors */
+    /* Background colors. The canvas, behind cards and in bands such as the group rows of the shortcuts editor, is
+     * the raised grey, darker than the window as dark's canvas is darker than its surface; a read-only field turns
+     * grey, not ivory, as the design greys a field that cannot be edited; the selected background is the window
+     * at 78 percent, as dark's is its window colour */
     -fx-background-color: #E4E5E8;
-    -fx-background-color-selected: rgba(18, 19, 32, 0.78); /* derive: dark value */
-    -fx-canvas-color: #1b1d30; /* derive: dark value */
+    -fx-background-color-selected: rgba(228, 229, 232, 0.78);
+    -fx-canvas-color: #DCDDE1;
     -fx-surface-color: #E4E5E8;
-    -fx-readonly-bg: #1e202f; /* derive: dark value */
+    -fx-readonly-bg: #DCDDE1;
     /* Every editable surface: fields, their dropdown lists and popups, list and table bodies. A warm ivory, not
      * white, apart from the grey window */
     -fx-field-color: #F3F1E8;
@@ -29,11 +32,12 @@
     /* The text of a disabled menu item or link, dimmed with it */
     -fx-text-disabled-color: #7C8090;
 
-    /* Accent colors (blue) */
+    /* Accent colors (blue): darker under the pointer and darker still while pressed, 12 and 23 percent as the
+     * primary action's greens, following the accent; white text on the accent fill */
     -fx-accent-color: #2F6FD6;
-    -fx-accent-hover-color: #8f9dff; /* derive: dark value */
-    -fx-accent-pressed-color: #6675ff; /* derive: dark value */
-    -fx-accent-text-color: #ffffff; /* derive: dark value */
+    -fx-accent-hover-color: derive(-fx-accent-color, -12%);
+    -fx-accent-pressed-color: derive(-fx-accent-color, -23%);
+    -fx-accent-text-color: #FFFFFF;
     /* An accent tint behind accent text: the binding chip and the bound {} icon of the form fields */
     -fx-accent-tint-color: #D6E2F8;
     /* The text and icons on the accent tint: the binding chip's name and x and the bound {} icon */
@@ -44,20 +48,21 @@
     /* The hairlines between the rows of tables and lists, lighter than the border */
     -fx-row-divider-color: #DADCE1;
 
-    /* Button colors */
-    -fx-button-color: #2d334d; /* derive: dark value */
+    /* Button colors: the raised grey at rest, a step darker than the window as dark's button is a step lighter than
+     * its surface, then darker under the pointer and while pressed */
+    -fx-button-color: #DCDDE1;
     -fx-button-hover-color: #D0D3DA;
     -fx-button-pressed-color: #C4C7D0;
 
-    /* Selection colors (blue-tint) */
+    /* Selection colors (blue-tint): a selected row under the pointer a step darker */
     -fx-selection-color: #D3DDF2;
-    -fx-selection-hover-color: #3f57a4; /* derive: dark value */
+    -fx-selection-hover-color: #C3D2F0;
     -fx-selection-text-color: #1F2230;
     /* A neutral selection: the format selector of the cron input */
     -fx-selection-neutral-color: #D3DDF2;
 
-    /* Table colors */
-    -fx-table-row-odd: #2a2d41; /* derive: dark value */
+    /* Table colors: the odd rows a shade darker than the ivory */
+    -fx-table-row-odd: #EDEBE2;
 
     /* Hover color */
     -fx-hover-color: #D0D3DA;
@@ -67,32 +72,36 @@
     -fx-shadow-color: rgba(31, 34, 48, 0.18);
     -fx-shadow-strong-color: rgba(31, 34, 48, 0.27);
 
-    /* Scrollbar colors */
-    -fx-scrollbar-color: #4a5078; /* derive: dark value */
-    -fx-scrollbar-hover-color: #6871ae; /* derive: dark value */
-    -fx-scrollbar-track-color: #1b1d30; /* derive: dark value */
+    /* Scrollbar colors: the track the raised grey, darker than the surface, a grey thumb on it, darker under the
+     * pointer */
+    -fx-scrollbar-color: #8F94A1;
+    -fx-scrollbar-hover-color: #6F7484;
+    -fx-scrollbar-track-color: #DCDDE1;
 
-    /* Checkbox colors */
-    -fx-checkbox-bg: #1b1d2d; /* derive: dark value */
-    -fx-checkbox-border: #575f90; /* derive: dark value */
-    -fx-checkbox-border-hover: #6f78b0; /* derive: dark value */
-    -fx-checkbox-mark: #ffffff; /* derive: dark value */
+    /* Checkbox colors: the box on the ivory of fields in a grey outline, darker under the pointer; the mark white on
+     * the accent */
+    -fx-checkbox-bg: #F3F1E8;
+    -fx-checkbox-border: #767B8E;
+    -fx-checkbox-border-hover: #5E6475;
+    -fx-checkbox-mark: #FFFFFF;
 
-    /* Toggle switch colors */
-    -fx-switch-track-off: #42486e; /* derive: dark value */
-    -fx-switch-track-on: #6675ff; /* derive: dark value */
-    -fx-switch-thumb-off: #8a90a8; /* derive: dark value */
-    -fx-switch-thumb-on: #ffffff; /* derive: dark value */
+    /* Toggle switch colors: off the border grey with a thumb in the secondary text colour, as dark pairs them; on
+     * the accent with a white thumb */
+    -fx-switch-track-off: #C2C4CC;
+    -fx-switch-track-on: #2F6FD6;
+    -fx-switch-thumb-off: #5E6475;
+    -fx-switch-thumb-on: #FFFFFF;
 
-    /* Semantic status colors. Normal is the green of the primary action, error the red of danger text, and the
-     * text on a status fill is white, as on the primary fill. */
+    /* Semantic status colors. Normal is the green of the primary action, error the red of danger text, the others
+     * deep hues of dark's that read as text on the window and carry white text as a fill. The text on a status
+     * fill is white, as on the primary fill. */
     -fx-status-normal: #1A7F4B;
-    -fx-status-running: #3fd0a0; /* derive: dark value */
-    -fx-status-paused: #e0a84c; /* derive: dark value */
-    -fx-status-blocked: #c88bff; /* derive: dark value */
+    -fx-status-running: #0A6E6A;
+    -fx-status-paused: #875A10;
+    -fx-status-blocked: #7A3EC0;
     -fx-status-error: #B3261E;
-    -fx-status-info: #5d9bff; /* derive: dark value */
-    -fx-status-idle: #6b7192; /* derive: dark value */
+    -fx-status-info: #1F56B3;
+    -fx-status-idle: #5C6280;
     -fx-status-button-text-color: #FFFFFF;
     /* The fills of the buttons filled with a status colour, darker under the pointer and darker still while pressed:
      * normal takes the primary action's hover and pressed greens, the others are 12 and 23 percent darker than
@@ -121,36 +130,39 @@
     -fx-keycap-border: #B4B7C1;
     -fx-keycap-color: #F3F1E8;
 
-    /* Warning colors */
-    -fx-warning-bg: #362f24; /* derive: dark value */
-    -fx-warning-text: #e0a84c; /* derive: dark value */
+    /* Warning colors: the paused amber on a pale amber */
+    -fx-warning-bg: #F6E6C1;
+    -fx-warning-text: #875A10;
 
-    /* Markdown view colors: code, and the odd rows of tables (the field surface of the even rows: no zebra
-     * stripes) */
-    -fx-code-text-color: #8fd6c8; /* derive: dark value */
-    -fx-code-background-color: #1d1f33; /* derive: dark value */
+    /* Markdown view colors: code in a deep teal, code blocks on the ivory, lighter than the raised content around
+     * them, and the odd rows of tables (the field surface of the even rows: no zebra stripes) */
+    -fx-code-text-color: #0F6E5C;
+    -fx-code-background-color: #F3F1E8;
     -fx-markdown-table-row-odd: -fx-field-color;
 
-    /* Markdown view: the marks of the search, every match and the current one, apart from the selection, which lies
-     * above both. */
-    -fx-markdown-search-color: derive(#e0a84c, -55%); /* derive: dark value */
+    /* Markdown view: the marks of the search. Every match in a pale amber behind the text colour, the current one
+     * in a full amber behind the same dark text: apart from the light blue of the selection, which lies above
+     * both. */
+    -fx-markdown-search-color: #F3D98A;
     -fx-markdown-search-text-color: -fx-text-color;
-    -fx-markdown-search-current-color: #e0a84c; /* derive: dark value */
-    -fx-markdown-search-current-text-color: #1b1d2d; /* derive: dark value */
+    -fx-markdown-search-current-color: #F0A93C;
+    -fx-markdown-search-current-text-color: #1F2230;
 
     /* Markdown view: the colours of code blocks coloured by their language, one per category
-     * (CodeCategory). The nine base categories have colours of their own, each to be readable on
-     * -fx-code-background-color. The fourteen fine ones refer to the variable they fall back to, as in
+     * (CodeCategory). The nine base categories have colours of their own, deep hues of dark.css's, each
+     * readable on -fx-code-background-color (contrast 5.0:1 or more): comment the secondary text, keyword
+     * the blocked violet, string the paused amber, function the info blue, type the primary action's hover
+     * green, as dark.css shares them. The fourteen fine ones refer to the variable they fall back to, as in
      * dark.css. */
-    -fx-code-comment-color: #8a90a8; /* derive: dark value */
-    -fx-code-keyword-color: #c88bff; /* derive: dark value */
-    -fx-code-string-color: #e0a84c; /* derive: dark value */
-    -fx-code-number-color: #ff9e64; /* derive: dark value */
-    -fx-code-type-color: #4cd38a; /* derive: dark value */
-    -fx-code-function-color: #5d9bff; /* derive: dark value */
-    -fx-code-variable-color: #ff8fa3; /* derive: dark value */
-    -fx-code-property-color: #7b8cff; /* derive: dark value */
-    -fx-code-tag-color: #ff8fa3; /* derive: dark value */
+    -fx-code-comment-color: #5E6475;
+    -fx-code-keyword-color: #7A3EC0;
+    -fx-code-string-color: #875A10;
+    -fx-code-number-color: #A84A10;
+    -fx-code-type-color: #15703F;
+    -fx-code-function-color: #1F56B3;
+    -fx-code-variable-color: #B0284D;
+    -fx-code-property-color: #3B4CC0;
+    -fx-code-tag-color: #B0284D;
     -fx-code-doc-color: -fx-code-comment-color;
     -fx-code-annotation-color: -fx-code-keyword-color;
     -fx-code-literal-color: -fx-code-number-color;
@@ -167,19 +179,21 @@
     -fx-code-emphasis-color: -fx-code-text-color;
 
     /* Base color for JavaFX default styling: the surface, so that JavaFX derives dark text for the controls the
-     * theme does not style */
+     * theme does not style. The inner background is the ivory of fields, the faint focus the focus blue at 22
+     * percent and the mark's highlight the mark colour itself, as in dark, and a selection without focus the
+     * selection's blue, as the design keeps a neutral selection blue in light */
     -fx-base: #E4E5E8;
-    -fx-control-inner-background: #1b1d30; /* derive: dark value */
+    -fx-control-inner-background: #F3F1E8;
     -fx-focus-color: #2F6FD6;
-    -fx-faint-focus-color: rgba(123, 140, 255, 0.22); /* derive: dark value */
+    -fx-faint-focus-color: rgba(47, 111, 214, 0.22);
     -fx-mark-color: #1F2230;
-    -fx-mark-highlight-color: #d6d9e6; /* derive: dark value */
+    -fx-mark-highlight-color: #1F2230;
     -fx-selection-bar: #D3DDF2;
-    -fx-selection-bar-non-focused: #394160; /* derive: dark value */
+    -fx-selection-bar-non-focused: #D3DDF2;
 }
 
-/* Production Badge - light override */
+/* Production Badge - light override: the warning colours */
 .detail-prod-badge {
-    -fx-background-color: #362f24; /* derive: dark value */
-    -fx-text-fill: #e0a84c; /* derive: dark value */
+    -fx-background-color: #F6E6C1;
+    -fx-text-fill: #875A10;
 }

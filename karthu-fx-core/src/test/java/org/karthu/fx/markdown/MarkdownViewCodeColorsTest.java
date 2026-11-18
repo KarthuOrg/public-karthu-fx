@@ -24,6 +24,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.karthu.fx.theme.Appearance;
+import org.karthu.fx.theme.ThemeManager;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
@@ -221,6 +223,38 @@ class MarkdownViewCodeColorsTest {
         assertEquals(themeColor(view, "-fx-code-text-color"), runs.get("=").getFill(), "operator, as code text");
         assertEquals(themeColor(view, "-fx-code-text-color"), runs.get(";").getFill(), "punctuation, as code text");
         assertEquals(themeColor(view, "-fx-code-text-color"), runs.get(" x ").getFill(), "plain code");
+    }
+
+    /**
+     * Nebula Light colours code in deep hues that read on its light code background, which lies apart from the view's
+     * raised content: each piece takes its light base colour, a fine piece the light colour it falls back to.
+     */
+    @Test
+    @DisplayName("in Light the pieces take deep colours on the ivory code background, plain code the deep teal")
+    void lightColors() {
+        ThemeManager.setAppearance(Appearance.LIGHT);
+        try {
+            MarkdownView view = layOut(new MarkdownView(COLORED));
+            Region block = (Region) view.lookup(".markdown-code-block");
+            Map<String, Text> runs = codeRunsByText(block);
+
+            assertEquals(Color.web("#F3F1E8"), block.getBackground().getFills().getFirst().getFill(),
+                    "the code background");
+            assertEquals(Color.web("#7A3EC0"), runs.get("int").getFill(), "keyword");
+            assertEquals(Color.web("#7A3EC0"), runs.get("@Override").getFill(), "annotation, as keyword");
+            assertEquals(Color.web("#A84A10"), runs.get("1").getFill(), "number");
+            assertEquals(Color.web("#A84A10"), runs.get("MAX").getFill(), "constant, as literal, as number");
+            assertEquals(Color.web("#5E6475"), runs.get("// done").getFill(), "comment");
+            assertEquals(Color.web("#875A10"), runs.get("\"a").getFill(), "string");
+            assertEquals(Color.web("#15703F"), runs.get("Row").getFill(), "type");
+            assertEquals(Color.web("#1F56B3"), runs.get("run").getFill(), "function");
+            assertEquals(Color.web("#0F6E5C"), runs.get(" x ").getFill(), "plain code");
+            assertEquals(Color.web("#B0284D"), themeColor(view, "-fx-code-variable-color"), "variable");
+            assertEquals(Color.web("#3B4CC0"), themeColor(view, "-fx-code-property-color"), "property");
+            assertEquals(Color.web("#B0284D"), themeColor(view, "-fx-code-tag-color"), "tag");
+        } finally {
+            ThemeManager.setAppearance(Appearance.DARK);
+        }
     }
 
     @Test
