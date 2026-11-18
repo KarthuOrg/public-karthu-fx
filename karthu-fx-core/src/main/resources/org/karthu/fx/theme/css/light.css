@@ -78,6 +78,11 @@
     /* Tooltip colors: a tooltip is a popup, so it lies on the ivory of popups with the dark text */
     -fx-tooltip-color: #F3F1E8;
     -fx-tooltip-text-color: #1F2230;
+    /* The colour a tooltip's content derives its text colours from, its -fx-background: the tooltip's ivory, so that
+     * its content takes dark text */
+    -fx-tooltip-base-color: -fx-tooltip-color;
+    /* A tooltip's shadow: the ink at 18 percent, as the popups' */
+    -fx-tooltip-shadow-color: rgba(31, 34, 48, 0.18);
 
     /* Scrollbar colors: the track the raised grey, darker than the surface, a grey thumb on it, darker under the
      * pointer */

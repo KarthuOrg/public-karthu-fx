@@ -35,9 +35,10 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   `-fx-danger-border-hover`, `-fx-danger-text-hover-color`, `-fx-error-border`,
   `-fx-keycap-border` and `-fx-keycap-color`.
 - Links and tooltips take colours of their own: `-fx-link-color` (the Markdown view's links and
-  images in table cells, hyperlinks, the shortcuts editor's fix) and `-fx-tooltip-color` with
-  `-fx-tooltip-text-color` (a tooltip's background and text). In Nebula Dark links keep the accent
-  and tooltips JavaFX's own colours.
+  images in table cells, hyperlinks, the shortcuts editor's fix) and `-fx-tooltip-color`,
+  `-fx-tooltip-text-color`, `-fx-tooltip-base-color` and `-fx-tooltip-shadow-color` (a tooltip's
+  background, its text, the colour its content derives its text colours from, and its shadow). In
+  Nebula Dark links keep the accent and tooltips JavaFX's own colours.
 - STYLEGUIDE.md lists every colour token with its value in both schemes, the contrast noted for
   Nebula Light and the token of the colour design it follows. The agent guide shows how to choose
   the scheme and how to give an application's own colours a value per scheme.

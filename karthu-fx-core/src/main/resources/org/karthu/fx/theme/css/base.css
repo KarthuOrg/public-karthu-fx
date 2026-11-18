@@ -4220,12 +4220,16 @@ Text {
     -fx-border-width: 1;
 }
 
-/* Tooltip: JavaFX's own shape, padding, font and shadow; only its
+/* Tooltip: JavaFX's own shape, padding, font and shadow shape; only its
  * colours are the theme's. Its skin's label carries the tooltip's style
- * class, so this rule colours the label too. */
+ * class, so this rule colours the label too. -fx-background is the colour
+ * JavaFX derives the text colours of the tooltip's content from; the shadow
+ * keeps JavaFX's three-pass box, radius, spread and offset. */
 .tooltip {
+    -fx-background: -fx-tooltip-base-color;
     -fx-background-color: -fx-tooltip-color;
     -fx-text-fill: -fx-tooltip-text-color;
+    -fx-effect: dropshadow(three-pass-box, -fx-tooltip-shadow-color, 10, 0.0, 0, 3);
 }
 
 /* TreeTableView */

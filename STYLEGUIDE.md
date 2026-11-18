@@ -108,8 +108,10 @@ Nebula Light.
 |---|---|---|---|---|---|
 | `-fx-shadow-color` | the shadow of menus, popups and the slider's thumb | `rgba(0, 0, 0, 0.2)` | `rgba(31, 34, 48, 0.18)` | (popup shadow) | a shadow; offsets and radii as in dark |
 | `-fx-shadow-strong-color` | the focused slider thumb's shadow | `rgba(0, 0, 0, 0.3)` | `rgba(31, 34, 48, 0.27)` *proposed* | — | a shadow, one and a half times the other, as in dark |
-| `-fx-tooltip-color` | a tooltip's background; JavaFX's own shape, padding, font and shadow stay in both schemes | `rgba(30, 30, 30, 0.8)` (JavaFX's) | `#F3F1E8` *proposed* | `-app-bg-field` | background, the ivory of popups; 1.1:1 against the window, its shadow sets it apart |
+| `-fx-tooltip-color` | a tooltip's background; JavaFX's own shape, padding, font and the shape of its shadow stay in both schemes | `rgba(30, 30, 30, 0.8)` (JavaFX's) | `#F3F1E8` *proposed* | `-app-bg-field` | background, the ivory of popups; 1.1:1 against the window, its shadow sets it apart |
 | `-fx-tooltip-text-color` | a tooltip's text | `#ffffff` (JavaFX's) | `#1F2230` *proposed* | `-app-text` | 14.0:1 on the tooltip |
+| `-fx-tooltip-base-color` | the colour a tooltip's content derives its text colours from, the tooltip's `-fx-background` | `rgba(30, 30, 30)` (JavaFX's) | `-fx-tooltip-color` *proposed* | `-app-bg-field` | the tooltip's own colour, opaque, as in dark; JavaFX derives dark text on it |
+| `-fx-tooltip-shadow-color` | a tooltip's shadow, in JavaFX's shape (a three-pass box, radius 10, 3 pixels down) | `rgba(0, 0, 0, 0.5)` (JavaFX's) | `rgba(31, 34, 48, 0.18)` *proposed* | (popup shadow) | a shadow, the popups' ink at 18 percent |
 
 ### Scroll bars, check boxes and toggle switches
 | Token | Use | Dark | Light | Design | Contrast in light |
@@ -233,7 +235,7 @@ without a karthu-fx token has no place in the library.
 | `-app-bg-window` | `-fx-background-color` |
 | `-app-bg-surface` | `-fx-surface-color`, `-fx-base` |
 | `-app-bg-raised` | `-fx-raised-color`. The design's group headers of a list are the shortcuts editor's group rows, on `-fx-canvas-color` |
-| `-app-bg-field` | `-fx-field-color`, `-fx-keycap-color`, `-fx-tooltip-color`, `-fx-control-inner-background`, `-fx-markdown-table-row-odd` |
+| `-app-bg-field` | `-fx-field-color`, `-fx-keycap-color`, `-fx-tooltip-color`, `-fx-tooltip-base-color`, `-fx-control-inner-background`, `-fx-markdown-table-row-odd` |
 | `-app-bg-canvas` | `-fx-canvas-color` |
 | `-app-canvas-dot` | none: karthu-fx draws no canvas with a dot grid |
 | `-app-border` | `-fx-control-border` |
@@ -271,7 +273,7 @@ without a karthu-fx token has no place in the library.
 | `-app-status-unsaved` | none: karthu-fx marks no tab with unsaved changes |
 | `-app-status-modified` | `-fx-accent-color`, the colour of the shortcuts editor's modified dot |
 | `-app-keycap-border` | `-fx-keycap-border` |
-| popup shadow | `-fx-shadow-color` |
+| popup shadow | `-fx-shadow-color`, `-fx-tooltip-shadow-color` |
 
 ---
 

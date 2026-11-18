@@ -9,6 +9,7 @@ import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.control.skin.TooltipSkin;
+import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Effect;
 import javafx.scene.layout.Region;
@@ -176,24 +177,35 @@ class ThemeDistinctionsTest {
     /**
      * A tooltip cannot be styled without showing it, so the label its skin shows stands in for it: the label carries
      * the tooltip's style class, and the theme's rule for the class colours it as in the tooltip's own window. In
-     * Dark it keeps JavaFX's own translucent grey with white text, as before; in Light it lies on the ivory of popups
-     * with the dark text.
+     * Dark it keeps JavaFX's own translucent grey with white text and JavaFX's shadow, as before; in Light it lies on
+     * the ivory of popups with the dark text and a soft shadow in the ink. Its content, here a region as the tooltip's
+     * graphic that shows the colour JavaFX derives a content's text colours from ({@code -fx-background}), finds the
+     * tooltip's own colour: JavaFX's opaque grey in Dark, the ivory in Light.
      */
     @Test
-    @DisplayName("a tooltip keeps JavaFX's translucent grey and white text in Dark and lies on the ivory of popups"
-            + " with the dark text in Light")
+    @DisplayName("a tooltip keeps JavaFX's translucent grey, white text and shadow in Dark and lies on the ivory of"
+            + " popups with the dark text and a soft shadow in Light; its content derives its text from its colour")
     void tooltip() {
-        Label tip = (Label) new TooltipSkin(new Tooltip("A tip")).getNode();
+        Region content = new Region();
+        content.setStyle("-fx-background-color: -fx-background;");
+        Tooltip tooltip = new Tooltip("A tip");
+        tooltip.setGraphic(content);
+        Label tip = (Label) new TooltipSkin(tooltip).getNode();
         VBox root = themed(Appearance.DARK, tip);
+        root.applyCss();
 
         assertEquals(Color.rgb(30, 30, 30, 0.8), fill(tip, 0), "the background");
         assertEquals(Color.WHITE, tip.getTextFill(), "the text");
+        assertEquals(Color.rgb(30, 30, 30), fill(content, 0), "the colour the content derives its text from");
+        assertTooltipShadow(Color.rgb(0, 0, 0, 0.5), tip.getEffect());
 
         ThemeManager.setAppearance(Appearance.LIGHT);
         root.applyCss();
 
         assertEquals(LIGHT_FIELD, fill(tip, 0), "the background");
         assertEquals(LIGHT_TEXT, tip.getTextFill(), "the text");
+        assertEquals(LIGHT_FIELD, fill(content, 0), "the colour the content derives its text from");
+        assertTooltipShadow(Color.rgb(31, 34, 48, 0.18), tip.getEffect());
     }
 
     /**
@@ -266,6 +278,17 @@ class ThemeDistinctionsTest {
         assertEquals(radius, shadow.getRadius(), "the shadow's radius");
         assertEquals(0, shadow.getOffsetX(), "the shadow's horizontal offset");
         assertEquals(offsetY, shadow.getOffsetY(), "the shadow's vertical offset");
+    }
+
+    /**
+     * A tooltip's shadow in JavaFX's own shape, in both schemes: a three-pass box of radius 10, no spread, 3 pixels
+     * down.
+     */
+    private static void assertTooltipShadow(Color color, Effect effect) {
+        assertShadow(color, 10, 3, effect);
+        DropShadow shadow = (DropShadow) effect;
+        assertEquals(BlurType.THREE_PASS_BOX, shadow.getBlurType(), "the shadow's blur");
+        assertEquals(0, shadow.getSpread(), "the shadow's spread");
     }
 
     /**

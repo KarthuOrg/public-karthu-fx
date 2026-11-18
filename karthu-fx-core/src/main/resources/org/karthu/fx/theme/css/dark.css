@@ -65,6 +65,10 @@
     /* Tooltip colors: JavaFX's own translucent grey and white text */
     -fx-tooltip-color: rgba(30, 30, 30, 0.8);
     -fx-tooltip-text-color: #ffffff;
+    /* The colour a tooltip's content derives its text colours from, its -fx-background: JavaFX's opaque grey */
+    -fx-tooltip-base-color: rgba(30, 30, 30);
+    /* A tooltip's shadow: JavaFX's black at 50 percent */
+    -fx-tooltip-shadow-color: rgba(0, 0, 0, 0.5);
 
     /* Scrollbar colors */
     -fx-scrollbar-color: #4a5078;
