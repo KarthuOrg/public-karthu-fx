@@ -230,7 +230,7 @@ class MarkdownViewCodeColorsTest {
      * raised content: each piece takes its light base colour, a fine piece the light colour it falls back to.
      */
     @Test
-    @DisplayName("in Light the pieces take deep colours on the ivory code background, plain code the deep teal")
+    @DisplayName("in Light the pieces take deep colours on the white code background, plain code the deep teal")
     void lightColors() {
         ThemeManager.setAppearance(Appearance.LIGHT);
         try {
@@ -238,7 +238,7 @@ class MarkdownViewCodeColorsTest {
             Region block = (Region) view.lookup(".markdown-code-block");
             Map<String, Text> runs = codeRunsByText(block);
 
-            assertEquals(Color.web("#F3F1E8"), block.getBackground().getFills().getFirst().getFill(),
+            assertEquals(Color.web("#FFFFFF"), block.getBackground().getFills().getFirst().getFill(),
                     "the code background");
             assertEquals(Color.web("#7A3EC0"), runs.get("int").getFill(), "keyword");
             assertEquals(Color.web("#7A3EC0"), runs.get("@Override").getFill(), "annotation, as keyword");

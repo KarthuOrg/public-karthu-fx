@@ -31,8 +31,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The places Nebula Light tells apart that share one colour in Nebula Dark, seen from outside: the resolved colours of
- * themed nodes in scenes that are never shown. The expected light colours are the values of the colour design, the
- * expected dark ones the colours those places had before Nebula Light told them apart.
+ * themed nodes in scenes that are never shown. The expected light colours are the values of the colour design, with
+ * white fields in place of its ivory, the expected dark ones the colours those places had before Nebula Light told
+ * them apart.
  */
 class ThemeDistinctionsTest {
 
@@ -40,7 +41,7 @@ class ThemeDistinctionsTest {
     private static final Color DARK_BORDER = Color.web("#42486e");
 
     private static final Color LIGHT_WINDOW = Color.web("#E4E5E8");
-    private static final Color LIGHT_FIELD = Color.web("#F3F1E8");
+    private static final Color LIGHT_FIELD = Color.web("#FFFFFF");
     private static final Color LIGHT_BORDER = Color.web("#C2C4CC");
     private static final Color LIGHT_RAISED = Color.web("#DCDDE1");
     private static final Color LIGHT_TEXT = Color.web("#1F2230");
@@ -64,8 +65,8 @@ class ThemeDistinctionsTest {
     }
 
     @Test
-    @DisplayName("an editable field lies on warm ivory in Light, apart from the grey window, and on the surface in Dark")
-    void fieldOnIvory() {
+    @DisplayName("an editable field lies on white in Light, apart from the grey window, and on the surface in Dark")
+    void fieldOnWhite() {
         TextField field = new TextField("text");
         VBox root = themed(Appearance.LIGHT, field);
 
@@ -81,10 +82,41 @@ class ThemeDistinctionsTest {
     }
 
     /**
+     * Every place that shares the field's colour in Light is white with it, and the odd rows of a table take a neutral
+     * light grey that sets them apart from the white rows. In Dark the odd rows keep their colour.
+     */
+    @Test
+    @DisplayName("in Light the field family is white and the odd rows of a table a neutral grey apart from it; in Dark"
+            + " the odd rows as before")
+    void fieldFamilyWhiteAndZebraGrey() {
+        String[] family = {
+                "-fx-field-color",
+                "-fx-control-inner-background",
+                "-fx-checkbox-bg",
+                "-fx-keycap-color",
+                "-fx-code-background-color",
+                "-fx-tooltip-color",
+                "-fx-tooltip-base-color",
+                "-fx-markdown-table-row-odd",
+        };
+        VBox root = themed(Appearance.LIGHT);
+
+        for (String token : family) {
+            assertEquals(LIGHT_FIELD, swatch(root, token), token);
+        }
+        assertEquals(Color.web("#F2F3F5"), swatch(root, "-fx-table-row-odd"), "the odd rows");
+
+        ThemeManager.setAppearance(Appearance.DARK);
+        root.applyCss();
+
+        assertEquals(Color.web("#2a2d41"), swatch(root, "-fx-table-row-odd"), "the odd rows");
+    }
+
+    /**
      * A disabled control keeps its structure in both schemes: the field's own colours, dimmed as a disabled button.
      */
     @Test
-    @DisplayName("a disabled field keeps the field's ivory and border in Light, dimmed by half")
+    @DisplayName("a disabled field keeps the field's white and border in Light, dimmed by half")
     void disabledFieldDimmed() {
         TextField field = new TextField("text");
         field.setDisable(true);
@@ -178,12 +210,12 @@ class ThemeDistinctionsTest {
      * A tooltip cannot be styled without showing it, so the label its skin shows stands in for it: the label carries
      * the tooltip's style class, and the theme's rule for the class colours it as in the tooltip's own window. In
      * Dark it keeps JavaFX's own translucent grey with white text and JavaFX's shadow, as before; in Light it lies on
-     * the ivory of popups with the dark text and a soft shadow in the ink. Its content, here a region as the tooltip's
+     * the white of popups with the dark text and a soft shadow in the ink. Its content, here a region as the tooltip's
      * graphic that shows the colour JavaFX derives a content's text colours from ({@code -fx-background}), finds the
-     * tooltip's own colour: JavaFX's opaque grey in Dark, the ivory in Light.
+     * tooltip's own colour: JavaFX's opaque grey in Dark, the white in Light.
      */
     @Test
-    @DisplayName("a tooltip keeps JavaFX's translucent grey, white text and shadow in Dark and lies on the ivory of"
+    @DisplayName("a tooltip keeps JavaFX's translucent grey, white text and shadow in Dark and lies on the white of"
             + " popups with the dark text and a soft shadow in Light; its content derives its text from its colour")
     void tooltip() {
         Region content = new Region();

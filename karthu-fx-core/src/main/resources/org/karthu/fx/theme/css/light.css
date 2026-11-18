@@ -1,5 +1,5 @@
 /*
- * Light theme - Nebula Light palette (cool grey chrome, dark ink, deep blue focus)
+ * Light theme - Nebula Light palette (cool grey chrome, white fields, dark ink, deep blue focus)
  * Defines exactly the tokens of dark.css, in the same order and grouping, and the light counterpart of
  * every rule of dark.css beyond .root: ThemeManager loads this stylesheet instead of dark.css, never on top of it.
  * A token that refers to another token keeps the reference and follows that token, unless its places take a colour
@@ -11,16 +11,16 @@
 .root {
     /* Background colors. The canvas, behind cards and in bands such as the group rows of the shortcuts editor, is
      * the raised grey, darker than the window as dark's canvas is darker than its surface; a read-only field turns
-     * grey, not ivory, as the design greys a field that cannot be edited; the selected background is the window
+     * grey, not white, as the design greys a field that cannot be edited; the selected background is the window
      * at 78 percent, as dark's is its window colour */
     -fx-background-color: #E4E5E8;
     -fx-background-color-selected: rgba(228, 229, 232, 0.78);
     -fx-canvas-color: #DCDDE1;
     -fx-surface-color: #E4E5E8;
     -fx-readonly-bg: #DCDDE1;
-    /* Every editable surface: fields, their dropdown lists and popups, list and table bodies. A warm ivory, not
-     * white, apart from the grey window */
-    -fx-field-color: #F3F1E8;
+    /* Every editable surface: fields, their dropdown lists and popups, list and table bodies. White, apart from the
+     * grey window */
+    -fx-field-color: #FFFFFF;
     /* A raised surface: the content area of the Markdown view, a step darker than the window */
     -fx-raised-color: #DCDDE1;
 
@@ -64,8 +64,8 @@
     /* A neutral selection: the format selector of the cron input */
     -fx-selection-neutral-color: #D3DDF2;
 
-    /* Table colors: the odd rows a shade darker than the ivory */
-    -fx-table-row-odd: #EDEBE2;
+    /* Table colors: the odd rows a neutral light grey, apart from the white rows */
+    -fx-table-row-odd: #F2F3F5;
 
     /* Hover color */
     -fx-hover-color: #D0D3DA;
@@ -75,10 +75,10 @@
     -fx-shadow-color: rgba(31, 34, 48, 0.18);
     -fx-shadow-strong-color: rgba(31, 34, 48, 0.27);
 
-    /* Tooltip colors: a tooltip is a popup, so it lies on the ivory of popups with the dark text */
-    -fx-tooltip-color: #F3F1E8;
+    /* Tooltip colors: a tooltip is a popup, so it lies on the white of popups with the dark text */
+    -fx-tooltip-color: #FFFFFF;
     -fx-tooltip-text-color: #1F2230;
-    /* The colour a tooltip's content derives its text colours from, its -fx-background: the tooltip's ivory, so that
+    /* The colour a tooltip's content derives its text colours from, its -fx-background: the tooltip's white, so that
      * its content takes dark text */
     -fx-tooltip-base-color: -fx-tooltip-color;
     /* A tooltip's shadow: the ink at 18 percent, as the popups' */
@@ -90,9 +90,9 @@
     -fx-scrollbar-hover-color: #6F7484;
     -fx-scrollbar-track-color: #DCDDE1;
 
-    /* Checkbox colors: the box on the ivory of fields in a grey outline, darker under the pointer; the mark white on
+    /* Checkbox colors: the box on the white of fields in a grey outline, darker under the pointer; the mark white on
      * the accent */
-    -fx-checkbox-bg: #F3F1E8;
+    -fx-checkbox-bg: #FFFFFF;
     -fx-checkbox-border: #767B8E;
     -fx-checkbox-border-hover: #5E6475;
     -fx-checkbox-mark: #FFFFFF;
@@ -140,16 +140,16 @@
 
     /* Key cap colors: the outline and fill of the key caps of the shortcuts editor, the fill the field surface */
     -fx-keycap-border: #B4B7C1;
-    -fx-keycap-color: #F3F1E8;
+    -fx-keycap-color: #FFFFFF;
 
     /* Warning colors: the paused amber on a pale amber */
     -fx-warning-bg: #F6E6C1;
     -fx-warning-text: #875A10;
 
-    /* Markdown view colors: code in a deep teal, code blocks on the ivory, lighter than the raised content around
+    /* Markdown view colors: code in a deep teal, code blocks on white, lighter than the raised content around
      * them, and the odd rows of tables (the field surface of the even rows: no zebra stripes) */
     -fx-code-text-color: #0F6E5C;
-    -fx-code-background-color: #F3F1E8;
+    -fx-code-background-color: #FFFFFF;
     -fx-markdown-table-row-odd: -fx-field-color;
 
     /* Markdown view: the marks of the search. Every match in a pale amber behind the text colour, the current one
@@ -191,11 +191,11 @@
     -fx-code-emphasis-color: -fx-code-text-color;
 
     /* Base color for JavaFX default styling: the surface, so that JavaFX derives dark text for the controls the
-     * theme does not style. The inner background is the ivory of fields, the faint focus the focus blue at 22
+     * theme does not style. The inner background is the white of fields, the faint focus the focus blue at 22
      * percent and the mark's highlight the mark colour itself, as in dark, and a selection without focus the
      * selection's blue, as the design keeps a neutral selection blue in light */
     -fx-base: #E4E5E8;
-    -fx-control-inner-background: #F3F1E8;
+    -fx-control-inner-background: #FFFFFF;
     -fx-focus-color: #2F6FD6;
     -fx-faint-focus-color: rgba(47, 111, 214, 0.22);
     -fx-mark-color: #1F2230;

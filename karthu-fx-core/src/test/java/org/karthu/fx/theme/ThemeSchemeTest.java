@@ -51,7 +51,7 @@ class ThemeSchemeTest {
     private static final Color DARK_TEXT = Color.web("#d6d9e6");
 
     private static final Color LIGHT_WINDOW = Color.web("#E4E5E8");
-    private static final Color LIGHT_FIELD = Color.web("#F3F1E8");
+    private static final Color LIGHT_FIELD = Color.web("#FFFFFF");
     private static final Color LIGHT_TEXT = Color.web("#1F2230");
 
     /** How long the test of a scene nobody holds asks for garbage collections at most. */
