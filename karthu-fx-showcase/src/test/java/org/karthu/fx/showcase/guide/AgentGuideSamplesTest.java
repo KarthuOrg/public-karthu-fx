@@ -219,19 +219,17 @@ class AgentGuideSamplesTest {
     @Test
     @DisplayName("Own colours: a token of the application's own per scheme, and a colour drawn in code that follows")
     void ownColors() {
-        ChangeListener<ColorScheme> listener = null;
-        try {
-            Label draft = new Label("Draft");
-            draft.getStyleClass().add("tag");
-            Scene scene = new Scene(new VBox(draft));
-            ThemeManager.apply(scene);
-            scene.getStylesheets().add(appStylesheet());
+        Label draft = new Label("Draft");
+        draft.getStyleClass().add("tag");
+        Scene scene = new Scene(new VBox(draft));
+        ThemeManager.apply(scene);
+        scene.getStylesheets().add(appStylesheet());
 
-            Canvas chart = new Canvas(200, 80);
-            ChangeListener<ColorScheme> redraw = (observable, oldScheme, newScheme) -> drawChart(chart, newScheme);
-            ThemeManager.colorSchemeProperty().addListener(redraw);
+        Canvas chart = new Canvas(200, 80);
+        ChangeListener<ColorScheme> redraw = (observable, oldScheme, newScheme) -> drawChart(chart, newScheme);
+        ThemeManager.colorSchemeProperty().addListener(redraw);
+        try {
             drawChart(chart, ThemeManager.getColorScheme());
-            listener = redraw;
 
             scene.getRoot().applyCss();
             assertEquals(Color.web("#3b3360"), draft.getBackground().getFills().get(0).getFill(), "the tag in Dark");
@@ -243,10 +241,9 @@ class AgentGuideSamplesTest {
             assertEquals(Color.web("#1d6a8c"), chart.getGraphicsContext2D().getFill(), "the chart in Light");
             assertTrue(scene.getStylesheets().get(2).startsWith("data:"), "the application's stylesheet stays last");
         } finally {
+            // The window closes, as the guide says: its listener goes first, so that going back to Dark draws nothing.
+            ThemeManager.colorSchemeProperty().removeListener(redraw);
             ThemeManager.setAppearance(Appearance.DARK);
-            if (listener != null) {
-                ThemeManager.colorSchemeProperty().removeListener(listener);
-            }
         }
     }
 
