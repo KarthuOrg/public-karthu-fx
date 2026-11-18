@@ -129,6 +129,31 @@ The 23 `-fx-code-<category>-color` tokens colour the pieces of a code block colo
 or more). A fine token refers to the token it falls back to, which JavaFX resolves at the coloured
 node, so a base colour set on one view also changes that view's fine ones that still refer to it.
 
+### Nebula Light: the design tokens
+`light.css` (Nebula Light) defines exactly the tokens of `dark.css`, in the same order, and replaces
+it on a scene. The table maps each token of the colour design (`-app-*`) to the karthu-fx tokens
+that take its value, with today's dark value and the light value. A value marked *proposed* is
+derived, not given by the design. Contrast after WCAG, against the background the colour sits on
+(text 4.5:1, borders and focus 3:1). A token of `dark.css` without a row here still holds its dark
+value in `light.css`, marked `derive: dark value` there; a token that refers to another keeps the
+reference in both schemes.
+
+| Design token | karthu-fx token | Dark (today) | Light | Proposed | Contrast (light) |
+|---|---|---|---|---|---|
+| `-app-bg-window` | `-fx-background-color` | `#1b1d30` | `#E4E5E8` | | background |
+| `-app-bg-surface` | `-fx-surface-color`, `-fx-base` | `#24273c` | `#E4E5E8` | | background |
+| `-app-text` | `-fx-text-color`, `-fx-mark-color` | `#d6d9e6` | `#1F2230` | | 12.5:1 on window and surface, 10.5:1 on hover |
+| `-app-text-strong` | `-fx-selection-text-color` | `#eef1fb` | `#1F2230` | | 11.6:1 on selection |
+| `-app-text-muted` | `-fx-text-secondary-color` | `#8a90a8` | `#5E6475` | | 4.7:1 on window and surface; 3.9:1 on hover, below 4.5:1 |
+| `-app-border` | `-fx-control-border` | `#42486e` | `#C2C4CC` | | 1.4:1 against window and surface, below 3:1 |
+| `-app-bg-hover` | `-fx-button-hover-color`, `-fx-hover-color` | `#394160`, `rgba(139,152,255,0.09)` | `#D0D3DA` | | background |
+| `-app-bg-selected` | `-fx-selection-color`, `-fx-selection-bar` | `#33488a` | `#D3DDF2` | | background |
+| `-app-focus` | `-fx-accent-color`, `-fx-focus-color` | `#7b8cff` | `#2F6FD6` | | 3.8:1 against window and surface; white text on it 4.8:1 |
+| `-app-accent-bg` | `-fx-accent-tint-color` | `rgba(123,140,255,0.16)` | `#D6E2F8` | | background; `-fx-accent-color` on it 3.7:1, below 4.5:1 |
+| `-app-primary` | `-fx-status-normal` | `#4cd38a` | `#1A7F4B` | | as text 4.0:1 on window, below 4.5:1 |
+| `-app-on-primary` | `-fx-status-button-text-color` | `#1b1d2d` | `#FFFFFF` | | 5.0:1 on `-fx-status-normal`, 6.5:1 on `-fx-status-error` |
+| `-app-danger-text` | `-fx-status-error` | `#e56a86` | `#B3261E` | | 5.2:1 on window and surface |
+
 ---
 
 ## 3. Density / metrics
@@ -1344,13 +1369,14 @@ Rules in `base.css` under *Frame: binding*; tokens: `-fx-accent-tint-color` (add
 
 ## 5. Notes for implementation
 - Window chrome: native OS title bar — style content only (no custom title bar).
-- Two stylesheets, load order: `base.css` then the theme (`dark.css`).
+- Two stylesheets, load order: `base.css` then the scheme in effect (`dark.css` or `light.css`).
 - Smoothing: `-fx-font-smoothing-type: lcd` belongs to `Text` alone and is not inherited, so
   `base.css` sets it on `.text` (the text inside labels, buttons and inputs) and on the type
   `Text` (plain text nodes, such as a `TextFlow`'s runs), never on `.root` or a control. JavaFX
   falls back to gray by itself where LCD cannot work (a transparent background), and so in a node
   cached as a bitmap, which is why the theme's scroll pane skin caches no viewport (*Scroll panes*).
   Don't cache a node with text (`setCache(true)`) in the theme's scenes.
-- Dark-only by design: there is no light theme and no Modena fallback —
-  `ThemeManager.apply(Scene)` always loads `base.css` + `dark.css`.
+- No Modena fallback: `ThemeManager.apply(Scene)` loads `base.css` + the stylesheet of the scheme
+  in effect, `dark.css` (the default) or `light.css`, and a change of the scheme replaces the one
+  with the other in every themed scene.
 - Don't introduce new literal hex in component rules — add a token instead.
