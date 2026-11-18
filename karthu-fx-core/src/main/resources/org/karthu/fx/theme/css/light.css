@@ -4,8 +4,8 @@
  * every rule of dark.css beyond .root: ThemeManager loads this stylesheet instead of dark.css, never on top of it.
  * A token that refers to another token keeps the reference and follows that token, unless its places take a colour
  * of their own here: a token that tells apart places sharing one colour in Nebula Dark refers to that colour in
- * dark.css and has its light value here. Where dark.css computes a shade of another token, the light shade points the
- * way light needs (darker under the pointer) and follows that token too.
+ * dark.css and has its light value here. A shade computed here with derive follows the token it names, darker under
+ * the pointer and while pressed, as light needs.
  */
 
 .root {
