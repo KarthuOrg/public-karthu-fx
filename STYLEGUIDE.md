@@ -35,20 +35,18 @@ in each scheme, the token of the colour design it follows (the design's `-app-*`
 design's tokens* at the end of this section maps every one of them) and the contrast noted for
 Nebula Light.
 
-- **Dark** is Nebula Dark's value. The design's own dark values differ (its window `#12131C`
-  against `#1b1d30`, its accent `#8AB4FF` against `#7b8cff`) and are not used.
-- **Light** is the design's light value where it names one. A value marked *proposed* is derived,
-  not given by the design, or proposed by the design itself (*by the design*): it follows the
-  design's logic (warm ivory fields, the grey chrome, deep hues that read on light, darker under
-  the pointer) and waits for a visual check.
+- **Dark** is Nebula Dark's value; the design tokens' dark values are not used.
+- **Light** is the light value of the design token in the *Design* column. *Proposed* marks a
+  value derived by the library rather than taken from the design tokens, following their logic
+  (warm ivory fields, the grey chrome, deep hues that read on light, darker under the pointer),
+  and a value the design tokens give only as a proposal.
 - **A value that names a token** refers to it, and JavaFX resolves the reference at the coloured
   node. Where Nebula Light tells apart places that share one colour in Nebula Dark, they take a
   token of their own: in `dark.css` it refers to the colour the places had, or holds its
   computation (a `derive`), so Nebula Dark keeps its colours. A light value that is a `derive`
   follows the token it names; the colour it resolves to stands beside it.
 - **Contrast** in Nebula Light, after WCAG, against the background the colour sits on: text
-  4.5:1, borders and focus 3:1, disabled text exempt. Noted while deriving; there is no lasting
-  contrast test.
+  4.5:1, borders and focus 3:1, disabled text exempt.
 
 ### Backgrounds
 | Token | Use | Dark | Light | Design | Contrast in light |
@@ -72,13 +70,13 @@ Nebula Light.
 ### Accent
 | Token | Use | Dark | Light | Design | Contrast in light |
 |---|---|---|---|---|---|
-| `-fx-accent-color` | focus borders, primary buttons, selected toggle buttons, checked boxes and radios, the slider's fill, the selected tab's underline, the quote bar, the shortcuts editor's modified dot | `#7b8cff` | `#2F6FD6` | `-app-focus`, `-app-status-modified` | 3.8:1 against window and surface; white text on it 4.8:1 |
+| `-fx-accent-color` | focus borders, primary buttons, selected toggle buttons, checked boxes and radios, the slider's fill, the selected tab's underline, the quote bar, the shortcuts editor's modified dot | `#7b8cff` | `#2F6FD6` | `-app-focus`; `-app-status-modified` *proposed* | 3.8:1 against window and surface; white text on it 4.8:1 |
 | `-fx-accent-hover-color` | the accent fill under the pointer (primary button, selected toggle button, checked box and radio, the slider's thumb), a hyperlink and the shortcuts editor's fix link under the pointer | `#8f9dff` | `derive(-fx-accent-color, -12%)` (`#2962BC`) *proposed* | — | darker under the pointer, as the primary green; white text on it 5.9:1; as text 4.7:1 on window and surface |
 | `-fx-accent-pressed-color` | the accent fill pressed (primary button, the slider's thumb) | `#6675ff` | `derive(-fx-accent-color, -23%)` (`#2455A5`) *proposed* | — | white text on it 7.2:1 |
 | `-fx-accent-text-color` | text on the accent fill (primary button, selected toggle button, the date picker's selected day) | `#ffffff` | `#FFFFFF` *proposed* | — | white, as on the primary fill; 4.8:1 on `-fx-accent-color` |
 | `-fx-accent-tint-color` | an accent tint behind accent text: the form fields' binding chip and bound `{}` icon | `rgba(123, 140, 255, 0.16)` | `#D6E2F8` | `-app-accent-bg` | background |
 | `-fx-accent-tint-text-color` | the text and icons on the accent tint: the binding chip's name and x, the bound `{}` icon | `-fx-accent-color` | `#1B4C9E` | `-app-accent-text` | 6.3:1 on the accent tint |
-| `-fx-link-color` | the Markdown view's links and images in table cells, hyperlinks, the shortcuts editor's fix | `-fx-accent-color` | `#1F56B3` *proposed* (by the design) | `-app-link` | 5.5:1 on window and surface, 5.1:1 on the Markdown view's raised content, 6.1:1 on the field surface; a hyperlink under the pointer takes `-fx-accent-hover-color`, 4.7:1 on the window |
+| `-fx-link-color` | the Markdown view's links and images in table cells, hyperlinks, the shortcuts editor's fix | `-fx-accent-color` | `#1F56B3` *proposed* | `-app-link` | 5.5:1 on window and surface, 5.1:1 on the Markdown view's raised content, 6.1:1 on the field surface; a hyperlink under the pointer takes `-fx-accent-hover-color`, 4.7:1 on the window |
 
 ### Borders
 | Token | Use | Dark | Light | Design | Contrast in light |
@@ -91,7 +89,7 @@ Nebula Light.
 |---|---|---|---|---|---|
 | `-fx-button-color` | neutral buttons and toggle buttons at rest, column headers, titled pane titles, spinner arrows, the date picker's week numbers, the chosen filter of the shortcuts editor | `#2d334d` | `#DCDDE1` *proposed* | — | background, the raised grey, a step darker than the window as dark's button is a step lighter than its surface; text on it 11.6:1, `-fx-text-secondary-color` 4.4:1, below 4.5:1 |
 | `-fx-button-hover-color` | a neutral button under the pointer | `#394160` | `#D0D3DA` | `-app-bg-hover` | background |
-| `-fx-button-pressed-color` | a pressed neutral button, a pressed icon button | `#475078` | `#C4C7D0` *proposed* (by the design) | `-app-bg-pressed` | background; text on it 9.4:1 |
+| `-fx-button-pressed-color` | a pressed neutral button, a pressed icon button | `#475078` | `#C4C7D0` *proposed* | `-app-bg-pressed` | background; text on it 9.4:1 |
 
 ### Selection and hover
 | Token | Use | Dark | Light | Design | Contrast in light |
@@ -140,12 +138,12 @@ Nebula Light.
 | `-fx-status-idle` | IDLE — no schedule: idle text and icons | `#6b7192` | `#5C6280` *proposed* | — | a grey indigo; as text 4.7:1 on window and surface, 5.3:1 on the field surface |
 | `-fx-status-button-text-color` | text on the status fills (`.success-button` and its siblings) | `#1b1d2d` | `#FFFFFF` | `-app-on-primary` | 5.0:1 on `-fx-status-normal`, 6.5:1 on `-fx-status-error` |
 | `-fx-status-normal-hover` | a success button under the pointer | `derive(-fx-status-normal, 15%)` | `#15703F` | `-app-primary-hover` | white text on it 6.1:1 |
-| `-fx-status-normal-pressed` | a pressed success button | `derive(-fx-status-normal, -12%)` | `#116236` *proposed* (by the design) | `-app-primary-pressed` | white text on it 7.4:1 |
+| `-fx-status-normal-pressed` | a pressed success button | `derive(-fx-status-normal, -12%)` | `#116236` *proposed* | `-app-primary-pressed` | white text on it 7.4:1 |
 | `-fx-status-running-hover` | the running button under the pointer | `derive(-fx-status-running, 15%)` | `derive(-fx-status-running, -12%)` (`#09615C`) *proposed* | — | darker under the pointer, as the primary green; follows the status colour; white text on it 7.3:1 |
 | `-fx-status-running-pressed` | the running button pressed | `derive(-fx-status-running, -12%)` | `derive(-fx-status-running, -23%)` (`#085551`) *proposed* | — | follows the status colour; white text on it 8.7:1 |
 | `-fx-status-paused-hover` | the warning button under the pointer | `derive(-fx-status-paused, 15%)` | `derive(-fx-status-paused, -12%)` (`#774F0E`) *proposed* | — | darker under the pointer; white text on it 7.2:1 |
 | `-fx-status-paused-pressed` | the warning button pressed | `derive(-fx-status-paused, -12%)` | `derive(-fx-status-paused, -23%)` (`#68450C`) *proposed* | — | white text on it 8.6:1 |
-| `-fx-status-error-hover` | a danger button's fill under the pointer | `derive(-fx-status-error, 15%)` | `#9C1F18` | `-app-danger-text-hover` | white text on it 8.0:1 |
+| `-fx-status-error-hover` | a danger button's fill under the pointer | `derive(-fx-status-error, 15%)` | `#9C1F18` *proposed* | `-app-danger-text-hover` | the danger text's colour under the pointer, as the fill; white text on it 8.0:1 |
 | `-fx-status-error-pressed` | a pressed danger button's fill | `derive(-fx-status-error, -12%)` | `#8A1D17` *proposed* | — | white text on it 9.3:1 |
 | `-fx-status-info-hover` | the info button under the pointer | `derive(-fx-status-info, 15%)` | `derive(-fx-status-info, -12%)` (`#1B4D9E`) *proposed* | — | darker under the pointer; white text on it 8.1:1 |
 | `-fx-status-info-pressed` | the info button pressed | `derive(-fx-status-info, -12%)` | `derive(-fx-status-info, -23%)` (`#18448A`) *proposed* | — | white text on it 9.4:1 |
@@ -170,7 +168,7 @@ Nebula Light.
 ### Markdown view
 | Token | Use | Dark | Light | Design | Contrast in light |
 |---|---|---|---|---|---|
-| `-fx-code-text-color` | code in the Markdown view, inline and plain code in its blocks: a soft mint in dark, a deep teal in light, apart from the accent | `#8fd6c8` | `#0F6E5C` *proposed* (by the design) | `-app-code` | 5.4:1 on the code background, 4.5:1 inline on the raised content |
+| `-fx-code-text-color` | code in the Markdown view, inline and plain code in its blocks: a soft mint in dark, a deep teal in light, apart from the accent | `#8fd6c8` | `#0F6E5C` *proposed* | `-app-code` | 5.4:1 on the code background, 4.5:1 inline on the raised content |
 | `-fx-code-background-color` | the background of code and source blocks, of their copy button, of the image placeholders and error boxes and of the image open button | `#1d1f33` | `#F3F1E8` *proposed* | — | background, the ivory, lighter than the raised content (1.2:1) so blocks stand apart as in dark, where they are darker |
 | `-fx-markdown-table-row-odd` | the odd rows of a table in the Markdown view, its `-fx-table-row-odd`: the rows' own colour, no zebra stripes | `-fx-surface-color` | `-fx-field-color` | `-app-bg-field` | background; text on it 14.0:1 |
 | `-fx-markdown-search-color` | the highlight of every match of the search but the current one: a muted amber in dark, a pale one in light, apart from the selection's blue | `derive(#e0a84c, -55%)` | `#F3D98A` *proposed* | — | background, a pale amber, apart from the selection's light blue by its hue; text on it 11.4:1 |
@@ -268,10 +266,10 @@ without a karthu-fx token has no place in the library.
 | `-app-danger-bg-hover` | none: the fill of an outlined Cancel button, while the theme's danger button stays filled; its fill under the pointer is `-fx-status-error-hover` |
 | `-app-danger-bg-pressed` | none, as `-app-danger-bg-hover`; the pressed fill is `-fx-status-error-pressed` |
 | `-app-danger-border-hover` | `-fx-danger-border-hover` |
-| `-app-danger-text-hover` | `-fx-danger-text-hover-color`, `-fx-status-error-hover` |
+| `-app-danger-text-hover` | `-fx-danger-text-hover-color`; `-fx-status-error-hover` *proposed*, the colour as the danger button's fill under the pointer |
 | `-app-error-border` | `-fx-error-border` |
 | `-app-status-unsaved` | none: karthu-fx marks no tab with unsaved changes |
-| `-app-status-modified` | `-fx-accent-color`, the colour of the shortcuts editor's modified dot |
+| `-app-status-modified` | `-fx-accent-color` *proposed*, the colour of the shortcuts editor's modified dot |
 | `-app-keycap-border` | `-fx-keycap-border` |
 | popup shadow | `-fx-shadow-color`, `-fx-tooltip-shadow-color` |
 
