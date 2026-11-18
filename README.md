@@ -1,6 +1,7 @@
 # Karthu FX
 
-JavaFX components with a dark theme of their own, and a showcase application that shows them all.
+JavaFX components with a theme of their own, light or dark, and a showcase application that shows
+them all.
 
 > **Under development. Please do not build on it yet.**
 >
@@ -12,9 +13,10 @@ JavaFX components with a dark theme of their own, and a showcase application tha
 
 - **A demonstration.** It shows what JavaFX components built with an AI assistant look like:
   themed dialogs, a settings dialog, form inputs, a Markdown view, commands with keyboard
-  shortcuts the user can change, and a few custom controls, all in one theme, Nebula Dark.
+  shortcuts the user can change, and a few custom controls, all in one theme with two colour
+  schemes, Nebula Light and Nebula Dark.
 - **A showcase application.** Every component and every themed standard control has a page to
-  click through.
+  click through, in either scheme: a switch in its toolbar chooses Light, Dark or System.
 - **Free to read and to copy from.** The licence is MIT-0: take what is useful, no attribution
   needed.
 
@@ -25,7 +27,8 @@ JavaFX components with a dark theme of their own, and a showcase application tha
 - **Not for production.** It has automated tests, but it has not been proven in other people's
   applications.
 - **Not supported.** No issues, no pull requests, no answers, and no promise that the work goes on.
-- **Not a general toolkit.** One dark theme and no light one, and it needs JDK 25 and JavaFX 25.
+- **Not a general toolkit.** One theme in a light and a dark scheme, and it needs JDK 25 and
+  JavaFX 25.
 
 ## Highlights
 
@@ -43,6 +46,14 @@ and frame, and the same focused, disabled, error, bound and read-only looks.
   that says in plain English what the expression means.
 
 <img src="docs/images/form-inputs.png" alt="The form inputs, one row per type and one column per state" width="75%">
+
+### Light, dark or as the system has it
+
+Every component comes in two colour schemes, Nebula Light and Nebula Dark, which share every shape
+and size. An application chooses Light, Dark or System with one call, `ThemeManager.setAppearance`,
+and every window follows at once; System follows the light or dark setting of the operating
+system, also when it changes while the application runs. Without a choice the theme stays dark.
+An application's own colours get a value per scheme in its own stylesheet.
 
 ### A Markdown view without a browser
 

@@ -42,7 +42,9 @@ mvn javafx:run -pl karthu-fx-showcase  # launch the showcase app (needs the inst
 - `karthu-fx-core` ships only `slf4j-api`; provide your own SLF4J binding in the application
   (the showcase uses Log4j 2).
 - Full JPMS: add `requires org.karthu.fx;` to your `module-info.java`.
-- Apply the theme to every scene with `ThemeManager.apply(scene)` before the scene is shown.
+- Apply the theme to every scene with `ThemeManager.apply(scene)` before the scene is shown. Its
+  scheme is Nebula Dark until the application chooses Light or System with
+  `ThemeManager.setAppearance`.
 
 ## Windows executable (jpackage)
 

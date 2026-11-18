@@ -16,13 +16,44 @@ documented in the JavaDoc; the style classes, pseudo-classes and colour tokens a
 
 ## Theming
 
-The library ships a single theme, **Nebula Dark** (see [`STYLEGUIDE.md`](../STYLEGUIDE.md)), as two
-stylesheets loaded in order: `base.css` (structure/density) and `dark.css` (color tokens).
+The library ships one theme in two colour schemes, **Nebula Light** and **Nebula Dark** (see
+[`STYLEGUIDE.md`](../STYLEGUIDE.md)), which share every shape, size and spacing; only the colours
+differ. It is three stylesheets: `base.css` (structure/density) and one colour stylesheet per
+scheme, `light.css` and `dark.css`, which define the same colour tokens. A themed scene holds
+`base.css` and the stylesheet of the scheme in effect, never both.
 
 Apply it with the static `ThemeManager.apply(scene)`. Call it for every `Scene`, including dialogs
 and secondary windows, before the scene is shown (the theme gives scroll panes a skin of its own,
 which must be their first). The CSS lives module-internal at `/org/karthu/fx/theme/css/`; always
-apply it through `ThemeManager`, never by resolving the path yourself.
+apply it through `ThemeManager`, never by resolving the path yourself. A native image that names
+the resources it includes one by one names all three stylesheets.
+
+- **Choosing the scheme** (from 1.1.0-RC2). An application chooses the scheme of all its windows
+  with `ThemeManager.setAppearance(Appearance)`: `LIGHT`, `DARK` or `SYSTEM`. System follows the
+  light or dark setting the operating system reports, also when it changes while the application
+  runs, and is Dark where the system reports none. Without a choice the scheme is Dark.
+  `appearanceProperty()` holds the choice and refuses null. The library stores the choice nowhere:
+  the application keeps it with its settings and sets it again at start, before its first window
+  shows, so that the window never appears in the other scheme.
+- **Switching while the application runs.** A change of the choice restyles at once every scene
+  the theme was applied to, shown or not yet shown, with the open popups, menus and tooltips of its
+  windows and karthu-fx's own dialogs: nothing needs to be applied again. Only the scheme's
+  stylesheet is replaced, in its place, so the application's own stylesheets keep their places and
+  order. The theme holds the scenes weakly: a scene nobody else holds is not kept alive.
+- **The scheme in effect.** `colorSchemeProperty()`, read-only, is JavaFX's `ColorScheme`, `LIGHT`
+  or `DARK`, System resolved: the property to follow for colours an application sets in code, such
+  as those it draws on a canvas.
+- **An application's own colours.** The theme's tokens (`-fx-text-color`, `-fx-accent-color` and
+  the others) keep their meaning in both schemes, so a stylesheet that uses them needs nothing
+  more. The root of every themed scene carries the pseudo-class `light` or `dark`, the scheme in
+  effect, also a root that replaces it, so an application gives a colour of its own a value per
+  scheme as a token of its own under `.root:light` and `.root:dark`, and its rules use the token.
+  Its stylesheets go on the scene after `ThemeManager.apply`, which replaces the scene's
+  stylesheets.
+- **The title bar** stays as the operating system draws it, in both schemes: JavaFX does not colour
+  it.
+- **In the showcase.** A *Light* / *Dark* / *System* switch at the right end of the toolbar, bound to
+  the theme's choice, which starts in Dark.
 
 ## Configuration
 
@@ -70,8 +101,8 @@ require `javafx.web`, so no browser engine ships with the application.
   or switches off languages per view through `getCodeLanguages()` and its own `CodeLexer`.
   Keywords, strings, comments, types and the other pieces each take the colour of one of 23
   categories (`CodeCategory`), nine base ones and fourteen fine ones that fall back to them, every
-  colour a theme token (`-fx-code-keyword-color` and so on) that an application changes with CSS at
-  runtime, and every piece a `code-` style class. A block longer than
+  colour a theme token (`-fx-code-keyword-color` and so on) with a value in each scheme, which an
+  application changes with CSS at runtime, and every piece a `code-` style class. A block longer than
   `codeHighlightLineLimitProperty()` (500 lines by default) stays in one colour, so a very long
   block cannot make the view slow.
 - **Zoom.** The whole document zooms from 50 to 200 % as a browser zooms a page, the text wrapping
@@ -109,8 +140,9 @@ require `javafx.web`, so no browser engine ships with the application.
   blocks and of a table's header and cells, also in rows never drawn, in the order the table
   shows them, following the reader's sort and moved, hidden or shown columns. Case and accents
   are ignored as in the search fields' list filter, but the search is one piece, its words next
-  to each other, a space matching any run of whitespace. Every match is marked in a muted amber,
-  the current one in amber behind dark text, both below the selection, and the view scrolls to
+  to each other, a space matching any run of whitespace. Every match is marked in a quiet amber
+  (muted in Nebula Dark, pale in Nebula Light), the current one in a full amber behind dark text,
+  both below the selection, and the view scrolls to
   the current match when it is not fully visible, sideways too in a wide code block or table, at
   every zoom. The view brings no search field and takes no keys for it: a `SearchInput` connected
   with `search(view)` (see [Search fields](#search-fields-in-the-same-look)) goes into the
@@ -135,7 +167,8 @@ require `javafx.web`, so no browser engine ships with the application.
   *Play animations* and *Images from the internet*, a search field connected to the view with the
   choice of its direction above it, an *Insert a line at the top* button that gives the view a new
   version of its text through `updateMarkdown`, a *Margins* switch with a slider for each margin
-  that sets them live, and a *Code colours* card whose CSS recolours the view as it is typed.
+  that sets them live, and a *Code colours* card whose CSS, the colours of the scheme in effect,
+  recolours the view as it is typed.
 
 ## Form fields
 
@@ -360,7 +393,7 @@ the user changes in a dialog. No new dependency.
   chosen, and `hasChangesProperty()` and `hasConflictsProperty()` enable the page's own buttons.
 - **Texts and styling.** Every text of the dialog and the editor is a property with an English
   default, the counter's parts as formats with a form for a count of one (*{0} conflict*, *{0}
-  conflicts*). Colours come from the theme's existing tokens; the style classes and
+  conflicts*). Colours come from the theme's tokens; the style classes and
   pseudo-classes (`shortcuts-row` with `:modified`, `:conflict`, `:override` and the others) are
   listed in [`STYLEGUIDE.md`](../STYLEGUIDE.md) (*Shortcuts editor and dialog*).
 - **In the showcase.** The *Shortcuts* page in the group *Navigation* is a small example
