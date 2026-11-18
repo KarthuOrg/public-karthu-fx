@@ -164,6 +164,7 @@ the colour it resolves to with the light values stands beside it.
 | `-app-focus` | `-fx-accent-color`, `-fx-focus-color` | `#7b8cff` | `#2F6FD6` | | 3.8:1 against window and surface; white text on it 4.8:1 |
 | `-app-accent-bg` | `-fx-accent-tint-color` | `rgba(123,140,255,0.16)` | `#D6E2F8` | | background |
 | `-app-accent-text` | `-fx-accent-tint-text-color`: the binding chip's name and x, the bound `{}` icon | `-fx-accent-color` | `#1B4C9E` | | 6.3:1 on the accent tint |
+| `-app-link` | `-fx-link-color`: the Markdown view's links and images in table cells, hyperlinks, the shortcuts editor's fix | `-fx-accent-color` | `#1F56B3` | *proposed* (by the design) | 5.5:1 on window and surface, 5.1:1 on the Markdown view's raised content, 6.1:1 on the field surface; a hyperlink under the pointer takes `-fx-accent-hover-color`, 4.7:1 on the window |
 | `-app-primary` | `-fx-status-normal` | `#4cd38a` | `#1A7F4B` | | as text 4.0:1 on window, below 4.5:1 |
 | `-app-primary-hover` | `-fx-status-normal-hover`: a success button under the pointer | `derive(-fx-status-normal, 15%)` | `#15703F` | | white text on it 6.1:1 |
 | `-app-primary-pressed` | `-fx-status-normal-pressed`: a pressed success button | `derive(-fx-status-normal, -12%)` | `#116236` | *proposed* (by the design) | white text on it 7.4:1 |
@@ -180,6 +181,8 @@ the colour it resolves to with the light values stands beside it.
 | — | `-fx-status-running-pressed`, `-fx-status-paused-pressed`, `-fx-status-info-pressed`: those buttons pressed | `derive(<status>, -12%)` | `derive(<status>, -23%)` (`#085551`, `#68450C`, `#18448A`) | *proposed* | follows the status colour; white text on them 8.6:1 or more |
 | (popup shadow) | `-fx-shadow-color`: the shadow of menus, popups and the slider's thumb | `rgba(0,0,0,0.2)` | `rgba(31,34,48,0.18)` | | a shadow; offsets and radii as in dark |
 | — | `-fx-shadow-strong-color`: the focused slider thumb's shadow | `rgba(0,0,0,0.3)` | `rgba(31,34,48,0.27)` | *proposed* | a shadow, one and a half times the other, as in dark |
+| `-app-bg-field` | `-fx-tooltip-color`: a tooltip's background; JavaFX's own shape, padding, font and shadow stay | `rgba(30,30,30,0.8)` (JavaFX's) | `#F3F1E8` | *proposed* | background, the ivory of popups; 1.1:1 against the window, its shadow sets it apart |
+| `-app-text` | `-fx-tooltip-text-color`: a tooltip's text | `#ffffff` (JavaFX's) | `#1F2230` | *proposed* | 14.0:1 on the tooltip |
 | — | `-fx-background-color-selected`: no place in the theme, for an application's own use | `rgba(18,19,32,0.78)` | `rgba(228,229,232,0.78)` | *proposed* | a veil, the window colour at 78 percent as in dark; no text of its own |
 | `-app-bg-canvas` | `-fx-canvas-color`: the group rows of the shortcuts editor, the settings dialog, the image window and its zoom bar, the area behind cards | `#1b1d30` | `#DCDDE1` | *proposed* | background, the design's canvas and raised grey, darker than the window as dark's canvas is darker than its surface; text on it 11.6:1, `-fx-text-secondary-color` 4.4:1, below 4.5:1 |
 | — | `-fx-readonly-bg`: read-only text fields, text areas and form fields | `#1e202f` | `#DCDDE1` | *proposed* | background, grey as the design's field that cannot be edited (`-app-bg-raised`); text on it 11.6:1, the warning outline 4.4:1, the error outline 3.8:1, the focus outline 3.5:1 |
@@ -235,11 +238,10 @@ stays filled (its fills are the status error's under the pointer and pressed);
 `-app-border-disabled`, `-app-icon-disabled` and `-app-bg-button-disabled` have no place, since the
 theme dims a disabled control as a whole and keeps its colours; the raised group headers of a list
 are the shortcuts editor's group lines, on `-fx-canvas-color`, which follows `-app-bg-canvas`;
-`-app-link` (`#1F56B3`, proposed by the design) has no place of its own: a link, in the Markdown
-view and as a `Hyperlink`, takes `-fx-accent-color`, 3.5:1 on the view's raised content and 3.8:1
-on the window, below 4.5:1; `-app-accent-bg` also marks a highlighted search match in the design,
-while the Markdown view's marks stay amber, since the accent tint is the selection's light blue.
-Tooltips have no rule in the theme and keep JavaFX's own look in both schemes.
+`-app-accent-bg` also marks a highlighted search match in the design, while the Markdown view's
+marks stay amber, since the accent tint is the selection's light blue. A tooltip keeps JavaFX's own
+shape, padding, font and shadow in both schemes; the theme sets only its colours, in Dark
+JavaFX's own.
 
 ---
 
@@ -372,7 +374,7 @@ Images add no token. Two pseudo-classes: `:loose` on a list, `:focus-within` on 
 | `markdown-text` | every `Text` run | `-fx-text-color` |
 | `markdown-strong`, `markdown-emphasis` | `Text` runs | bold, italic; combined on one run as needed |
 | `markdown-code` | `Text` runs | monospace in `-fx-code-text-color`; no background box (a `Text` has none) |
-| `markdown-link` | the `Text` runs of a link (inline link, autolink, bare URL), combined with the classes of the styles inside it | `-fx-accent-color` (also around code and inside a quote), underlined on `:hover`; hand cursor and the address as tooltip, set by the view |
+| `markdown-link` | the `Text` runs of a link (inline link, autolink, bare URL), combined with the classes of the styles inside it | `-fx-link-color` (also around code and inside a quote), underlined on `:hover`; hand cursor and the address as tooltip, set by the view |
 | `markdown-bullet-list`, `markdown-ordered-list` | a list: a box of its item rows | items 3px apart; with the pseudo-class `:loose` (blank lines between its items or an item's blocks in the source) 8px, like paragraphs |
 | `markdown-list-item` | an item row: a box of the item's blocks | left padding 18px (24px in an ordered list), the indent per level, which holds the marker; blocks 3px apart (8px in a loose list) |
 | `markdown-list-marker` | an item's marker, a `Label`: `•`, or the number and its delimiter (`3.`, `3)`); a bullet task item has none | `-fx-text-color`; its 6px right padding is the gap to the item's blocks |
@@ -395,7 +397,7 @@ Images add no token. Two pseudo-classes: `:loose` on a list, `:focus-within` on 
 | `markdown-image-inline` | an image in a sentence or a heading, a `Region` that is one node of its line's `TextFlow`, its bottom on the baseline, one character for the selection | shrinks to the width its text wraps at. Its placeholder and error box are smaller than a block's (radius 3, padding `0 3`, 4px between icon and text), so the line keeps its height |
 | `markdown-image-placeholder` | what an image shows until it is decoded: in a block a `Label` with the Bootstrap `IMAGE` icon and the alt text, inline a `Label` with the icon alone | one quiet line as wide as its content: `-fx-code-background-color`, radius 4, padding `4 8`, 6px between icon and text, text and icon (14px) in `-fx-text-secondary-color` |
 | `markdown-image-error` | what an image shows when it cannot be shown (missing, a format the view cannot decode, above the pixel limit): in a block an `HBox` with the Bootstrap `FILE_EARMARK_X` icon, a `Label` with the alt text and one with the note, inline a `Label` with the icon and the alt text, the image's address as the tooltip of both | like the placeholder: `-fx-code-background-color`, radius 4, padding `4 8`, 6px apart, labels and icon (14px) in `-fx-text-secondary-color` |
-| `markdown-image-cell` | an image in a table cell, header or body: the Bootstrap `IMAGE` icon (a `FontIcon`) and the alt text (a `markdown-text` run), joined by a no-break space, never a picture | `-fx-accent-color`, as a link's runs, inside a quote too, icon 13px. Underlined on `:hover`, with a hand cursor, since a click opens the image. In a selected cell or a table selected whole the icon takes `-fx-selection-text-color` |
+| `markdown-image-cell` | an image in a table cell, header or body: the Bootstrap `IMAGE` icon (a `FontIcon`) and the alt text (a `markdown-text` run), joined by a no-break space, never a picture | `-fx-link-color`, as a link's runs, inside a quote too, icon 13px. Underlined on `:hover`, with a hand cursor, since a click opens the image. In a selected cell or a table selected whole the icon takes `-fx-selection-text-color` |
 | `markdown-image-open` | a block image's open button, a `Button` that also carries `icon-button`, with the Bootstrap fullscreen icon, shown while the pointer is over the image, which opens the full size window | like `markdown-code-copy`: the theme's icon button, 4px from the image's top and right edges, background `-fx-code-background-color`, hover adds `-fx-hover-color`, pressed `-fx-button-pressed-color`, icon 14px in `-fx-text-secondary-color` (`-fx-text-color` on hover), above the selection's highlight |
 | `markdown-image-window` | the root of the full size window's scene, a `BorderPane`: the bar on top, the image area below | `-fx-canvas-color` |
 | `markdown-image-bar` | the window's bar, an `HBox`: `markdown-image-fit` and `markdown-image-actual-size` (the theme's `Button`s *Fit* and *100 %*), `markdown-image-zoom` (a `Label` with the zoom in percent), and at its right end `markdown-image-copy` and `markdown-image-save` (the theme's `Button`s *Copy image* and *Save as*, disabled, dimmed as a disabled button, while there is no image to copy or no file to save) | like the view's zoom bar: padding 4, spacing 4, a 1px line in `-fx-control-border` below it, on `-fx-surface-color`, the zoom in `-fx-text-secondary-color` |
@@ -626,7 +628,7 @@ renaming one is a breaking change.
 | `shortcuts-key-caps` | a key's caps, an `HBox` | spacing 3 |
 | `shortcuts-key-cap` | one cap, a `Label`: a modifier, the key's name or the character | 11px, padding `0 5`, `-fx-keycap-color` in a 1px `-fx-keycap-border` frame, radius 3; in a conflict framed in `-fx-error-border` and lettered in `-fx-status-error` |
 | `shortcuts-hint` | the hint after the key caps, a `Label`: *Also used by …* naming the other commands of a conflict, else *Overrides …* naming the commands of enclosing contexts the key overrides; shows only then | `-fx-text-secondary-color`; in a conflict `-fx-status-error`, also on the selected row; shrinks with an ellipsis |
-| `shortcuts-fix` | the conflict's one-click fix after the hint, a `Hyperlink`, not focus traversable: *Remove there* takes the key from the other commands; shows only while one of them is not fixed | the theme's link, `-fx-accent-color`, `-fx-accent-hover-color` under the pointer, no padding |
+| `shortcuts-fix` | the conflict's one-click fix after the hint, a `Hyperlink`, not focus traversable: *Remove there* takes the key from the other commands; shows only while one of them is not fixed | the theme's link, `-fx-link-color`, `-fx-accent-hover-color` under the pointer, no padding |
 | `shortcuts-not-assigned` | *Not assigned*, a `Label` | `-fx-text-placeholder-color` |
 | `shortcuts-row-content` | the row's content, an `HBox`: the columns and the buttons | — |
 | `shortcuts-edit`, `shortcuts-remove`, `shortcuts-reset` | the pencil (Bootstrap `PENCIL`), the × (`X`) and the reset (`ARROW_COUNTERCLOCKWISE`), `Button`s beside `icon-button`, not focus traversable | icons 13px in `-fx-text-secondary-color`, the × in `-fx-danger-text-hover-color` under the pointer, the reset in `-fx-accent-color`; pencil and × on the row under the pointer and the selected row, the reset on a modified row, none on a fixed row |
