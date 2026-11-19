@@ -87,34 +87,34 @@ public class MarkdownShowcaseController {
             """;
 
     /**
-     * The text of the <i>Code colours</i> card in Nebula Light: the same rule with the light scheme's nine base colours.
+     * The text of the <i>Code colours</i> card in Nebula Light: the same rule with the light scheme's colours, after Eclipse's light editors.
      * Applied, it changes nothing either.
      */
     static final String LIGHT_CODE_COLORS = """
             .markdown-view {
-                -fx-code-comment-color: #5E6475;
-                -fx-code-keyword-color: #7A3EC0;
-                -fx-code-string-color: #875A10;
-                -fx-code-number-color: #A84A10;
-                -fx-code-type-color: #15703F;
-                -fx-code-function-color: #1F56B3;
-                -fx-code-variable-color: #B0284D;
-                -fx-code-property-color: #3B4CC0;
-                -fx-code-tag-color: #B0284D;
-                -fx-code-doc-color: -fx-code-comment-color;
-                -fx-code-annotation-color: -fx-code-keyword-color;
-                -fx-code-literal-color: -fx-code-number-color;
-                -fx-code-constant-color: -fx-code-literal-color;
+                -fx-code-comment-color: #3F7F5F;
+                -fx-code-keyword-color: #7F0055;
+                -fx-code-string-color: #2A00FF;
+                -fx-code-number-color: #000000;
+                -fx-code-type-color: #000000;
+                -fx-code-function-color: #000000;
+                -fx-code-variable-color: #000000;
+                -fx-code-property-color: #0000C0;
+                -fx-code-tag-color: #3F7F7F;
+                -fx-code-doc-color: #3F5FBF;
+                -fx-code-annotation-color: #646464;
+                -fx-code-literal-color: -fx-code-keyword-color;
+                -fx-code-constant-color: -fx-code-property-color;
                 -fx-code-escape-color: -fx-code-string-color;
-                -fx-code-attribute-color: -fx-code-number-color;
-                -fx-code-operator-color: -fx-code-text-color;
-                -fx-code-punctuation-color: -fx-code-text-color;
+                -fx-code-attribute-color: #7F007F;
+                -fx-code-operator-color: -fx-code-block-text-color;
+                -fx-code-punctuation-color: #008080;
                 -fx-code-heading-color: -fx-code-function-color;
                 -fx-code-link-color: -fx-code-property-color;
                 -fx-code-code-color: -fx-code-string-color;
                 -fx-code-list-color: -fx-code-keyword-color;
                 -fx-code-quote-color: -fx-code-comment-color;
-                -fx-code-emphasis-color: -fx-code-text-color;
+                -fx-code-emphasis-color: -fx-code-block-text-color;
             }
             """;
 

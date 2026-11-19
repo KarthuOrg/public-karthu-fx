@@ -127,6 +127,8 @@
     /* Markdown view colors: code, and the odd rows of tables (the surface: no zebra stripes) */
     -fx-code-text-color: #8fd6c8;
     -fx-code-background-color: #1d1f33;
+    /* The plain code between the coloured pieces of a code block: the code colour, as inline code */
+    -fx-code-block-text-color: -fx-code-text-color;
     -fx-markdown-table-row-odd: -fx-surface-color;
 
     /* Markdown view: the marks of the search. Every match in a muted amber behind the text colour, the

@@ -8,8 +8,9 @@ import java.util.Optional;
 /**
  * The category of a piece of code in a coloured code block of the {@link MarkdownView}: keyword, string, comment and
  * so on. A {@link CodeLexer} cuts a block's code into {@link CodePiece pieces}, each of one category, and the view
- * colours each piece by its category. Text between pieces is plain code, in the code colour
- * {@code -fx-code-text-color}.
+ * colours each piece by its category. Text between pieces is plain code, in the block's code colour
+ * {@code -fx-code-block-text-color} (the code colour {@code -fx-code-text-color} in Nebula Dark, black in Nebula
+ * Light).
  *
  * <p><b>Base and fine categories.</b> Nine categories are <em>base</em> categories with a colour of their own, so that
  * nine colours colour every language completely. The fourteen others are <em>fine</em> categories: each takes the
@@ -26,8 +27,9 @@ import java.util.Optional;
  * {@code code-constant}, {@code code-literal} and {@code code-number}. So an own rule for {@code code-keyword} (an
  * underline, say) also reaches annotations, and one for {@code code-annotation} only them. The defaults are colours
  * only, no bold, no italic, each readable on the code background {@code -fx-code-background-color}. Each colour
- * scheme of the theme, Nebula Dark and Nebula Light, has base colours of its own, and in both a fine variable refers
- * to its fallback. Bold and italic from an own rule show only when the code font has those faces: JavaFX finds none
+ * scheme of the theme, Nebula Dark and Nebula Light, has base colours of its own. In Nebula Dark every fine variable
+ * refers to its fallback. Nebula Light follows the default colours of Eclipse's light editors, and some of its fine
+ * variables hold a colour of their own or refer to another category's variable. Bold and italic from an own rule show only when the code font has those faces: JavaFX finds none
  * of a variable font such as "Cascadia Mono".
  *
  * <p>Categories are never removed; new fine categories with a fallback may be added.
@@ -36,81 +38,83 @@ public enum CodeCategory {
 
     /**
      * Comments. Style class {@code code-comment}, variable {@code -fx-code-comment-color}, default {@code #8a90a8} in
-     * Nebula Dark, {@code #5E6475} in Nebula Light.
+     * Nebula Dark, {@code #3F7F5F} in Nebula Light.
      */
     COMMENT(true, null),
 
     /**
      * Keywords of a language. Style class {@code code-keyword}, variable {@code -fx-code-keyword-color}, default
-     * {@code #c88bff} in Nebula Dark, {@code #7A3EC0} in Nebula Light.
+     * {@code #c88bff} in Nebula Dark, {@code #7F0055} in Nebula Light.
      */
     KEYWORD(true, null),
 
     /**
      * Text in quotes. Style class {@code code-string}, variable {@code -fx-code-string-color}, default
-     * {@code #e0a84c} in Nebula Dark, {@code #875A10} in Nebula Light.
+     * {@code #e0a84c} in Nebula Dark, {@code #2A00FF} in Nebula Light.
      */
     STRING(true, null),
 
     /**
      * Numbers. Style class {@code code-number}, variable {@code -fx-code-number-color}, default {@code #ff9e64} in
-     * Nebula Dark, {@code #A84A10} in Nebula Light.
+     * Nebula Dark, {@code #000000} in Nebula Light.
      */
     NUMBER(true, null),
 
     /**
      * Type names. Style class {@code code-type}, variable {@code -fx-code-type-color}, default {@code #4cd38a} in
-     * Nebula Dark, {@code #15703F} in Nebula Light.
+     * Nebula Dark, {@code #000000} in Nebula Light.
      */
     TYPE(true, null),
 
     /**
      * A name followed by {@code (}. Style class {@code code-function}, variable {@code -fx-code-function-color},
-     * default {@code #5d9bff} in Nebula Dark, {@code #1F56B3} in Nebula Light.
+     * default {@code #5d9bff} in Nebula Dark, {@code #000000} in Nebula Light.
      */
     FUNCTION(true, null),
 
     /**
      * Variables: Bash variables, SQL parameters, YAML anchors. Style class {@code code-variable}, variable
-     * {@code -fx-code-variable-color}, default {@code #ff8fa3} in Nebula Dark, {@code #B0284D} in Nebula Light.
+     * {@code -fx-code-variable-color}, default {@code #ff8fa3} in Nebula Dark, {@code #000000} in Nebula Light.
      */
     VARIABLE(true, null),
 
     /**
      * Keys in JSON and YAML. Style class {@code code-property}, variable {@code -fx-code-property-color}, default
-     * {@code #7b8cff} in Nebula Dark, {@code #3B4CC0} in Nebula Light.
+     * {@code #7b8cff} in Nebula Dark, {@code #0000C0} in Nebula Light.
      */
     PROPERTY(true, null),
 
     /**
      * XML and HTML tags. Style class {@code code-tag}, variable {@code -fx-code-tag-color}, default {@code #ff8fa3} in
-     * Nebula Dark, {@code #B0284D} in Nebula Light.
+     * Nebula Dark, {@code #3F7F7F} in Nebula Light.
      */
     TAG(true, null),
 
     /**
      * Documentation comments such as Javadoc. Falls back to {@link #COMMENT}. Style classes {@code code-doc} and
-     * {@code code-comment}, variable {@code -fx-code-doc-color}, default {@code -fx-code-comment-color}.
+     * {@code code-comment}, variable {@code -fx-code-doc-color}, default {@code -fx-code-comment-color} in Nebula Dark,
+     * {@code #3F5FBF} in Nebula Light.
      */
     DOC(false, COMMENT),
 
     /**
      * Java annotations. Falls back to {@link #KEYWORD}. Style classes {@code code-annotation} and
-     * {@code code-keyword}, variable {@code -fx-code-annotation-color}, default {@code -fx-code-keyword-color}.
+     * {@code code-keyword}, variable {@code -fx-code-annotation-color}, default {@code -fx-code-keyword-color} in
+     * Nebula Dark, {@code #646464} in Nebula Light.
      */
     ANNOTATION(false, KEYWORD),
 
     /**
      * {@code true}, {@code false}, {@code null}, SQL {@code NULL}. Falls back to {@link #NUMBER}. Style classes
      * {@code code-literal} and {@code code-number}, variable {@code -fx-code-literal-color}, default
-     * {@code -fx-code-number-color}.
+     * {@code -fx-code-number-color} in Nebula Dark, {@code -fx-code-keyword-color} in Nebula Light.
      */
     LITERAL(false, NUMBER),
 
     /**
      * Java names in capitals only, at least two characters. Falls back to {@link #LITERAL}. Style classes
      * {@code code-constant}, {@code code-literal} and {@code code-number}, variable {@code -fx-code-constant-color},
-     * default {@code -fx-code-literal-color}.
+     * default {@code -fx-code-literal-color} in Nebula Dark, {@code -fx-code-property-color} in Nebula Light.
      */
     CONSTANT(false, LITERAL),
 
@@ -122,19 +126,22 @@ public enum CodeCategory {
 
     /**
      * XML and HTML attribute names. Falls back to {@link #NUMBER}. Style classes {@code code-attribute} and
-     * {@code code-number}, variable {@code -fx-code-attribute-color}, default {@code -fx-code-number-color}.
+     * {@code code-number}, variable {@code -fx-code-attribute-color}, default {@code -fx-code-number-color} in
+     * Nebula Dark, {@code #7F007F} in Nebula Light.
      */
     ATTRIBUTE(false, NUMBER),
 
     /**
      * Operators. Falls back to the code text. Style class {@code code-operator}, variable
-     * {@code -fx-code-operator-color}, default {@code -fx-code-text-color}.
+     * {@code -fx-code-operator-color}, default {@code -fx-code-text-color} in Nebula Dark,
+     * {@code -fx-code-block-text-color} in Nebula Light.
      */
     OPERATOR(false, null),
 
     /**
      * Brackets and separators. Falls back to the code text. Style class {@code code-punctuation}, variable
-     * {@code -fx-code-punctuation-color}, default {@code -fx-code-text-color}.
+     * {@code -fx-code-punctuation-color}, default {@code -fx-code-text-color} in Nebula Dark, {@code #008080} in
+     * Nebula Light.
      */
     PUNCTUATION(false, null),
 
@@ -170,7 +177,8 @@ public enum CodeCategory {
 
     /**
      * Markdown emphasis and strong emphasis. Falls back to the code text. Style class {@code code-emphasis}, variable
-     * {@code -fx-code-emphasis-color}, default {@code -fx-code-text-color}.
+     * {@code -fx-code-emphasis-color}, default {@code -fx-code-text-color} in Nebula Dark,
+     * {@code -fx-code-block-text-color} in Nebula Light.
      */
     EMPHASIS(false, null);
 

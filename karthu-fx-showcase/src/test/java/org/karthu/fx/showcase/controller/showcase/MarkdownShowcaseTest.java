@@ -437,8 +437,8 @@ class MarkdownShowcaseTest {
             MarkdownView view = view(root);
             TextArea css = codeColors(root);
             String light = css.getText();
-            assertTrue(light.contains("    -fx-code-keyword-color: #7A3EC0;\n"), light);
-            assertTrue(light.contains("    -fx-code-annotation-color: -fx-code-keyword-color;\n"), light);
+            assertTrue(light.contains("    -fx-code-keyword-color: #7F0055;\n"), light);
+            assertTrue(light.contains("    -fx-code-literal-color: -fx-code-keyword-color;\n"), light);
             Map<CodeCategory, Paint> withCard = fills(view);
             List<String> sheets = new ArrayList<>(view.getStylesheets());
             view.getStylesheets().clear();

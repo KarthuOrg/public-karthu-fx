@@ -3498,6 +3498,13 @@ Text {
     -fx-padding: 8 12 8 12;
 }
 
+/* The plain code of a code block, between its coloured pieces: the
+ * block text colour (the code colour in dark, black in light). Before
+ * the category rules, which outweigh it on a coloured piece. */
+.markdown-view .markdown-code-block .markdown-code {
+    -fx-fill: -fx-code-block-text-color;
+}
+
 /* Code coloured by its language: each run of a piece carries the
  * code- class of its category and of every category its fallback chain
  * passes (an annotation code-annotation and code-keyword). Each class

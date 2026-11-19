@@ -226,11 +226,11 @@ class MarkdownViewCodeColorsTest {
     }
 
     /**
-     * Nebula Light colours code in deep hues that read on its light code background, which lies apart from the view's
-     * raised content: each piece takes its light base colour, a fine piece the light colour it falls back to.
+     * Nebula Light colours code after Eclipse's light editors on its white code background: each piece takes its
+     * light colour, plain code and the categories Eclipse leaves uncoloured black.
      */
     @Test
-    @DisplayName("in Light the pieces take deep colours on the white code background, plain code the deep teal")
+    @DisplayName("in Light the pieces take Eclipse's colours on the white code background, plain code black")
     void lightColors() {
         ThemeManager.setAppearance(Appearance.LIGHT);
         try {
@@ -240,18 +240,18 @@ class MarkdownViewCodeColorsTest {
 
             assertEquals(Color.web("#FFFFFF"), block.getBackground().getFills().getFirst().getFill(),
                     "the code background");
-            assertEquals(Color.web("#7A3EC0"), runs.get("int").getFill(), "keyword");
-            assertEquals(Color.web("#7A3EC0"), runs.get("@Override").getFill(), "annotation, as keyword");
-            assertEquals(Color.web("#A84A10"), runs.get("1").getFill(), "number");
-            assertEquals(Color.web("#A84A10"), runs.get("MAX").getFill(), "constant, as literal, as number");
-            assertEquals(Color.web("#5E6475"), runs.get("// done").getFill(), "comment");
-            assertEquals(Color.web("#875A10"), runs.get("\"a").getFill(), "string");
-            assertEquals(Color.web("#15703F"), runs.get("Row").getFill(), "type");
-            assertEquals(Color.web("#1F56B3"), runs.get("run").getFill(), "function");
-            assertEquals(Color.web("#0F6E5C"), runs.get(" x ").getFill(), "plain code");
-            assertEquals(Color.web("#B0284D"), themeColor(view, "-fx-code-variable-color"), "variable");
-            assertEquals(Color.web("#3B4CC0"), themeColor(view, "-fx-code-property-color"), "property");
-            assertEquals(Color.web("#B0284D"), themeColor(view, "-fx-code-tag-color"), "tag");
+            assertEquals(Color.web("#7F0055"), runs.get("int").getFill(), "keyword");
+            assertEquals(Color.web("#646464"), runs.get("@Override").getFill(), "annotation, its own grey");
+            assertEquals(Color.web("#000000"), runs.get("1").getFill(), "number, black");
+            assertEquals(Color.web("#0000C0"), runs.get("MAX").getFill(), "constant, as property");
+            assertEquals(Color.web("#3F7F5F"), runs.get("// done").getFill(), "comment");
+            assertEquals(Color.web("#2A00FF"), runs.get("\"a").getFill(), "string");
+            assertEquals(Color.web("#000000"), runs.get("Row").getFill(), "type, black");
+            assertEquals(Color.web("#000000"), runs.get("run").getFill(), "function, black");
+            assertEquals(Color.web("#000000"), runs.get(" x ").getFill(), "plain code, black");
+            assertEquals(Color.web("#000000"), themeColor(view, "-fx-code-variable-color"), "variable");
+            assertEquals(Color.web("#0000C0"), themeColor(view, "-fx-code-property-color"), "property");
+            assertEquals(Color.web("#3F7F7F"), themeColor(view, "-fx-code-tag-color"), "tag");
         } finally {
             ThemeManager.setAppearance(Appearance.DARK);
         }

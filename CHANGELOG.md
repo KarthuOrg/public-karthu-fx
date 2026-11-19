@@ -8,6 +8,12 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 
 ### Added
 
+- Nebula Light colours code after the default colours of Eclipse's light editors: keywords a
+  wine red, strings a blue, comments a green, Javadoc a slate blue, fields and constants a deep
+  blue, annotations a grey, XML tags, attributes and brackets in Eclipse's own colours, and
+  numbers, types, method names, variables and plain code black. The new token
+  `-fx-code-block-text-color` colours the plain code of a code block, in Nebula Dark the code
+  colour as before, so inline code keeps its deep teal in light. Nebula Dark keeps every colour.
 - Nebula Light, a light colour scheme beside Nebula Dark, with the same shapes, sizes and spacing:
   a cool grey chrome, white fields, dark text and a deep blue focus, for every component and
   every themed standard control, the Markdown view's coloured code and search marks included.

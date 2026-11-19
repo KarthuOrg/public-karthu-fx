@@ -170,8 +170,9 @@ Nebula Light.
 ### Markdown view
 | Token | Use | Dark | Light | Design | Contrast in light |
 |---|---|---|---|---|---|
-| `-fx-code-text-color` | code in the Markdown view, inline and plain code in its blocks: a soft mint in dark, a deep teal in light, apart from the accent | `#8fd6c8` | `#0F6E5C` *proposed* | `-app-code` | 6.2:1 on the code background, 4.5:1 inline on the raised content |
+| `-fx-code-text-color` | inline code in the Markdown view, and in dark the plain code of its blocks: a soft mint in dark, a deep teal in light, apart from the accent | `#8fd6c8` | `#0F6E5C` *proposed* | `-app-code` | 6.2:1 on the code background, 4.5:1 inline on the raised content |
 | `-fx-code-background-color` | the background of code and source blocks, of their copy button, of the image placeholders and error boxes and of the image open button | `#1d1f33` | `#FFFFFF` *proposed* | — | background, the white of fields, lighter than the raised content (1.4:1) so blocks stand apart as in dark, where they are darker |
+| `-fx-code-block-text-color` | the plain code of a code block, between its coloured pieces, and a block without colours | `-fx-code-text-color` | `#000000` | — | black, as in Eclipse's light editors (the owner's choice); 21:1 on the code background |
 | `-fx-markdown-table-row-odd` | the odd rows of a table in the Markdown view, its `-fx-table-row-odd`: the rows' own colour, no zebra stripes | `-fx-surface-color` | `-fx-field-color` | `-app-bg-field` | background, the white of fields; text on it 15.8:1 |
 | `-fx-markdown-search-color` | the highlight of every match of the search but the current one: a muted amber in dark, a pale one in light, apart from the selection's blue | `derive(#e0a84c, -55%)` | `#F3D98A` *proposed* | — | background, a pale amber, apart from the selection's light blue by its hue; text on it 11.4:1 |
 | `-fx-markdown-search-text-color` | the characters of those matches, shown on their highlight | `-fx-text-color` | `-fx-text-color` | — | 11.4:1 on the match |
@@ -181,35 +182,39 @@ Nebula Light.
 ### Code colours
 The 23 `-fx-code-<category>-color` tokens colour the pieces of a code block coloured by its language
 (`CodeCategory`). A base token holds a colour, readable on `-fx-code-background-color` (contrast
-5.0:1 or more in both schemes). A fine token refers to the token it falls back to, in both
-schemes, which JavaFX resolves at the coloured node, so a base colour set on one view also changes
-that view's fine ones that still refer to it.
+5.0:1 or more in dark, 4.6:1 or more in light). In dark a fine token refers to the token it falls
+back to, which JavaFX resolves at the coloured node, so a base colour set on one view also changes
+that view's fine ones that still refer to it. Light follows the default colours of Eclipse's light
+editors (the owner's choice, 2026-11-19): keywords a wine red, strings a blue, comments a green,
+fields and constants a deep blue, numbers, types, method names and variables black; some fine
+tokens hold a colour of their own there or refer to another category's token. Colours only:
+Eclipse's bold keywords are left out.
 
 | Token | Use | Dark | Light | Design | Contrast in light |
 |---|---|---|---|---|---|
-| `-fx-code-comment-color` | comments (base) | `#8a90a8` | `#5E6475` *proposed* | — | the secondary text colour, as dark shares its own; 5.9:1 on the code background |
-| `-fx-code-keyword-color` | keywords of a language (base) | `#c88bff` | `#7A3EC0` *proposed* | — | the blocked violet, as dark shares it; 6.4:1 on the code background |
-| `-fx-code-string-color` | text in quotes (base) | `#e0a84c` | `#875A10` *proposed* | — | the paused amber, as dark shares it; 6.0:1 on the code background |
-| `-fx-code-number-color` | numbers (base) | `#ff9e64` | `#A84A10` *proposed* | — | a deep orange; 5.8:1 on the code background |
-| `-fx-code-type-color` | type names (base) | `#4cd38a` | `#15703F` *proposed* | — | the primary action's hover green (the primary green itself is 5.0:1 there, at the limit); 6.1:1 on the code background |
-| `-fx-code-function-color` | a name followed by `(` (base) | `#5d9bff` | `#1F56B3` *proposed* | — | the info blue, as dark shares it; 6.9:1 on the code background |
-| `-fx-code-variable-color` | Bash variables, SQL parameters, YAML anchors (base) | `#ff8fa3` | `#B0284D` *proposed* | — | a deep rose; 6.4:1 on the code background |
-| `-fx-code-property-color` | keys in JSON and YAML (base) | `#7b8cff` | `#3B4CC0` *proposed* | — | an indigo of dark's hue (the accent itself is 4.8:1 there, below 5.0:1); 7.0:1 on the code background |
-| `-fx-code-tag-color` | XML and HTML tags (base) | `#ff8fa3` | `#B0284D` *proposed* | — | the variable's rose, as in dark; 6.4:1 on the code background |
-| `-fx-code-doc-color` | documentation comments such as Javadoc (fine) | `-fx-code-comment-color` | `-fx-code-comment-color` | — | as its fallback |
-| `-fx-code-annotation-color` | Java annotations (fine) | `-fx-code-keyword-color` | `-fx-code-keyword-color` | — | as its fallback |
-| `-fx-code-literal-color` | `true`, `false`, `null`, SQL `NULL` (fine) | `-fx-code-number-color` | `-fx-code-number-color` | — | as its fallback |
-| `-fx-code-constant-color` | Java names in capitals only, at least two characters (fine) | `-fx-code-literal-color` | `-fx-code-literal-color` | — | as its fallback |
+| `-fx-code-comment-color` | comments (base) | `#8a90a8` | `#3F7F5F` | — | Eclipse's comment green; 4.8:1 on the code background |
+| `-fx-code-keyword-color` | keywords of a language (base) | `#c88bff` | `#7F0055` | — | Eclipse's keyword wine red; 10.3:1 on the code background |
+| `-fx-code-string-color` | text in quotes (base) | `#e0a84c` | `#2A00FF` | — | Eclipse's string blue; 8.3:1 on the code background |
+| `-fx-code-number-color` | numbers (base) | `#ff9e64` | `#000000` | — | black, as Eclipse leaves numbers; 21:1 on the code background |
+| `-fx-code-type-color` | type names (base) | `#4cd38a` | `#000000` | — | black, as Eclipse leaves type names; 21:1 on the code background |
+| `-fx-code-function-color` | a name followed by `(` (base) | `#5d9bff` | `#000000` | — | black, as Eclipse leaves method names; 21:1 on the code background |
+| `-fx-code-variable-color` | Bash variables, SQL parameters, YAML anchors (base) | `#ff8fa3` | `#000000` | — | black, as Eclipse leaves local variables; 21:1 on the code background |
+| `-fx-code-property-color` | keys in JSON and YAML (base) | `#7b8cff` | `#0000C0` | — | Eclipse's field blue; 11.9:1 on the code background |
+| `-fx-code-tag-color` | XML and HTML tags (base) | `#ff8fa3` | `#3F7F7F` | — | Eclipse's XML tag teal grey; 4.6:1 on the code background |
+| `-fx-code-doc-color` | documentation comments such as Javadoc (fine) | `-fx-code-comment-color` | `#3F5FBF` | — | Eclipse's Javadoc slate blue; 5.8:1 on the code background |
+| `-fx-code-annotation-color` | Java annotations (fine) | `-fx-code-keyword-color` | `#646464` | — | Eclipse's annotation grey; 5.9:1 on the code background |
+| `-fx-code-literal-color` | `true`, `false`, `null`, SQL `NULL` (fine) | `-fx-code-number-color` | `-fx-code-keyword-color` | — | a keyword, as in Eclipse |
+| `-fx-code-constant-color` | Java names in capitals only, at least two characters (fine) | `-fx-code-literal-color` | `-fx-code-property-color` | — | a field, as in Eclipse |
 | `-fx-code-escape-color` | escapes in strings, XML entities (fine) | `-fx-code-string-color` | `-fx-code-string-color` | — | as its fallback |
-| `-fx-code-attribute-color` | XML and HTML attribute names (fine) | `-fx-code-number-color` | `-fx-code-number-color` | — | as its fallback |
-| `-fx-code-operator-color` | operators (fine) | `-fx-code-text-color` | `-fx-code-text-color` | — | as the code text |
-| `-fx-code-punctuation-color` | brackets, separators (fine) | `-fx-code-text-color` | `-fx-code-text-color` | — | as the code text |
-| `-fx-code-heading-color` | Markdown headings (fine) | `-fx-code-function-color` | `-fx-code-function-color` | — | as its fallback |
+| `-fx-code-attribute-color` | XML and HTML attribute names (fine) | `-fx-code-number-color` | `#7F007F` | — | Eclipse's XML attribute purple; 9.5:1 on the code background |
+| `-fx-code-operator-color` | operators (fine) | `-fx-code-text-color` | `-fx-code-block-text-color` | — | black, as the plain code |
+| `-fx-code-punctuation-color` | brackets, separators (fine) | `-fx-code-text-color` | `#008080` | — | Eclipse's XML bracket teal; 4.8:1 on the code background |
+| `-fx-code-heading-color` | Markdown headings (fine) | `-fx-code-function-color` | `-fx-code-function-color` | — | as its fallback: black |
 | `-fx-code-link-color` | Markdown links and addresses (fine) | `-fx-code-property-color` | `-fx-code-property-color` | — | as its fallback |
 | `-fx-code-code-color` | Markdown inline code and fences (fine) | `-fx-code-string-color` | `-fx-code-string-color` | — | as its fallback |
 | `-fx-code-list-color` | Markdown list markers (fine) | `-fx-code-keyword-color` | `-fx-code-keyword-color` | — | as its fallback |
 | `-fx-code-quote-color` | Markdown quote lines (fine) | `-fx-code-comment-color` | `-fx-code-comment-color` | — | as its fallback |
-| `-fx-code-emphasis-color` | Markdown emphasis and strong emphasis (fine) | `-fx-code-text-color` | `-fx-code-text-color` | — | as the code text |
+| `-fx-code-emphasis-color` | Markdown emphasis and strong emphasis (fine) | `-fx-code-text-color` | `-fx-code-block-text-color` | — | black, as the plain code |
 
 ### JavaFX's own tokens
 Tokens of JavaFX's default stylesheet, which its own rules read where the theme does not style a
@@ -422,7 +427,7 @@ Images add no token. Two pseudo-classes: `:loose` on a list, `:focus-within` on 
 | `markdown-code-copy` | a code block's copy button, a `Button` that also carries `icon-button`, with the Bootstrap clipboard icon | the theme's icon button (padding 4, radius 3, hand cursor), 4px from the block's top and right edges; background `-fx-code-background-color` (masks the code under it), hover adds `-fx-hover-color`, pressed `-fx-button-pressed-color`; icon 14px in `-fx-text-secondary-color`, `-fx-text-color` on hover |
 | `markdown-table` | a GFM table, a `TableView`: a column per table column, a row per body row; each header and body cell a `TextFlow` of `Text` runs with the classes above | the theme's table rules (`.table-view`: border, header, hover, selection, sort arrow) plus, inside the view: rows and cells in 13px like the body text (the theme's rows are 11.5px), no zebra stripes, cell padding `4 8` with the text at the top, header labels padded `4 8` and showing the header's formatted text (`-fx-content-display: graphic-only`), `-fx-cell-size: 24px` as the floor of a row's height; the theme's sort arrow and menu button in the header (§4, TableView); selected cells in the theme's cell selection rules (`-fx-selection-color`, the focused cell's accent frame), their runs in `-fx-selection-text-color`, code and links too; with the pseudo-class `:selected-whole` while the text selection passes over the table: every body cell and column header in `-fx-selection-color`, all runs in `-fx-selection-text-color` |
 | `markdown-source-block` | a source block: a block the view does not render (an HTML block, indented code) shown as its source lines | like `markdown-code-block`: `-fx-code-background-color`, radius 4, the same scroll pane and bar; no copy button |
-| `markdown-block-content` | the `TextFlow` inside a code or source block's scroll pane that holds its text as `Text` runs: `markdown-text` and `markdown-code` in a code block, `markdown-text` alone in a source block. One run for the whole text, except in a code block coloured by its language: a run per piece, which also carries its category's `code-` classes (`code-keyword`, an annotation `code-annotation` and `code-keyword`), and a run per plain stretch between pieces | padding `8 12`; monospace, never wrapped, a tab stop every four columns; code in `-fx-code-text-color`, a piece in its `-fx-code-<category>-color`, source in `-fx-text-color` |
+| `markdown-block-content` | the `TextFlow` inside a code or source block's scroll pane that holds its text as `Text` runs: `markdown-text` and `markdown-code` in a code block, `markdown-text` alone in a source block. One run for the whole text, except in a code block coloured by its language: a run per piece, which also carries its category's `code-` classes (`code-keyword`, an annotation `code-annotation` and `code-keyword`), and a run per plain stretch between pieces | padding `8 12`; monospace, never wrapped, a tab stop every four columns; plain code in `-fx-code-block-text-color`, a piece in its `-fx-code-<category>-color`, source in `-fx-text-color` |
 | `code-comment`, `code-keyword`, `code-string`, `code-number`, `code-type`, `code-function`, `code-variable`, `code-property`, `code-tag` (base), `code-doc`, `code-annotation`, `code-literal`, `code-constant`, `code-escape`, `code-attribute`, `code-operator`, `code-punctuation`, `code-heading`, `code-link`, `code-code`, `code-list`, `code-quote`, `code-emphasis` (fine) | the run of a piece in a code block coloured by its language, beside `markdown-text` and `markdown-code`: the class of its category and of every category its fallback chain passes (a doc comment `code-doc` and `code-comment`, a constant `code-constant`, `code-literal` and `code-number`, a heading `code-heading` and `code-function`, while operator, punctuation and emphasis carry only their own) | `-fx-fill` from the category's `-fx-code-<category>-color` (§2, *Code colours*), under `.markdown-view .markdown-code-block`, base classes first and fine ones after them, so the finest class of a run wins; colour only, no bold, no italic |
 | `markdown-selection` | the highlight behind selected characters, a `Path`, in a layer over the runs of a heading's, a paragraph's or a code or source block's flow (an unmanaged `TextFlow`, clipped to the selection) that shows the selected characters again on the highlight. Over a selected image, block or inline, a `Path` of its own over the picture, placeholder or error box | `-fx-fill: -fx-selection-color`; its own property `-fx-highlight-text-fill: -fx-selection-text-color` colours the selected characters. Over an image `-fx-opacity: 0.5` |
 | `markdown-search-match` | the highlight behind every match of the search but the current one, a `Path`, in a layer over the runs of a heading's, a paragraph's, a code or source block's or a table's header or body cell's flow (an unmanaged `TextFlow`, clipped to the matches) that shows the matched characters again on it, below the current match's layer and the selection's | `-fx-fill: -fx-markdown-search-color`; `-fx-highlight-text-fill: -fx-markdown-search-text-color` colours the matched characters. In a selected table cell and a table `:selected-whole` the selection shows above it: `-fx-fill: transparent`, `-fx-highlight-text-fill: -fx-selection-text-color` |
@@ -479,9 +484,9 @@ at first `java`, `json`, `yaml`/`yml`, `sql`, `xml`/`html`/`xhtml`, `bash`/`sh`/
 `markdown`/`md`) shows a run per piece its lexer found, with the piece's `code-` classes, and a
 plain run per stretch between pieces. A block without a language, in one the view does not know,
 with more lines than `codeHighlightLineLimitProperty()` (500 by default) or whose lexer fails
-stays one run in `-fx-code-text-color`, as inline code and source blocks always do. The 23
+stays one run in `-fx-code-block-text-color` (the code colour in dark, black in light). The 23
 `-fx-code-<category>-color` tokens are defined at the root in `dark.css` and `light.css`, a base
-one with a colour of its scheme, a fine one as a reference to its fallback, and JavaFX resolves such a reference from the coloured run upwards: a
+one with a colour of its scheme, a fine one in dark as a reference to its fallback, and JavaFX resolves such a reference from the coloured run upwards: a
 base colour set on one view (`setStyle`, or a stylesheet of the view) also changes that view's
 fine categories that still refer to it, and a fine token set alone changes only its own runs.
 The `code-` rules in `base.css` sit under `.markdown-view .markdown-code-block`, three classes

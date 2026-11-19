@@ -320,49 +320,50 @@ import java.util.function.Consumer;
  * <p><b>Categories.</b> Every piece belongs to one of 23 categories ({@link CodeCategory}). Nine base categories have
  * a colour of their own, so nine colours colour every language completely. The fourteen fine ones take the colour of
  * the category they fall back to until they are set themselves, three of them the code colour
- * {@code -fx-code-text-color}. Each category is a CSS variable of the theme, with a colour in each of its two colour
+ * {@code -fx-code-text-color}. Nebula Light follows the default colours of Eclipse's light editors: some of its
+ * fine categories have a colour of their own there, and plain code in a block is black. Each category is a CSS variable of the theme, with a colour in each of its two colour
  * schemes, Nebula Dark and Nebula Light ({@link org.karthu.fx.theme.ThemeManager}), and a style class:
  * <table>
  *   <caption>Categories of coloured code</caption>
  *   <tr><th>Category</th><th>Marks</th><th>Variable</th><th>Nebula Dark</th><th>Nebula Light</th>
  *       <th>Style classes of its runs</th></tr>
  *   <tr><td>comment</td><td>comments</td><td>{@code -fx-code-comment-color}</td><td>{@code #8a90a8}</td>
- *       <td>{@code #5E6475}</td><td>{@code code-comment}</td></tr>
+ *       <td>{@code #3F7F5F}</td><td>{@code code-comment}</td></tr>
  *   <tr><td>keyword</td><td>keywords of a language</td><td>{@code -fx-code-keyword-color}</td>
- *       <td>{@code #c88bff}</td><td>{@code #7A3EC0}</td><td>{@code code-keyword}</td></tr>
+ *       <td>{@code #c88bff}</td><td>{@code #7F0055}</td><td>{@code code-keyword}</td></tr>
  *   <tr><td>string</td><td>text in quotes</td><td>{@code -fx-code-string-color}</td><td>{@code #e0a84c}</td>
- *       <td>{@code #875A10}</td><td>{@code code-string}</td></tr>
+ *       <td>{@code #2A00FF}</td><td>{@code code-string}</td></tr>
  *   <tr><td>number</td><td>numbers</td><td>{@code -fx-code-number-color}</td><td>{@code #ff9e64}</td>
- *       <td>{@code #A84A10}</td><td>{@code code-number}</td></tr>
+ *       <td>{@code #000000}</td><td>{@code code-number}</td></tr>
  *   <tr><td>type</td><td>type names</td><td>{@code -fx-code-type-color}</td><td>{@code #4cd38a}</td>
- *       <td>{@code #15703F}</td><td>{@code code-type}</td></tr>
+ *       <td>{@code #000000}</td><td>{@code code-type}</td></tr>
  *   <tr><td>function</td><td>a name followed by {@code (}</td><td>{@code -fx-code-function-color}</td>
- *       <td>{@code #5d9bff}</td><td>{@code #1F56B3}</td><td>{@code code-function}</td></tr>
+ *       <td>{@code #5d9bff}</td><td>{@code #000000}</td><td>{@code code-function}</td></tr>
  *   <tr><td>variable</td><td>Bash variables, SQL parameters, YAML anchors and aliases</td>
- *       <td>{@code -fx-code-variable-color}</td><td>{@code #ff8fa3}</td><td>{@code #B0284D}</td>
+ *       <td>{@code -fx-code-variable-color}</td><td>{@code #ff8fa3}</td><td>{@code #000000}</td>
  *       <td>{@code code-variable}</td></tr>
  *   <tr><td>property</td><td>keys in JSON and YAML</td><td>{@code -fx-code-property-color}</td>
- *       <td>{@code #7b8cff}</td><td>{@code #3B4CC0}</td><td>{@code code-property}</td></tr>
+ *       <td>{@code #7b8cff}</td><td>{@code #0000C0}</td><td>{@code code-property}</td></tr>
  *   <tr><td>tag</td><td>XML and HTML tags</td><td>{@code -fx-code-tag-color}</td><td>{@code #ff8fa3}</td>
- *       <td>{@code #B0284D}</td><td>{@code code-tag}</td></tr>
+ *       <td>{@code #3F7F7F}</td><td>{@code code-tag}</td></tr>
  *   <tr><td>doc</td><td>documentation comments such as Javadoc</td><td>{@code -fx-code-doc-color}</td>
- *       <td>as comment</td><td>as comment</td><td>{@code code-doc}, {@code code-comment}</td></tr>
+ *       <td>as comment</td><td>{@code #3F5FBF}</td><td>{@code code-doc}, {@code code-comment}</td></tr>
  *   <tr><td>annotation</td><td>Java annotations</td><td>{@code -fx-code-annotation-color}</td><td>as keyword</td>
- *       <td>as keyword</td><td>{@code code-annotation}, {@code code-keyword}</td></tr>
+ *       <td>{@code #646464}</td><td>{@code code-annotation}, {@code code-keyword}</td></tr>
  *   <tr><td>literal</td><td>{@code true}, {@code false}, {@code null}, SQL's {@code NULL}</td>
- *       <td>{@code -fx-code-literal-color}</td><td>as number</td><td>as number</td>
+ *       <td>{@code -fx-code-literal-color}</td><td>as number</td><td>as keyword</td>
  *       <td>{@code code-literal}, {@code code-number}</td></tr>
  *   <tr><td>constant</td><td>Java names in capitals only, at least two characters</td>
- *       <td>{@code -fx-code-constant-color}</td><td>as literal</td><td>as literal</td>
+ *       <td>{@code -fx-code-constant-color}</td><td>as literal</td><td>as property</td>
  *       <td>{@code code-constant}, {@code code-literal}, {@code code-number}</td></tr>
  *   <tr><td>escape</td><td>escapes in strings, XML entities</td><td>{@code -fx-code-escape-color}</td>
  *       <td>as string</td><td>as string</td><td>{@code code-escape}, {@code code-string}</td></tr>
  *   <tr><td>attribute</td><td>XML and HTML attribute names</td><td>{@code -fx-code-attribute-color}</td>
- *       <td>as number</td><td>as number</td><td>{@code code-attribute}, {@code code-number}</td></tr>
+ *       <td>as number</td><td>{@code #7F007F}</td><td>{@code code-attribute}, {@code code-number}</td></tr>
  *   <tr><td>operator</td><td>operators</td><td>{@code -fx-code-operator-color}</td><td>the code colour</td>
- *       <td>the code colour</td><td>{@code code-operator}</td></tr>
+ *       <td>the block's code colour</td><td>{@code code-operator}</td></tr>
  *   <tr><td>punctuation</td><td>brackets, separators</td><td>{@code -fx-code-punctuation-color}</td>
- *       <td>the code colour</td><td>the code colour</td><td>{@code code-punctuation}</td></tr>
+ *       <td>the code colour</td><td>{@code #008080}</td><td>{@code code-punctuation}</td></tr>
  *   <tr><td>heading</td><td>Markdown headings</td><td>{@code -fx-code-heading-color}</td><td>as function</td>
  *       <td>as function</td><td>{@code code-heading}, {@code code-function}</td></tr>
  *   <tr><td>link</td><td>Markdown links and addresses</td><td>{@code -fx-code-link-color}</td><td>as property</td>
@@ -374,7 +375,7 @@ import java.util.function.Consumer;
  *   <tr><td>quote</td><td>Markdown quote lines</td><td>{@code -fx-code-quote-color}</td><td>as comment</td>
  *       <td>as comment</td><td>{@code code-quote}, {@code code-comment}</td></tr>
  *   <tr><td>emphasis</td><td>Markdown emphasis and strong emphasis</td><td>{@code -fx-code-emphasis-color}</td>
- *       <td>the code colour</td><td>the code colour</td><td>{@code code-emphasis}</td></tr>
+ *       <td>the code colour</td><td>the block's code colour</td><td>{@code code-emphasis}</td></tr>
  * </table>
  *
  * <p><b>Changing colours.</b> The variables are defined at the theme's root, in the stylesheet of each scheme, a base
@@ -845,7 +846,8 @@ import java.util.function.Consumer;
  * </table>
  *
  * <p>Colours come from the theme's tokens, some of them the view's own: {@code -fx-code-text-color}, the colour of
- * code, inline and in code blocks, {@code -fx-code-background-color}, the background of code and source blocks and of
+ * inline code, {@code -fx-code-block-text-color}, the colour of plain code in code blocks (the code colour in Nebula
+ * Dark, black in Nebula Light), {@code -fx-code-background-color}, the background of code and source blocks and of
  * the copy buttons, {@code -fx-markdown-table-row-odd}, the colour of a table's odd rows, the colours of coloured
  * code, one per {@link CodeCategory category} (see <em>Code colours</em>), and the colours of the search's marks:
  * {@code -fx-markdown-search-color} and {@code -fx-markdown-search-text-color}, the highlight and the characters of

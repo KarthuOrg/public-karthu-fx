@@ -150,6 +150,9 @@
      * them, and the odd rows of tables (the field surface of the even rows: no zebra stripes) */
     -fx-code-text-color: #0F6E5C;
     -fx-code-background-color: #FFFFFF;
+    /* The plain code between the coloured pieces of a code block: black, as in Eclipse's light editor (21:1 on the
+     * code background); inline code keeps the deep teal, apart from the text around it */
+    -fx-code-block-text-color: #000000;
     -fx-markdown-table-row-odd: -fx-field-color;
 
     /* Markdown view: the marks of the search. Every match in a pale amber behind the text colour, the current one
@@ -161,34 +164,35 @@
     -fx-markdown-search-current-text-color: #1F2230;
 
     /* Markdown view: the colours of code blocks coloured by their language, one per category
-     * (CodeCategory). The nine base categories have colours of their own, deep hues of dark.css's, each
-     * readable on -fx-code-background-color (contrast 5.0:1 or more): comment the secondary text, keyword
-     * the blocked violet, string the paused amber, function the info blue, type the primary action's hover
-     * green, as dark.css shares them. The fourteen fine ones refer to the variable they fall back to, as in
-     * dark.css. */
-    -fx-code-comment-color: #5E6475;
-    -fx-code-keyword-color: #7A3EC0;
-    -fx-code-string-color: #875A10;
-    -fx-code-number-color: #A84A10;
-    -fx-code-type-color: #15703F;
-    -fx-code-function-color: #1F56B3;
-    -fx-code-variable-color: #B0284D;
-    -fx-code-property-color: #3B4CC0;
-    -fx-code-tag-color: #B0284D;
-    -fx-code-doc-color: -fx-code-comment-color;
-    -fx-code-annotation-color: -fx-code-keyword-color;
-    -fx-code-literal-color: -fx-code-number-color;
-    -fx-code-constant-color: -fx-code-literal-color;
+     * (CodeCategory), after the default colours of Eclipse's light editors (the owner's choice, 2026-11-19): keyword
+     * a wine red, string a blue, comment a green, Javadoc a slate blue, fields and constants a deep blue, annotations
+     * a grey; numbers, types, method names and variables stay black as in Eclipse. XML takes Eclipse's own: tags a
+     * teal grey, attribute names a purple, brackets and separators a teal. Each readable on
+     * -fx-code-background-color (contrast 4.6:1 or more, the tags' teal grey the lowest). Colours only: Eclipse's bold keywords are left out, as
+     * base.css colours the categories and nothing else. */
+    -fx-code-comment-color: #3F7F5F;
+    -fx-code-keyword-color: #7F0055;
+    -fx-code-string-color: #2A00FF;
+    -fx-code-number-color: #000000;
+    -fx-code-type-color: #000000;
+    -fx-code-function-color: #000000;
+    -fx-code-variable-color: #000000;
+    -fx-code-property-color: #0000C0;
+    -fx-code-tag-color: #3F7F7F;
+    -fx-code-doc-color: #3F5FBF;
+    -fx-code-annotation-color: #646464;
+    -fx-code-literal-color: -fx-code-keyword-color;
+    -fx-code-constant-color: -fx-code-property-color;
     -fx-code-escape-color: -fx-code-string-color;
-    -fx-code-attribute-color: -fx-code-number-color;
-    -fx-code-operator-color: -fx-code-text-color;
-    -fx-code-punctuation-color: -fx-code-text-color;
+    -fx-code-attribute-color: #7F007F;
+    -fx-code-operator-color: -fx-code-block-text-color;
+    -fx-code-punctuation-color: #008080;
     -fx-code-heading-color: -fx-code-function-color;
     -fx-code-link-color: -fx-code-property-color;
     -fx-code-code-color: -fx-code-string-color;
     -fx-code-list-color: -fx-code-keyword-color;
     -fx-code-quote-color: -fx-code-comment-color;
-    -fx-code-emphasis-color: -fx-code-text-color;
+    -fx-code-emphasis-color: -fx-code-block-text-color;
 
     /* Base color for JavaFX default styling: the surface, so that JavaFX derives dark text for the controls the
      * theme does not style. The inner background is the white of fields, the faint focus the focus blue at 22
