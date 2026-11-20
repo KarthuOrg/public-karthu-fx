@@ -3,20 +3,27 @@ package org.karthu.fx.showcase.controller;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 
@@ -45,6 +52,9 @@ import java.util.Map;
 public class StyleShowcaseController {
 
     private static final Logger log = LoggerFactory.getLogger(StyleShowcaseController.class);
+
+    /** The key that puts the focus into the navigation's search: Ctrl+F, Cmd+F on macOS. */
+    private static final KeyCombination FIND = new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN);
 
     @FXML
     private SearchInput navigationSearch;
@@ -83,6 +93,12 @@ public class StyleShowcaseController {
 
     private StyleShowcaseViewModel viewModel;
     private final Map<String, Parent> pageCache = new HashMap<>();
+
+    /** Ctrl+F on the window's scene: the focus into the search, unless a handler before it took the key. */
+    private final EventHandler<KeyEvent> findHandler = this::find;
+
+    /** The scene {@link #findHandler} is added to, null while the window has none. */
+    private Scene findScene;
 
     /**
      * Binds the scheme switch of the toolbar to the theme's choice, in both directions: a choice on the switch is the
@@ -167,6 +183,13 @@ public class StyleShowcaseController {
                 }
         );
 
+        // The keyboard: Ctrl+F anywhere in the window, Arrow down and Enter in the search, Enter on a page row. Esc in
+        // the search is the field's own: it empties a field with text and consumes the key.
+        navigationTree.sceneProperty().addListener((obs, oldScene, newScene) -> addFindHandler(newScene));
+        addFindHandler(navigationTree.getScene());
+        navigationSearch.addEventFilter(KeyEvent.KEY_PRESSED, this::searchKeyPressed);
+        navigationTree.addEventFilter(KeyEvent.KEY_PRESSED, this::treeKeyPressed);
+
         // Select the first page's row, which opens the page
         if (!viewModel.getShowcaseItems().isEmpty()) {
             selectPageRow(viewModel.getShowcaseItems().get(0));
@@ -185,6 +208,78 @@ public class StyleShowcaseController {
             navigationTree.getSelectionModel().clearSelection();
         } else {
             navigationTree.getSelectionModel().select(node);
+        }
+    }
+
+    /**
+     * Adds the Ctrl+F handler to the window's scene, after every handler the scene has now, and takes it from the scene
+     * it was added to before. A handler, not a filter: the key reaches it after the focused node and its parents, so a
+     * page that takes Ctrl+F where it has the focus keeps it. A page may add a handler of its own to the scene when it
+     * enters it, as the Shortcuts page adds its command registry's; every handler of a node hears the key even once one
+     * consumed it, so this one is added again after each page that enters the scene and checks whether the key was
+     * taken.
+     *
+     * @param scene the window's scene, null for none
+     */
+    private void addFindHandler(Scene scene) {
+        if (findScene != null) {
+            findScene.removeEventHandler(KeyEvent.KEY_PRESSED, findHandler);
+        }
+        findScene = scene;
+        if (scene != null) {
+            scene.addEventHandler(KeyEvent.KEY_PRESSED, findHandler);
+        }
+    }
+
+    /** Ctrl+F that nothing took before: the focus into the search field, its text selected. */
+    private void find(KeyEvent event) {
+        if (event.isConsumed() || !FIND.match(event)) {
+            return;
+        }
+        TextField text = navigationSearch.getTextField();
+        text.requestFocus();
+        text.selectAll();
+        event.consume();
+    }
+
+    /**
+     * Arrow down and Enter in the search field, without a modifier: Arrow down moves the focus to the tree and selects
+     * the first hit's row, Enter selects that row and keeps the focus in the field; selecting the row opens the page.
+     * Without a hit both pass on. A filter, ahead of the text field's own keys; the field's own Enter acts only while it
+     * searches a Markdown view, which this one never does.
+     */
+    private void searchKeyPressed(KeyEvent event) {
+        if (event.isAltDown() || event.isControlDown() || event.isMetaDown() || event.isShiftDown()) {
+            return;
+        }
+        if (event.getCode() != KeyCode.DOWN && event.getCode() != KeyCode.ENTER) {
+            return;
+        }
+        ShowcaseItem firstHit = viewModel.firstHit();
+        if (firstHit == null) {
+            return;
+        }
+        if (event.getCode() == KeyCode.DOWN) {
+            navigationTree.requestFocus();
+        }
+        selectPageRow(firstHit);
+        navigationTree.scrollTo(navigationTree.getRow(viewModel.navigationNodeOf(firstHit)));
+        event.consume();
+    }
+
+    /**
+     * Enter on a page row, without a modifier: the row the tree's focus is on is selected, which opens its page. On a
+     * section or group row Enter passes on and opens nothing. The tree's arrow keys stay its own.
+     */
+    private void treeKeyPressed(KeyEvent event) {
+        if (event.getCode() != KeyCode.ENTER || event.isAltDown() || event.isControlDown() || event.isMetaDown()
+                || event.isShiftDown()) {
+            return;
+        }
+        TreeItem<NavigationEntry> focused = navigationTree.getFocusModel().getFocusedItem();
+        if (focused != null && focused.getValue() instanceof ShowcaseItem) {
+            navigationTree.getSelectionModel().select(focused);
+            event.consume();
         }
     }
 
@@ -224,6 +319,8 @@ public class StyleShowcaseController {
         }
 
         contentArea.getChildren().setAll(page);
+        // A page entering the scene may have added a handler of its own to it: Ctrl+F's comes after it.
+        addFindHandler(navigationTree.getScene());
 
         // Reset scroll to top
         contentScrollPane.setVvalue(0.0);

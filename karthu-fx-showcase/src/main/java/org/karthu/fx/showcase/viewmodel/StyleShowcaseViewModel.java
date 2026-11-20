@@ -153,6 +153,15 @@ public class StyleShowcaseViewModel {
     }
 
     /**
+     * The first hit of the search: the first page the tree shows, top to bottom.
+     *
+     * @return the page, or {@code null} while the tree shows none
+     */
+    public ShowcaseItem firstHit() {
+        return firstPage(navigationRoot);
+    }
+
+    /**
      * Connects a search field to the pages: from now on the field narrows {@link #getFilteredItems()} as the user
      * types, through the field's own list filter, so matching follows karthu-fx's search rule (words, case and accents
      * ignored). A page's text for the search is its name, its group's name and its section's name, separated by
@@ -255,6 +264,19 @@ public class StyleShowcaseViewModel {
         TreeItem<NavigationEntry> node = new TreeItem<>(heading);
         node.setExpanded(true);
         return node;
+    }
+
+    private static ShowcaseItem firstPage(TreeItem<NavigationEntry> node) {
+        if (node.getValue() instanceof ShowcaseItem page) {
+            return page;
+        }
+        for (TreeItem<NavigationEntry> child : node.getChildren()) {
+            ShowcaseItem found = firstPage(child);
+            if (found != null) {
+                return found;
+            }
+        }
+        return null;
     }
 
     private static TreeItem<NavigationEntry> find(TreeItem<NavigationEntry> node, ShowcaseItem page) {

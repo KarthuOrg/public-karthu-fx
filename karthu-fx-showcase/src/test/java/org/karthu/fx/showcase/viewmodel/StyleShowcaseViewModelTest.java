@@ -259,6 +259,24 @@ class StyleShowcaseViewModelTest {
         assertNull(viewModel.navigationNodeOf(buttons));
     }
 
+    @Test
+    @DisplayName("the first hit is the first page the tree shows, none while the search finds nothing")
+    void firstHit() {
+        StyleShowcaseViewModel viewModel = new StyleShowcaseViewModel();
+        SearchInput field = new SearchInput();
+        viewModel.connectSearch(field);
+        assertEquals("Buttons", viewModel.firstHit().displayName());
+
+        field.setText("tab");
+        assertEquals("TableView", viewModel.firstHit().displayName());
+
+        field.setText("dialog");
+        assertEquals("Dialog / Alert", viewModel.firstHit().displayName());
+
+        field.setText("zebra");
+        assertNull(viewModel.firstHit());
+    }
+
     // --- Helpers -------------------------------------------------------------------------------------
 
     /** Types a search into a field connected to the view model and returns the tree's outline. */

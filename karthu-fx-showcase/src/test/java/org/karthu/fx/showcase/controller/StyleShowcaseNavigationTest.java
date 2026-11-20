@@ -1,14 +1,18 @@
 package org.karthu.fx.showcase.controller;
 
 import javafx.application.Platform;
+import javafx.event.Event;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.junit.jupiter.api.BeforeAll;
@@ -205,7 +209,157 @@ class StyleShowcaseNavigationTest {
         assertEquals("Text Field", openPageTitle(window));
     }
 
+    @Test
+    @DisplayName("Ctrl+F puts the focus into the search field and selects its text")
+    void ctrlFFocusesTheSearch() throws IOException {
+        Window window = load();
+        laidOut(window);
+        window.search.setText("tab");
+        window.tree.requestFocus();
+
+        press(window.tree, KeyCode.F, true);
+
+        TextField text = window.search.getTextField();
+        assertSame(text, window.root.getScene().getFocusOwner());
+        assertEquals("tab", text.getSelectedText());
+    }
+
+    @Test
+    @DisplayName("a node that consumes Ctrl+F keeps it: the focus stays where it is")
+    void ctrlFConsumedByANodeStaysThere() throws IOException {
+        Window window = load();
+        laidOut(window);
+        TextField pageField = new TextField();
+        pageField.addEventHandler(KeyEvent.KEY_PRESSED, event -> {
+            if (event.getCode() == KeyCode.F && event.isControlDown()) {
+                event.consume();
+            }
+        });
+        window.contentArea.getChildren().setAll(pageField);
+
+        press(pageField, KeyCode.F, true);
+
+        assertSame(pageField, window.root.getScene().getFocusOwner());
+    }
+
+    @Test
+    @DisplayName("on the Shortcuts page Ctrl+F stays the demo's: its Find runs and the focus stays in the page")
+    void ctrlFOnTheShortcutsPageStaysTheDemos() throws IOException {
+        Window window = load();
+        laidOut(window);
+        selectPage(window, "Shortcuts");
+        window.root.applyCss();
+        window.root.layout();
+        Node toolbar = window.root.lookup("#exampleToolbar");
+        assertNotNull(toolbar, "the demo's toolbar");
+
+        press(toolbar, KeyCode.F, true);
+
+        assertTrue(((Label) window.root.lookup("#lastCommandLabel")).getText().contains("(search.find)"),
+                ((Label) window.root.lookup("#lastCommandLabel")).getText());
+        assertSame(toolbar, window.root.getScene().getFocusOwner());
+    }
+
+    @Test
+    @DisplayName("Ctrl+F reaches the search again once another page than Shortcuts is open")
+    void ctrlFAfterLeavingTheShortcutsPage() throws IOException {
+        Window window = load();
+        laidOut(window);
+        selectPage(window, "Shortcuts");
+        selectPage(window, "Buttons");
+
+        press(window.tree, KeyCode.F, true);
+
+        assertSame(window.search.getTextField(), window.root.getScene().getFocusOwner());
+    }
+
+    @Test
+    @DisplayName("Esc in the search field clears it and brings the full tree back")
+    void escClearsTheSearch() throws IOException {
+        Window window = load();
+        laidOut(window);
+        window.search.setText("dialog");
+        window.root.layout();
+
+        press(window.search.getTextField(), KeyCode.ESCAPE, false);
+        window.root.layout();
+
+        assertEquals("", window.search.getText());
+        assertEquals(43, texts(window.tree, ".sidebar-item-label").size());
+    }
+
+    @Test
+    @DisplayName("Arrow down in the search field moves the focus to the tree and selects the first hit, which opens")
+    void arrowDownSelectsTheFirstHit() throws IOException {
+        Window window = load();
+        laidOut(window);
+        window.search.setText("dialog");
+
+        press(window.search.getTextField(), KeyCode.DOWN, false);
+
+        assertSame(window.tree, window.root.getScene().getFocusOwner());
+        assertEquals("Dialog / Alert", window.tree.getSelectionModel().getSelectedItem().getValue().text());
+        assertEquals("Dialog / Alert", window.viewModel.getSelectedItem().displayName());
+        assertEquals("dialog", window.search.getText(), "the search stays");
+    }
+
+    @Test
+    @DisplayName("Enter in the search field opens the first hit")
+    void enterInTheSearchOpensTheFirstHit() throws IOException {
+        Window window = load();
+        laidOut(window);
+        window.search.setText("form path");
+
+        press(window.search.getTextField(), KeyCode.ENTER, false);
+
+        assertEquals("Path Input", window.viewModel.getSelectedItem().displayName());
+        assertEquals("Path Input", window.tree.getSelectionModel().getSelectedItem().getValue().text());
+        assertEquals("Path Input", openPageTitle(window));
+    }
+
+    @Test
+    @DisplayName("Enter in the search field without hits opens nothing")
+    void enterWithoutHitsOpensNothing() throws IOException {
+        Window window = load();
+        laidOut(window);
+        window.search.setText("zebra");
+
+        press(window.search.getTextField(), KeyCode.ENTER, false);
+
+        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
+        assertEquals("Buttons", openPageTitle(window));
+    }
+
+    @Test
+    @DisplayName("Enter on a page row opens that page; on a heading row it opens nothing")
+    void enterOnARow() throws IOException {
+        Window window = load();
+        laidOut(window);
+        TreeItem<NavigationEntry> javaFx = window.tree.getRoot().getChildren().get(0);
+        TreeItem<NavigationEntry> inputs = javaFx.getChildren().get(0);
+
+        window.tree.getFocusModel().focus(window.tree.getRow(inputs));
+        press(window.tree, KeyCode.ENTER, false);
+        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
+
+        window.tree.getFocusModel().focus(window.tree.getRow(inputs.getChildren().get(2)));
+        press(window.tree, KeyCode.ENTER, false);
+        assertEquals("Text Area", window.viewModel.getSelectedItem().displayName());
+        assertEquals("Text Area", window.tree.getSelectionModel().getSelectedItem().getValue().text());
+        assertEquals("Text Area", openPageTitle(window));
+    }
+
     // --- Helpers -------------------------------------------------------------------------------------
+
+    /**
+     * Gives a node the focus and presses a key there, as the platform sends it on Windows and Linux: Ctrl is the
+     * Control key.
+     */
+    private static void press(Node node, KeyCode code, boolean ctrl) {
+        node.requestFocus();
+        assertSame(node, node.getScene().getFocusOwner(), "the node did not take the focus");
+        Event.fireEvent(node, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, false, ctrl, false, false));
+    }
 
     /** The loaded window: its root, its view model and the parts the tests look at. */
     private record Window(Parent root, StyleShowcaseViewModel viewModel, TreeView<NavigationEntry> tree,
