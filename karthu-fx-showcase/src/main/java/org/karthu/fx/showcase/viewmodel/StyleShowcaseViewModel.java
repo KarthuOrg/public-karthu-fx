@@ -19,6 +19,10 @@ import org.karthu.fx.form.SearchInput;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
 
+import static org.karthu.fx.showcase.viewmodel.ShowcaseSection.EXAMPLES;
+import static org.karthu.fx.showcase.viewmodel.ShowcaseSection.JAVAFX;
+import static org.karthu.fx.showcase.viewmodel.ShowcaseSection.KARTHU_FX;
+
 /**
  * ViewModel for the style showcase application: the pages, the navigation tree built over them and the open page.
  * <p>
@@ -28,10 +32,6 @@ import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
  * {@link #connectSearch(SearchInput)} narrows that list as the user types.
  */
 public class StyleShowcaseViewModel {
-
-    private static final ShowcaseSection JAVAFX = ShowcaseSection.JAVAFX;
-    private static final ShowcaseSection KARTHU_FX = ShowcaseSection.KARTHU_FX;
-    private static final ShowcaseSection EXAMPLES = ShowcaseSection.EXAMPLES;
 
     /** The group of the form collection (package org.karthu.fx.form). */
     private static final String FORM_INPUTS = "Form Inputs";
@@ -149,7 +149,7 @@ public class StyleShowcaseViewModel {
      * @return its node, or {@code null} when the tree does not show it
      */
     public TreeItem<NavigationEntry> navigationNodeOf(ShowcaseItem page) {
-        return find(navigationRoot, page);
+        return findPage(navigationRoot, page);
     }
 
     /**
@@ -158,7 +158,11 @@ public class StyleShowcaseViewModel {
      * @return the page, or {@code null} while the tree shows none
      */
     public ShowcaseItem firstHit() {
-        return firstPage(navigationRoot);
+        TreeItem<NavigationEntry> node = findPage(navigationRoot, null);
+        if (node == null) {
+            return null;
+        }
+        return (ShowcaseItem) node.getValue();
     }
 
     /**
@@ -266,27 +270,21 @@ public class StyleShowcaseViewModel {
         return node;
     }
 
-    private static ShowcaseItem firstPage(TreeItem<NavigationEntry> node) {
-        if (node.getValue() instanceof ShowcaseItem page) {
-            return page;
-        }
-        for (TreeItem<NavigationEntry> child : node.getChildren()) {
-            ShowcaseItem found = firstPage(child);
-            if (found != null) {
-                return found;
-            }
-        }
-        return null;
-    }
-
-    private static TreeItem<NavigationEntry> find(TreeItem<NavigationEntry> node, ShowcaseItem page) {
-        if (node.getValue() == page) {
+    /**
+     * Walks the tree depth first, top to bottom, for the node of a page.
+     *
+     * @param node the node to start at
+     * @param page the page, or {@code null} for the first page of all
+     * @return the node, or {@code null} when the tree below {@code node} shows no such page
+     */
+    private static TreeItem<NavigationEntry> findPage(TreeItem<NavigationEntry> node, ShowcaseItem page) {
+        if (node.getValue() instanceof ShowcaseItem found && (page == null || found == page)) {
             return node;
         }
         for (TreeItem<NavigationEntry> child : node.getChildren()) {
-            TreeItem<NavigationEntry> found = find(child, page);
-            if (found != null) {
-                return found;
+            TreeItem<NavigationEntry> result = findPage(child, page);
+            if (result != null) {
+                return result;
             }
         }
         return null;

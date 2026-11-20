@@ -2,17 +2,22 @@ package org.karthu.fx.showcase.controller;
 
 import javafx.application.Platform;
 import javafx.event.Event;
+import javafx.event.EventType;
 import javafx.fxml.FXMLLoader;
+import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.junit.jupiter.api.BeforeAll;
@@ -349,7 +354,138 @@ class StyleShowcaseNavigationTest {
         assertEquals("Text Area", openPageTitle(window));
     }
 
+    @Test
+    @DisplayName("a click on a section or group row collapses it, a second click expands it; the open page stays")
+    void clickOnAHeadingRowTogglesIt() throws IOException {
+        Window window = load();
+        laidOut(window);
+        Node openPage = window.contentArea.getChildren().get(0);
+        TreeItem<NavigationEntry> javaFx = window.tree.getRoot().getChildren().get(0);
+        TreeItem<NavigationEntry> selection = javaFx.getChildren().get(1);
+
+        click(window, selection, false, 1);
+        assertFalse(selection.isExpanded(), "the group collapsed");
+        assertFalse(texts(window.tree, ".sidebar-item-label").contains("ComboBox"));
+        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
+        assertSame(openPage, window.contentArea.getChildren().get(0));
+
+        click(window, selection, false, 1);
+        assertTrue(selection.isExpanded(), "the group expanded again");
+        assertTrue(texts(window.tree, ".sidebar-item-label").contains("ComboBox"));
+
+        click(window, javaFx, false, 1);
+        assertFalse(javaFx.isExpanded(), "the section collapsed");
+        assertFalse(texts(window.tree, ".sidebar-item-label").contains("Buttons"));
+        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
+        assertSame(openPage, window.contentArea.getChildren().get(0));
+    }
+
+    @Test
+    @DisplayName("a click on a heading row's disclosure arrow toggles it once")
+    void clickOnTheArrowTogglesOnce() throws IOException {
+        Window window = load();
+        laidOut(window);
+        TreeItem<NavigationEntry> selection = window.tree.getRoot().getChildren().get(0).getChildren().get(1);
+
+        click(window, selection, true, 1);
+        assertFalse(selection.isExpanded(), "the arrow collapsed the group");
+
+        click(window, selection, true, 1);
+        assertTrue(selection.isExpanded(), "the arrow expanded the group");
+    }
+
+    @Test
+    @DisplayName("each click of a double click on a heading row toggles it once")
+    void doubleClickOnAHeadingRow() throws IOException {
+        Window window = load();
+        laidOut(window);
+        TreeItem<NavigationEntry> selection = window.tree.getRoot().getChildren().get(0).getChildren().get(1);
+
+        click(window, selection, false, 1);
+        assertFalse(selection.isExpanded());
+        click(window, selection, false, 2);
+        assertTrue(selection.isExpanded(), "the second click expanded the group again");
+    }
+
+    @Test
+    @DisplayName("a click on a page row opens it and toggles nothing")
+    void clickOnAPageRowOpensIt() throws IOException {
+        Window window = load();
+        laidOut(window);
+        TreeItem<NavigationEntry> textField = window.tree.getRoot().getChildren().get(0).getChildren().get(0)
+                .getChildren().get(1);
+
+        click(window, textField, false, 1);
+
+        assertEquals("Text Field", window.viewModel.getSelectedItem().displayName());
+        assertEquals("Text Field", openPageTitle(window));
+        assertTrue(textField.getParent().isExpanded());
+    }
+
+    @Test
+    @DisplayName("Arrow left and right on a selected heading row collapse and expand it once")
+    void arrowKeysOnAHeadingRow() throws IOException {
+        Window window = load();
+        laidOut(window);
+        TreeItem<NavigationEntry> selection = window.tree.getRoot().getChildren().get(0).getChildren().get(1);
+        window.tree.getSelectionModel().select(selection);
+
+        press(window.tree, KeyCode.LEFT, false);
+        assertFalse(selection.isExpanded(), "Arrow left collapsed the group");
+
+        press(window.tree, KeyCode.RIGHT, false);
+        assertTrue(selection.isExpanded(), "Arrow right expanded the group");
+        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
+    }
+
     // --- Helpers -------------------------------------------------------------------------------------
+
+    /**
+     * Clicks the primary button on the row of a tree node, as the platform sends it: pressed, released, clicked. The
+     * click lands on the row's disclosure arrow, or on the row's right end, away from the arrow.
+     */
+    private static void click(Window window, TreeItem<NavigationEntry> node, boolean onArrow, int clickCount) {
+        window.root.applyCss();
+        window.root.layout();
+        TreeCell<NavigationEntry> cell = cellOf(window.tree, node);
+        Node target = cell;
+        double x;
+        double y;
+        if (onArrow) {
+            target = cell.getDisclosureNode();
+            assertNotNull(target, "the row's disclosure arrow");
+            Bounds arrow = target.localToScene(target.getLayoutBounds());
+            x = arrow.getCenterX();
+            y = arrow.getCenterY();
+        } else {
+            Bounds row = cell.localToScene(cell.getLayoutBounds());
+            x = row.getMaxX() - 4;
+            y = row.getCenterY();
+        }
+        fireMouse(target, MouseEvent.MOUSE_PRESSED, x, y, clickCount);
+        fireMouse(target, MouseEvent.MOUSE_RELEASED, x, y, clickCount);
+        fireMouse(target, MouseEvent.MOUSE_CLICKED, x, y, clickCount);
+        window.root.applyCss();
+        window.root.layout();
+    }
+
+    private static void fireMouse(Node target, EventType<MouseEvent> type, double x, double y,
+            int clickCount) {
+        boolean primaryDown = type == MouseEvent.MOUSE_PRESSED;
+        Event.fireEvent(target, new MouseEvent(type, x, y, x, y, MouseButton.PRIMARY, clickCount, false, false, false,
+                false, primaryDown, false, false, false, false, true, null));
+    }
+
+    /** The visible cell that shows a tree node. */
+    @SuppressWarnings("unchecked")
+    private static TreeCell<NavigationEntry> cellOf(TreeView<NavigationEntry> tree, TreeItem<NavigationEntry> node) {
+        for (Node candidate : tree.lookupAll(".tree-cell")) {
+            if (candidate instanceof TreeCell<?> cell && cell.getTreeItem() == node && cell.isVisible()) {
+                return (TreeCell<NavigationEntry>) cell;
+            }
+        }
+        throw new AssertionError("no cell shows " + node.getValue().text());
+    }
 
     /**
      * Gives a node the focus and presses a key there, as the platform sends it on Windows and Linux: Ctrl is the

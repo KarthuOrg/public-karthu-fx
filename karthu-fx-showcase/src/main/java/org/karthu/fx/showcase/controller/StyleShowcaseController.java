@@ -3,10 +3,10 @@ package org.karthu.fx.showcase.controller;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
+import javafx.css.PseudoClass;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -24,6 +24,8 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 
@@ -249,10 +251,7 @@ public class StyleShowcaseController {
      * searches a Markdown view, which this one never does.
      */
     private void searchKeyPressed(KeyEvent event) {
-        if (event.isAltDown() || event.isControlDown() || event.isMetaDown() || event.isShiftDown()) {
-            return;
-        }
-        if (event.getCode() != KeyCode.DOWN && event.getCode() != KeyCode.ENTER) {
+        if (hasModifier(event) || (event.getCode() != KeyCode.DOWN && event.getCode() != KeyCode.ENTER)) {
             return;
         }
         ShowcaseItem firstHit = viewModel.firstHit();
@@ -263,7 +262,7 @@ public class StyleShowcaseController {
             navigationTree.requestFocus();
         }
         selectPageRow(firstHit);
-        navigationTree.scrollTo(navigationTree.getRow(viewModel.navigationNodeOf(firstHit)));
+        navigationTree.scrollTo(navigationTree.getSelectionModel().getSelectedIndex());
         event.consume();
     }
 
@@ -272,8 +271,7 @@ public class StyleShowcaseController {
      * section or group row Enter passes on and opens nothing. The tree's arrow keys stay its own.
      */
     private void treeKeyPressed(KeyEvent event) {
-        if (event.getCode() != KeyCode.ENTER || event.isAltDown() || event.isControlDown() || event.isMetaDown()
-                || event.isShiftDown()) {
+        if (event.getCode() != KeyCode.ENTER || hasModifier(event)) {
             return;
         }
         TreeItem<NavigationEntry> focused = navigationTree.getFocusModel().getFocusedItem();
@@ -281,6 +279,11 @@ public class StyleShowcaseController {
             navigationTree.getSelectionModel().select(focused);
             event.consume();
         }
+    }
+
+    /** Whether a key came with Alt, Ctrl, Meta or Shift held. */
+    private static boolean hasModifier(KeyEvent event) {
+        return event.isAltDown() || event.isControlDown() || event.isMetaDown() || event.isShiftDown();
     }
 
     @FXML
@@ -329,12 +332,49 @@ public class StyleShowcaseController {
     /**
      * A row of the navigation tree: a page with its icon and name, or a section or group heading. A heading row carries
      * the pseudo-class {@code :section-heading} or {@code :group-heading}, its label the style class
-     * {@code navigation-section-header} or {@code navigation-group-header}.
+     * {@code navigation-section-header} or {@code navigation-group-header}. A click on a heading row selects it and
+     * expands or collapses it, on its disclosure arrow as anywhere else on the row.
      */
     private static final class NavigationCell extends TreeCell<NavigationEntry> {
 
         private static final PseudoClass SECTION_HEADING = PseudoClass.getPseudoClass("section-heading");
         private static final PseudoClass GROUP_HEADING = PseudoClass.getPseudoClass("group-heading");
+
+        NavigationCell() {
+            addEventFilter(MouseEvent.MOUSE_PRESSED, this::headingPressed);
+            addEventFilter(MouseEvent.MOUSE_RELEASED, this::headingReleased);
+        }
+
+        /**
+         * A primary press on a heading row: the row selected, the tree focused, the heading expanded or collapsed. The
+         * press is consumed, so the cell's own behaviour, which toggles a heading on its arrow, on the second click of a
+         * double click, and acts on the release when the row is already selected, does nothing more: every click
+         * toggles exactly once.
+         */
+        private void headingPressed(MouseEvent event) {
+            if (!isPrimaryOnHeading(event)) {
+                return;
+            }
+            TreeItem<NavigationEntry> heading = getTreeItem();
+            TreeView<NavigationEntry> tree = getTreeView();
+            tree.requestFocus();
+            tree.getSelectionModel().select(heading);
+            tree.getFocusModel().focus(tree.getRow(heading));
+            heading.setExpanded(!heading.isExpanded());
+            event.consume();
+        }
+
+        /** A primary release on a heading row: consumed, its press did all there is to do. */
+        private void headingReleased(MouseEvent event) {
+            if (isPrimaryOnHeading(event)) {
+                event.consume();
+            }
+        }
+
+        private boolean isPrimaryOnHeading(MouseEvent event) {
+            return event.getButton() == MouseButton.PRIMARY && !isEmpty() && getTreeItem() != null
+                    && !(getItem() instanceof ShowcaseItem);
+        }
 
         @Override
         protected void updateItem(NavigationEntry entry, boolean empty) {
