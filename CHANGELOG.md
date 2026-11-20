@@ -8,6 +8,14 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 
 ### Added
 
+- A path setting in `SettingsDialog`: the new type `SettingType.PATH`, made with
+  `SettingEntry.ofPath(...)` (with and without a description), names its `PathMode` and its
+  `PathFilter`s, read back with `getPathMode()` and `getPathFilters()`. The dialog shows it with a
+  `PathInput` and its *Browse* icon, in the entry's mode, with its filters (their descriptions
+  resolved like the labels) and the shared directory memory; it takes the stored path, saves the
+  changed one and puts it back on *Cancel*, like every other setting. The value is the path's text,
+  the empty text no path. The showcase's *Settings Dialog* page has a *Tools* category with a
+  program and a folder.
 - Nebula Light colours code after the default colours of Eclipse's light editors: keywords a
   wine red, strings a blue, comments a green, Javadoc a slate blue, fields and constants a deep
   blue, annotations a grey, XML tags, attributes and brackets in Eclipse's own colours, and

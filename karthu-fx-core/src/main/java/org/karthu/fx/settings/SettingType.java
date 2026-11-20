@@ -22,5 +22,14 @@ public enum SettingType {
     SECRET,
 
     /** Date input — rendered as {@code DatePicker}. */
-    DATETIME
+    DATETIME,
+
+    /**
+     * A file or directory path — rendered as {@link org.karthu.fx.form.PathInput}, with its <i>Browse</i> icon, in
+     * the entry's {@linkplain SettingEntry#getPathMode() mode} and with its
+     * {@linkplain SettingEntry#getPathFilters() filters}.
+     *
+     * @since 1.1.0-RC2
+     */
+    PATH
 }
