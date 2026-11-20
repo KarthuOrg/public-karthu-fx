@@ -13,8 +13,10 @@ import java.util.List;
  * @param alignments the alignment of each column, as many as the header has cells
  * @param rows       the body rows in source order, each with one cell per column; empty for a table of a header
  *                   alone
+ * @param line       the 1-based number of the header row's source line; the delimiter row and the body rows follow
+ *                   it one by one
  */
-public record Table(List<Cell> header, List<Alignment> alignments, List<List<Cell>> rows) implements Block {
+public record Table(List<Cell> header, List<Alignment> alignments, List<List<Cell>> rows, int line) implements Block {
 
     /**
      * Copies the cells, so the table cannot change afterwards.
@@ -27,6 +29,16 @@ public record Table(List<Cell> header, List<Alignment> alignments, List<List<Cel
             copiedRows.add(List.copyOf(row));
         }
         rows = List.copyOf(copiedRows);
+    }
+
+    /**
+     * The source line of a body row: the rows follow the header row and the delimiter row without a gap.
+     *
+     * @param row the row's index in {@link #rows()}, from 0
+     * @return the 1-based number of its source line
+     */
+    public int rowLine(int row) {
+        return line + 2 + row;
     }
 
     /**

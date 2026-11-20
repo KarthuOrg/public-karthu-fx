@@ -153,6 +153,13 @@ require `javafx.web`, so no browser engine ships with the application.
   pictures until their files have been read again, so nothing flashes or jumps, and a search goes
   on from its current match. `setMarkdown` and the text property show another document, from the
   top.
+- **Source lines** (from 1.1.0-RC2). `topSourceLine()` tells the line of the Markdown text the
+  reader is looking at, the first block whose top is in the visible area, and
+  `searchMatchSourceLine()` the line of the current search match, both as an `OptionalInt`
+  counted from 1, so an application can open the file in an editor there. A list item, a table
+  row (the header too, and the row as the source has it in a sorted table) and a line of a code
+  block have their own line; any other block its first. Both follow the zoom, the margins and
+  `updateMarkdown`.
 - **Texts.** The labels of the copy button and the context menu (*Copy*, *Copy with header*,
   *Select column*, *Copy Markdown*), the zoom bar's texts (*Zoom out*, *Zoom in*, *Zoom levels*,
   *Reset*) and the texts of images (*Open image*, the window's buttons, the boxes' notes) are

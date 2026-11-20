@@ -16,6 +16,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
 import javafx.event.EventTarget;
+import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
@@ -33,6 +34,7 @@ import org.slf4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.function.Consumer;
 
 /**
@@ -709,6 +711,17 @@ import java.util.function.Consumer;
  * search is cleared. The matches of the whole document are found at once, but only the blocks, and in a table the
  * rows, within one visible height above or below the visible area build their marks, more as the view scrolls, so a
  * one-letter search in a large document stays quick.
+ *
+ * <h2>Source lines</h2>
+ *
+ * <p>The view tells an application which line of the Markdown text the reader is looking at, so that it can open
+ * the text in an editor at that line: {@link #topSourceLine()} the line at the top of the visible area,
+ * {@link #searchMatchSourceLine()} the line of the current search match. Lines count from 1, and each line ending,
+ * {@code \n}, {@code \r\n} or {@code \r}, ends one. A line is a block's first line: a heading, a
+ * paragraph (also one that is a block image), a quote's or a list item's paragraph, a thematic break; or, finer, a list
+ * item's marker, a table row (the header row too) or a line of a code or source block. A line inside a wrapped or
+ * multi-line paragraph is not told apart: the paragraph's first line counts. Both are read from the document as it is
+ * laid out, so they follow the zoom, the margins, the reader's sorting of a table and {@link #updateMarkdown(String)}.
  *
  * <h2>Style classes</h2>
  *
@@ -1624,6 +1637,44 @@ public class MarkdownView extends BaseComponent {
      */
     public final void clearSearch() {
         searchText.set(null);
+    }
+
+    /**
+     * The source line the reader is looking at: that of the first block whose top lies in the visible area, a block
+     * fully visible at the top or one taller than the area that starts in it, see <em>Source lines</em> in the class
+     * description. A heading or a paragraph cut by the top edge does not count, the block below it does; in a code or
+     * source block or a table cut by the edge, the first code line or row below it counts. Where no block starts in
+     * the visible area, as in a paragraph taller than it, the block at the top edge counts. Before the view is laid
+     * out, the first block's line.
+     *
+     * <p>The view applies its CSS and lays itself out first if a change waits for the next pulse, such as a new zoom
+     * or a new version of the text, so the answer holds for what the reader will see.
+     *
+     * @return the 1-based line of the Markdown text; empty while the view shows no document or a document without
+     *         blocks
+     * @since 1.1.0-RC2
+     */
+    public final OptionalInt topSourceLine() {
+        applyCss();
+        layout();
+        double viewportHeight = Math.max(0, scrollPane.getViewportBounds().getHeight());
+        double offset = VerticalScroll.offset(scrollPane);
+        Node content = scrollPane.getContent();
+        double top = content.localToScene(0, offset).getY();
+        double bottom = content.localToScene(0, offset + viewportHeight).getY();
+        return SourceLines.fromTop(documentSelection.segments(), top, bottom);
+    }
+
+    /**
+     * The source line of the current search match: that of the heading, paragraph, table row or code or source line
+     * that holds it, see <em>Source lines</em> in the class description. In a sorted table, the line of the match's
+     * row as the source has it.
+     *
+     * @return the 1-based line of the Markdown text; empty without a current match
+     * @since 1.1.0-RC2
+     */
+    public final OptionalInt searchMatchSourceLine() {
+        return documentSearch.currentSourceLine();
     }
 
     /**

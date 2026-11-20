@@ -15,6 +15,9 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.StackPane;
+import javafx.scene.shape.LineTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.PathElement;
 import javafx.scene.text.HitInfo;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -66,6 +69,10 @@ import java.util.List;
  * <p><b>Search.</b> The block's text is one text of the view's search, its matches shown in the two layers of its
  * flow's {@link SearchMarks}, below the selection's layer. A match the search goes to scrolls the block sideways into
  * view ({@link #revealSideways}).
+ *
+ * <p><b>Source lines.</b> The block knows the source line it starts on and that of its text's first line
+ * ({@link Lines}): its text's lines follow one another in the source, so the line feeds before a character count the
+ * source lines from there.
  */
 final class MonospaceBlock extends StackPane implements Searchable {
 
@@ -88,6 +95,11 @@ final class MonospaceBlock extends StackPane implements Searchable {
     private final List<BlockContainer> containers;
 
     /**
+     * The source lines of the block and of its text's first line.
+     */
+    private final Lines lines;
+
+    /**
      * Creates a block.
      *
      * @param text             the text, its lines separated by line feeds
@@ -95,14 +107,16 @@ final class MonospaceBlock extends StackPane implements Searchable {
      *                         overlapping; none for a text in one colour
      * @param selection        the view's selection across the document, which takes the presses and drags on the text
      * @param containers       the quotes and list items around the block, the outermost first
+     * @param lines            the source lines of the block and of its text's first line
      * @param blockStyleClass  the block's style class, such as {@code markdown-code-block}
      * @param textStyleClasses the style classes of the text's runs beside {@code markdown-text}
      */
     MonospaceBlock(String text, List<CodePiece> pieces, DocumentSelection selection, List<BlockContainer> containers,
-                   String blockStyleClass, String... textStyleClasses) {
+                   Lines lines, String blockStyleClass, String... textStyleClasses) {
         this.text = text;
         this.selection = selection;
         this.containers = List.copyOf(containers);
+        this.lines = lines;
         getStyleClass().add(blockStyleClass);
         flow = new BlockFlow(runs(text, pieces, textStyleClasses));
         flow.getStyleClass().add("markdown-block-content");
@@ -308,6 +322,73 @@ final class MonospaceBlock extends StackPane implements Searchable {
     }
 
     /**
+     * The source line of the text's line at the height, the first or the last line above or below the text.
+     */
+    @Override
+    public int sourceLineAt(double sceneY) {
+        int index = Math.clamp(hit(flow.localToScene(0, 0).getX(), sceneY).getCharIndex(), 0, text.length());
+        return lines.text() + lineFeedsBefore(index);
+    }
+
+    /**
+     * The block's line if the whole block lies below the height, else the source line of the text's first line whose
+     * top does.
+     */
+    @Override
+    public int sourceLineFrom(double sceneY) {
+        if (SourceLines.startsFrom(this, sceneY)) {
+            return lines.block();
+        }
+        int line = 0;
+        int lineStart = 0;
+        while (lineStart >= 0) {
+            if (SourceLines.isAtOrBelow(flow.localToScene(0, lineTop(lineStart)).getY(), sceneY)) {
+                return lines.text() + line;
+            }
+            int lineFeed = text.indexOf('\n', lineStart);
+            lineStart = lineFeed < 0 ? -1 : lineFeed + 1;
+            line++;
+        }
+        return -1;
+    }
+
+    /**
+     * The source line of the text's line where the match starts.
+     */
+    @Override
+    public int sourceLine(Match match) {
+        return lines.text() + lineFeedsBefore(match.start());
+    }
+
+    /**
+     * The number of line feeds in the text before a position: the index of the text's line the position lies in.
+     */
+    private int lineFeedsBefore(int position) {
+        int count = 0;
+        for (int i = 0; i < position && i < text.length(); i++) {
+            if (text.charAt(i) == '\n') {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    /**
+     * The top of the line a position starts, in the flow's coordinates: the top of the caret there.
+     */
+    private double lineTop(int lineStart) {
+        double top = Double.POSITIVE_INFINITY;
+        for (PathElement element : flow.caretShape(lineStart, true)) {
+            if (element instanceof MoveTo move) {
+                top = Math.min(top, move.getY());
+            } else if (element instanceof LineTo line) {
+                top = Math.min(top, line.getY());
+            }
+        }
+        return top;
+    }
+
+    /**
      * What of the text lies under a point: the character, and the character gap nearest to it (its insertion index).
      */
     private HitInfo hit(double sceneX, double sceneY) {
@@ -354,6 +435,17 @@ final class MonospaceBlock extends StackPane implements Searchable {
      * from the start, its copies of the runs made on the first selection. The layer holds the selected range, the
      * block's only record of it. The search's layers, made on the first match, lie between the runs and it.
      */
+    /**
+     * The source lines of a block.
+     *
+     * @param block the 1-based source line the block starts on: a code block's opening fence, a source block's first
+     *              line
+     * @param text  the 1-based source line of the text's first line: the line below a code block's fence, a source
+     *              block's first line
+     */
+    record Lines(int block, int text) {
+    }
+
     private static final class BlockFlow extends TextFlow {
 
         /**

@@ -174,7 +174,7 @@ final class MarkdownRenderer {
 
     private Node renderBlock(Block block) {
         Node node = switch (block) {
-            case Heading heading -> textSegment(heading.content(), true,
+            case Heading heading -> textSegment(heading.content(), true, heading.line(),
                     "markdown-heading", "markdown-heading-" + heading.level());
             case Paragraph paragraph -> paragraph(paragraph);
             case BulletList list -> bulletList(list);
@@ -208,14 +208,14 @@ final class MarkdownRenderer {
         }
         if (only instanceof Image image) {
             ImageBlock block = images.block(image.destination(), image.title(), image.alt(), containers,
-                    !inTightItem());
+                    !inTightItem(), paragraph.line());
             if (link != null) {
                 block.linkTo(link.destination(), linkAction);
             }
             documentSelection.add(block);
             return block;
         }
-        return textSegment(paragraph.content(), !inTightItem(), "markdown-paragraph");
+        return textSegment(paragraph.content(), !inTightItem(), paragraph.line(), "markdown-paragraph");
     }
 
     /**
@@ -265,7 +265,7 @@ final class MarkdownRenderer {
      */
     private Node sourceBlock(SourceBlock source) {
         MonospaceBlock block = new MonospaceBlock(String.join("\n", source.lines()), List.of(), documentSelection,
-                containers, "markdown-source-block");
+                containers, new MonospaceBlock.Lines(source.line(), source.sourceLine(0)), "markdown-source-block");
         documentSelection.add(block);
         return block;
     }
@@ -281,7 +281,8 @@ final class MarkdownRenderer {
         String literal = code.literal();
         String text = literal.endsWith("\n") ? literal.substring(0, literal.length() - 1) : literal;
         MonospaceBlock block = new MonospaceBlock(text, coloring.pieces(code.info(), text), documentSelection,
-                containers, "markdown-code-block", RunStyle.CODE.styleClass());
+                containers, new MonospaceBlock.Lines(code.line(), code.codeLine(0)), "markdown-code-block",
+                RunStyle.CODE.styleClass());
         block.getChildren().add(copyButton(text));
         documentSelection.add(block);
         return block;
@@ -396,17 +397,18 @@ final class MarkdownRenderer {
         containers.add(new BlockContainer.Item(copied, tight));
         List<Node> blocks = renderBlocks(item.blocks());
         containers.removeLast();
-        return new ListItemBox(marker, taskBox, blocks);
+        return new ListItemBox(marker, taskBox, blocks, item.line());
     }
 
     /**
      * The text flow of a heading or a paragraph, with one {@link Text} per style run (see
      * {@link #addRuns(TextFlow, List)}), and a segment of the document selection.
      *
-     * @param spaced whether copied text sets it apart from its neighbours by a blank line
+     * @param spaced     whether copied text sets it apart from its neighbours by a blank line
+     * @param sourceLine the 1-based source line of the heading or the paragraph
      */
-    private TextSegment textSegment(List<Inline> content, boolean spaced, String... styleClasses) {
-        TextSegment flow = new TextSegment(containers, spaced);
+    private TextSegment textSegment(List<Inline> content, boolean spaced, int sourceLine, String... styleClasses) {
+        TextSegment flow = new TextSegment(containers, spaced, sourceLine);
         flow.getStyleClass().addAll(styleClasses);
         addRuns(flow, content);
         documentSelection.add(flow);

@@ -426,6 +426,7 @@ view.setZoom(1.25);
 view.setLeftMargin(48);
 view.setRightMargin(48);
 view.updateMarkdown("# Release notes\n\nNow with search.\n\nSee [the guide](https://example.com/guide).");
+int editorLine = view.searchMatchSourceLine().orElse(view.topSourceLine().orElse(1));
 ```
 
 - The view opens no link by itself: without `setOnLinkAction` a click does nothing. The handler
@@ -437,6 +438,11 @@ view.updateMarkdown("# Release notes\n\nNow with search.\n\nSee [the guide](http
 - `setMarkdown` shows another document, from the top. `updateMarkdown` sets a new version of the
   shown one, such as a file read again after it changed, and keeps the reader's place and the
   pictures of images whose address stays. It throws while `markdownProperty()` is bound.
+- From 1.1.0-RC2 on, `topSourceLine()` and `searchMatchSourceLine()` tell which line of the
+  Markdown text the reader is looking at, as an `OptionalInt` counted from 1: the first block whose
+  top is in the visible area (a list item, a table row or a code line where the edge cuts a list,
+  table or code block), and the block, row or code line of the current search match. Use them to
+  open the file in an editor at that line; both are empty without a document or a match.
 - The space left and right of the text is `setLeftMargin` and `setRightMargin`, in pixels at 100 %:
   the zoom scales them, and a narrow view shrinks them so the text keeps 300 pixels, so they need
   no computing against the view's width. Not a number, the default, keeps the theme's 14 pixels.

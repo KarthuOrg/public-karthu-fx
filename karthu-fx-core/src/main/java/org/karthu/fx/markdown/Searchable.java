@@ -101,6 +101,15 @@ interface Searchable extends Segment {
     void revealSideways(Match match);
 
     /**
+     * The source line of the part of the segment that holds a match: a heading's or a paragraph's line, a code or
+     * source block's line of the match's first character, a table row's line.
+     *
+     * @param match one of the segment's matches
+     * @return the 1-based source line
+     */
+    int sourceLine(Match match);
+
+    /**
      * A match of the search in a segment: a range of one of its texts.
      *
      * @param text  the number of the text in {@link #searchTexts()}, from 0

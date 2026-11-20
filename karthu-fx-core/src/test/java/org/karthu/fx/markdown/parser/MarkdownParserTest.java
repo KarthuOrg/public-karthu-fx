@@ -24,7 +24,7 @@ class MarkdownParserTest {
     void atxHeading() {
         MarkdownDocument document = MarkdownParser.parse("# Title");
 
-        assertEquals(List.of(new Heading(1, List.of(new PlainText("Title")))), document.blocks());
+        assertEquals(List.of(new Heading(1, List.of(new PlainText("Title")), 1)), document.blocks());
     }
 
     @Test
@@ -69,7 +69,7 @@ class MarkdownParserTest {
     void paragraphLinesFlowTogether() {
         MarkdownDocument document = MarkdownParser.parse("aaa\nbbb");
 
-        assertEquals(List.of(new Paragraph(List.of(new PlainText("aaa"), new SoftBreak(), new PlainText("bbb")))),
+        assertEquals(List.of(new Paragraph(List.of(new PlainText("aaa"), new SoftBreak(), new PlainText("bbb")), 1)),
                 document.blocks());
     }
 
@@ -105,7 +105,7 @@ class MarkdownParserTest {
     @DisplayName("two trailing spaces or a trailing backslash make a hard line break, not at the end of a block")
     void hardLineBreaks() {
         MarkdownDocument document = MarkdownParser.parse("foo  \nbar");
-        assertEquals(List.of(new Paragraph(List.of(new PlainText("foo"), new HardBreak(), new PlainText("bar")))),
+        assertEquals(List.of(new Paragraph(List.of(new PlainText("foo"), new HardBreak(), new PlainText("bar")), 1)),
                 document.blocks());
 
         assertHtml("<p>foo<br />\nbaz</p>", "foo\\\nbaz");
@@ -132,7 +132,7 @@ class MarkdownParserTest {
     @DisplayName("a code span is closed by a backtick run of the same length")
     void codeSpans() {
         MarkdownDocument document = MarkdownParser.parse("a `b` c");
-        assertEquals(List.of(new Paragraph(List.of(new PlainText("a "), new CodeSpan("b"), new PlainText(" c")))),
+        assertEquals(List.of(new Paragraph(List.of(new PlainText("a "), new CodeSpan("b"), new PlainText(" c")), 1)),
                 document.blocks());
 
         assertHtml("<p><code>foo ` bar</code></p>", "`` foo ` bar ``");
@@ -166,7 +166,7 @@ class MarkdownParserTest {
     void emphasisForms() {
         MarkdownDocument document = MarkdownParser.parse("a *b* c");
         assertEquals(List.of(new Paragraph(List.of(
-                        new PlainText("a "), new Emphasis(List.of(new PlainText("b"))), new PlainText(" c")))),
+                        new PlainText("a "), new Emphasis(List.of(new PlainText("b"))), new PlainText(" c")), 1)),
                 document.blocks());
 
         assertHtml("<p><em>foo bar</em></p>", "*foo bar*");
@@ -273,8 +273,9 @@ class MarkdownParserTest {
         MarkdownDocument document = MarkdownParser.parse("- foo\n- bar");
 
         assertEquals(List.of(new BulletList(true, List.of(
-                        new ListItem(List.of(new Paragraph(List.of(new PlainText("foo"))))),
-                        new ListItem(List.of(new Paragraph(List.of(new PlainText("bar")))))))),
+                        new ListItem(List.of(new Paragraph(List.of(new PlainText("foo")), 1)), ListItem.Task.NONE, 1),
+                        new ListItem(List.of(new Paragraph(List.of(new PlainText("bar")), 2)), ListItem.Task.NONE,
+                                2)), 1)),
                 document.blocks());
     }
 
@@ -326,8 +327,9 @@ class MarkdownParserTest {
     void orderedList() {
         MarkdownDocument document = MarkdownParser.parse("3) three\n4) four");
         assertEquals(List.of(new OrderedList(3, ')', true, List.of(
-                        new ListItem(List.of(new Paragraph(List.of(new PlainText("three"))))),
-                        new ListItem(List.of(new Paragraph(List.of(new PlainText("four")))))))),
+                        new ListItem(List.of(new Paragraph(List.of(new PlainText("three")), 1)), ListItem.Task.NONE, 1),
+                        new ListItem(List.of(new Paragraph(List.of(new PlainText("four")), 2)), ListItem.Task.NONE,
+                                2)), 1)),
                 document.blocks());
 
         assertHtml("<ol>\n<li>one</li>\n<li>two</li>\n</ol>", "1. one\n2. two");
@@ -412,8 +414,9 @@ class MarkdownParserTest {
     void tightAndLooseLists() {
         MarkdownDocument document = MarkdownParser.parse("- a\n\n- b");
         assertEquals(List.of(new BulletList(false, List.of(
-                        new ListItem(List.of(new Paragraph(List.of(new PlainText("a"))))),
-                        new ListItem(List.of(new Paragraph(List.of(new PlainText("b")))))))),
+                        new ListItem(List.of(new Paragraph(List.of(new PlainText("a")), 1)), ListItem.Task.NONE, 1),
+                        new ListItem(List.of(new Paragraph(List.of(new PlainText("b")), 3)), ListItem.Task.NONE,
+                                3)), 1)),
                 document.blocks());
 
         assertHtml("<ul>\n<li>\n<p>foo</p>\n</li>\n<li>\n<p>bar</p>\n</li>\n<li>\n<p>baz</p>\n</li>\n</ul>",
@@ -495,7 +498,7 @@ class MarkdownParserTest {
     @DisplayName("a line of three or more -, * or _, spaces allowed, is a thematic break")
     void thematicBreaks() {
         MarkdownDocument document = MarkdownParser.parse("---");
-        assertEquals(List.of(new ThematicBreak()), document.blocks());
+        assertEquals(List.of(new ThematicBreak(1)), document.blocks());
 
         assertHtml("<hr />\n<hr />\n<hr />", "***\n---\n___");
         assertHtml("<hr />\n<hr />\n<hr />", " ***\n  ***\n   ***");
@@ -539,7 +542,7 @@ class MarkdownParserTest {
     void blockQuote() {
         MarkdownDocument document = MarkdownParser.parse("> foo\n> bar");
         assertEquals(List.of(new BlockQuote(List.of(
-                        new Paragraph(List.of(new PlainText("foo"), new SoftBreak(), new PlainText("bar")))))),
+                        new Paragraph(List.of(new PlainText("foo"), new SoftBreak(), new PlainText("bar")), 1)), 1)),
                 document.blocks());
 
         assertHtml("<blockquote>\n<h1>Foo</h1>\n<p>bar\nbaz</p>\n</blockquote>", "> # Foo\n> bar\n> baz");
@@ -626,7 +629,7 @@ class MarkdownParserTest {
     void fencedCodeBlock() {
         MarkdownDocument document = MarkdownParser.parse("```java\nint x = 1;\n  **not bold**\n```");
 
-        assertEquals(List.of(new CodeBlock("java", "int x = 1;\n  **not bold**\n")), document.blocks());
+        assertEquals(List.of(new CodeBlock("java", "int x = 1;\n  **not bold**\n", 1)), document.blocks());
     }
 
     @Test
@@ -653,7 +656,7 @@ class MarkdownParserTest {
         assertHtml("<pre><code class=\"language-;\"></code></pre>", "````;\n````");
         assertHtml("<p><code>aa</code>\nfoo</p>", "``` aa ```\nfoo");
         assertHtml("<pre><code class=\"language-aa\">foo\n</code></pre>", "~~~ aa ``` ~~~\nfoo\n~~~");
-        assertEquals(List.of(new CodeBlock("java title", "x\n")), MarkdownParser.parse("```  java title  \nx\n```").blocks());
+        assertEquals(List.of(new CodeBlock("java title", "x\n", 1)), MarkdownParser.parse("```  java title  \nx\n```").blocks());
     }
 
     @Test
@@ -724,8 +727,8 @@ class MarkdownParserTest {
         assertEquals(List.of(
                 new Table(List.of(cell(new PlainText("a")), cell(new PlainText("b"))),
                         List.of(Table.Alignment.NONE, Table.Alignment.CENTER),
-                        List.of(List.of(cell(new CodeSpan("x")), cell(new PlainText("| y"))))),
-                new Paragraph(List.of(new PlainText("after")))), document.blocks());
+                        List.of(List.of(cell(new CodeSpan("x")), cell(new PlainText("| y")))), 1),
+                new Paragraph(List.of(new PlainText("after")), 5)), document.blocks());
     }
 
     @Test
@@ -836,8 +839,8 @@ class MarkdownParserTest {
     @DisplayName("a line starting with a tag, a closing tag or <! starts an HTML block, kept as its lines up to a blank line")
     void htmlBlock() {
         MarkdownDocument document = MarkdownParser.parse("<div>\n*hello*\n</div>\n\nafter");
-        assertEquals(List.of(new SourceBlock(SourceBlock.Kind.HTML, List.of("<div>", "*hello*", "</div>")),
-                new Paragraph(List.of(new PlainText("after")))), document.blocks());
+        assertEquals(List.of(new SourceBlock(SourceBlock.Kind.HTML, List.of("<div>", "*hello*", "</div>"), 1),
+                new Paragraph(List.of(new PlainText("after")), 5)), document.blocks());
 
         assertHtml(" <div>\n  *hello*\n         <foo><a>", " <div>\n  *hello*\n         <foo><a>");
         assertHtml("</div>\n*foo*", "</div>\n*foo*");
@@ -877,7 +880,7 @@ class MarkdownParserTest {
     void indentedCode() {
         MarkdownDocument document = MarkdownParser.parse("    a simple\n      indented code block\n\n\nafter");
         assertEquals(List.of(new SourceBlock(SourceBlock.Kind.INDENTED_CODE, List.of("    a simple",
-                        "      indented code block")), new Paragraph(List.of(new PlainText("after")))),
+                        "      indented code block"), 1), new Paragraph(List.of(new PlainText("after")), 5)),
                 document.blocks());
 
         assertHtml("<pre><code>&lt;a/&gt;\n*hi*\n\n- one\n</code></pre>", "    <a/>\n    *hi*\n\n    - one");
@@ -957,7 +960,7 @@ class MarkdownParserTest {
             blocks = quote.blocks();
         }
         assertEquals(100, quotes);
-        assertEquals(new Paragraph(List.of(new PlainText(">".repeat(19_900) + " deep"))), blocks.getFirst());
+        assertEquals(new Paragraph(List.of(new PlainText(">".repeat(19_900) + " deep")), 1), blocks.getFirst());
     }
 
     @Test
@@ -978,7 +981,7 @@ class MarkdownParserTest {
             containers++;
         }
         assertEquals(100, containers);
-        assertEquals(new Paragraph(List.of(new PlainText("> - ".repeat(9_950) + "deep"))), blocks.getFirst());
+        assertEquals(new Paragraph(List.of(new PlainText("> - ".repeat(9_950) + "deep")), 1), blocks.getFirst());
     }
 
     @Test
@@ -1051,7 +1054,7 @@ class MarkdownParserTest {
                         new PlainText("See "),
                         new Link("https://example.com/a_b", "Title",
                                 List.of(new PlainText("the "), new Emphasis(List.of(new PlainText("docs"))))),
-                        new PlainText(".")))),
+                        new PlainText(".")), 1)),
                 document.blocks());
         assertHtml("<p><a href=\"/uri\" title=\"title\">link</a></p>", "[link](/uri \"title\")");
         assertHtml("<p><a href=\"/uri\">link</a></p>", "[link](/uri)");
@@ -1137,7 +1140,7 @@ class MarkdownParserTest {
         assertEquals(List.of(new Paragraph(List.of(
                         new PlainText("See "),
                         new Image("moon_1.jpg", "Full \"moon\"", "the moon"),
-                        new PlainText(".")))),
+                        new PlainText(".")), 1)),
                 document.blocks());
     }
 
@@ -1188,7 +1191,7 @@ class MarkdownParserTest {
         assertEquals(List.of(new Paragraph(List.of(
                         new PlainText("Go to "),
                         new Link("https://example.com/a\\_b", "", List.of(new PlainText("https://example.com/a\\_b"))),
-                        new PlainText(".")))),
+                        new PlainText(".")), 1)),
                 document.blocks());
 
         assertHtml("<p><a href=\"http://foo.bar.baz\">http://foo.bar.baz</a></p>", "<http://foo.bar.baz>");
@@ -1225,7 +1228,7 @@ class MarkdownParserTest {
     void autolinkInsideLinkText() {
         assertHtml("<p><a href=\"/c\">see https://a.b <em>now</em></a></p>", "[see <https://a.b> *now*](/c)");
         assertEquals(List.of(new Paragraph(List.of(
-                        new Link("/c", "", List.of(new PlainText("see https://a.b too")))))),
+                        new Link("/c", "", List.of(new PlainText("see https://a.b too")))), 1)),
                 MarkdownParser.parse("[see <https://a.b> too](/c)").blocks());
     }
 
@@ -1236,7 +1239,7 @@ class MarkdownParserTest {
         assertEquals(List.of(new Paragraph(List.of(
                         new PlainText("Source: "),
                         new Link("https://archive.ics.uci.edu/dataset/2/adult", "",
-                                List.of(new PlainText("https://archive.ics.uci.edu/dataset/2/adult")))))),
+                                List.of(new PlainText("https://archive.ics.uci.edu/dataset/2/adult")))), 1)),
                 document.blocks());
 
         assertHtml("<p>a <a href=\"http://a.b/c\">http://a.b/c</a> and <a href=\"https://d.e\">https://d.e</a> f</p>",
@@ -1297,10 +1300,10 @@ class MarkdownParserTest {
         assertEquals(List.of(new Paragraph(List.of(
                         new PlainText("See "),
                         new Link("https://x.y/__init__.py", "", List.of(new PlainText("https://x.y/__init__.py"))),
-                        new PlainText(".")))),
+                        new PlainText(".")), 1)),
                 MarkdownParser.parse("See https://x.y/__init__.py.").blocks());
         assertEquals(List.of(new Paragraph(List.of(
-                        new Link("https://a.b/c\\_d", "", List.of(new PlainText("https://a.b/c\\_d")))))),
+                        new Link("https://a.b/c\\_d", "", List.of(new PlainText("https://a.b/c\\_d")))), 1)),
                 MarkdownParser.parse("https://a.b/c\\_d").blocks());
         assertHtml("<p><a href=\"https://a.b/*c*/d\">https://a.b/*c*/d</a> and <em>e</em></p>",
                 "https://a.b/*c*/d and *e*");

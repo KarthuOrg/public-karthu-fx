@@ -104,6 +104,27 @@ interface Segment {
     boolean spaced();
 
     /**
+     * The source line of the part of the segment at a height ({@link SourceLines}): a code or source block's line
+     * there, a table's row there, the header's above its first row; the block's line for a heading, a paragraph and a
+     * block image, which are one part.
+     *
+     * @param sceneY the height in the scene; a height above or below the segment counts as its first or last part
+     * @return the 1-based source line
+     */
+    int sourceLineAt(double sceneY);
+
+    /**
+     * The source line of the segment's first part whose top lies at or below a height, the reader's place at the top
+     * of the view ({@link SourceLines}): the block's own line if the whole segment lies below it, else the first code
+     * or source line or the first table row below it.
+     *
+     * @param sceneY the height in the scene
+     * @return the 1-based source line, -1 if no part starts below the height: a heading, a paragraph or a block image
+     *         cut by it, or a block whose last part is
+     */
+    int sourceLineFrom(double sceneY);
+
+    /**
      * A range of positions of a segment.
      *
      * @param start the first position

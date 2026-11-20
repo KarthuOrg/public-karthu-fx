@@ -178,6 +178,11 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
     private final List<Table.Cell> header;
 
     /**
+     * The parsed table, which knows the source lines of its header and its rows.
+     */
+    private final Table sourceTable;
+
+    /**
      * The columns in the source's order, whatever order the reader has moved them to: a column's place here is the
      * index of its cells in the header and in each row.
      */
@@ -262,6 +267,7 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
             getColumns().add(column(i, table.header().get(i), table.alignments().get(i), runs));
         }
         header = List.copyOf(table.header());
+        sourceTable = table;
         sourceColumns = List.copyOf(getColumns());
         List<Row> rows = new ArrayList<>();
         for (int i = 0; i < table.rows().size(); i++) {
@@ -690,6 +696,71 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
             }
         }
         return text.toString();
+    }
+
+    /**
+     * The source line of the header row: the table's first line.
+     *
+     * @return the 1-based source line
+     */
+    int headerLine() {
+        return sourceTable.line();
+    }
+
+    /**
+     * The source line of the row at a height, as the table shows its rows now, sorted or not: the header's above the
+     * first row, the last row's below it. Before the table has laid out its rows, the header's.
+     *
+     * @param sceneY the height in the scene
+     * @return the 1-based source line
+     */
+    int sourceLineAt(double sceneY) {
+        int line = sourceTable.line();
+        if (!(getSkin() instanceof TableSkin skin)) {
+            return line;
+        }
+        for (int index = 0; index < getItems().size(); index++) {
+            TableRow<Row> row = skin.visibleRow(index);
+            if (row == null) {
+                continue;
+            }
+            if (sceneY < row.localToScene(row.getLayoutBounds()).getMinY()) {
+                break;
+            }
+            line = sourceTable.rowLine(getItems().get(index).sourceIndex());
+        }
+        return line;
+    }
+
+    /**
+     * The source line of the first row, in the shown order, whose top lies at or below a height.
+     *
+     * @param sceneY the height in the scene
+     * @return the 1-based source line, -1 if no row does or the table has not laid out its rows yet
+     */
+    int sourceLineFrom(double sceneY) {
+        if (!(getSkin() instanceof TableSkin skin)) {
+            return -1;
+        }
+        for (int index = 0; index < getItems().size(); index++) {
+            TableRow<Row> row = skin.visibleRow(index);
+            if (row != null && SourceLines.isAtOrBelow(row.localToScene(row.getLayoutBounds()).getMinY(), sceneY)) {
+                return sourceTable.rowLine(getItems().get(index).sourceIndex());
+            }
+        }
+        return -1;
+    }
+
+    /**
+     * The source line of the row that holds a match of the search: the cell's row as the source has it, however the
+     * table is sorted.
+     *
+     * @param match one of the table's matches, its text numbered as the table's last {@link #numberSearchTexts()}
+     * @return the 1-based source line
+     */
+    int sourceLine(Searchable.Match match) {
+        int row = searchTexts.get(match.text()).key().cell().row();
+        return row == HEADER_ROW ? sourceTable.line() : sourceTable.rowLine(row);
     }
 
     /**

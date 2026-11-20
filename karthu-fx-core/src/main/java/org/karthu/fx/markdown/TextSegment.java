@@ -41,6 +41,11 @@ final class TextSegment extends TextFlow implements Searchable {
     private final boolean spaced;
 
     /**
+     * The source line of the heading or the paragraph, its first line.
+     */
+    private final int sourceLine;
+
+    /**
      * The selection's layer, {@code null} until the first selection.
      */
     private HighlightLayer layer;
@@ -61,10 +66,12 @@ final class TextSegment extends TextFlow implements Searchable {
      *
      * @param containers the quotes and list items around it, the outermost first
      * @param spaced     whether copied text sets it apart by blank lines
+     * @param sourceLine the 1-based source line of the heading or the paragraph, its first line
      */
-    TextSegment(List<BlockContainer> containers, boolean spaced) {
+    TextSegment(List<BlockContainer> containers, boolean spaced, int sourceLine) {
         this.containers = List.copyOf(containers);
         this.spaced = spaced;
+        this.sourceLine = sourceLine;
         setCursor(Cursor.TEXT);
     }
 
@@ -246,6 +253,24 @@ final class TextSegment extends TextFlow implements Searchable {
     @Override
     public boolean spaced() {
         return spaced;
+    }
+
+    /**
+     * The heading's or the paragraph's line: a line inside a wrapped paragraph is not told apart.
+     */
+    @Override
+    public int sourceLineAt(double sceneY) {
+        return sourceLine;
+    }
+
+    @Override
+    public int sourceLineFrom(double sceneY) {
+        return SourceLines.startsFrom(this, sceneY) ? sourceLine : -1;
+    }
+
+    @Override
+    public int sourceLine(Match match) {
+        return sourceLine;
     }
 
     /**

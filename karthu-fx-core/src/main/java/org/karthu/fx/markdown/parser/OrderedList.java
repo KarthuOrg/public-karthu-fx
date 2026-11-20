@@ -10,8 +10,9 @@ import java.util.List;
  * @param tight     whether the list is tight in CommonMark's sense: no blank line between its items, and none between
  *                  two blocks of one item
  * @param items     the items in source order, at least one
+ * @param line      the 1-based number of the source line of the first item's marker
  */
-public record OrderedList(int start, char delimiter, boolean tight, List<ListItem> items) implements Block {
+public record OrderedList(int start, char delimiter, boolean tight, List<ListItem> items, int line) implements Block {
 
     /**
      * Copies the items, so the list cannot change afterwards.

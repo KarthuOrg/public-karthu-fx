@@ -393,11 +393,13 @@ final class DocumentImages {
      * @param alt        the image's alt text
      * @param containers the quotes and list items around the block, the outermost first
      * @param spaced     whether copied text sets the block apart by blank lines, as the paragraph it stands for
+     * @param sourceLine the 1-based source line of the paragraph the block stands for
      * @return the block
      */
-    ImageBlock block(String address, String title, String alt, List<BlockContainer> containers, boolean spaced) {
+    ImageBlock block(String address, String title, String alt, List<BlockContainer> containers, boolean spaced,
+                     int sourceLine) {
         ImageBlock block = new ImageBlock(address, title, alt, this, NEXT_IMAGE.getAndIncrement(), containers,
-                spaced);
+                spaced, sourceLine);
         add(block);
         return block;
     }

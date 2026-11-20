@@ -274,6 +274,34 @@ final class TableBlock extends Region implements Searchable {
     }
 
     /**
+     * The row at the height, see {@link MarkdownTable#sourceLineAt(double)}.
+     */
+    @Override
+    public int sourceLineAt(double sceneY) {
+        return table.sourceLineAt(sceneY);
+    }
+
+    /**
+     * The header's line if the whole block lies below the height, else the first row below it, see
+     * {@link MarkdownTable#sourceLineFrom(double)}.
+     */
+    @Override
+    public int sourceLineFrom(double sceneY) {
+        if (SourceLines.startsFrom(this, sceneY)) {
+            return table.headerLine();
+        }
+        return table.sourceLineFrom(sceneY);
+    }
+
+    /**
+     * The row of the match's cell, see {@link MarkdownTable#sourceLine(Match)}.
+     */
+    @Override
+    public int sourceLine(Match match) {
+        return table.sourceLine(match);
+    }
+
+    /**
      * Moves the bar by the horizontal part of a scroll event, if the table is wider than the block.
      */
     private void scrollSideways(ScrollEvent event) {

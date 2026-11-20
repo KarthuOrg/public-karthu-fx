@@ -10,14 +10,25 @@ import java.util.List;
  * @param lines the block's lines as written, without line endings and without the indentation or markers of the
  *              containers it is in (a list item's indentation, a quote's {@code >}); blank lines at its end are not
  *              part of it
+ * @param line  the 1-based number of the block's first source line; its other lines follow it one by one
  */
-public record SourceBlock(Kind kind, List<String> lines) implements Block {
+public record SourceBlock(Kind kind, List<String> lines, int line) implements Block {
 
     /**
      * Copies the lines, so the block cannot change afterwards.
      */
     public SourceBlock {
         lines = List.copyOf(lines);
+    }
+
+    /**
+     * The source line of one of the block's lines.
+     *
+     * @param index the line's index in {@link #lines()}, from 0
+     * @return the 1-based number of its source line
+     */
+    public int sourceLine(int index) {
+        return line + index;
     }
 
     /**

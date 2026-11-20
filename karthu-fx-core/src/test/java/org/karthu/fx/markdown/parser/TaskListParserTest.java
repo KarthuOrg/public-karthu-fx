@@ -37,12 +37,12 @@ class TaskListParserTest {
         MarkdownDocument document = MarkdownParser.parse("- [ ] open\n- [x] done\n- [X] done too\n- plain");
 
         assertEquals(List.of(new BulletList(true, List.of(
-                        new ListItem(List.of(paragraph("open")), ListItem.Task.OPEN),
-                        new ListItem(List.of(paragraph("done")), ListItem.Task.DONE),
-                        new ListItem(List.of(paragraph("done too")), ListItem.Task.DONE),
-                        new ListItem(List.of(paragraph("plain")), ListItem.Task.NONE)))),
+                        new ListItem(List.of(paragraph("open", 1)), ListItem.Task.OPEN, 1),
+                        new ListItem(List.of(paragraph("done", 2)), ListItem.Task.DONE, 2),
+                        new ListItem(List.of(paragraph("done too", 3)), ListItem.Task.DONE, 3),
+                        new ListItem(List.of(paragraph("plain", 4)), ListItem.Task.NONE, 4)), 1)),
                 document.blocks());
-        assertEquals(ListItem.Task.NONE, new ListItem(List.of()).task());
+        assertEquals(ListItem.Task.NONE, new ListItem(List.of(), ListItem.Task.NONE, 1).task());
     }
 
     @Test
@@ -88,7 +88,7 @@ class TaskListParserTest {
     void emptyTasks() {
         assertHtml("<ul>\n<li>" + OPEN + "</li>\n</ul>", "- [ ]");
         assertHtml("<ul>\n<li>" + DONE + "</li>\n<li>" + OPEN + "</li>\n</ul>", "- [x]   \n- [ ]\t");
-        assertEquals(List.of(new BulletList(true, List.of(new ListItem(List.of(), ListItem.Task.OPEN)))),
+        assertEquals(List.of(new BulletList(true, List.of(new ListItem(List.of(), ListItem.Task.OPEN, 1)), 1)),
                 MarkdownParser.parse("- [ ]").blocks());
         assertHtml("<ul>\n<li>" + OPEN + "\n<pre><code>code\n</code></pre>\n</li>\n</ul>", "- [ ]\n  ```\n  code\n  ```");
         assertHtml("<ul>\n<li>" + DONE + "\n<ul>\n<li>sub</li>\n</ul>\n</li>\n</ul>", "- [x]\n  - sub");
@@ -140,8 +140,8 @@ class TaskListParserTest {
                 + "</ul>", "- [ ] a | b\n  --- | ---");
     }
 
-    private static Paragraph paragraph(String text) {
-        return new Paragraph(List.of(new PlainText(text)));
+    private static Paragraph paragraph(String text, int line) {
+        return new Paragraph(List.of(new PlainText(text)), line);
     }
 
     private static void assertHtml(String expectedHtml, String markdown) {

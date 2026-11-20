@@ -8,6 +8,13 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 
 ### Added
 
+- `MarkdownView` tells which line of the Markdown text the reader is looking at, for an
+  application that opens the file in an editor there: `topSourceLine()`, the line of the first
+  block whose top is in the visible area, and `searchMatchSourceLine()`, the line of the current
+  search match, both an `OptionalInt` counted from 1 and empty without a document or a match. A
+  list item, a table row (the header row too) and a code line have their own line, any other
+  block its first; `\n`, `\r\n` and `\r` each end one line. Both follow the zoom, the margins,
+  a sorted table and `updateMarkdown`.
 - Nebula Light colours code after the default colours of Eclipse's light editors: keywords a
   wine red, strings a blue, comments a green, Javadoc a slate blue, fields and constants a deep
   blue, annotations a grey, XML tags, attributes and brackets in Eclipse's own colours, and

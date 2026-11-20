@@ -42,6 +42,12 @@ import java.util.List;
  * starts only where no paragraph is open. None of the three counts in {@link #startsBlock(String)}: a line that would
  * start one right after a container's open paragraph is a lazy continuation line of that paragraph, as in GFM.
  *
+ * <p><b>Source lines.</b> Every block gets the source line it starts on ({@link Block#line()}). A container hands its
+ * content on as the run of source lines it took, without a gap: an item's first line is its marker's, and every line
+ * up to its last is its own, blank ones and lazy ones too; a quote's likewise. So a parser knows the source line of its
+ * first line ({@link #firstLine}) and counts on from it, and the lines of a code block, a table or a source block
+ * follow their first one.
+ *
  * <p><b>Depth.</b> Each container level parses on one level deeper, and the recursion would overflow the stack on a
  * text of thousands of nested markers. So containers nest at most {@link #MAX_DEPTH} levels deep, as in markdown-it;
  * deeper, a container's marker is paragraph text. No real document comes near it.
@@ -61,6 +67,12 @@ final class BlockParser {
     private final List<String> lines;
     private final BitSet lazyLines;
     private final int depth;
+
+    /**
+     * The 1-based source line of the first of {@link #lines}: the lines are a run of the text's lines without a gap.
+     */
+    private final int firstLine;
+
     private int index;
 
     /**
@@ -101,11 +113,14 @@ final class BlockParser {
      * @param depth      the number of containers around the lines, 0 for the document
      * @param probe      whether the parse only probes the block structure
      * @param taskMarker the task marker the first line starts with, if the lines are a list item's content
+     * @param firstLine  the 1-based source line of the first line
      */
-    private BlockParser(List<String> lines, BitSet lazyLines, int depth, boolean probe, ListItem.Task taskMarker) {
+    private BlockParser(List<String> lines, BitSet lazyLines, int depth, boolean probe, ListItem.Task taskMarker,
+                        int firstLine) {
         this.lines = lines;
         this.lazyLines = lazyLines;
         this.depth = depth;
+        this.firstLine = firstLine;
         this.probe = probe;
         this.taskMarker = taskMarker;
     }
@@ -113,11 +128,20 @@ final class BlockParser {
     /**
      * Parses lines into blocks.
      *
-     * @param lines the lines, without line endings
+     * @param lines the lines of the whole text, without line endings, the first one source line 1
      * @return the blocks in source order
      */
     static List<Block> parseBlocks(List<String> lines) {
-        return new BlockParser(lines, new BitSet(), 0, false, ListItem.Task.NONE).parse();
+        return new BlockParser(lines, new BitSet(), 0, false, ListItem.Task.NONE, 1).parse();
+    }
+
+    /**
+     * The 1-based source line of one of this parser's lines.
+     *
+     * @param at the line's index in {@link #lines}
+     */
+    private int sourceLine(int at) {
+        return firstLine + at;
     }
 
     private List<Block> parse() {
@@ -146,11 +170,11 @@ final class BlockParser {
                 blocks.add(fencedCode());
                 endsInParagraph = false;
             } else if (headingLevel(line) > 0) {
-                blocks.add(heading(line));
+                blocks.add(heading(line, sourceLine(index)));
                 index++;
                 endsInParagraph = false;
             } else if (isThematicBreak(line)) {
-                blocks.add(new ThematicBreak());
+                blocks.add(new ThematicBreak(sourceLine(index)));
                 index++;
                 endsInParagraph = false;
             } else if (quoteContent(line) != null) {
@@ -196,13 +220,15 @@ final class BlockParser {
      */
     private Container list() {
         ItemStart first = itemStart(lines.get(index));
+        int listLine = sourceLine(index);
         List<ListItem> items = new ArrayList<>();
         boolean tight = true;
         boolean lastItemEndsInParagraph = false;
         ItemStart start = first;
         while (start != null) {
+            int itemLine = sourceLine(index);
             Content item = item(start);
-            items.add(new ListItem(item.blocks(), item.task()));
+            items.add(new ListItem(item.blocks(), item.task(), itemLine));
             lastItemEndsInParagraph = item.endsInParagraph();
             if (item.blankBetweenBlocks()) {
                 tight = false;
@@ -225,10 +251,10 @@ final class BlockParser {
             }
         }
         if (first.ordered()) {
-            return new Container(new OrderedList(first.number(), first.marker(), tight, items),
+            return new Container(new OrderedList(first.number(), first.marker(), tight, items, listLine),
                     lastItemEndsInParagraph);
         }
-        return new Container(new BulletList(tight, items), lastItemEndsInParagraph);
+        return new Container(new BulletList(tight, items, listLine), lastItemEndsInParagraph);
     }
 
     /**
@@ -240,6 +266,7 @@ final class BlockParser {
      * @return the item's content
      */
     private Content item(ItemStart start) {
+        int contentLine = sourceLine(index);
         int column = start.contentColumn();
         boolean blankStart = isBlank(start.firstLine());
         List<String> content = new ArrayList<>();
@@ -268,7 +295,7 @@ final class BlockParser {
                 content.add(text.substring(column));
                 knownOpenParagraph = false;
             } else if (!previousBlank && isLazyContinuation(text, lazy, knownOpenParagraph, content.subList(0, kept),
-                    contentLazyLines)) {
+                    contentLazyLines, contentLine)) {
                 contentLazyLines.set(content.size());
                 content.add(text);
                 knownOpenParagraph = true;
@@ -282,7 +309,7 @@ final class BlockParser {
         index = end;
         // A probe needs the block structure only, which the task marker does not change.
         ListItem.Task marker = probe ? ListItem.Task.NONE : taskMarker(start.firstLine());
-        return parseContent(content.subList(0, kept), contentLazyLines, probe, marker);
+        return parseContent(content.subList(0, kept), contentLazyLines, probe, marker, contentLine);
     }
 
     /**
@@ -333,6 +360,7 @@ final class BlockParser {
      * recursively. A blank line, or any other line, ends it.
      */
     private Container quote() {
+        int quoteLine = sourceLine(index);
         List<String> content = new ArrayList<>();
         BitSet contentLazyLines = new BitSet();
         // As in item(): known to end in an open paragraph right after a lazy line, so the content is probed again
@@ -345,7 +373,7 @@ final class BlockParser {
             if (lineContent != null) {
                 content.add(lineContent);
                 knownOpenParagraph = false;
-            } else if (isLazyContinuation(text, lazy, knownOpenParagraph, content, contentLazyLines)) {
+            } else if (isLazyContinuation(text, lazy, knownOpenParagraph, content, contentLazyLines, quoteLine)) {
                 contentLazyLines.set(content.size());
                 content.add(text);
                 knownOpenParagraph = true;
@@ -354,8 +382,8 @@ final class BlockParser {
             }
             index++;
         }
-        Content quoteContent = parseContent(content, contentLazyLines, probe, ListItem.Task.NONE);
-        return new Container(new BlockQuote(quoteContent.blocks()), quoteContent.endsInParagraph());
+        Content quoteContent = parseContent(content, contentLazyLines, probe, ListItem.Task.NONE, quoteLine);
+        return new Container(new BlockQuote(quoteContent.blocks(), quoteLine), quoteContent.endsInParagraph());
     }
 
     /**
@@ -368,14 +396,15 @@ final class BlockParser {
      * when it is not blank, starts no block and the content so far ends in an open paragraph.
      *
      * @param knownOpenParagraph whether the content is known to end in an open paragraph without a probe
+     * @param contentLine        the 1-based source line of the content's first line
      */
     private boolean isLazyContinuation(String line, boolean lazy, boolean knownOpenParagraph, List<String> content,
-                                       BitSet contentLazyLines) {
+                                       BitSet contentLazyLines, int contentLine) {
         if (lazy) {
             return true;
         }
         return !isBlank(line) && !startsBlock(line)
-                && (knownOpenParagraph || endsInParagraph(content, contentLazyLines));
+                && (knownOpenParagraph || endsInParagraph(content, contentLazyLines, contentLine));
     }
 
     /**
@@ -400,8 +429,8 @@ final class BlockParser {
      * Whether lines of a container's content, parsed as blocks, end inside an open paragraph. A probe: the blocks are
      * thrown away, so their inline content is not parsed.
      */
-    private boolean endsInParagraph(List<String> lines, BitSet lazyLines) {
-        return parseContent(lines, lazyLines, true, ListItem.Task.NONE).endsInParagraph();
+    private boolean endsInParagraph(List<String> lines, BitSet lazyLines, int contentLine) {
+        return parseContent(lines, lazyLines, true, ListItem.Task.NONE, contentLine).endsInParagraph();
     }
 
     /**
@@ -413,10 +442,12 @@ final class BlockParser {
      *                         parsed
      * @param taskMarker       the task marker a list item's content starts with, {@link ListItem.Task#NONE} for none
      *                         and for a quote's content
+     * @param contentLine      the 1-based source line of the content's first line
      */
     private Content parseContent(List<String> contentLines, BitSet contentLazyLines, boolean probeOnly,
-                                 ListItem.Task taskMarker) {
-        BlockParser parser = new BlockParser(contentLines, contentLazyLines, depth + 1, probeOnly, taskMarker);
+                                 ListItem.Task taskMarker, int contentLine) {
+        BlockParser parser = new BlockParser(contentLines, contentLazyLines, depth + 1, probeOnly, taskMarker,
+                contentLine);
         List<Block> blocks = parser.parse();
         return new Content(blocks, parser.endsInParagraph, parser.blankBetweenBlocks, parser.task);
     }
@@ -530,6 +561,7 @@ final class BlockParser {
      */
     private CodeBlock fencedCode() {
         FenceStart fence = fenceStart(lines.get(index));
+        int fenceLine = sourceLine(index);
         index++;
         StringBuilder literal = new StringBuilder();
         while (index < lines.size()) {
@@ -540,7 +572,7 @@ final class BlockParser {
             }
             literal.append(line, Math.min(indentation(line), fence.indent()), line.length()).append('\n');
         }
-        return new CodeBlock(fence.info(), literal.toString());
+        return new CodeBlock(fence.info(), literal.toString(), fenceLine);
     }
 
     /**
@@ -619,20 +651,22 @@ final class BlockParser {
             end = line + 1;
         }
         List<String> source = new ArrayList<>(lines.subList(index, end));
+        int sourceBlockLine = sourceLine(index);
         index = end;
-        return new SourceBlock(SourceBlock.Kind.INDENTED_CODE, source);
+        return new SourceBlock(SourceBlock.Kind.INDENTED_CODE, source, sourceBlockLine);
     }
 
     /**
      * Reads an HTML block from the current line, its start, on: every line up to the next blank line, as written.
      */
     private SourceBlock htmlBlock() {
+        int htmlLine = sourceLine(index);
         List<String> source = new ArrayList<>();
         while (index < lines.size() && !isBlank(lines.get(index)) && !lazyLines.get(index)) {
             source.add(lines.get(index));
             index++;
         }
-        return new SourceBlock(SourceBlock.Kind.HTML, source);
+        return new SourceBlock(SourceBlock.Kind.HTML, source, htmlLine);
     }
 
     /**
@@ -678,6 +712,7 @@ final class BlockParser {
      * are dropped; each cell is inline Markdown ({@link #tableCell(String)}).
      */
     private Table table() {
+        int headerLine = sourceLine(index);
         List<Table.Cell> header = tableCells(lines.get(index), -1);
         List<Table.Alignment> alignments = new ArrayList<>();
         for (String delimiter : splitCells(lines.get(index + 1))) {
@@ -690,7 +725,7 @@ final class BlockParser {
             rows.add(tableCells(lines.get(index), header.size()));
             index++;
         }
-        return new Table(header, alignments, rows);
+        return new Table(header, alignments, rows, headerLine);
     }
 
     /**
@@ -848,11 +883,12 @@ final class BlockParser {
     /**
      * Reads a paragraph from the current line on, with the given text in place of the current line's.
      *
-     * @param firstLine the text of the paragraph's first line; empty for a task marker alone on its line, whose
-     *                  paragraph then starts with the next line
+     * @param firstLineText the text of the paragraph's first line; empty for a task marker alone on its line, whose
+     *                      paragraph then starts with the next line
      */
-    private Paragraph paragraph(String firstLine) {
-        StringBuilder text = new StringBuilder(stripLeadingSpaces(firstLine));
+    private Paragraph paragraph(String firstLineText) {
+        int paragraphLine = sourceLine(index);
+        StringBuilder text = new StringBuilder(stripLeadingSpaces(firstLineText));
         index++;
         while (index < lines.size() && !isBlank(lines.get(index))
                 && (lazyLines.get(index) || (!interruptsParagraph(lines.get(index)) && !isTableStart(index)))) {
@@ -863,9 +899,9 @@ final class BlockParser {
             index++;
         }
         if (probe) {
-            return new Paragraph(List.of());
+            return new Paragraph(List.of(), paragraphLine);
         }
-        return new Paragraph(InlineParser.parseInlines(stripTrailingSpaces(text.toString())));
+        return new Paragraph(InlineParser.parseInlines(stripTrailingSpaces(text.toString())), paragraphLine);
     }
 
     /**
@@ -933,11 +969,13 @@ final class BlockParser {
 
     /**
      * Reads a heading line, whose level {@link #headingLevel(String)} has found.
+     *
+     * @param number the heading's 1-based source line
      */
-    private static Heading heading(String line) {
+    private static Heading heading(String line, int number) {
         int level = headingLevel(line);
         String afterOpening = line.substring(indentation(line) + level);
-        return new Heading(level, InlineParser.parseInlines(headingText(afterOpening)));
+        return new Heading(level, InlineParser.parseInlines(headingText(afterOpening)), number);
     }
 
     /**

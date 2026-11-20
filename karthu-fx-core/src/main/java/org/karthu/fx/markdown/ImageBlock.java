@@ -38,6 +38,11 @@ final class ImageBlock extends ImageNode implements Segment {
     private final boolean spaced;
 
     /**
+     * The source line of the paragraph the image stands for.
+     */
+    private final int sourceLine;
+
+    /**
      * The space between the image's edges and its open button.
      */
     private static final double OPEN_BUTTON_MARGIN = 4;
@@ -58,12 +63,14 @@ final class ImageBlock extends ImageNode implements Segment {
      * @param order      where the block comes among all images: in document order within a view
      * @param containers the quotes and list items around the block, the outermost first
      * @param spaced     whether copied text sets the block apart by blank lines, as the paragraph it stands for
+     * @param sourceLine the 1-based source line of the paragraph the image stands for
      */
     ImageBlock(String address, String title, String alt, DocumentImages images, long order,
-               List<BlockContainer> containers, boolean spaced) {
+               List<BlockContainer> containers, boolean spaced, int sourceLine) {
         super(address, title, alt, images, order, "markdown-image-block", placeholder(alt));
         this.containers = List.copyOf(containers);
         this.spaced = spaced;
+        this.sourceLine = sourceLine;
         openButton = openButton(images.openImageText());
         openButton.setOnAction(event -> images.open(this));
         // The pointer is over the block exactly while it is over what the block shows, the image or the button: the
@@ -258,5 +265,18 @@ final class ImageBlock extends ImageNode implements Segment {
     @Override
     public boolean spaced() {
         return spaced;
+    }
+
+    /**
+     * The line of the paragraph the image stands for.
+     */
+    @Override
+    public int sourceLineAt(double sceneY) {
+        return sourceLine;
+    }
+
+    @Override
+    public int sourceLineFrom(double sceneY) {
+        return SourceLines.startsFrom(this, sceneY) ? sourceLine : -1;
     }
 }

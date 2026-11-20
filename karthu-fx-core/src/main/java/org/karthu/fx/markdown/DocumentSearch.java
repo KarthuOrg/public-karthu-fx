@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.Set;
 
 /**
@@ -97,6 +98,20 @@ final class DocumentSearch {
         this.scrollPane = scrollPane;
         searchText.addListener(observable -> searchChanged());
         scrollPane.vvalueProperty().addListener(observable -> markNear());
+    }
+
+    /**
+     * The source line of the current match: the line of the block, list item's block, table row or code line that holds
+     * it ({@link Searchable#sourceLine(Searchable.Match)}).
+     *
+     * @return the 1-based source line, empty without a current match
+     */
+    OptionalInt currentSourceLine() {
+        Found current = currentMatch();
+        if (current == null) {
+            return OptionalInt.empty();
+        }
+        return OptionalInt.of(parts.get(current.part()).segment().sourceLine(current.match()));
     }
 
     /**

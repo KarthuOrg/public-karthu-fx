@@ -12,8 +12,9 @@ import java.util.Objects;
  *
  * @param blocks the item's blocks in source order; empty for an empty item
  * @param task   whether the item is a task, and if so, whether it is done
+ * @param line   the 1-based number of the source line of the item's marker
  */
-public record ListItem(List<Block> blocks, Task task) {
+public record ListItem(List<Block> blocks, Task task, int line) {
 
     /**
      * Whether a list item is a GFM task list item, and its state.
@@ -53,14 +54,5 @@ public record ListItem(List<Block> blocks, Task task) {
      */
     public boolean isTask() {
         return task != Task.NONE;
-    }
-
-    /**
-     * Creates a plain item, no task.
-     *
-     * @param blocks the item's blocks in source order; empty for an empty item
-     */
-    public ListItem(List<Block> blocks) {
-        this(blocks, Task.NONE);
     }
 }

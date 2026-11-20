@@ -394,7 +394,8 @@ class AgentGuideSamplesTest {
     }
 
     @Test
-    @DisplayName("Markdown view: the text, links, images, an own language, the zoom and the margins")
+    @DisplayName("Markdown view: the text, links, images, an own language, the zoom, the margins and the source"
+            + " line")
     void markdownView() {
         MarkdownView view = new MarkdownView("# Release notes\n\nSee [the guide](https://example.com/guide).");
         List<String> opened = new ArrayList<>();
@@ -414,7 +415,9 @@ class AgentGuideSamplesTest {
         view.setLeftMargin(48);
         view.setRightMargin(48);
         view.updateMarkdown("# Release notes\n\nNow with search.\n\nSee [the guide](https://example.com/guide).");
+        int editorLine = view.searchMatchSourceLine().orElse(view.topSourceLine().orElse(1));
 
+        assertEquals(1, editorLine, "no search, the top block: the heading on line 1");
         assertTrue(view.getCodeLanguages().containsKey("java"));
         assertEquals(1.25, view.getZoom(), 0.001);
         assertEquals(48, view.getLeftMargin());

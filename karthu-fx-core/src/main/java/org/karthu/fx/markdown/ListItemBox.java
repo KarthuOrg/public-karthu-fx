@@ -48,25 +48,22 @@ final class ListItemBox extends VBox {
     private final TaskBox taskBox;
 
     /**
-     * Creates the row of a plain item.
-     *
-     * @param marker the item's marker
-     * @param blocks the nodes of the item's blocks
+     * The source line of the item's marker.
      */
-    ListItemBox(Label marker, List<Node> blocks) {
-        this(marker, null, blocks);
-    }
+    private final int sourceLine;
 
     /**
      * Creates an item row.
      *
-     * @param marker  the item's marker, {@code null} for a bullet task item
-     * @param taskBox the task's check box, {@code null} for an item that is no task
-     * @param blocks  the nodes of the item's blocks
+     * @param marker     the item's marker, {@code null} for a bullet task item
+     * @param taskBox    the task's check box, {@code null} for an item that is no task
+     * @param blocks     the nodes of the item's blocks
+     * @param sourceLine the 1-based source line of the item's marker
      */
-    ListItemBox(Label marker, TaskBox taskBox, List<Node> blocks) {
+    ListItemBox(Label marker, TaskBox taskBox, List<Node> blocks, int sourceLine) {
         this.marker = marker;
         this.taskBox = taskBox;
+        this.sourceLine = sourceLine;
         getStyleClass().add("markdown-list-item");
         if (marker != null) {
             marker.setManaged(false);
@@ -79,6 +76,16 @@ final class ListItemBox extends VBox {
             getChildren().add(taskBox);
         }
         getChildren().addAll(blocks);
+    }
+
+    /**
+     * The source line of the item: its marker's line, for a point of the row that lies in none of its blocks, such as
+     * the marker or the check box ({@link SourceLines#at}).
+     *
+     * @return the 1-based source line
+     */
+    int sourceLine() {
+        return sourceLine;
     }
 
     @Override
