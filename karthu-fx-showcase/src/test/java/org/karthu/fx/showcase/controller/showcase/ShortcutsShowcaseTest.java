@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The <i>Shortcuts</i> page of the group <i>Navigation</i>, loaded from its FXML and laid out with the theme in a scene
+ * The <i>Shortcuts</i> page of the section <i>karthu-fx</i>, loaded from its FXML and laid out with the theme in a scene
  * that is never shown: the example application's commands, their keys sent as events to the focused node, the
  * read-outs, the tooltips, the stored text list and the embedded editor. The dialog is a window: its button is checked,
  * never pressed.
@@ -312,15 +312,15 @@ class ShortcutsShowcaseTest {
     }
 
     @Test
-    @DisplayName("the page is in the showcase's navigation, in the group Navigation")
+    @DisplayName("the page is in the showcase's navigation, directly under the section karthu-fx")
     void pageInTheNavigation() {
         List<String> found = new ArrayList<>();
         for (ShowcaseItem item : new StyleShowcaseViewModel().getShowcaseItems()) {
             if (item.fxmlFileName().equals("shortcuts-showcase.fxml")) {
-                found.add(item.displayName() + " in " + item.category());
+                found.add(item.displayName() + " in " + item.section().displayName() + " / " + item.group());
             }
         }
-        assertEquals(List.of("Shortcuts in Navigation"), found);
+        assertEquals(List.of("Shortcuts in karthu-fx / null"), found);
     }
 
     // --- Helpers -------------------------------------------------------------------------------------

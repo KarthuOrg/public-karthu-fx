@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Menu?>
 <?import javafx.scene.control.MenuBar?>
 <?import javafx.scene.control.MenuItem?>
 <?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.ScrollPane?>
 <?import javafx.scene.control.ToggleButton?>
+<?import javafx.scene.control.TreeView?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
@@ -43,9 +43,10 @@
     </top>
 
     <left>
-        <VBox styleClass="showcase-sidebar" prefWidth="220">
+        <!-- The navigation: a tree of sections, groups and pages, styled by the showcase's own sheet -->
+        <VBox styleClass="showcase-sidebar" prefWidth="220" stylesheets="@showcase-navigation.css">
             <Label text="COMPONENTS" styleClass="showcase-sidebar-header"/>
-            <ListView fx:id="componentList" VBox.vgrow="ALWAYS"/>
+            <TreeView fx:id="navigationTree" VBox.vgrow="ALWAYS"/>
         </VBox>
     </left>
 

@@ -5,23 +5,27 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.ListView;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.control.TreeCell;
+import javafx.scene.control.TreeItem;
+import javafx.scene.control.TreeView;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import org.karthu.fx.dialog.CustomDialog;
+import org.karthu.fx.showcase.viewmodel.GroupHeading;
+import org.karthu.fx.showcase.viewmodel.NavigationEntry;
+import org.karthu.fx.showcase.viewmodel.SectionHeading;
 import org.karthu.fx.showcase.viewmodel.ShowcaseItem;
 import org.karthu.fx.showcase.viewmodel.StyleShowcaseViewModel;
 import org.karthu.fx.theme.Appearance;
@@ -42,7 +46,7 @@ public class StyleShowcaseController {
     private static final Logger log = LoggerFactory.getLogger(StyleShowcaseController.class);
 
     @FXML
-    private ListView<ShowcaseItem> componentList;
+    private TreeView<NavigationEntry> navigationTree;
 
     @FXML
     private StackPane contentArea;
@@ -115,52 +119,16 @@ public class StyleShowcaseController {
     public void initViewModel(StyleShowcaseViewModel viewModel) {
         this.viewModel = viewModel;
 
-        // Set items from ViewModel
-        componentList.setItems(viewModel.getShowcaseItems());
+        // The tree of sections, groups and pages; its root is the view model's and stays hidden.
+        navigationTree.setShowRoot(false);
+        navigationTree.setRoot(viewModel.getNavigationRoot());
+        navigationTree.setCellFactory(tree -> new NavigationCell());
 
-        // Custom ListCell with category headers and icon + label rows
-        componentList.setCellFactory(listView -> new ListCell<>() {
-            @Override
-            protected void updateItem(ShowcaseItem item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty || item == null) {
-                    setText(null);
-                    setGraphic(null);
-                    return;
-                }
-
-                FontIcon icon = FontIcon.of(item.icon(), 14);
-                icon.getStyleClass().add("sidebar-item-icon");
-                Label name = new Label(item.displayName());
-                name.getStyleClass().add("sidebar-item-label");
-                HBox row = new HBox(8, icon, name);
-                row.setAlignment(Pos.CENTER_LEFT);
-
-                // Category header above the first item of each category
-                int index = getIndex();
-                if (index == 0 || !item.category().equals(getCategory(index - 1))) {
-                    Label header = new Label(item.category());
-                    header.getStyleClass().add("category-header");
-                    setGraphic(new VBox(2, header, row));
-                } else {
-                    setGraphic(row);
-                }
-                setText(null);
-            }
-
-            private String getCategory(int index) {
-                if (index >= 0 && index < viewModel.getShowcaseItems().size()) {
-                    return viewModel.getShowcaseItems().get(index).category();
-                }
-                return "";
-            }
-        });
-
-        // Selection listener: update ViewModel when user selects
-        componentList.getSelectionModel().selectedItemProperty().addListener(
-                (obs, oldItem, newItem) -> {
-                    if (newItem != null) {
-                        viewModel.selectItem(newItem);
+        // A page row opens its page; a section or group row opens nothing and leaves the open page as it is.
+        navigationTree.getSelectionModel().selectedItemProperty().addListener(
+                (obs, oldNode, newNode) -> {
+                    if (newNode != null && newNode.getValue() instanceof ShowcaseItem page) {
+                        viewModel.selectItem(page);
                     }
                 }
         );
@@ -174,9 +142,24 @@ public class StyleShowcaseController {
                 }
         );
 
-        // Select first item
+        // Select the first page's row, which opens the page
         if (!viewModel.getShowcaseItems().isEmpty()) {
-            componentList.getSelectionModel().selectFirst();
+            selectPageRow(viewModel.getShowcaseItems().get(0));
+        }
+    }
+
+    /**
+     * Selects the tree row of a page, which opens the page; clears the tree's selection when the tree does not show the
+     * page, which leaves the open page as it is.
+     *
+     * @param page the page
+     */
+    private void selectPageRow(ShowcaseItem page) {
+        TreeItem<NavigationEntry> node = viewModel.navigationNodeOf(page);
+        if (node == null) {
+            navigationTree.getSelectionModel().clearSelection();
+        } else {
+            navigationTree.getSelectionModel().select(node);
         }
     }
 
@@ -187,7 +170,7 @@ public class StyleShowcaseController {
 
     @FXML
     private void onAbout() {
-        CustomDialog.info(componentList.getScene().getWindow(),
+        CustomDialog.info(navigationTree.getScene().getWindow(),
                 "About Karthu FX", "Karthu FX Showcase",
                 "Version 1.0.0\n\nA showcase for previewing and testing the Karthu FX component library.");
     }
@@ -219,5 +202,49 @@ public class StyleShowcaseController {
 
         // Reset scroll to top
         contentScrollPane.setVvalue(0.0);
+    }
+
+    /**
+     * A row of the navigation tree: a page with its icon and name, or a section or group heading. A heading row carries
+     * the pseudo-class {@code :section-heading} or {@code :group-heading}, its label the style class
+     * {@code navigation-section-header} or {@code navigation-group-header}.
+     */
+    private static final class NavigationCell extends TreeCell<NavigationEntry> {
+
+        private static final PseudoClass SECTION_HEADING = PseudoClass.getPseudoClass("section-heading");
+        private static final PseudoClass GROUP_HEADING = PseudoClass.getPseudoClass("group-heading");
+
+        @Override
+        protected void updateItem(NavigationEntry entry, boolean empty) {
+            super.updateItem(entry, empty);
+            setText(null);
+            pseudoClassStateChanged(SECTION_HEADING, !empty && entry instanceof SectionHeading);
+            pseudoClassStateChanged(GROUP_HEADING, !empty && entry instanceof GroupHeading);
+            if (empty || entry == null) {
+                setGraphic(null);
+                return;
+            }
+            switch (entry) {
+                case ShowcaseItem page -> setGraphic(pageRow(page));
+                case SectionHeading section -> setGraphic(heading(section.text(), "navigation-section-header"));
+                case GroupHeading group -> setGraphic(heading(group.text(), "navigation-group-header"));
+            }
+        }
+
+        private static HBox pageRow(ShowcaseItem page) {
+            FontIcon icon = FontIcon.of(page.icon(), 14);
+            icon.getStyleClass().add("sidebar-item-icon");
+            Label name = new Label(page.displayName());
+            name.getStyleClass().add("sidebar-item-label");
+            HBox row = new HBox(8, icon, name);
+            row.setAlignment(Pos.CENTER_LEFT);
+            return row;
+        }
+
+        private static Label heading(String text, String styleClass) {
+            Label heading = new Label(text);
+            heading.getStyleClass().add(styleClass);
+            return heading;
+        }
     }
 }

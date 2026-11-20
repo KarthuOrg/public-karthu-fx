@@ -1,80 +1,149 @@
 package org.karthu.fx.showcase.viewmodel;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
+import javafx.scene.control.TreeItem;
 
+import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
 
 /**
- * ViewModel for the style showcase application.
- * Contains the sidebar items and selection state.
+ * ViewModel for the style showcase application: the pages, the navigation tree built over them and the open page.
+ * <p>
+ * The pages are one ordered list; their order is the display order inside a group and among a section's directly
+ * attached pages. The tree is built from the filtered view of that list ({@link #getFilteredItems()}), rebuilt whenever
+ * it changes, under one root that stays the same node.
  */
 public class StyleShowcaseViewModel {
 
-    /** The sidebar group of the form collection (package org.karthu.fx.form). */
+    private static final ShowcaseSection JAVAFX = ShowcaseSection.JAVAFX;
+    private static final ShowcaseSection KARTHU_FX = ShowcaseSection.KARTHU_FX;
+    private static final ShowcaseSection EXAMPLES = ShowcaseSection.EXAMPLES;
+
+    /** The group of the form collection (package org.karthu.fx.form). */
     private static final String FORM_INPUTS = "Form Inputs";
 
+    /** The group of a page directly under its section: none. */
+    private static final String NO_GROUP = null;
+
     private final ObservableList<ShowcaseItem> showcaseItems;
+    private final FilteredList<ShowcaseItem> filteredItems;
+    private final TreeItem<NavigationEntry> navigationRoot = new TreeItem<>();
     private final ObjectProperty<ShowcaseItem> selectedItem = new SimpleObjectProperty<>();
 
     public StyleShowcaseViewModel() {
         showcaseItems = FXCollections.observableArrayList(
-                new ShowcaseItem("Buttons", "button-showcase.fxml", "Inputs", BootstrapIcons.MENU_BUTTON_WIDE),
-                new ShowcaseItem("Text Field", "text-field-showcase.fxml", "Inputs", BootstrapIcons.INPUT_CURSOR_TEXT),
-                new ShowcaseItem("Text Area", "text-area-showcase.fxml", "Inputs", BootstrapIcons.TEXTAREA_RESIZE),
-                new ShowcaseItem("Checkbox", "checkbox-showcase.fxml", "Inputs", BootstrapIcons.CHECK2_SQUARE),
-                new ShowcaseItem("Radio Button", "radio-button-showcase.fxml", "Inputs", BootstrapIcons.RECORD_CIRCLE),
-                new ShowcaseItem("Toggle Switch", "toggle-switch-showcase.fxml", "Inputs", BootstrapIcons.TOGGLE_ON),
-                new ShowcaseItem("Hyperlink", "hyperlink-showcase.fxml", "Inputs", BootstrapIcons.LINK_45DEG),
-                // The form collection: the overview first, then one page per input type, the path and cron inputs, then the
-                // search input.
-                new ShowcaseItem("Overview", "form-inputs-overview-showcase.fxml", FORM_INPUTS, BootstrapIcons.UI_CHECKS_GRID),
-                new ShowcaseItem("Text Input", "text-input-showcase.fxml", FORM_INPUTS, BootstrapIcons.CURSOR_TEXT),
-                new ShowcaseItem("Password Input", "password-input-showcase.fxml", FORM_INPUTS, BootstrapIcons.KEY),
-                new ShowcaseItem("Number Input", "number-input-showcase.fxml", FORM_INPUTS, BootstrapIcons.HASH),
-                new ShowcaseItem("Combo Input", "combo-input-showcase.fxml", FORM_INPUTS, BootstrapIcons.MENU_DOWN),
-                new ShowcaseItem("Editable Combo Input", "editable-combo-input-showcase.fxml", FORM_INPUTS,
+                page(JAVAFX, "Inputs", "Buttons", "button-showcase.fxml", BootstrapIcons.MENU_BUTTON_WIDE),
+                page(JAVAFX, "Inputs", "Text Field", "text-field-showcase.fxml", BootstrapIcons.INPUT_CURSOR_TEXT),
+                page(JAVAFX, "Inputs", "Text Area", "text-area-showcase.fxml", BootstrapIcons.TEXTAREA_RESIZE),
+                page(JAVAFX, "Inputs", "Checkbox", "checkbox-showcase.fxml", BootstrapIcons.CHECK2_SQUARE),
+                page(JAVAFX, "Inputs", "Radio Button", "radio-button-showcase.fxml", BootstrapIcons.RECORD_CIRCLE),
+                page(JAVAFX, "Inputs", "Hyperlink", "hyperlink-showcase.fxml", BootstrapIcons.LINK_45DEG),
+                page(JAVAFX, "Selection", "ComboBox", "combo-box-showcase.fxml", BootstrapIcons.MENU_BUTTON),
+                page(JAVAFX, "Selection", "ChoiceBox", "choice-box-showcase.fxml", BootstrapIcons.CHEVRON_EXPAND),
+                page(JAVAFX, "Selection", "DatePicker", "date-picker-showcase.fxml", BootstrapIcons.CALENDAR3),
+                page(JAVAFX, "Selection", "Spinner", "spinner-showcase.fxml", BootstrapIcons.ARROW_DOWN_UP),
+                page(JAVAFX, "Selection", "Slider", "slider-showcase.fxml", BootstrapIcons.SLIDERS),
+                page(JAVAFX, "Selection", "ColorPicker", "color-picker-showcase.fxml", BootstrapIcons.PALETTE),
+                page(JAVAFX, "Data Display", "TableView", "table-view-showcase.fxml", BootstrapIcons.TABLE),
+                page(JAVAFX, "Data Display", "ListView", "list-view-showcase.fxml", BootstrapIcons.LIST_UL),
+                page(JAVAFX, "Data Display", "TreeView", "tree-view-showcase.fxml", BootstrapIcons.LIST_NESTED),
+                page(JAVAFX, "Data Display", "TreeTableView", "tree-table-view-showcase.fxml", BootstrapIcons.DIAGRAM_3),
+                page(JAVAFX, "Layout", "Accordion", "accordion-showcase.fxml", BootstrapIcons.VIEW_STACKED),
+                page(JAVAFX, "Layout", "TabPane", "tab-pane-showcase.fxml", BootstrapIcons.SEGMENTED_NAV),
+                page(JAVAFX, "Layout", "SplitPane", "split-pane-showcase.fxml", BootstrapIcons.LAYOUT_SPLIT),
+                page(JAVAFX, "Layout", "ScrollPane", "scroll-pane-showcase.fxml", BootstrapIcons.ARROWS_EXPAND),
+                page(JAVAFX, "Navigation", "Pagination", "pagination-showcase.fxml", BootstrapIcons.THREE_DOTS),
+                page(JAVAFX, "Navigation", "Menu Bar", "menu-bar-showcase.fxml", BootstrapIcons.LIST),
+                page(JAVAFX, "Navigation", "Context Menu", "context-menu-showcase.fxml", BootstrapIcons.MENU_APP),
+                page(JAVAFX, NO_GROUP, "Progress", "progress-showcase.fxml", BootstrapIcons.HOURGLASS_SPLIT),
+                // The form collection: the overview first, then one page per input type, the path and cron inputs,
+                // then the search input, in the look of the form inputs though no form input.
+                page(KARTHU_FX, FORM_INPUTS, "Overview", "form-inputs-overview-showcase.fxml",
+                        BootstrapIcons.UI_CHECKS_GRID),
+                page(KARTHU_FX, FORM_INPUTS, "Text Input", "text-input-showcase.fxml", BootstrapIcons.CURSOR_TEXT),
+                page(KARTHU_FX, FORM_INPUTS, "Password Input", "password-input-showcase.fxml", BootstrapIcons.KEY),
+                page(KARTHU_FX, FORM_INPUTS, "Number Input", "number-input-showcase.fxml", BootstrapIcons.HASH),
+                page(KARTHU_FX, FORM_INPUTS, "Combo Input", "combo-input-showcase.fxml", BootstrapIcons.MENU_DOWN),
+                page(KARTHU_FX, FORM_INPUTS, "Editable Combo Input", "editable-combo-input-showcase.fxml",
                         BootstrapIcons.INPUT_CURSOR),
-                new ShowcaseItem("Text Area Input", "text-area-input-showcase.fxml", FORM_INPUTS, BootstrapIcons.TEXTAREA_T),
-                new ShowcaseItem("Path Input", "path-input-showcase.fxml", FORM_INPUTS, BootstrapIcons.FOLDER2_OPEN),
-                new ShowcaseItem("Cron Input", "cron-input-showcase.fxml", FORM_INPUTS, BootstrapIcons.CLOCK),
-                // The search input and its suggestions: in the look of the form inputs, though no form input.
-                new ShowcaseItem("Search Input", "search-input-showcase.fxml", FORM_INPUTS, BootstrapIcons.SEARCH),
-                new ShowcaseItem("ComboBox", "combo-box-showcase.fxml", "Selection", BootstrapIcons.MENU_BUTTON),
-                new ShowcaseItem("ChoiceBox", "choice-box-showcase.fxml", "Selection", BootstrapIcons.CHEVRON_EXPAND),
-                new ShowcaseItem("DatePicker", "date-picker-showcase.fxml", "Selection", BootstrapIcons.CALENDAR3),
-                new ShowcaseItem("Spinner", "spinner-showcase.fxml", "Selection", BootstrapIcons.ARROW_DOWN_UP),
-                new ShowcaseItem("Slider", "slider-showcase.fxml", "Selection", BootstrapIcons.SLIDERS),
-                new ShowcaseItem("ColorPicker", "color-picker-showcase.fxml", "Selection", BootstrapIcons.PALETTE),
-                new ShowcaseItem("Twin Column Selector", "twin-column-selector-showcase.fxml", "Selection", BootstrapIcons.ARROW_LEFT_RIGHT),
-                new ShowcaseItem("Key-Value Editor", "key-value-editor-showcase.fxml", "Inputs", BootstrapIcons.LIST_CHECK),
-                new ShowcaseItem("TableView", "table-view-showcase.fxml", "Data Display", BootstrapIcons.TABLE),
-                new ShowcaseItem("ListView", "list-view-showcase.fxml", "Data Display", BootstrapIcons.LIST_UL),
-                new ShowcaseItem("TreeView", "tree-view-showcase.fxml", "Data Display", BootstrapIcons.LIST_NESTED),
-                new ShowcaseItem("TreeTableView", "tree-table-view-showcase.fxml", "Data Display", BootstrapIcons.DIAGRAM_3),
-                new ShowcaseItem("Markdown", "markdown-showcase.fxml", "Data Display", BootstrapIcons.MARKDOWN),
-                new ShowcaseItem("Accordion", "accordion-showcase.fxml", "Layout", BootstrapIcons.VIEW_STACKED),
-                new ShowcaseItem("TabPane", "tab-pane-showcase.fxml", "Layout", BootstrapIcons.SEGMENTED_NAV),
-                new ShowcaseItem("SplitPane", "split-pane-showcase.fxml", "Layout", BootstrapIcons.LAYOUT_SPLIT),
-                new ShowcaseItem("ScrollPane", "scroll-pane-showcase.fxml", "Layout", BootstrapIcons.ARROWS_EXPAND),
-                new ShowcaseItem("Progress", "progress-showcase.fxml", "Feedback", BootstrapIcons.HOURGLASS_SPLIT),
-                new ShowcaseItem("Dialog / Alert", "dialog-showcase.fxml", "Feedback", BootstrapIcons.CHAT_SQUARE_TEXT),
-                new ShowcaseItem("Pagination", "pagination-showcase.fxml", "Navigation", BootstrapIcons.THREE_DOTS),
-                new ShowcaseItem("Menu Bar", "menu-bar-showcase.fxml", "Navigation", BootstrapIcons.LIST),
-                new ShowcaseItem("Context Menu", "context-menu-showcase.fxml", "Navigation", BootstrapIcons.MENU_APP),
-                new ShowcaseItem("Shortcuts", "shortcuts-showcase.fxml", "Navigation", BootstrapIcons.KEYBOARD),
-                new ShowcaseItem("Icons", "icons-showcase.fxml", "Data Display", BootstrapIcons.EMOJI_SMILE),
-                new ShowcaseItem("Settings Dialog", "settings-dialog-showcase.fxml", "Feedback", BootstrapIcons.GEAR),
-                new ShowcaseItem("Job Scheduler", "job-scheduler-showcase.fxml", "Examples", BootstrapIcons.ALARM)
+                page(KARTHU_FX, FORM_INPUTS, "Text Area Input", "text-area-input-showcase.fxml",
+                        BootstrapIcons.TEXTAREA_T),
+                page(KARTHU_FX, FORM_INPUTS, "Path Input", "path-input-showcase.fxml", BootstrapIcons.FOLDER2_OPEN),
+                page(KARTHU_FX, FORM_INPUTS, "Cron Input", "cron-input-showcase.fxml", BootstrapIcons.CLOCK),
+                page(KARTHU_FX, FORM_INPUTS, "Search Input", "search-input-showcase.fxml", BootstrapIcons.SEARCH),
+                page(KARTHU_FX, "Components", "Toggle Switch", "toggle-switch-showcase.fxml", BootstrapIcons.TOGGLE_ON),
+                page(KARTHU_FX, "Components", "Twin Column Selector", "twin-column-selector-showcase.fxml",
+                        BootstrapIcons.ARROW_LEFT_RIGHT),
+                page(KARTHU_FX, "Components", "Key-Value Editor", "key-value-editor-showcase.fxml",
+                        BootstrapIcons.LIST_CHECK),
+                page(KARTHU_FX, "Dialogs", "Dialog / Alert", "dialog-showcase.fxml", BootstrapIcons.CHAT_SQUARE_TEXT),
+                page(KARTHU_FX, "Dialogs", "Settings Dialog", "settings-dialog-showcase.fxml", BootstrapIcons.GEAR),
+                page(KARTHU_FX, NO_GROUP, "Markdown", "markdown-showcase.fxml", BootstrapIcons.MARKDOWN),
+                page(KARTHU_FX, NO_GROUP, "Shortcuts", "shortcuts-showcase.fxml", BootstrapIcons.KEYBOARD),
+                page(KARTHU_FX, NO_GROUP, "Icons", "icons-showcase.fxml", BootstrapIcons.EMOJI_SMILE),
+                page(EXAMPLES, NO_GROUP, "Job Scheduler", "job-scheduler-showcase.fxml", BootstrapIcons.ALARM)
         );
-        // Initial selection is driven by the controller (selectFirst) so the
-        // change event actually fires and the first page gets loaded.
+        filteredItems = new FilteredList<>(showcaseItems);
+        navigationRoot.setExpanded(true);
+        rebuildNavigation();
+        filteredItems.addListener((ListChangeListener<ShowcaseItem>) change -> rebuildNavigation());
+        // Initial selection is driven by the controller, which selects the first page's row so that the change event
+        // fires and the first page gets loaded.
     }
 
+    private static ShowcaseItem page(ShowcaseSection section, String group, String name, String fxmlFileName,
+            Ikon icon) {
+        return new ShowcaseItem(section, group, name, fxmlFileName, icon);
+    }
+
+    /**
+     * Every page of the showcase, in display order.
+     *
+     * @return the pages
+     */
     public ObservableList<ShowcaseItem> getShowcaseItems() {
         return showcaseItems;
+    }
+
+    /**
+     * The pages the navigation tree shows: all of them until a predicate narrows the list. The tree is rebuilt
+     * whenever this list changes.
+     *
+     * @return the filtered view of {@link #getShowcaseItems()}
+     */
+    public FilteredList<ShowcaseItem> getFilteredItems() {
+        return filteredItems;
+    }
+
+    /**
+     * The navigation tree's root, hidden in the view: its children are the sections that hold a page among the
+     * filtered pages, each with its groups first, in the order of their first page, then its directly attached pages.
+     * Every node is expanded. The root stays the same node when the tree is rebuilt.
+     *
+     * @return the root
+     */
+    public TreeItem<NavigationEntry> getNavigationRoot() {
+        return navigationRoot;
+    }
+
+    /**
+     * The tree node of a page.
+     *
+     * @param page the page
+     * @return its node, or {@code null} when the tree does not show it
+     */
+    public TreeItem<NavigationEntry> navigationNodeOf(ShowcaseItem page) {
+        return find(navigationRoot, page);
     }
 
     public ObjectProperty<ShowcaseItem> selectedItemProperty() {
@@ -87,5 +156,57 @@ public class StyleShowcaseViewModel {
 
     public void selectItem(ShowcaseItem item) {
         selectedItem.set(item);
+    }
+
+    /** Builds the sections, groups and page leaves from the filtered pages and puts them under the root. */
+    private void rebuildNavigation() {
+        List<TreeItem<NavigationEntry>> sections = new ArrayList<>();
+        for (ShowcaseSection section : ShowcaseSection.values()) {
+            Map<String, TreeItem<NavigationEntry>> groups = new LinkedHashMap<>();
+            List<TreeItem<NavigationEntry>> attached = new ArrayList<>();
+            for (ShowcaseItem item : filteredItems) {
+                if (item.section() != section) {
+                    continue;
+                }
+                TreeItem<NavigationEntry> leaf = new TreeItem<>(item);
+                if (item.group() == null) {
+                    attached.add(leaf);
+                } else {
+                    TreeItem<NavigationEntry> group = groups.get(item.group());
+                    if (group == null) {
+                        group = expanded(new GroupHeading(section, item.group()));
+                        groups.put(item.group(), group);
+                    }
+                    group.getChildren().add(leaf);
+                }
+            }
+            if (groups.isEmpty() && attached.isEmpty()) {
+                continue;
+            }
+            TreeItem<NavigationEntry> sectionNode = expanded(new SectionHeading(section));
+            sectionNode.getChildren().addAll(groups.values());
+            sectionNode.getChildren().addAll(attached);
+            sections.add(sectionNode);
+        }
+        navigationRoot.getChildren().setAll(sections);
+    }
+
+    private static TreeItem<NavigationEntry> expanded(NavigationEntry heading) {
+        TreeItem<NavigationEntry> node = new TreeItem<>(heading);
+        node.setExpanded(true);
+        return node;
+    }
+
+    private static TreeItem<NavigationEntry> find(TreeItem<NavigationEntry> node, ShowcaseItem page) {
+        if (node.getValue() == page) {
+            return node;
+        }
+        for (TreeItem<NavigationEntry> child : node.getChildren()) {
+            TreeItem<NavigationEntry> found = find(child, page);
+            if (found != null) {
+                return found;
+            }
+        }
+        return null;
     }
 }

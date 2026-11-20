@@ -1,0 +1,93 @@
+/*
+ * The showcase's navigation: a tree of sections, groups and pages in the sidebar. Colours come from the theme's
+ * tokens only, so the rules hold in Nebula Dark and Nebula Light alike. Section and group rows are headings: a
+ * section bold in the text colour, a group bold, smaller, in the secondary text colour; a selected heading keeps its
+ * look and has no accent bar, since it opens nothing.
+ */
+
+.showcase-sidebar .tree-view {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+.showcase-sidebar .tree-view .tree-cell {
+    -fx-padding: 6 12 6 8;
+    -fx-background-color: transparent;
+    -fx-font-size: 13px;
+}
+
+.showcase-sidebar .tree-view .tree-cell:hover:filled {
+    -fx-background-color: -fx-hover-color;
+}
+
+.showcase-sidebar .tree-view .tree-cell:selected {
+    -fx-background-color: -fx-accent-color, -fx-selection-color;
+    -fx-background-insets: 0, 0 0 0 2;
+}
+
+.showcase-sidebar .tree-view .tree-cell .tree-disclosure-node .arrow {
+    -fx-background-color: -fx-text-secondary-color;
+}
+
+/* Page rows: icon and name, in the accent colour when selected */
+
+.showcase-sidebar .tree-cell .sidebar-item-icon {
+    -fx-icon-color: -fx-text-secondary-color;
+    -fx-fill: -fx-text-secondary-color;
+}
+
+.showcase-sidebar .tree-cell .sidebar-item-label .text {
+    -fx-fill: -fx-text-color;
+}
+
+.showcase-sidebar .tree-cell:selected .sidebar-item-label {
+    -fx-font-weight: bold;
+}
+
+/* Text-node fills: win over the generic .tree-view .tree-cell:selected .text rule */
+.showcase-sidebar .tree-cell:selected .sidebar-item-label .text {
+    -fx-fill: -fx-accent-color;
+}
+
+.showcase-sidebar .tree-cell:selected .sidebar-item-icon {
+    -fx-icon-color: -fx-accent-color;
+    -fx-fill: -fx-accent-color;
+}
+
+/* Heading rows */
+
+.showcase-sidebar .tree-view .tree-cell:section-heading {
+    -fx-padding: 10 12 4 8;
+}
+
+.showcase-sidebar .tree-view .tree-cell:group-heading {
+    -fx-padding: 6 12 2 8;
+}
+
+.showcase-sidebar .tree-view .tree-cell:section-heading:selected,
+.showcase-sidebar .tree-view .tree-cell:group-heading:selected {
+    -fx-background-color: -fx-hover-color;
+    -fx-background-insets: 0;
+}
+
+.showcase-sidebar .tree-cell .navigation-section-header {
+    -fx-font-size: 13px;
+    -fx-font-weight: bold;
+}
+
+.showcase-sidebar .tree-cell .navigation-section-header .text,
+.showcase-sidebar .tree-cell:selected .navigation-section-header .text {
+    -fx-fill: -fx-text-color;
+}
+
+.showcase-sidebar .tree-cell .navigation-group-header {
+    -fx-font-size: 11px;
+    -fx-font-weight: bold;
+}
+
+.showcase-sidebar .tree-cell .navigation-group-header .text,
+.showcase-sidebar .tree-cell:selected .navigation-group-header .text {
+    -fx-fill: -fx-text-secondary-color;
+}
