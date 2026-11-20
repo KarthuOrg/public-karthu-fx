@@ -167,6 +167,9 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   theme set the background colour to a lookup of itself. The dialog looks as before.
 - `MarkdownView`: a document with many tables no longer keeps the application busy with endless
   layout passes; it comes to rest after it is laid out.
+- A selected `ToggleButton` no longer shows a strip of its colour below its border after it lost
+  the focus, and no longer bleeds slightly around it while focused: the theme's toggle buttons
+  paint their background exactly inside the border, in both schemes. No colour changes.
 
 ## [1.1.0-RC1] - 2026-11-14
 

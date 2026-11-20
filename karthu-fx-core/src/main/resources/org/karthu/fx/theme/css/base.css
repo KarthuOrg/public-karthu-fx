@@ -1776,9 +1776,12 @@ Text {
     -fx-padding: 4 0 2 0;
 }
 
-/* Toggle button */
+/* Toggle button. One background layer exactly inside the border: without insets of its own, modena's insets for its
+   layers apply, which put the background 1 px below the border (selected: a strip of accent colour under the button)
+   and 0.2 px around it when focused. They hold for every rule below, the shortcuts filter's too. */
 .toggle-button {
     -fx-background-color: -fx-button-color;
+    -fx-background-insets: 0;
     -fx-text-fill: -fx-text-color;
     -fx-padding: 4 8;
     -fx-background-radius: 3;
