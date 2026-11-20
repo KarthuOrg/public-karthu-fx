@@ -165,6 +165,11 @@ require `javafx.web`, so no browser engine ships with the application.
   row (the header too, and the row as the source has it in a sorted table) and a line of a code
   block have their own line; any other block its first. Both follow the zoom, the margins and
   `updateMarkdown`.
+- **Context menu entries of the application** (from 1.1.0-RC2). `setContextMenuCallback` takes a
+  `ContextMenuCallback`, called on every opening of the context menu after the view's own entries
+  are in place, with the menu's entries (to add to, remove from or reorder) and a
+  `ContextMenuPlace`: the source line under the right click, with the same granularity as above,
+  empty in the margins. Without a callback the menu is unchanged.
 - **Texts.** The labels of the copy button and the context menu (*Copy*, *Copy with header*,
   *Select column*, *Copy Markdown*), the zoom bar's texts (*Zoom out*, *Zoom in*, *Zoom levels*,
   *Reset*) and the texts of images (*Open image*, the window's buttons, the boxes' notes) are

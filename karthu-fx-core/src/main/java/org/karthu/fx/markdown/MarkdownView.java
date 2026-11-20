@@ -488,6 +488,11 @@ import java.util.function.Consumer;
  * entries ({@link #copyMarkdownTextProperty()}, {@link #copyTextProperty()}, {@link #copyWithHeaderTextProperty()},
  * {@link #selectColumnTextProperty()}), can be replaced, for example to match the application's language.
  *
+ * <p>An application adds entries of its own to the context menu through a {@link ContextMenuCallback}
+ * ({@link #contextMenuCallbackProperty()}): called on every opening, after the view's entries above are in place, it
+ * receives the menu's entries and the {@link ContextMenuPlace place} of the request with the source line under the
+ * right click (see <em>Source lines</em>), for example to open the text in an editor at that line.
+ *
  * <p>In a table with the keyboard focus, the shortcut key (Ctrl, Command on macOS) plus C copies the selected cells
  * as text that pastes into a spreadsheet cell by cell: one cell as its visible text (code without backticks, emphasis
  * without asterisks, a link as its text, an image as its alt text), several cells as their bounding rectangle, the
@@ -722,6 +727,8 @@ import java.util.function.Consumer;
  * item's marker, a table row (the header row too) or a line of a code or source block. A line inside a wrapped or
  * multi-line paragraph is not told apart: the paragraph's first line counts. Both are read from the document as it is
  * laid out, so they follow the zoom, the margins, the reader's sorting of a table and {@link #updateMarkdown(String)}.
+ * The context menu's {@link ContextMenuPlace place} tells the line under a right click the same way (see
+ * {@link #contextMenuCallbackProperty()}).
  *
  * <h2>Style classes</h2>
  *
@@ -920,6 +927,8 @@ public class MarkdownView extends BaseComponent {
 
     private final StringProperty markdown = new SimpleStringProperty(this, "markdown");
     private final ObjectProperty<Consumer<String>> onLinkAction = new SimpleObjectProperty<>(this, "onLinkAction");
+    private final ObjectProperty<ContextMenuCallback> contextMenuCallback =
+            new SimpleObjectProperty<>(this, "contextMenuCallback");
     private final StringProperty copyMarkdownText = new SimpleStringProperty(this, "copyMarkdownText",
             DEFAULT_COPY_MARKDOWN_TEXT);
     private final StringProperty copyCodeText = new SimpleStringProperty(this, "copyCodeText",
@@ -1095,7 +1104,7 @@ public class MarkdownView extends BaseComponent {
         scrollPane.setFitToWidth(true);
         scrollPane.setContextMenu(contextMenu());
         // A filter: it runs before the scroll pane, where the request bubbles up to, shows the menu.
-        addEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, event -> prepareContextMenu(event.getTarget()));
+        addEventFilter(ContextMenuEvent.CONTEXT_MENU_REQUESTED, event -> contextMenuRequested(event));
         // A handler: a code or source block and a table with the focus take their own shortcut keys first.
         addEventHandler(KeyEvent.KEY_PRESSED, event -> keyPressed(event));
         zoomBar.visibleProperty().bind(zoomBarVisible);
@@ -1248,6 +1257,42 @@ public class MarkdownView extends BaseComponent {
      */
     public final void setOnLinkAction(Consumer<String> handler) {
         onLinkAction.set(handler);
+    }
+
+    /**
+     * What the application adds to the view's context menu: a callback called on every opening of the menu, after
+     * the view's own entries are in place (see <em>Copying</em> in the class description). It receives the menu's
+     * entries, to add to, remove from or reorder, and the {@link ContextMenuPlace place} of the request, which tells
+     * the source line under the right click (see <em>Source lines</em>), empty where the click hit no block, as in the
+     * margins. The view builds its entries anew on every opening, so the callback's changes last for one opening.
+     * Without a callback ({@code null}, the default), the menu holds the view's own entries alone. The callback is
+     * read at each opening, so it can be set or changed at any time.
+     *
+     * @return the context menu callback property
+     * @since 1.1.0-RC2
+     */
+    public final ObjectProperty<ContextMenuCallback> contextMenuCallbackProperty() {
+        return contextMenuCallback;
+    }
+
+    /**
+     * Returns what the application adds to the view's context menu, see {@link #contextMenuCallbackProperty()}.
+     *
+     * @return the callback, {@code null} if none is set
+     * @since 1.1.0-RC2
+     */
+    public final ContextMenuCallback getContextMenuCallback() {
+        return contextMenuCallback.get();
+    }
+
+    /**
+     * Sets what the application adds to the view's context menu, see {@link #contextMenuCallbackProperty()}.
+     *
+     * @param callback the callback, called on every opening of the menu; {@code null} for none
+     * @since 1.1.0-RC2
+     */
+    public final void setContextMenuCallback(ContextMenuCallback callback) {
+        contextMenuCallback.set(callback);
     }
 
     /**
@@ -2513,6 +2558,23 @@ public class MarkdownView extends BaseComponent {
         entries.add(separator);
         entries.add(copyMarkdownEntry);
         contextMenu.getItems().setAll(entries);
+    }
+
+    /**
+     * Prepares the context menu for a request: the view's own entries for the node it comes from, then the
+     * application's callback, if one is set, with the source line at the request's height in that node.
+     *
+     * @param event the request, from a right click or the keyboard
+     */
+    private void contextMenuRequested(ContextMenuEvent event) {
+        EventTarget target = event.getTarget();
+        prepareContextMenu(target);
+        ContextMenuCallback callback = contextMenuCallback.get();
+        if (callback == null) {
+            return;
+        }
+        OptionalInt line = target instanceof Node node ? SourceLines.at(node, event.getSceneY()) : OptionalInt.empty();
+        callback.contextMenuRequested(contextMenu.getItems(), new ContextMenuPlace(line));
     }
 
     /**

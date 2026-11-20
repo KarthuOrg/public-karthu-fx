@@ -16,6 +16,7 @@ import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -88,6 +89,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -416,8 +418,16 @@ class AgentGuideSamplesTest {
         view.setRightMargin(48);
         view.updateMarkdown("# Release notes\n\nNow with search.\n\nSee [the guide](https://example.com/guide).");
         int editorLine = view.searchMatchSourceLine().orElse(view.topSourceLine().orElse(1));
+        List<Integer> editorLines = new ArrayList<>();
+        view.setContextMenuCallback((items, place) -> {
+            MenuItem openInEditor = new MenuItem("Open in Editor");
+            openInEditor.setOnAction(event -> editorLines.add(place.sourceLine().orElse(editorLine)));
+            items.addAll(new SeparatorMenuItem(), openInEditor);
+        });
 
         assertEquals(1, editorLine, "no search, the top block: the heading on line 1");
+        assertNotNull(view.getContextMenuCallback());
+        assertEquals(List.of(), editorLines, "nothing opened before a menu entry was chosen");
         assertTrue(view.getCodeLanguages().containsKey("java"));
         assertEquals(1.25, view.getZoom(), 0.001);
         assertEquals(48, view.getLeftMargin());

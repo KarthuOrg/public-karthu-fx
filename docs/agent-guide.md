@@ -427,6 +427,12 @@ view.setLeftMargin(48);
 view.setRightMargin(48);
 view.updateMarkdown("# Release notes\n\nNow with search.\n\nSee [the guide](https://example.com/guide).");
 int editorLine = view.searchMatchSourceLine().orElse(view.topSourceLine().orElse(1));
+List<Integer> editorLines = new ArrayList<>();
+view.setContextMenuCallback((items, place) -> {
+    MenuItem openInEditor = new MenuItem("Open in Editor");
+    openInEditor.setOnAction(event -> editorLines.add(place.sourceLine().orElse(editorLine)));
+    items.addAll(new SeparatorMenuItem(), openInEditor);
+});
 ```
 
 - The view opens no link by itself: without `setOnLinkAction` a click does nothing. The handler
@@ -443,6 +449,10 @@ int editorLine = view.searchMatchSourceLine().orElse(view.topSourceLine().orElse
   top is in the visible area (a list item, a table row or a code line where the edge cuts a list,
   table or code block), and the block, row or code line of the current search match. Use them to
   open the file in an editor at that line; both are empty without a document or a match.
+- From 1.1.0-RC2 on, `setContextMenuCallback` adds the application's entries to the view's context
+  menu: the callback runs on every opening, after the built-in entries are in place, so add yours
+  to the list it gets (do not replace the menu). Its `ContextMenuPlace` holds the source line under
+  the right click, empty in the margins; fall back to the lines above.
 - The space left and right of the text is `setLeftMargin` and `setRightMargin`, in pixels at 100 %:
   the zoom scales them, and a narrow view shrinks them so the text keeps 300 pixels, so they need
   no computing against the view's width. Not a number, the default, keeps the theme's 14 pixels.

@@ -8,6 +8,13 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 
 ### Added
 
+- An application adds its own entries to `MarkdownView`'s context menu: `setContextMenuCallback`
+  (with `contextMenuCallbackProperty()` and `getContextMenuCallback()`) takes the new functional
+  interface `ContextMenuCallback`, called on every opening of the menu after the view's own entries
+  are in place, with the menu's entries, to add to, remove from or reorder, and the new record
+  `ContextMenuPlace`, whose `sourceLine()` is the line of the Markdown text under the right click
+  (a block, list item, table row or code line, as `topSourceLine()` counts them), empty where the
+  click hit no block, as in the margins. Without a callback the menu is as before.
 - `MarkdownView` tells which line of the Markdown text the reader is looking at, for an
   application that opens the file in an editor there: `topSourceLine()`, the line of the first
   block whose top is in the visible area, and `searchMatchSourceLine()`, the line of the current
