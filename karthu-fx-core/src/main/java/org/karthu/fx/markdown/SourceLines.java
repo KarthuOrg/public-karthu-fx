@@ -48,19 +48,18 @@ final class SourceLines {
         if (segments.isEmpty()) {
             return OptionalInt.empty();
         }
-        Segment cut = segments.getFirst();
+        Segment lastAboveTop = segments.getFirst();
         for (Segment segment : segments) {
-            Node node = segment.node();
-            if (node.localToScene(node.getLayoutBounds()).getMinY() > bottom) {
+            if (topOf(segment.node()) > bottom) {
                 break;
             }
-            int line = segment.sourceLineFrom(top);
-            if (line > 0) {
-                return OptionalInt.of(line);
+            OptionalInt line = segment.sourceLineFrom(top);
+            if (line.isPresent()) {
+                return line;
             }
-            cut = segment;
+            lastAboveTop = segment;
         }
-        return OptionalInt.of(cut.sourceLineAt(top));
+        return OptionalInt.of(lastAboveTop.sourceLineAt(top));
     }
 
     /**
@@ -91,7 +90,30 @@ final class SourceLines {
      * @return {@code true} if the node's top lies there, within the tolerance
      */
     static boolean startsFrom(Node node, double sceneY) {
-        return isAtOrBelow(node.localToScene(node.getLayoutBounds()).getMinY(), sceneY);
+        return isAtOrBelow(topOf(node), sceneY);
+    }
+
+    /**
+     * The source line of a segment of one part, a heading, a paragraph or a block image, if its top lies at or below a
+     * height ({@link Segment#sourceLineFrom(double)}).
+     *
+     * @param node   the segment's node
+     * @param sceneY the height in the scene
+     * @param line   the segment's 1-based source line
+     * @return the line; empty if the height cuts the segment or lies below its top
+     */
+    static OptionalInt wholeFrom(Node node, double sceneY, int line) {
+        return startsFrom(node, sceneY) ? OptionalInt.of(line) : OptionalInt.empty();
+    }
+
+    /**
+     * The top of a node in the scene.
+     *
+     * @param node the node
+     * @return the top of its layout bounds in the scene
+     */
+    static double topOf(Node node) {
+        return node.localToScene(node.getLayoutBounds()).getMinY();
     }
 
     /**

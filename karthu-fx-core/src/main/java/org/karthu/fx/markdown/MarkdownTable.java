@@ -53,6 +53,7 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -719,15 +720,11 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
         if (!(getSkin() instanceof TableSkin skin)) {
             return line;
         }
-        for (int index = 0; index < getItems().size(); index++) {
-            TableRow<Row> row = skin.visibleRow(index);
-            if (row == null) {
-                continue;
-            }
-            if (sceneY < row.localToScene(row.getLayoutBounds()).getMinY()) {
+        for (RowTop row : rowTops(skin)) {
+            if (sceneY < row.top()) {
                 break;
             }
-            line = sourceTable.rowLine(getItems().get(index).sourceIndex());
+            line = sourceTable.rowLine(getItems().get(row.index()).sourceIndex());
         }
         return line;
     }
@@ -736,19 +733,44 @@ final class MarkdownTable extends TableView<MarkdownTable.Row> implements Select
      * The source line of the first row, in the shown order, whose top lies at or below a height.
      *
      * @param sceneY the height in the scene
-     * @return the 1-based source line, -1 if no row does or the table has not laid out its rows yet
+     * @return the 1-based source line; empty if no row does or the table has not laid out its rows yet
      */
-    int sourceLineFrom(double sceneY) {
+    OptionalInt sourceLineFrom(double sceneY) {
         if (!(getSkin() instanceof TableSkin skin)) {
-            return -1;
+            return OptionalInt.empty();
         }
-        for (int index = 0; index < getItems().size(); index++) {
-            TableRow<Row> row = skin.visibleRow(index);
-            if (row != null && SourceLines.isAtOrBelow(row.localToScene(row.getLayoutBounds()).getMinY(), sceneY)) {
-                return sourceTable.rowLine(getItems().get(index).sourceIndex());
+        for (RowTop row : rowTops(skin)) {
+            if (SourceLines.isAtOrBelow(row.top(), sceneY)) {
+                return OptionalInt.of(sourceTable.rowLine(getItems().get(row.index()).sourceIndex()));
             }
         }
-        return -1;
+        return OptionalInt.empty();
+    }
+
+    /**
+     * The tops of the rows the table has laid out, in the shown order.
+     *
+     * @param skin the table's skin
+     * @return the laid-out rows, each with its index in the shown order and its top in the scene
+     */
+    private List<RowTop> rowTops(TableSkin skin) {
+        List<RowTop> tops = new ArrayList<>();
+        for (int index = 0; index < getItems().size(); index++) {
+            TableRow<Row> row = skin.visibleRow(index);
+            if (row != null) {
+                tops.add(new RowTop(index, SourceLines.topOf(row)));
+            }
+        }
+        return tops;
+    }
+
+    /**
+     * A laid-out row's place.
+     *
+     * @param index the row's index in the shown order
+     * @param top   the row's top in the scene
+     */
+    private record RowTop(int index, double top) {
     }
 
     /**

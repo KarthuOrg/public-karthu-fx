@@ -11,6 +11,7 @@ import javafx.scene.text.TextFlow;
 import java.text.BreakIterator;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalInt;
 
 /**
  * The text flow of a heading or a paragraph, which a document selection runs through: its positions are those of the
@@ -264,8 +265,8 @@ final class TextSegment extends TextFlow implements Searchable {
     }
 
     @Override
-    public int sourceLineFrom(double sceneY) {
-        return SourceLines.startsFrom(this, sceneY) ? sourceLine : -1;
+    public OptionalInt sourceLineFrom(double sceneY) {
+        return SourceLines.wholeFrom(this, sceneY, sourceLine);
     }
 
     @Override

@@ -3,6 +3,7 @@ package org.karthu.fx.markdown;
 import javafx.scene.Node;
 
 import java.util.List;
+import java.util.OptionalInt;
 
 /**
  * A part of the document a document selection ({@link DocumentSelection}) runs through: a heading's or a paragraph's
@@ -119,10 +120,10 @@ interface Segment {
      * or source line or the first table row below it.
      *
      * @param sceneY the height in the scene
-     * @return the 1-based source line, -1 if no part starts below the height: a heading, a paragraph or a block image
-     *         cut by it, or a block whose last part is
+     * @return the 1-based source line; empty if no part starts below the height: a heading, a paragraph or a block
+     *         image cut by it, or a block whose last part is
      */
-    int sourceLineFrom(double sceneY);
+    OptionalInt sourceLineFrom(double sceneY);
 
     /**
      * A range of positions of a segment.

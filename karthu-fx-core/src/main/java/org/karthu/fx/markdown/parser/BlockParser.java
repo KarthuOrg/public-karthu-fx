@@ -970,12 +970,13 @@ final class BlockParser {
     /**
      * Reads a heading line, whose level {@link #headingLevel(String)} has found.
      *
-     * @param number the heading's 1-based source line
+     * @param text       the heading's line, its text
+     * @param lineNumber the heading's 1-based source line
      */
-    private static Heading heading(String line, int number) {
-        int level = headingLevel(line);
-        String afterOpening = line.substring(indentation(line) + level);
-        return new Heading(level, InlineParser.parseInlines(headingText(afterOpening)), number);
+    private static Heading heading(String text, int lineNumber) {
+        int level = headingLevel(text);
+        String afterOpening = text.substring(indentation(text) + level);
+        return new Heading(level, InlineParser.parseInlines(headingText(afterOpening)), lineNumber);
     }
 
     /**

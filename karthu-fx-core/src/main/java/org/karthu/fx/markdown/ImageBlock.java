@@ -13,6 +13,7 @@ import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.util.List;
+import java.util.OptionalInt;
 
 /**
  * A block image ({@code markdown-image-block}): an image alone in its paragraph, shown as a block of its own. Until
@@ -276,7 +277,7 @@ final class ImageBlock extends ImageNode implements Segment {
     }
 
     @Override
-    public int sourceLineFrom(double sceneY) {
-        return SourceLines.startsFrom(this, sceneY) ? sourceLine : -1;
+    public OptionalInt sourceLineFrom(double sceneY) {
+        return SourceLines.wholeFrom(this, sceneY, sourceLine);
     }
 }

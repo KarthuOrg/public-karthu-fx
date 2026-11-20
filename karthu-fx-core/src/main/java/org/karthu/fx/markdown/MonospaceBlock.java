@@ -25,6 +25,7 @@ import org.karthu.fx.font.MonospaceFont;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalInt;
 
 /**
  * A block of monospace text that keeps its lines whole: the text, never wrapped, in a scroll pane of its own that
@@ -327,7 +328,7 @@ final class MonospaceBlock extends StackPane implements Searchable {
     @Override
     public int sourceLineAt(double sceneY) {
         int index = Math.clamp(hit(flow.localToScene(0, 0).getX(), sceneY).getCharIndex(), 0, text.length());
-        return lines.text() + lineFeedsBefore(index);
+        return lines.firstTextLine() + lineFeedsBefore(index);
     }
 
     /**
@@ -335,21 +336,21 @@ final class MonospaceBlock extends StackPane implements Searchable {
      * top does.
      */
     @Override
-    public int sourceLineFrom(double sceneY) {
+    public OptionalInt sourceLineFrom(double sceneY) {
         if (SourceLines.startsFrom(this, sceneY)) {
-            return lines.block();
+            return OptionalInt.of(lines.blockLine());
         }
         int line = 0;
         int lineStart = 0;
         while (lineStart >= 0) {
             if (SourceLines.isAtOrBelow(flow.localToScene(0, lineTop(lineStart)).getY(), sceneY)) {
-                return lines.text() + line;
+                return OptionalInt.of(lines.firstTextLine() + line);
             }
             int lineFeed = text.indexOf('\n', lineStart);
             lineStart = lineFeed < 0 ? -1 : lineFeed + 1;
             line++;
         }
-        return -1;
+        return OptionalInt.empty();
     }
 
     /**
@@ -357,7 +358,7 @@ final class MonospaceBlock extends StackPane implements Searchable {
      */
     @Override
     public int sourceLine(Match match) {
-        return lines.text() + lineFeedsBefore(match.start());
+        return lines.firstTextLine() + lineFeedsBefore(match.start());
     }
 
     /**
@@ -431,21 +432,21 @@ final class MonospaceBlock extends StackPane implements Searchable {
     }
 
     /**
+     * The source lines of a block.
+     *
+     * @param blockLine     the 1-based source line the block starts on: a code block's opening fence, a source block's
+     *                      first line
+     * @param firstTextLine the 1-based source line of the text's first line: the line below a code block's fence, a
+     *                      source block's first line
+     */
+    record Lines(int blockLine, int firstTextLine) {
+    }
+
+    /**
      * The flow of a block's text: its runs, and over them, its last child, the layer that shows the selection, there
      * from the start, its copies of the runs made on the first selection. The layer holds the selected range, the
      * block's only record of it. The search's layers, made on the first match, lie between the runs and it.
      */
-    /**
-     * The source lines of a block.
-     *
-     * @param block the 1-based source line the block starts on: a code block's opening fence, a source block's first
-     *              line
-     * @param text  the 1-based source line of the text's first line: the line below a code block's fence, a source
-     *              block's first line
-     */
-    record Lines(int block, int text) {
-    }
-
     private static final class BlockFlow extends TextFlow {
 
         /**

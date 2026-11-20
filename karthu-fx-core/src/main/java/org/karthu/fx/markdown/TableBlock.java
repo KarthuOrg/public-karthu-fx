@@ -9,6 +9,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
 
 import java.util.List;
+import java.util.OptionalInt;
 
 /**
  * The block of a table in the document. It gives its table ({@link MarkdownTable}) the document's width, or the
@@ -286,9 +287,9 @@ final class TableBlock extends Region implements Searchable {
      * {@link MarkdownTable#sourceLineFrom(double)}.
      */
     @Override
-    public int sourceLineFrom(double sceneY) {
+    public OptionalInt sourceLineFrom(double sceneY) {
         if (SourceLines.startsFrom(this, sceneY)) {
-            return table.headerLine();
+            return OptionalInt.of(table.headerLine());
         }
         return table.sourceLineFrom(sceneY);
     }
