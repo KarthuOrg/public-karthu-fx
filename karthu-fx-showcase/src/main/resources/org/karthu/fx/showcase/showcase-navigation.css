@@ -2,8 +2,15 @@
  * The showcase's navigation: a tree of sections, groups and pages in the sidebar. Colours come from the theme's
  * tokens only, so the rules hold in Nebula Dark and Nebula Light alike. Section and group rows are headings: a
  * section bold in the text colour, a group bold, smaller, in the secondary text colour; a selected heading keeps its
- * look and has no accent bar, since it opens nothing.
+ * look and has no accent bar, since it opens nothing. The search above the tree is karthu-fx's own field in the
+ * theme's look; "No matches" lies over the empty tree in the secondary text colour.
  */
+
+.showcase-sidebar .navigation-no-matches {
+    -fx-padding: 16 12 0 12;
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text-secondary-color;
+}
 
 .showcase-sidebar .tree-view {
     -fx-background-color: transparent;

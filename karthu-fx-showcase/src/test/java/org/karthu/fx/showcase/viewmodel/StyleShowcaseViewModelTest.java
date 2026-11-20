@@ -1,26 +1,47 @@
 package org.karthu.fx.showcase.viewmodel;
 
+import javafx.application.Platform;
+import javafx.scene.control.Label;
 import javafx.scene.control.TreeItem;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.karthu.fx.form.SearchInput;
 
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The showcase's navigation as the view model builds it, without a window: its pages and the tree of sections, groups
- * and pages over them.
+ * The showcase's navigation as the view model builds it, without a window: its pages, the tree of sections, groups
+ * and pages over them, and the search that narrows the tree. The search is karthu-fx's own field, never shown; the
+ * toolkit runs only because the field is a control.
  */
 class StyleShowcaseViewModelTest {
+
+    @BeforeAll
+    static void initToolkit() throws InterruptedException {
+        try {
+            Platform.startup(() -> {});
+        } catch (IllegalStateException alreadyStarted) {
+            // toolkit already running from another test class
+        }
+        new Label();
+        CountDownLatch started = new CountDownLatch(1);
+        Platform.runLater(started::countDown);
+        assertTrue(started.await(10, TimeUnit.SECONDS), "the toolkit's thread did not run");
+    }
 
     @Test
     @DisplayName("the tree holds the sections in order, their groups before their directly attached pages, pages in list order")
@@ -144,7 +165,109 @@ class StyleShowcaseViewModelTest {
         assertNull(viewModel.navigationNodeOf(buttons), "its row is not in the tree");
     }
 
+    @Test
+    @DisplayName("\"tab\" leaves the pages with \"tab\" in their name, under their sections and groups")
+    void searchTab() {
+        StyleShowcaseViewModel viewModel = new StyleShowcaseViewModel();
+
+        List<String> tree = search(viewModel, "tab");
+
+        // "Editable" holds "tab" too: karthu-fx's rule matches every contiguous part of a word.
+        assertEquals(List.of("JavaFX", "  Data Display", "    TableView", "    TreeTableView", "  Layout", "    TabPane",
+                "karthu-fx", "  Form Inputs", "    Editable Combo Input"), tree);
+    }
+
+    @Test
+    @DisplayName("\"form\" leaves every Form Input page through the group's name")
+    void searchForm() {
+        StyleShowcaseViewModel viewModel = new StyleShowcaseViewModel();
+
+        List<String> tree = search(viewModel, "form");
+
+        assertEquals(List.of("karthu-fx", "  Form Inputs",
+                "    Overview", "    Text Input", "    Password Input", "    Number Input", "    Combo Input",
+                "    Editable Combo Input", "    Text Area Input", "    Path Input", "    Cron Input", "    Search Input"),
+                tree);
+    }
+
+    @Test
+    @DisplayName("\"karthu\" leaves every karthu-fx page through the section's name")
+    void searchKarthu() {
+        StyleShowcaseViewModel viewModel = new StyleShowcaseViewModel();
+
+        List<String> tree = search(viewModel, "karthu");
+
+        assertEquals(List.of("karthu-fx",
+                "  Form Inputs",
+                "    Overview", "    Text Input", "    Password Input", "    Number Input", "    Combo Input",
+                "    Editable Combo Input", "    Text Area Input", "    Path Input", "    Cron Input", "    Search Input",
+                "  Components",
+                "    Toggle Switch", "    Twin Column Selector", "    Key-Value Editor",
+                "  Dialogs",
+                "    Dialog / Alert", "    Settings Dialog",
+                "  Markdown", "  Shortcuts", "  Icons"), tree);
+    }
+
+    @Test
+    @DisplayName("several words narrow further: \"form path\" leaves the Path Input")
+    void searchFormPath() {
+        StyleShowcaseViewModel viewModel = new StyleShowcaseViewModel();
+
+        assertEquals(List.of("karthu-fx", "  Form Inputs", "    Path Input"), search(viewModel, "form path"));
+    }
+
+    @Test
+    @DisplayName("the search ignores accents and case")
+    void searchIgnoresAccentsAndCase() {
+        StyleShowcaseViewModel viewModel = new StyleShowcaseViewModel();
+
+        assertEquals(List.of("karthu-fx", "  Dialogs", "    Dialog / Alert", "    Settings Dialog"),
+                search(viewModel, "diälog"));
+        assertEquals(List.of("JavaFX", "  Selection", "    Spinner"), search(viewModel, "SPINNER"));
+    }
+
+    @Test
+    @DisplayName("a search without hits leaves an empty tree and no page; clearing it brings every page back")
+    void searchWithoutHits() {
+        StyleShowcaseViewModel viewModel = new StyleShowcaseViewModel();
+        SearchInput field = new SearchInput();
+        viewModel.connectSearch(field);
+        assertTrue(viewModel.hasPagesProperty().get());
+
+        field.setText("zebra");
+        assertEquals(List.of(), outline(viewModel.getNavigationRoot()));
+        assertFalse(viewModel.hasPagesProperty().get());
+
+        field.setText("");
+        assertEquals(43, leaves(viewModel.getNavigationRoot()));
+        assertTrue(viewModel.hasPagesProperty().get());
+    }
+
+    @Test
+    @DisplayName("every node built for a search is expanded, and the open page stays the open page")
+    void searchKeepsNodesExpandedAndTheOpenPage() {
+        StyleShowcaseViewModel viewModel = new StyleShowcaseViewModel();
+        ShowcaseItem buttons = viewModel.getShowcaseItems().get(0);
+        viewModel.selectItem(buttons);
+
+        search(viewModel, "dialog");
+
+        List<String> collapsed = new ArrayList<>();
+        collectCollapsed(viewModel.getNavigationRoot(), collapsed);
+        assertEquals(List.of(), collapsed);
+        assertSame(buttons, viewModel.getSelectedItem());
+        assertNull(viewModel.navigationNodeOf(buttons));
+    }
+
     // --- Helpers -------------------------------------------------------------------------------------
+
+    /** Types a search into a field connected to the view model and returns the tree's outline. */
+    private static List<String> search(StyleShowcaseViewModel viewModel, String text) {
+        SearchInput field = new SearchInput();
+        viewModel.connectSearch(field);
+        field.setText(text);
+        return outline(viewModel.getNavigationRoot());
+    }
 
     /** The tree below the hidden root, one line per node, indented two spaces per level. */
     private static List<String> outline(TreeItem<NavigationEntry> root) {

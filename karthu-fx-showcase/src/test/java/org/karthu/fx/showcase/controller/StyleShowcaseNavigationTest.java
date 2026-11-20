@@ -14,6 +14,7 @@ import javafx.scene.layout.VBox;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.karthu.fx.form.SearchInput;
 import org.karthu.fx.showcase.viewmodel.NavigationEntry;
 import org.karthu.fx.showcase.viewmodel.ShowcaseItem;
 import org.karthu.fx.showcase.viewmodel.StyleShowcaseViewModel;
@@ -29,12 +30,14 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * The showcase window's navigation, loaded from the window's FXML in a scene that is never shown: the tree of sections,
- * groups and pages in the sidebar, the page it opens at start, and heading rows that open nothing.
+ * groups and pages in the sidebar, the page it opens at start, heading rows that open nothing, and the search above
+ * the tree that narrows it.
  */
 class StyleShowcaseNavigationTest {
 
@@ -61,7 +64,7 @@ class StyleShowcaseNavigationTest {
         VBox sidebar = (VBox) window.root.lookup(".showcase-sidebar");
         Label header = (Label) sidebar.getChildren().get(0);
         assertEquals("COMPONENTS", header.getText());
-        assertTrue(sidebar.getChildren().contains(window.tree), "the tree sits in the sidebar");
+        assertTrue(sidebar.getChildren().contains(window.tree.getParent()), "the tree sits in the sidebar");
     }
 
     @Test
@@ -101,10 +104,7 @@ class StyleShowcaseNavigationTest {
     @DisplayName("heading rows carry their own style classes; page rows keep their icon and name")
     void rowsLaidOut() throws IOException {
         Window window = load();
-        Scene scene = new Scene(window.root, 1200, 3000);
-        ThemeManager.apply(scene);
-        window.root.applyCss();
-        window.root.layout();
+        laidOut(window);
 
         assertEquals(List.of("JavaFX", "karthu-fx", "Examples"), texts(window.tree, ".navigation-section-header"));
         assertEquals(List.of("Inputs", "Selection", "Data Display", "Layout", "Navigation", "Form Inputs", "Components",
@@ -121,11 +121,95 @@ class StyleShowcaseNavigationTest {
         assertEquals(11, group.getFont().getSize(), 0.01);
     }
 
+    @Test
+    @DisplayName("a search field with an English prompt sits above the tree in the sidebar")
+    void searchAboveTheTree() throws IOException {
+        Window window = load();
+
+        VBox sidebar = (VBox) window.root.lookup(".showcase-sidebar");
+        int search = sidebar.getChildren().indexOf(window.search);
+        assertTrue(search >= 0, "the search sits in the sidebar");
+        int tree = sidebar.getChildren().indexOf(window.tree.getParent());
+        assertTrue(search < tree, "the search sits above the tree");
+        assertEquals("Search pages", window.search.getPromptText());
+    }
+
+    @Test
+    @DisplayName("typing narrows the tree to the hits, under their sections and groups, all expanded")
+    void typingNarrowsTheTree() throws IOException {
+        Window window = load();
+        laidOut(window);
+
+        window.search.setText("form path");
+        window.root.layout();
+
+        assertEquals(List.of("karthu-fx"), texts(window.tree, ".navigation-section-header"));
+        assertEquals(List.of("Form Inputs"), texts(window.tree, ".navigation-group-header"));
+        assertEquals(List.of("Path Input"), texts(window.tree, ".sidebar-item-label"));
+    }
+
+    @Test
+    @DisplayName("\"No matches\" shows while no page is left and goes when one is")
+    void noMatches() throws IOException {
+        Window window = load();
+        laidOut(window);
+        Label noMatches = (Label) window.root.lookup(".navigation-no-matches");
+        assertNotNull(noMatches, "the no-matches label");
+        assertEquals("No matches", noMatches.getText());
+        assertFalse(noMatches.isVisible());
+
+        window.search.setText("tabpanes");
+        window.root.layout();
+        assertTrue(noMatches.isVisible());
+        assertEquals(List.of(), texts(window.tree, ".sidebar-item-label"));
+
+        window.search.setText("tabpane");
+        window.root.layout();
+        assertFalse(noMatches.isVisible());
+        assertEquals(List.of("TabPane"), texts(window.tree, ".sidebar-item-label"));
+    }
+
+    @Test
+    @DisplayName("the open page stays open while its row is hidden; its row is selected again when it is among the hits")
+    void openPageSurvivesTheSearch() throws IOException {
+        Window window = load();
+        selectPage(window, "TabPane");
+        Node openPage = window.contentArea.getChildren().get(0);
+
+        window.search.setText("form");
+        assertNull(window.tree.getSelectionModel().getSelectedItem(), "no row selected while the page is hidden");
+        assertEquals("TabPane", window.viewModel.getSelectedItem().displayName());
+        assertSame(openPage, window.contentArea.getChildren().get(0));
+
+        window.search.setText("tab");
+        assertSame(window.viewModel.getSelectedItem(), window.tree.getSelectionModel().getSelectedItem().getValue());
+        assertSame(openPage, window.contentArea.getChildren().get(0));
+    }
+
+    @Test
+    @DisplayName("clearing the search restores the full, expanded tree with the open page's row selected")
+    void clearingRestoresTheTree() throws IOException {
+        Window window = load();
+        laidOut(window);
+        selectPage(window, "Text Field");
+
+        window.search.setText("dialog");
+        window.root.layout();
+        assertEquals(2, texts(window.tree, ".sidebar-item-label").size());
+
+        window.search.setText("");
+        window.root.layout();
+        assertEquals(43, texts(window.tree, ".sidebar-item-label").size());
+        assertEquals(List.of("JavaFX", "karthu-fx", "Examples"), texts(window.tree, ".navigation-section-header"));
+        assertEquals("Text Field", window.tree.getSelectionModel().getSelectedItem().getValue().text());
+        assertEquals("Text Field", openPageTitle(window));
+    }
+
     // --- Helpers -------------------------------------------------------------------------------------
 
     /** The loaded window: its root, its view model and the parts the tests look at. */
     private record Window(Parent root, StyleShowcaseViewModel viewModel, TreeView<NavigationEntry> tree,
-                          StackPane contentArea) {
+                          StackPane contentArea, SearchInput search) {
     }
 
     @SuppressWarnings("unchecked")
@@ -140,7 +224,28 @@ class StyleShowcaseNavigationTest {
         assertNotNull(tree, "the navigation tree");
         StackPane contentArea = (StackPane) ((ScrollPane) root.lookup("#contentScrollPane")).getContent();
         assertNotNull(contentArea, "the content area");
-        return new Window(root, viewModel, tree, contentArea);
+        SearchInput search = (SearchInput) root.lookup("#navigationSearch");
+        assertNotNull(search, "the navigation's search");
+        return new Window(root, viewModel, tree, contentArea, search);
+    }
+
+    /** Puts the window into a scene that is never shown, in the theme, laid out tall enough for every row. */
+    private static Scene laidOut(Window window) {
+        Scene scene = new Scene(window.root, 1200, 3000);
+        ThemeManager.apply(scene);
+        window.root.applyCss();
+        window.root.layout();
+        return scene;
+    }
+
+    /** Selects the row of the named page, which opens it. */
+    private static void selectPage(Window window, String name) {
+        for (ShowcaseItem page : window.viewModel.getShowcaseItems()) {
+            if (page.displayName().equals(name)) {
+                window.tree.getSelectionModel().select(window.viewModel.navigationNodeOf(page));
+            }
+        }
+        assertEquals(name, window.viewModel.getSelectedItem().displayName());
     }
 
     private static String openPageTitle(Window window) {

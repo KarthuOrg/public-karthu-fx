@@ -13,6 +13,7 @@
 <?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
+<?import org.karthu.fx.form.SearchInput?>
 
 <BorderPane xmlns="http://javafx.com/javafx"
             xmlns:fx="http://javafx.com/fxml"
@@ -43,10 +44,20 @@
     </top>
 
     <left>
-        <!-- The navigation: a tree of sections, groups and pages, styled by the showcase's own sheet -->
+        <!-- The navigation: a search, under it a tree of sections, groups and pages, styled by the showcase's own sheet.
+             "No matches" lies over the tree while the search leaves no page. -->
         <VBox styleClass="showcase-sidebar" prefWidth="220" stylesheets="@showcase-navigation.css">
             <Label text="COMPONENTS" styleClass="showcase-sidebar-header"/>
-            <TreeView fx:id="navigationTree" VBox.vgrow="ALWAYS"/>
+            <SearchInput fx:id="navigationSearch" promptText="Search pages" styleClass="navigation-search">
+                <VBox.margin>
+                    <javafx.geometry.Insets right="12" bottom="8" left="12"/>
+                </VBox.margin>
+            </SearchInput>
+            <StackPane VBox.vgrow="ALWAYS">
+                <TreeView fx:id="navigationTree"/>
+                <Label fx:id="noMatches" text="No matches" styleClass="navigation-no-matches"
+                       StackPane.alignment="TOP_CENTER" visible="false" mouseTransparent="true"/>
+            </StackPane>
         </VBox>
     </left>
 

@@ -6,6 +6,8 @@ import java.util.List;
 import java.util.Map;
 
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyBooleanProperty;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -13,6 +15,7 @@ import javafx.collections.ObservableList;
 import javafx.collections.transformation.FilteredList;
 import javafx.scene.control.TreeItem;
 
+import org.karthu.fx.form.SearchInput;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
 
@@ -21,7 +24,8 @@ import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
  * <p>
  * The pages are one ordered list; their order is the display order inside a group and among a section's directly
  * attached pages. The tree is built from the filtered view of that list ({@link #getFilteredItems()}), rebuilt whenever
- * it changes, under one root that stays the same node.
+ * it changes, under one root that stays the same node. A search field connected through
+ * {@link #connectSearch(SearchInput)} narrows that list as the user types.
  */
 public class StyleShowcaseViewModel {
 
@@ -39,6 +43,8 @@ public class StyleShowcaseViewModel {
     private final FilteredList<ShowcaseItem> filteredItems;
     private final TreeItem<NavigationEntry> navigationRoot = new TreeItem<>();
     private final ObjectProperty<ShowcaseItem> selectedItem = new SimpleObjectProperty<>();
+    private final ReadOnlyBooleanWrapper hasPages = new ReadOnlyBooleanWrapper(true);
+    private final ReadOnlyBooleanWrapper rebuilding = new ReadOnlyBooleanWrapper(false);
 
     public StyleShowcaseViewModel() {
         showcaseItems = FXCollections.observableArrayList(
@@ -146,6 +152,54 @@ public class StyleShowcaseViewModel {
         return find(navigationRoot, page);
     }
 
+    /**
+     * Connects a search field to the pages: from now on the field narrows {@link #getFilteredItems()} as the user
+     * types, through the field's own list filter, so matching follows karthu-fx's search rule (words, case and accents
+     * ignored). A page's text for the search is its name, its group's name and its section's name, separated by
+     * whitespace, so that no word spans two of them and a group's or section's name finds all of its pages.
+     *
+     * @param search the search field
+     */
+    public void connectSearch(SearchInput search) {
+        search.filter(filteredItems, item -> searchText(item));
+    }
+
+    /**
+     * The text a page is matched against: its name, its group's name if it has a group, and its section's name.
+     *
+     * @param item the page
+     * @return the text, its parts separated by a space
+     */
+    private static String searchText(ShowcaseItem item) {
+        StringBuilder text = new StringBuilder(item.displayName());
+        if (item.group() != null) {
+            text.append(' ').append(item.group());
+        }
+        text.append(' ').append(item.section().displayName());
+        return text.toString();
+    }
+
+    /**
+     * Whether the filtered pages hold at least one page, so that the tree shows a row: false while a search finds
+     * nothing.
+     *
+     * @return the property, true at start
+     */
+    public ReadOnlyBooleanProperty hasPagesProperty() {
+        return hasPages.getReadOnlyProperty();
+    }
+
+    /**
+     * True while the tree is being rebuilt, back to false when the new nodes are in place. A view reads a change of the
+     * tree's selection while it is true as no choice of the user's, and selects the open page's row again when it turns
+     * false.
+     *
+     * @return the property
+     */
+    public ReadOnlyBooleanProperty rebuildingProperty() {
+        return rebuilding.getReadOnlyProperty();
+    }
+
     public ObjectProperty<ShowcaseItem> selectedItemProperty() {
         return selectedItem;
     }
@@ -188,7 +242,13 @@ public class StyleShowcaseViewModel {
             sectionNode.getChildren().addAll(attached);
             sections.add(sectionNode);
         }
-        navigationRoot.getChildren().setAll(sections);
+        rebuilding.set(true);
+        try {
+            navigationRoot.getChildren().setAll(sections);
+            hasPages.set(!filteredItems.isEmpty());
+        } finally {
+            rebuilding.set(false);
+        }
     }
 
     private static TreeItem<NavigationEntry> expanded(NavigationEntry heading) {

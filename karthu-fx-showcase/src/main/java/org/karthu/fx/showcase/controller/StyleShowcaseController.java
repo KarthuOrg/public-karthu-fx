@@ -23,6 +23,7 @@ import javafx.scene.layout.StackPane;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import org.karthu.fx.dialog.CustomDialog;
+import org.karthu.fx.form.SearchInput;
 import org.karthu.fx.showcase.viewmodel.GroupHeading;
 import org.karthu.fx.showcase.viewmodel.NavigationEntry;
 import org.karthu.fx.showcase.viewmodel.SectionHeading;
@@ -46,7 +47,13 @@ public class StyleShowcaseController {
     private static final Logger log = LoggerFactory.getLogger(StyleShowcaseController.class);
 
     @FXML
+    private SearchInput navigationSearch;
+
+    @FXML
     private TreeView<NavigationEntry> navigationTree;
+
+    @FXML
+    private Label noMatches;
 
     @FXML
     private StackPane contentArea;
@@ -124,11 +131,29 @@ public class StyleShowcaseController {
         navigationTree.setRoot(viewModel.getNavigationRoot());
         navigationTree.setCellFactory(tree -> new NavigationCell());
 
-        // A page row opens its page; a section or group row opens nothing and leaves the open page as it is.
+        // The search narrows the tree; "No matches" shows while it leaves no page.
+        viewModel.connectSearch(navigationSearch);
+        noMatches.visibleProperty().bind(viewModel.hasPagesProperty().not());
+
+        // A page row opens its page; a section or group row opens nothing and leaves the open page as it is. While the
+        // tree is rebuilt its selection moves on its own: that is no choice of the user's and opens nothing.
         navigationTree.getSelectionModel().selectedItemProperty().addListener(
                 (obs, oldNode, newNode) -> {
+                    if (viewModel.rebuildingProperty().get()) {
+                        return;
+                    }
                     if (newNode != null && newNode.getValue() instanceof ShowcaseItem page) {
                         viewModel.selectItem(page);
+                    }
+                }
+        );
+
+        // After a rebuild the open page's row is selected again when the tree shows it; otherwise no row is selected
+        // and the page stays open.
+        viewModel.rebuildingProperty().addListener(
+                (obs, wasRebuilding, isRebuilding) -> {
+                    if (!isRebuilding && viewModel.getSelectedItem() != null) {
+                        selectPageRow(viewModel.getSelectedItem());
                     }
                 }
         );
