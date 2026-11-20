@@ -9,6 +9,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.stage.Window;
 
+import org.karthu.fx.form.PathFilter;
+import org.karthu.fx.form.PathMode;
 import org.karthu.fx.settings.SettingCategory;
 import org.karthu.fx.settings.SettingEntry;
 import org.karthu.fx.settings.SettingGroup;
@@ -127,9 +129,29 @@ public class SettingsDialogShowcaseController {
                 "security", "Security",
                 List.of(credentialsGroup, licenseGroup), List.of());
 
+        // Tools: a program to open, the arguments it takes, and a folder
+        SettingEntry<String> editorProgram = SettingEntry.ofPath(
+                "tools.editor.program", "Editor Program",
+                "The program that opens a document; Browse or Alt+Down chooses it",
+                "", PathMode.OPEN, List.of(new PathFilter("Programs", List.of("*.exe"))));
+        SettingEntry<String> editorArguments = SettingEntry.ofString(
+                "tools.editor.arguments", "Arguments", "\"{file}\"");
+        SettingEntry<String> exportFolder = SettingEntry.ofPath(
+                "tools.export.folder", "Export Folder",
+                "", PathMode.DIRECTORY, List.of());
+
+        SettingGroup editorToolGroup = new SettingGroup("External Editor", List.of(
+                editorProgram, editorArguments));
+        SettingGroup exportGroup = new SettingGroup("Export", List.of(
+                exportFolder));
+
+        SettingCategory tools = new SettingCategory(
+                "tools", "Tools",
+                List.of(editorToolGroup, exportGroup), List.of());
+
         // Build the model (null ResourceBundle — raw keys used as labels)
         SettingsModel model = new SettingsModel(
-                List.of(appearance, network, security), null);
+                List.of(appearance, network, security, tools), null);
 
         // Start from the values applied last
         if (appliedValues != null) {
@@ -154,7 +176,8 @@ public class SettingsDialogShowcaseController {
             resultLabel.setText("OK — Density: " + density.getValue()
                     + ", Font: " + fontFamily.getValue()
                     + ", Size: " + fontSize.getValue()
-                    + ", License: " + licenseExpiry.getValue());
+                    + ", License: " + licenseExpiry.getValue()
+                    + ", Editor: " + (editorProgram.getValue().isEmpty() ? "none" : editorProgram.getValue()));
         } else {
             resultLabel.setText("Cancelled — no changes applied.");
         }

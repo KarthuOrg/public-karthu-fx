@@ -17,7 +17,7 @@
     <!-- Open Dialog -->
     <VBox styleClass="showcase-card" spacing="12">
         <Label text="Demo" styleClass="showcase-card-title"/>
-        <Label text="Opens a modal settings dialog populated with sample settings across multiple categories."
+        <Label text="Opens a modal settings dialog populated with sample settings across multiple categories, among them, under Tools, a program and a folder chosen with a path input and its Browse icon."
                wrapText="true"/>
         <HBox spacing="8" alignment="CENTER_LEFT">
             <Button fx:id="openDialogBtn" text="Open Settings Dialog" styleClass="primary-button"/>

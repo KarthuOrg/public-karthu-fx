@@ -640,8 +640,9 @@ if (result == SettingsDialogResult.OK) {
 - `store` stands for the application's own storage: the dialog saves nothing.
   `model.snapshot()` gives every value by its key, `model.restore(map)` puts stored values back
   before the dialog opens.
-- Entry kinds: `ofString`, `ofBoolean`, `ofInteger`, `ofChoice`, `ofSecret`, `ofDateTime`. Each
-  has a variant with a description.
+- Entry kinds: `ofString`, `ofBoolean`, `ofInteger`, `ofChoice`, `ofSecret`, `ofDateTime`,
+  `ofPath`. Each has a variant with a description. `ofPath` takes a `PathMode` and a list of
+  `PathFilter`s and shows a `PathInput`; its value is the path's text, empty for no path.
 - A category's last argument is its child categories, for a tree.
 - With a `ResourceBundle` as the model's second argument, labels are looked up as keys.
 

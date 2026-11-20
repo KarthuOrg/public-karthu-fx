@@ -39,6 +39,8 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.stage.Window;
 
+import org.karthu.fx.form.PathFilter;
+import org.karthu.fx.form.PathInput;
 import org.karthu.fx.theme.ThemeManager;
 
 /**
@@ -455,7 +457,32 @@ public class SettingsDialog {
                 });
                 yield datePicker;
             }
+            case PATH -> createPathInput((SettingEntry<String>) entry);
         };
+    }
+
+    /**
+     * The path input of a {@link SettingType#PATH} entry: the entry's mode, its filters with their descriptions
+     * resolved like the labels, and the path's text kept in step with the entry's value both ways. The field keeps
+     * PathInput's own directory memory, so the dialog starts where the user chose last.
+     */
+    private PathInput createPathInput(SettingEntry<String> pathEntry) {
+        PathInput pathInput = new PathInput();
+        pathInput.setMode(pathEntry.getPathMode());
+        for (PathFilter filter : pathEntry.getPathFilters()) {
+            pathInput.getFilters().add(new PathFilter(model.resolve(filter.description()), filter.patterns()));
+        }
+        pathInput.setValue(pathEntry.getValue() != null ? pathEntry.getValue() : "");
+        // The entry takes the text first, so the dirty check that follows compares the new value.
+        pathInput.valueProperty().addListener((obs, oldVal, newVal) -> pathEntry.setValue(newVal));
+        pathInput.valueProperty().addListener(createDirtyListener());
+        pathEntry.valueProperty().addListener((obs, oldVal, newVal) -> {
+            String shown = newVal != null ? newVal : "";
+            if (!pathInput.getValue().equals(shown)) {
+                pathInput.setValue(shown);
+            }
+        });
+        return pathInput;
     }
 
     // --- Dirty tracking ---

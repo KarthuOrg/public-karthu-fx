@@ -71,6 +71,11 @@ the resources it includes one by one names all three stylesheets.
 stores nothing: an application reads the values from the entries, or all at once with
 `SettingsModel.snapshot()`, and keeps them wherever it keeps its data.
 
+An entry's `SettingType` decides its control: `STRING` a text field, `BOOLEAN` a check box,
+`INTEGER` a spinner, `CHOICE` a combo box, `SECRET` a password field, `DATETIME` a date picker and
+`PATH` a `PathInput` with its *Browse* icon, in the mode and with the file filters the entry names
+(`SettingEntry.ofPath`).
+
 ## Controls
 
 `ToggleSwitch`, `TwinColumnSelector`, `KeyValueEditor` (with `KeyValueEntry`) and the

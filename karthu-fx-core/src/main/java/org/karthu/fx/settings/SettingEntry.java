@@ -3,9 +3,13 @@ package org.karthu.fx.settings;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+
+import org.karthu.fx.form.PathFilter;
+import org.karthu.fx.form.PathMode;
 
 /**
  * A single setting definition with a mutable value.
@@ -14,7 +18,7 @@ import javafx.beans.property.SimpleObjectProperty;
  * Use the static factory methods to create entries — they enforce the correct
  * {@link SettingType} for each value class.</p>
  *
- * @param <T> the value type (String, Boolean, Integer)
+ * @param <T> the value type (String, Boolean, Integer, LocalDate)
  */
 public class SettingEntry<T> {
 
@@ -28,11 +32,20 @@ public class SettingEntry<T> {
     private final int min;
     private final int max;
     private final int step;
+    private final PathMode pathMode;
+    private final List<PathFilter> pathFilters;
     private final ObjectProperty<T> value;
 
     private SettingEntry(String key, String labelKey, String descriptionKey,
                          SettingType type, Class<T> valueClass, T defaultValue,
                          List<T> choices, int min, int max, int step) {
+        this(key, labelKey, descriptionKey, type, valueClass, defaultValue, choices, min, max, step, null, List.of());
+    }
+
+    private SettingEntry(String key, String labelKey, String descriptionKey,
+                         SettingType type, Class<T> valueClass, T defaultValue,
+                         List<T> choices, int min, int max, int step,
+                         PathMode pathMode, List<PathFilter> pathFilters) {
         this.key = key;
         this.labelKey = labelKey;
         this.descriptionKey = descriptionKey;
@@ -43,6 +56,8 @@ public class SettingEntry<T> {
         this.min = min;
         this.max = max;
         this.step = step;
+        this.pathMode = pathMode;
+        this.pathFilters = pathFilters;
         this.value = new SimpleObjectProperty<>(defaultValue);
     }
 
@@ -130,6 +145,26 @@ public class SettingEntry<T> {
     public static SettingEntry<LocalDate> ofDateTime(String key, String labelKey, LocalDate defaultValue) {
         return new SettingEntry<>(key, labelKey, null, SettingType.DATETIME,
                 LocalDate.class, defaultValue, null, 0, 0, 0);
+    }
+
+    /**
+     * Creates a path setting rendered as a {@link org.karthu.fx.form.PathInput}, a text field with a <i>Browse</i>
+     * icon that opens the file or folder dialog of the mode. The value is the path's text as the field holds it;
+     * the empty text is no path.
+     *
+     * @param key          the unique key, which names the setting
+     * @param labelKey     the i18n key of the label
+     * @param defaultValue the initial path's text; null counts as the empty text
+     * @param mode         what the field chooses: a file to open, a file to save or a directory
+     * @param filters      the file filters of the open and save dialogs, in their order; their descriptions are i18n
+     *                     keys like the label's; copied
+     * @return a {@link SettingType#PATH} entry
+     * @throws NullPointerException if the mode or the filters are null, or a filter is null
+     * @since 1.1.0-RC2
+     */
+    public static SettingEntry<String> ofPath(String key, String labelKey, String defaultValue,
+                                              PathMode mode, List<PathFilter> filters) {
+        return ofPath(key, labelKey, null, defaultValue, mode, filters);
     }
 
     // --- Static factory methods (with description) ---
@@ -230,6 +265,29 @@ public class SettingEntry<T> {
                 LocalDate.class, defaultValue, null, 0, 0, 0);
     }
 
+    /**
+     * Creates a path setting with a description hint, rendered as a {@link org.karthu.fx.form.PathInput}.
+     *
+     * @param key            the unique key, which names the setting
+     * @param labelKey       the i18n key of the label
+     * @param descriptionKey the i18n key of the hint shown below the control
+     * @param defaultValue   the initial path's text; null counts as the empty text
+     * @param mode           what the field chooses: a file to open, a file to save or a directory
+     * @param filters        the file filters of the open and save dialogs, in their order; their descriptions are
+     *                       i18n keys like the label's; copied
+     * @return a {@link SettingType#PATH} entry
+     * @throws NullPointerException if the mode or the filters are null, or a filter is null
+     * @since 1.1.0-RC2
+     */
+    public static SettingEntry<String> ofPath(String key, String labelKey, String descriptionKey,
+                                              String defaultValue, PathMode mode, List<PathFilter> filters) {
+        Objects.requireNonNull(mode, "mode must not be null");
+        List<PathFilter> copied = List.copyOf(Objects.requireNonNull(filters, "filters must not be null"));
+        String initial = defaultValue != null ? defaultValue : "";
+        return new SettingEntry<>(key, labelKey, descriptionKey, SettingType.PATH,
+                String.class, initial, null, 0, 0, 0, mode, copied);
+    }
+
     // --- Accessors ---
 
     /** {@return the unique key, which names the setting} */
@@ -283,6 +341,26 @@ public class SettingEntry<T> {
     /** {@return the spinner's step of an {@link SettingType#INTEGER} setting; 0 for other types} */
     public int getStep() {
         return step;
+    }
+
+    /**
+     * {@return what a {@link SettingType#PATH} setting chooses: a file to open, a file to save or a directory; null
+     * for other types}
+     *
+     * @since 1.1.0-RC2
+     */
+    public PathMode getPathMode() {
+        return pathMode;
+    }
+
+    /**
+     * {@return the file filters of a {@link SettingType#PATH} setting, unmodifiable, in their order; empty for other
+     * types}
+     *
+     * @since 1.1.0-RC2
+     */
+    public List<PathFilter> getPathFilters() {
+        return pathFilters;
     }
 
     public T getValue() {
