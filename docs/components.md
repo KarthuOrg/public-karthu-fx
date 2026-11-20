@@ -396,8 +396,8 @@ the user changes in a dialog. No new dependency.
   conflicts*). Colours come from the theme's tokens; the style classes and
   pseudo-classes (`shortcuts-row` with `:modified`, `:conflict`, `:override` and the others) are
   listed in [`STYLEGUIDE.md`](../STYLEGUIDE.md) (*Shortcuts editor and dialog*).
-- **In the showcase.** The *Shortcuts* page in the group *Navigation* is a small example
-  application of 30 commands in six groups, some without a key and one fixed, with a menu bar, a
+- **In the showcase.** The *Shortcuts* page, directly under the *karthu-fx* section, is a small
+  example application of 30 commands in six groups, some without a key and one fixed, with a menu bar, a
   toolbar whose tooltips name the keys, a note field and a document as parts of the window with
   keys of their own, and two switches that disable a command. It reads out the last command that
   ran and the text list the application would keep, hands a stored list with entries it cannot use

@@ -148,6 +148,15 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 
 ### Changed
 
+- The showcase's navigation is a tree of three sections: *JavaFX* with the standard controls in
+  the groups *Inputs*, *Selection*, *Data Display*, *Layout* and *Navigation*, *karthu-fx* with
+  its own components in *Form Inputs*, *Components* and *Dialogs*, and *Examples* with the *Job
+  Scheduler*; a page that would be alone in a group sits directly under its section. A click on a
+  section or group expands or collapses it and leaves the open page open. A search field above the
+  tree, karthu-fx's `SearchInput`, narrows it to the pages whose name, group or section matches,
+  by karthu-fx's search rule, and shows *No matches* when none does. Ctrl+F puts the focus into
+  the search, Esc clears it, Arrow down moves to the first hit and Enter opens it, also on a page
+  row. Every page looks and works as before.
 - The theme has a third stylesheet, `light.css`, beside `base.css` and `dark.css`. A native image
   that names the resources it includes one by one names `light.css` too, or the theme has no
   colours to load for Light.
