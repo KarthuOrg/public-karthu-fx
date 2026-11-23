@@ -212,7 +212,7 @@
 }
 
 .context-menu {
-    -fx-background-color: -fx-field-color;
+    -fx-background-color: -fx-surface-color;
     -fx-border-color: -fx-control-border;
     -fx-border-width: 1;
     -fx-effect: dropshadow(gaussian, -fx-shadow-color, 8, 0, 0, 2);
@@ -1345,9 +1345,14 @@ Text {
     -fx-fill: -fx-text-color;
 }
 
-/* Context Menu */
+/* Context Menu: the menus of the menu bar, their sub-menus, context
+ * menus and the menus of menu buttons. A menu of commands lies on the
+ * surface, the colour of the menu bar it hangs from, not on the field
+ * colour: in Nebula Light the grey of the window, apart from the white
+ * lists of fields. A choice box's list keeps the field colour by its own
+ * rule (.choice-box .context-menu). */
 .context-menu {
-    -fx-background-color: -fx-control-border, -fx-field-color;
+    -fx-background-color: -fx-control-border, -fx-surface-color;
     -fx-background-insets: 0, 1;
     -fx-background-radius: 3;
     -fx-padding: 0;

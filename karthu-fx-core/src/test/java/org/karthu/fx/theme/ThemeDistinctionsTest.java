@@ -5,6 +5,8 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.MenuBar;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
@@ -13,6 +15,7 @@ import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.Effect;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
@@ -238,6 +241,56 @@ class ThemeDistinctionsTest {
         assertEquals(LIGHT_TEXT, tip.getTextFill(), "the text");
         assertEquals(LIGHT_FIELD, fill(content, 0), "the colour the content derives its text from");
         assertTooltipShadow(Color.rgb(31, 34, 48, 0.18), tip.getEffect());
+    }
+
+    /**
+     * A menu of commands belongs to the window's chrome: it lies on the surface, the colour of the menu bar it hangs
+     * from, which is the grey of the window in Light and the colour the menu had in Dark. A context menu cannot be
+     * styled without showing it, so a region with its style class stands in for it.
+     */
+    @Test
+    @DisplayName("a menu lies on the grey of its menu bar in Light, inside its border, and on the surface in Dark")
+    void menuOnTheSurface() {
+        Region menu = new Region();
+        menu.getStyleClass().add("context-menu");
+        MenuBar bar = new MenuBar();
+        VBox root = themed(Appearance.LIGHT, bar, menu);
+
+        assertEquals(LIGHT_WINDOW, fill(bar, 0), "the menu bar");
+        assertEquals(LIGHT_BORDER, fill(menu, 0), "the menu's border");
+        assertEquals(LIGHT_WINDOW, fill(menu, 1), "the menu's background");
+
+        ThemeManager.setAppearance(Appearance.DARK);
+        root.applyCss();
+
+        assertEquals(DARK_SURFACE, fill(bar, 0), "the menu bar");
+        assertEquals(DARK_BORDER, fill(menu, 0), "the menu's border");
+        assertEquals(DARK_SURFACE, fill(menu, 1), "the menu's background");
+    }
+
+    /**
+     * A list of values belongs to its field: the lists of a choice box and of a combo box stay on the white of fields
+     * in Light, apart from the grey menus. Neither can be styled without showing it. A region with the context menu's
+     * style class inside one with the choice box's stands in for the choice box's list, a list view inside a region
+     * with the style class of the combo box's popup for the combo box's.
+     */
+    @Test
+    @DisplayName("the lists of a choice box and of a combo box stay on the white of fields in Light, inside their"
+            + " border")
+    void fieldListsStayWhite() {
+        Region choiceList = new Region();
+        choiceList.getStyleClass().add("context-menu");
+        StackPane choiceBox = new StackPane(choiceList);
+        choiceBox.getStyleClass().add("choice-box");
+        ListView<String> comboList = new ListView<>();
+        StackPane comboPopup = new StackPane(comboList);
+        comboPopup.getStyleClass().add("combo-box-popup");
+        themed(Appearance.LIGHT, choiceBox, comboPopup);
+
+        assertEquals(LIGHT_BORDER, fill(choiceList, 0), "the border of the choice box's list");
+        assertEquals(LIGHT_FIELD, fill(choiceList, 1), "the choice box's list");
+        assertEquals(LIGHT_BORDER, fill(comboList, 0), "the border of the combo box's list");
+        assertEquals(LIGHT_FIELD, fill(comboList, 1), "the combo box's list");
     }
 
     /**

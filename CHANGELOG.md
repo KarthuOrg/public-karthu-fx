@@ -39,6 +39,9 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 - Nebula Light, a light colour scheme beside Nebula Dark, with the same shapes, sizes and spacing:
   a cool grey chrome, white fields, dark text and a deep blue focus, for every component and
   every themed standard control, the Markdown view's coloured code and search marks included.
+  A menu of commands (the menus of the menu bar, context menus) is the grey of its menu bar, as
+  it takes the surface colour in both schemes. The list of a field (a combo box's, a choice
+  box's, the suggestions of a search field, the calendar) is white like the field.
   Nebula Dark keeps every colour.
 - `ThemeManager` changes the scheme while the application runs. `setAppearance(Appearance)` takes
   the new enum `Appearance`: `LIGHT`, `DARK` or `SYSTEM`, which follows the light or dark setting

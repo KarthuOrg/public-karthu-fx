@@ -75,7 +75,8 @@
     -fx-shadow-color: rgba(31, 34, 48, 0.18);
     -fx-shadow-strong-color: rgba(31, 34, 48, 0.27);
 
-    /* Tooltip colors: a tooltip is a popup, so it lies on the white of popups with the dark text */
+    /* Tooltip colors: a tooltip lies on the white of the fields' popups with the dark text, not on the grey of
+     * menus */
     -fx-tooltip-color: #FFFFFF;
     -fx-tooltip-text-color: #1F2230;
     /* The colour a tooltip's content derives its text colours from, its -fx-background: the tooltip's white, so that

@@ -56,9 +56,9 @@ Nebula Light.
 | `-fx-background-color` | the window, the root of every themed scene | `#1b1d30` | `#E4E5E8` | `-app-bg-window` | background |
 | `-fx-background-color-selected` | no place in the theme, for an application's own use: a veil in the window colour | `rgba(18, 19, 32, 0.78)` | `rgba(228, 229, 232, 0.78)` *proposed* | — | a veil, the window colour at 78 percent as in dark; no text of its own |
 | `-fx-canvas-color` | the area behind cards (so surface cards stand out), the group rows of the shortcuts editor, the settings dialog, the image window's image area | `#1b1d30` | `#DCDDE1` *proposed* | `-app-bg-canvas` | background, the design's canvas and raised grey, darker than the window as dark's canvas is darker than its surface; text on it 11.6:1, `-fx-text-secondary-color` 4.4:1, below 4.5:1 |
-| `-fx-surface-color` | panels, tool and menu bars, tab headers, dialogs, the status bar, cards | `#24273c` | `#E4E5E8` | `-app-bg-surface` | background; in light the same grey as the window, so the chrome reads as one surface |
+| `-fx-surface-color` | panels, tool and menu bars, the menus of the menu bar and context menus, tab headers, dialogs, the status bar, cards | `#24273c` | `#E4E5E8` | `-app-bg-surface` | background; in light the same grey as the window, so the chrome reads as one surface, an open menu with the bar it hangs from |
 | `-fx-readonly-bg` | read-only text fields, text areas and form fields | `#1e202f` | `#DCDDE1` *proposed* | — | background, grey as the design's field that cannot be edited (`-app-bg-raised`); text on it 11.6:1, the warning outline 4.4:1, the error outline 3.8:1, the focus outline 3.5:1 |
-| `-fx-field-color` | every editable surface: text fields, password fields, combo and choice boxes, date pickers, spinners, text areas, the form fields, the zoom group, dropdown lists, context menus, the date picker's and the suggestion popup, list, tree and table bodies and the rows of tables | `-fx-surface-color` | `#FFFFFF` | `-app-bg-field` | background, white (the design's ivory replaced); text on it 15.8:1, `-fx-control-border` against it 1.7:1, below 3:1 |
+| `-fx-field-color` | every editable surface: text fields, password fields, combo and choice boxes, date pickers, spinners, text areas, the form fields, the zoom group, dropdown lists (a combo box's and a choice box's), the date picker's and the suggestion popup, list, tree and table bodies and the rows of tables | `-fx-surface-color` | `#FFFFFF` | `-app-bg-field` | background, white (the design's ivory replaced); text on it 15.8:1, `-fx-control-border` against it 1.7:1, below 3:1 |
 | `-fx-raised-color` | a raised surface: the Markdown view's content area | `-fx-surface-color` | `#EEEFF2` (lighter than the design's `#DCDDE1`) | `-app-bg-raised` | background; text on it 13.7:1, `-fx-text-secondary-color` 5.1:1, inline code 5.4:1, links 6.0:1 |
 
 ### Text
@@ -67,7 +67,7 @@ Nebula Light.
 | `-fx-text-color` | primary text: labels, menu items, the text of inputs, icons on neutral buttons | `#d6d9e6` | `#1F2230` | `-app-text` | 12.5:1 on window and surface, 10.5:1 on hover |
 | `-fx-text-secondary-color` | secondary and muted text: form field labels, captions, helper text, counters, idle icons inside fields | `#8a90a8` | `#5E6475` | `-app-text-muted` | 4.7:1 on window and surface; 3.9:1 on hover, below 4.5:1 |
 | `-fx-text-placeholder-color` | prompt texts, *Not assigned* in the shortcuts editor | `-fx-text-secondary-color` | `#5A5F6E` | `-app-text-placeholder` | 6.4:1 on the field surface |
-| `-fx-text-disabled-color` | a disabled menu item's text, a disabled link's | `-fx-text-secondary-color` | `#7C8090` | `-app-text-disabled` | 3.9:1 on the field surface before the dimming of a disabled control (disabled text exempt) |
+| `-fx-text-disabled-color` | a disabled menu item's text, a disabled link's | `-fx-text-secondary-color` | `#7C8090` | `-app-text-disabled` | 3.1:1 on window and surface, where a menu lies, and 3.9:1 on the field surface, before the dimming of a disabled control (disabled text exempt) |
 
 ### Accent
 | Token | Use | Dark | Light | Design | Contrast in light |
@@ -345,10 +345,14 @@ radius). Selected tab: 2px accent underline and bold `-fx-text-color` label; ina
 labels `-fx-text-secondary-color`, brightening to `-fx-text-color` on hover. The tab
 content area has no border. Close button tints to `-fx-text-color` on hover.
 
-**Menus / context menu** — `-fx-field-color` bg, 1px border, radius 3, soft drop shadow
+**Menus / context menu** — `-fx-surface-color` bg, 1px border, radius 3, soft drop shadow
 `dropshadow(gaussian, -fx-shadow-color, 8, 0, 0, 2)`. Item hover/focus → `-fx-hover-color`.
 Shortcuts in secondary color; destructive items use `-fx-status-error`; a disabled item's text
-`-fx-text-disabled-color`.
+`-fx-text-disabled-color`. A menu of commands lies on the surface, the colour of the menu bar it
+hangs from: in Nebula Light the grey of the window, apart from the white lists of fields. This
+holds for the menus of the menu bar and their sub-menus, context menus, the menus of menu buttons
+and the binding list of the form fields. A choice box's list is a list of values and keeps
+`-fx-field-color` by its own rule, as a combo box's list.
 
 **Scrollbars** — fixed 12px breadth (explicit `-fx-pref-width`/`-fx-pref-height`;
 without it the bars collapse to zero because the arrows are shaped away); track
