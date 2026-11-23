@@ -213,13 +213,14 @@ class ThemeDistinctionsTest {
      * A tooltip cannot be styled without showing it, so the label its skin shows stands in for it: the label carries
      * the tooltip's style class, and the theme's rule for the class colours it as in the tooltip's own window. In
      * Dark it keeps JavaFX's own translucent grey with white text and JavaFX's shadow, as before; in Light it lies on
-     * the white of popups with the dark text and a soft shadow in the ink. Its content, here a region as the tooltip's
-     * graphic that shows the colour JavaFX derives a content's text colours from ({@code -fx-background}), finds the
-     * tooltip's own colour: JavaFX's opaque grey in Dark, the white in Light.
+     * the white of the fields' popups, not on the grey of menus, with the dark text and a soft shadow in the ink. Its
+     * content, here a region as the tooltip's graphic that shows the colour JavaFX derives a content's text colours
+     * from ({@code -fx-background}), finds the tooltip's own colour: JavaFX's opaque grey in Dark, the white in Light.
      */
     @Test
     @DisplayName("a tooltip keeps JavaFX's translucent grey, white text and shadow in Dark and lies on the white of"
-            + " popups with the dark text and a soft shadow in Light; its content derives its text from its colour")
+            + " the fields' popups with the dark text and a soft shadow in Light; its content derives its text from"
+            + " its colour")
     void tooltip() {
         Region content = new Region();
         content.setStyle("-fx-background-color: -fx-background;");
@@ -245,14 +246,12 @@ class ThemeDistinctionsTest {
 
     /**
      * A menu of commands belongs to the window's chrome: it lies on the surface, the colour of the menu bar it hangs
-     * from, which is the grey of the window in Light and the colour the menu had in Dark. A context menu cannot be
-     * styled without showing it, so a region with its style class stands in for it.
+     * from, which is the grey of the window in Light and the colour the menu had in Dark.
      */
     @Test
     @DisplayName("a menu lies on the grey of its menu bar in Light, inside its border, and on the surface in Dark")
     void menuOnTheSurface() {
-        Region menu = new Region();
-        menu.getStyleClass().add("context-menu");
+        MenuStandIn menu = new MenuStandIn();
         MenuBar bar = new MenuBar();
         VBox root = themed(Appearance.LIGHT, bar, menu);
 
@@ -270,16 +269,15 @@ class ThemeDistinctionsTest {
 
     /**
      * A list of values belongs to its field: the lists of a choice box and of a combo box stay on the white of fields
-     * in Light, apart from the grey menus. Neither can be styled without showing it. A region with the context menu's
-     * style class inside one with the choice box's stands in for the choice box's list, a list view inside a region
-     * with the style class of the combo box's popup for the combo box's.
+     * in Light, apart from the grey menus. The rules that draw them hold inside the open popups only, so a stand-in
+     * for a menu inside a region with the choice box's style class takes the place of the choice box's list, and a
+     * list view inside a region with the style class of the combo box's popup the place of the combo box's.
      */
     @Test
     @DisplayName("the lists of a choice box and of a combo box stay on the white of fields in Light, inside their"
             + " border")
     void fieldListsStayWhite() {
-        Region choiceList = new Region();
-        choiceList.getStyleClass().add("context-menu");
+        MenuStandIn choiceList = new MenuStandIn();
         StackPane choiceBox = new StackPane(choiceList);
         choiceBox.getStyleClass().add("choice-box");
         ListView<String> comboList = new ListView<>();
@@ -293,16 +291,11 @@ class ThemeDistinctionsTest {
         assertEquals(LIGHT_FIELD, fill(comboList, 1), "the combo box's list");
     }
 
-    /**
-     * A context menu cannot be styled without showing it, so a region with its style class stands in for it: the
-     * theme's rule for the class draws it.
-     */
     @Test
     @DisplayName("shadows keep their offsets and radii, in the ink at 18 percent in Light and in black at 20 percent in"
             + " Dark; the focused slider's stronger shadow too")
     void shadows() {
-        Region menu = new Region();
-        menu.getStyleClass().add("context-menu");
+        MenuStandIn menu = new MenuStandIn();
         FocusedSlider slider = new FocusedSlider();
         VBox root = themed(Appearance.LIGHT, menu, slider);
 
@@ -419,6 +412,17 @@ class ThemeDistinctionsTest {
 
         void press() {
             setPressed(true);
+        }
+    }
+
+    /**
+     * A stand-in for a menu: a context menu cannot be styled without showing it, so a region with its style class
+     * takes its place, drawn by the theme's rule for the class.
+     */
+    private static final class MenuStandIn extends Region {
+
+        MenuStandIn() {
+            getStyleClass().add("context-menu");
         }
     }
 

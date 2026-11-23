@@ -108,7 +108,7 @@ Nebula Light.
 |---|---|---|---|---|---|
 | `-fx-shadow-color` | the shadow of menus, popups and the slider's thumb | `rgba(0, 0, 0, 0.2)` | `rgba(31, 34, 48, 0.18)` | (popup shadow) | a shadow; offsets and radii as in dark |
 | `-fx-shadow-strong-color` | the focused slider thumb's shadow | `rgba(0, 0, 0, 0.3)` | `rgba(31, 34, 48, 0.27)` *proposed* | — | a shadow, one and a half times the other, as in dark |
-| `-fx-tooltip-color` | a tooltip's background; JavaFX's own shape, padding, font and the shape of its shadow stay in both schemes | `rgba(30, 30, 30, 0.8)` (JavaFX's) | `#FFFFFF` *proposed* | `-app-bg-field` | background, the white of popups (the design's ivory replaced); 1.3:1 against the window, its shadow sets it apart |
+| `-fx-tooltip-color` | a tooltip's background; JavaFX's own shape, padding, font and the shape of its shadow stay in both schemes | `rgba(30, 30, 30, 0.8)` (JavaFX's) | `#FFFFFF` *proposed* | `-app-bg-field` | background, the white of the fields' popups, not the grey of menus (the design's ivory replaced); 1.3:1 against the window, its shadow sets it apart |
 | `-fx-tooltip-text-color` | a tooltip's text | `#ffffff` (JavaFX's) | `#1F2230` *proposed* | `-app-text` | 15.8:1 on the tooltip |
 | `-fx-tooltip-base-color` | the colour a tooltip's content derives its text colours from, the tooltip's `-fx-background` | `rgba(30, 30, 30)` (JavaFX's) | `-fx-tooltip-color` *proposed* | `-app-bg-field` | the tooltip's own colour, opaque, as in dark; JavaFX derives dark text on it |
 | `-fx-tooltip-shadow-color` | a tooltip's shadow, in JavaFX's shape (a three-pass box, radius 10, 3 pixels down) | `rgba(0, 0, 0, 0.5)` (JavaFX's) | `rgba(31, 34, 48, 0.18)` *proposed* | (popup shadow) | a shadow, the popups' ink at 18 percent |
