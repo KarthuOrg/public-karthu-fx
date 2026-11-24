@@ -67,14 +67,16 @@ public enum CodeCategory {
     TYPE(true, null),
 
     /**
-     * A name followed by {@code (}. Style class {@code code-function}, variable {@code -fx-code-function-color},
-     * default {@code #5d9bff} in Nebula Dark, {@code #000000} in Nebula Light.
+     * A name followed by {@code (}, PowerShell commands such as {@code Get-ChildItem}. Style class
+     * {@code code-function}, variable {@code -fx-code-function-color}, default {@code #5d9bff} in Nebula Dark,
+     * {@code #000000} in Nebula Light.
      */
     FUNCTION(true, null),
 
     /**
-     * Variables: Bash variables, SQL parameters, YAML anchors. Style class {@code code-variable}, variable
-     * {@code -fx-code-variable-color}, default {@code #ff8fa3} in Nebula Dark, {@code #000000} in Nebula Light.
+     * Variables: Bash and PowerShell variables, SQL parameters, YAML anchors. Style class {@code code-variable},
+     * variable {@code -fx-code-variable-color}, default {@code #ff8fa3} in Nebula Dark, {@code #000000} in Nebula
+     * Light.
      */
     VARIABLE(true, null),
 
@@ -98,16 +100,17 @@ public enum CodeCategory {
     DOC(false, COMMENT),
 
     /**
-     * Java annotations. Falls back to {@link #KEYWORD}. Style classes {@code code-annotation} and
-     * {@code code-keyword}, variable {@code -fx-code-annotation-color}, default {@code -fx-code-keyword-color} in
+     * Java annotations, PowerShell attributes. Falls back to {@link #KEYWORD}. Style classes {@code code-annotation}
+     * and {@code code-keyword}, variable {@code -fx-code-annotation-color}, default {@code -fx-code-keyword-color} in
      * Nebula Dark, {@code #646464} in Nebula Light.
      */
     ANNOTATION(false, KEYWORD),
 
     /**
-     * {@code true}, {@code false}, {@code null}, SQL {@code NULL}. Falls back to {@link #NUMBER}. Style classes
-     * {@code code-literal} and {@code code-number}, variable {@code -fx-code-literal-color}, default
-     * {@code -fx-code-number-color} in Nebula Dark, {@code -fx-code-keyword-color} in Nebula Light.
+     * {@code true}, {@code false}, {@code null}, SQL {@code NULL}, PowerShell {@code $true}, {@code $false} and
+     * {@code $null}. Falls back to {@link #NUMBER}. Style classes {@code code-literal} and {@code code-number},
+     * variable {@code -fx-code-literal-color}, default {@code -fx-code-number-color} in Nebula Dark,
+     * {@code -fx-code-keyword-color} in Nebula Light.
      */
     LITERAL(false, NUMBER),
 
@@ -125,9 +128,9 @@ public enum CodeCategory {
     ESCAPE(false, STRING),
 
     /**
-     * XML and HTML attribute names. Falls back to {@link #NUMBER}. Style classes {@code code-attribute} and
-     * {@code code-number}, variable {@code -fx-code-attribute-color}, default {@code -fx-code-number-color} in
-     * Nebula Dark, {@code #7F007F} in Nebula Light.
+     * XML and HTML attribute names, PowerShell parameters. Falls back to {@link #NUMBER}. Style classes
+     * {@code code-attribute} and {@code code-number}, variable {@code -fx-code-attribute-color}, default
+     * {@code -fx-code-number-color} in Nebula Dark, {@code #7F007F} in Nebula Light.
      */
     ATTRIBUTE(false, NUMBER),
 

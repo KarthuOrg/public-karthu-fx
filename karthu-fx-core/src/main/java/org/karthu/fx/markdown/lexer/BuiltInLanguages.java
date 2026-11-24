@@ -31,9 +31,10 @@ public final class BuiltInLanguages {
         add(languages, new YamlLexer(), "yaml", "yml");
         add(languages, new SqlLexer(), "sql");
 
-        // Markup and shell: XML and HTML, Bash, Markdown.
+        // Markup and shell: XML and HTML, Bash, PowerShell, Markdown.
         add(languages, new XmlLexer(), "xml", "html", "xhtml");
         add(languages, new BashLexer(), "bash", "sh", "shell");
+        add(languages, new PowerShellLexer(), "powershell", "pwsh", "ps1");
         add(languages, new MarkdownLexer(), "markdown", "md");
 
         return languages;

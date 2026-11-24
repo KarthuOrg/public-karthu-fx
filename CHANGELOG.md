@@ -8,6 +8,14 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 
 ### Added
 
+- `MarkdownView` colours PowerShell: a code block of the language `powershell`, `pwsh` or `ps1`
+  shows comments (also `<# ... #>`), strings and here-strings, variables (`$env:PATH`, `${...}`,
+  splatted `@args`), `$true`, `$false` and `$null` as literals, keywords in any case, the
+  operators written as a dash and a word (`-eq`, `-match`, `-join`, with their `c` and `i`
+  prefixes), a command's parameters such as `-Recurse` as attributes, types in brackets
+  (`[string]`, `[int[]]`, generic ones), attributes such as `[CmdletBinding()]` as annotations,
+  commands in the form verb-noun and methods as functions, and numbers.
+
 - An application adds its own entries to `MarkdownView`'s context menu: `setContextMenuCallback`
   (with `contextMenuCallbackProperty()` and `getContextMenuCallback()`) takes the new functional
   interface `ContextMenuCallback`, called on every opening of the menu after the view's own entries

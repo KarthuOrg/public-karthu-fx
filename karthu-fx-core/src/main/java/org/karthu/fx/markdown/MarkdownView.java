@@ -302,6 +302,7 @@ import java.util.function.Consumer;
  *   <li>SQL: {@code sql};</li>
  *   <li>XML and HTML: {@code xml}, {@code html} and {@code xhtml};</li>
  *   <li>Bash: {@code bash}, {@code sh} and {@code shell};</li>
+ *   <li>PowerShell: {@code powershell}, {@code pwsh} and {@code ps1};</li>
  *   <li>Markdown: {@code markdown} and {@code md}.</li>
  * </ul>
  * No language embeds another: the content of a {@code script} or {@code style} element in HTML and a fenced block in
@@ -339,9 +340,10 @@ import java.util.function.Consumer;
  *       <td>{@code #000000}</td><td>{@code code-number}</td></tr>
  *   <tr><td>type</td><td>type names</td><td>{@code -fx-code-type-color}</td><td>{@code #4cd38a}</td>
  *       <td>{@code #000000}</td><td>{@code code-type}</td></tr>
- *   <tr><td>function</td><td>a name followed by {@code (}</td><td>{@code -fx-code-function-color}</td>
- *       <td>{@code #5d9bff}</td><td>{@code #000000}</td><td>{@code code-function}</td></tr>
- *   <tr><td>variable</td><td>Bash variables, SQL parameters, YAML anchors and aliases</td>
+ *   <tr><td>function</td><td>a name followed by {@code (}, PowerShell commands such as {@code Get-ChildItem}</td>
+ *       <td>{@code -fx-code-function-color}</td><td>{@code #5d9bff}</td><td>{@code #000000}</td>
+ *       <td>{@code code-function}</td></tr>
+ *   <tr><td>variable</td><td>Bash and PowerShell variables, SQL parameters, YAML anchors and aliases</td>
  *       <td>{@code -fx-code-variable-color}</td><td>{@code #ff8fa3}</td><td>{@code #000000}</td>
  *       <td>{@code code-variable}</td></tr>
  *   <tr><td>property</td><td>keys in JSON and YAML</td><td>{@code -fx-code-property-color}</td>
@@ -350,9 +352,10 @@ import java.util.function.Consumer;
  *       <td>{@code #3F7F7F}</td><td>{@code code-tag}</td></tr>
  *   <tr><td>doc</td><td>documentation comments such as Javadoc</td><td>{@code -fx-code-doc-color}</td>
  *       <td>as comment</td><td>{@code #3F5FBF}</td><td>{@code code-doc}, {@code code-comment}</td></tr>
- *   <tr><td>annotation</td><td>Java annotations</td><td>{@code -fx-code-annotation-color}</td><td>as keyword</td>
- *       <td>{@code #646464}</td><td>{@code code-annotation}, {@code code-keyword}</td></tr>
- *   <tr><td>literal</td><td>{@code true}, {@code false}, {@code null}, SQL's {@code NULL}</td>
+ *   <tr><td>annotation</td><td>Java annotations, PowerShell attributes</td><td>{@code -fx-code-annotation-color}</td>
+ *       <td>as keyword</td><td>{@code #646464}</td><td>{@code code-annotation}, {@code code-keyword}</td></tr>
+ *   <tr><td>literal</td><td>{@code true}, {@code false}, {@code null}, SQL's {@code NULL}, PowerShell's
+ *       {@code $true}, {@code $false} and {@code $null}</td>
  *       <td>{@code -fx-code-literal-color}</td><td>as number</td><td>as keyword</td>
  *       <td>{@code code-literal}, {@code code-number}</td></tr>
  *   <tr><td>constant</td><td>Java names in capitals only, at least two characters</td>
@@ -360,8 +363,9 @@ import java.util.function.Consumer;
  *       <td>{@code code-constant}, {@code code-literal}, {@code code-number}</td></tr>
  *   <tr><td>escape</td><td>escapes in strings, XML entities</td><td>{@code -fx-code-escape-color}</td>
  *       <td>as string</td><td>as string</td><td>{@code code-escape}, {@code code-string}</td></tr>
- *   <tr><td>attribute</td><td>XML and HTML attribute names</td><td>{@code -fx-code-attribute-color}</td>
- *       <td>as number</td><td>{@code #7F007F}</td><td>{@code code-attribute}, {@code code-number}</td></tr>
+ *   <tr><td>attribute</td><td>XML and HTML attribute names, PowerShell parameters</td>
+ *       <td>{@code -fx-code-attribute-color}</td><td>as number</td><td>{@code #7F007F}</td>
+ *       <td>{@code code-attribute}, {@code code-number}</td></tr>
  *   <tr><td>operator</td><td>operators</td><td>{@code -fx-code-operator-color}</td><td>the code colour</td>
  *       <td>the block's code colour</td><td>{@code code-operator}</td></tr>
  *   <tr><td>punctuation</td><td>brackets, separators</td><td>{@code -fx-code-punctuation-color}</td>

@@ -439,8 +439,8 @@ view.setContextMenuCallback((items, place) -> {
   gets the address as written.
 - Relative image addresses resolve against `setImageBase`. Images from the internet load only
   after `setRemoteImages(true)`.
-- Java, JSON, YAML, SQL, XML/HTML, Bash and Markdown are coloured without any setup. An own
-  language is a `CodeLexer` in `getCodeLanguages()` under the name used after the fence.
+- Java, JSON, YAML, SQL, XML/HTML, Bash, PowerShell and Markdown are coloured without any setup.
+  An own language is a `CodeLexer` in `getCodeLanguages()` under the name used after the fence.
 - `setMarkdown` shows another document, from the top. `updateMarkdown` sets a new version of the
   shown one, such as a file read again after it changed, and keeps the reader's place and the
   pictures of images whose address stays. It throws while `markdownProperty()` is bound.

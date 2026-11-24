@@ -22,9 +22,9 @@ import static org.karthu.fx.markdown.MarkdownTestSupport.codeRunsByText;
 import static org.karthu.fx.markdown.MarkdownTestSupport.layOut;
 
 /**
- * Code blocks of markup and shell, XML and HTML, Bash and Markdown, coloured by their language and seen from outside
- * the view: Markdown with a fenced block in, the block's runs out, read by their text and their style classes
- * (through {@link MarkdownTestSupport#assertCodeRuns}). One table of cases per language.
+ * Code blocks of markup and shell, XML and HTML, Bash, PowerShell and Markdown, coloured by their language and seen
+ * from outside the view: Markdown with a fenced block in, the block's runs out, read by their text and their style
+ * classes (through {@link MarkdownTestSupport#assertCodeRuns}). One table of cases per language.
  */
 class MarkdownViewMarkupAndShellColorsTest {
 
@@ -260,6 +260,112 @@ class MarkdownViewMarkupAndShellColorsTest {
     }
 
     /**
+     * The cases of the PowerShell lexer: what a case shows, the code, and the runs of its block.
+     */
+    static Stream<Arguments> powerShellCases() {
+        return Stream.of(
+                // Comments.
+                Arguments.of("a comment line and a comment after a command", "# setup\nGet-Date # now",
+                        List.of("comment:# setup", "plain:\n", "function:Get-Date", "plain: ", "comment:# now")),
+                Arguments.of("a block comment over lines", "<# help\n  more #>\nexit",
+                        List.of("comment:<# help\n  more #>", "plain:\n", "keyword:exit")),
+                Arguments.of("a hash inside a word starts no comment", "echo a#b",
+                        List.of("plain:echo a#b")),
+                // Strings.
+                Arguments.of("strings in single and double quotes, with a doubled quote and a backtick",
+                        "'it''s' \"a `\" b\"",
+                        List.of("string:'it''s'", "plain: ", "string:\"a `\" b\"")),
+                Arguments.of("a variable and a subexpression with quotes stay in a double-quoted string",
+                        "\"Hi $name, $(Get-Date -f \"yyyy\")\"",
+                        List.of("string:\"Hi $name, $(Get-Date -f \"yyyy\")\"")),
+                Arguments.of("here-strings in double and single quotes, quotes inside them",
+                        "$t = @\"\nLine \"one\"\n\"@\n$u = @'\nx\n'@",
+                        List.of("variable:$t", "plain: ", "operator:=", "plain: ", "string:@\"\nLine \"one\"\n\"@",
+                                "plain:\n", "variable:$u", "plain: ", "operator:=", "plain: ", "string:@'\nx\n'@")),
+                // Variables and literals.
+                Arguments.of("variables with a scope or a drive, in braces, automatic and splatted",
+                        "$env:PATH $script:n ${my var} $_ $? @args",
+                        List.of("variable:$env:PATH", "plain: ", "variable:$script:n", "plain: ",
+                                "variable:${my var}", "plain: ", "variable:$_", "plain: ", "variable:$?", "plain: ",
+                                "variable:@args")),
+                Arguments.of("$true, $false and $null in any case are literals", "$true, $False, $NULL",
+                        List.of("literal:$true", "punctuation:,", "plain: ", "literal:$False", "punctuation:,",
+                                "plain: ", "literal:$NULL")),
+                // Keywords.
+                Arguments.of("keywords in any case", "If ($a) { return }",
+                        List.of("keyword:If", "plain: ", "punctuation:(", "variable:$a", "punctuation:)", "plain: ",
+                                "punctuation:{", "plain: ", "keyword:return", "plain: ", "punctuation:}")),
+                Arguments.of("in is a keyword in a foreach", "foreach ($f in $files)",
+                        List.of("keyword:foreach", "plain: ", "punctuation:(", "variable:$f", "plain: ", "keyword:in",
+                                "plain: ", "variable:$files", "punctuation:)")),
+                // Operators and parameters.
+                Arguments.of("operators written as a dash and a word, in any case and with a case prefix",
+                        "$a -eq 1 -and $b -NotMatch 'x' -ceq $c",
+                        List.of("variable:$a", "plain: ", "operator:-eq", "plain: ", "number:1", "plain: ",
+                                "operator:-and", "plain: ", "variable:$b", "plain: ", "operator:-NotMatch", "plain: ",
+                                "string:'x'", "plain: ", "operator:-ceq", "plain: ", "variable:$c")),
+                Arguments.of("a command's parameters", "Get-ChildItem -Path C:\\temp -Recurse -ErrorAction Stop",
+                        List.of("function:Get-ChildItem", "plain: ", "attribute:-Path", "plain: C:\\temp ",
+                                "attribute:-Recurse", "plain: ", "attribute:-ErrorAction", "plain: Stop")),
+                Arguments.of("the operators of characters, a dash alone among them",
+                        "$n = $n - 1; $s -= 2; $i++",
+                        List.of("variable:$n", "plain: ", "operator:=", "plain: ", "variable:$n", "plain: ",
+                                "operator:-", "plain: ", "number:1", "punctuation:;", "plain: ", "variable:$s",
+                                "plain: ", "operator:-=", "plain: ", "number:2", "punctuation:;", "plain: ",
+                                "variable:$i", "operator:++")),
+                // Types, attributes and brackets.
+                Arguments.of("types in brackets, an array type and a generic one, and a static method",
+                        "[string]$s = [int[]]$a + [System.Collections.Generic.List[string]]::new()",
+                        List.of("punctuation:[", "type:string", "punctuation:]", "variable:$s", "plain: ",
+                                "operator:=", "plain: ", "punctuation:[", "type:int[]", "punctuation:]",
+                                "variable:$a", "plain: ", "operator:+", "plain: ", "punctuation:[",
+                                "type:System.Collections.Generic.List[string]", "punctuation:]::", "function:new",
+                                "punctuation:()")),
+                Arguments.of("attributes, and a bracket that indexes",
+                        "[CmdletBinding()]\nparam([Parameter(Mandatory)] $x)\n$list[0]",
+                        List.of("punctuation:[", "annotation:CmdletBinding", "punctuation:()]", "plain:\n",
+                                "keyword:param", "punctuation:([", "annotation:Parameter", "punctuation:(",
+                                "plain:Mandatory", "punctuation:)]", "plain: ", "variable:$x", "punctuation:)",
+                                "plain:\n", "variable:$list", "punctuation:[", "number:0", "punctuation:]")),
+                Arguments.of("arrays and hash tables", "$h = @{ a = 1 }; $l = @(1, 2)",
+                        List.of("variable:$h", "plain: ", "operator:=", "plain: ", "punctuation:@{", "plain: a ",
+                                "operator:=", "plain: ", "number:1", "plain: ", "punctuation:};", "plain: ",
+                                "variable:$l", "plain: ", "operator:=", "plain: ", "punctuation:@(", "number:1",
+                                "punctuation:,", "plain: ", "number:2", "punctuation:)")),
+                // Commands and functions.
+                Arguments.of("a function's definition, commands where a command starts and a method",
+                        "function Get-Stuff { }\nGet-Stuff | ForEach-Object { $_.Trim() }\ncd my-folder",
+                        List.of("keyword:function", "plain: ", "function:Get-Stuff", "plain: ", "punctuation:{",
+                                "plain: ", "punctuation:}", "plain:\n", "function:Get-Stuff", "plain: ", "operator:|",
+                                "plain: ", "function:ForEach-Object", "plain: ", "punctuation:{", "plain: ",
+                                "variable:$_", "plain:.", "function:Trim", "punctuation:()", "plain: ",
+                                "punctuation:}", "plain:\ncd my-folder")),
+                // Numbers.
+                Arguments.of("numbers: hexadecimal, with an exponent, a multiplier, a range; a version is none",
+                        "1 0x1F 2.5e3 10KB 1..5 v1.2",
+                        List.of("number:1", "plain: ", "number:0x1F", "plain: ", "number:2.5e3", "plain: ",
+                                "number:10KB", "plain: ", "number:1", "operator:..", "number:5", "plain: v1.2")),
+                // Escapes, code that does not run, and no code.
+                Arguments.of("a backtick takes the character after it, a line's end too", "Write-Host a`$b `\n  c",
+                        List.of("function:Write-Host", "plain: a`$b `\n  c")),
+                Arguments.of("an unterminated string runs to the end of the block", "Write-Host \"open\nmore",
+                        List.of("function:Write-Host", "plain: ", "string:\"open\nmore")),
+                Arguments.of("an unterminated block comment runs to the end of the block", "x <# open\nmore",
+                        List.of("plain:x ", "comment:<# open\nmore")),
+                Arguments.of("code that does not run is coloured too", "if ( \"",
+                        List.of("keyword:if", "plain: ", "punctuation:(", "plain: ", "string:\"")),
+                Arguments.of("an empty block is one empty run", "",
+                        List.of("plain:")));
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("powerShellCases")
+    @DisplayName("the PowerShell lexer")
+    void powerShellRuns(String what, String code, List<String> expected) {
+        assertCodeRuns("powershell", code, expected);
+    }
+
+    /**
      * The cases of the Markdown lexer: what a case shows, the code, and the runs of its block.
      */
     static Stream<Arguments> markdownCases() {
@@ -363,6 +469,9 @@ class MarkdownViewMarkupAndShellColorsTest {
             "bash  | fi    | keyword:fi",
             "sh    | fi    | keyword:fi",
             "shell | fi    | keyword:fi",
+            "powershell | if | keyword:if",
+            "pwsh  | if    | keyword:if",
+            "ps1   | if    | keyword:if",
             "markdown | # T | heading:# T",
             "md    | # T   | heading:# T"})
     @DisplayName("each language is known by its name and its short names")

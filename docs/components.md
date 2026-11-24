@@ -102,8 +102,9 @@ require `javafx.web`, so no browser engine ships with the application.
   reader selects as in a spreadsheet and copies as tab-separated text (Ctrl+C, or the context menu
   with or without the column titles). A table too wide for the view scrolls sideways.
 - **Coloured code.** A code block whose fence names its language is coloured by a lexer: Java,
-  JSON, YAML, SQL, XML and HTML, Bash and Markdown are built in, and an application adds, replaces
-  or switches off languages per view through `getCodeLanguages()` and its own `CodeLexer`.
+  JSON, YAML, SQL, XML and HTML, Bash, PowerShell and Markdown are built in, and an application
+  adds, replaces or switches off languages per view through `getCodeLanguages()` and its own
+  `CodeLexer`.
   Keywords, strings, comments, types and the other pieces each take the colour of one of 23
   categories (`CodeCategory`), nine base ones and fourteen fine ones that fall back to them, every
   colour a theme token (`-fx-code-keyword-color` and so on) with a value in each scheme, which an

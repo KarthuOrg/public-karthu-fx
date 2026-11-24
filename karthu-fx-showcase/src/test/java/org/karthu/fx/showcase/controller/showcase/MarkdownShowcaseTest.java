@@ -286,7 +286,7 @@ class MarkdownShowcaseTest {
     }
 
     @Test
-    @DisplayName("the live source has a block of each of the seven languages, showing the categories its language marks")
+    @DisplayName("the live source has a block of each of the eight languages, showing the categories its language marks")
     void liveSourceShowsEveryLanguage() throws IOException {
         Parent root = layOut();
         String source = assertInstanceOf(TextArea.class, root.lookup("#sourceArea")).getText();
@@ -312,6 +312,10 @@ class MarkdownShowcaseTest {
                         CodeCategory.PUNCTUATION),
                 "bash", EnumSet.of(CodeCategory.COMMENT, CodeCategory.STRING, CodeCategory.VARIABLE,
                         CodeCategory.KEYWORD, CodeCategory.FUNCTION, CodeCategory.NUMBER, CodeCategory.OPERATOR,
+                        CodeCategory.PUNCTUATION),
+                "powershell", EnumSet.of(CodeCategory.COMMENT, CodeCategory.STRING, CodeCategory.VARIABLE,
+                        CodeCategory.LITERAL, CodeCategory.KEYWORD, CodeCategory.FUNCTION, CodeCategory.ATTRIBUTE,
+                        CodeCategory.TYPE, CodeCategory.ANNOTATION, CodeCategory.NUMBER, CodeCategory.OPERATOR,
                         CodeCategory.PUNCTUATION),
                 "markdown", EnumSet.of(CodeCategory.HEADING, CodeCategory.EMPHASIS, CodeCategory.CODE,
                         CodeCategory.LINK, CodeCategory.LIST, CodeCategory.QUOTE, CodeCategory.PUNCTUATION));

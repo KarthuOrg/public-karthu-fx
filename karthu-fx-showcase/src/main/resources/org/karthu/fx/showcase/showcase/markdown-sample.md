@@ -237,8 +237,9 @@ Code blocks sit in list items too, and tildes fence a block as well as backticks
 
 A code block whose fence names a language the view knows shows its code in colours:
 keywords, strings, numbers, comments, types and more, each in the colour of its
-category. Seven languages are built in: `java`, `json`, `yaml` (or `yml`), `sql`,
-`xml` (or `html`), `bash` (or `sh`) and `markdown` (or `md`). A block without a
+category. Eight languages are built in: `java`, `json`, `yaml` (or `yml`), `sql`,
+`xml` (or `html`), `bash` (or `sh`), `powershell` (or `pwsh`) and `markdown` (or
+`md`). A block without a
 language, or with one the view does not know, keeps the one code colour. The
 *Code colours* card below the editor changes the colours at once. Selecting,
 copying and zooming work in a coloured block as in any other.
@@ -322,6 +323,21 @@ backup() {
 }
 backup '/data/backup'
 echo $?
+```
+
+```powershell
+<# Copies the newest CSV files to a backup folder. #>
+function Backup-Csv {
+  [CmdletBinding()]
+  param([string]$Target = "$env:TEMP\backup", [int]$Days = 7)
+  Get-ChildItem -Path $Source -Filter *.csv |
+    Where-Object { $_.LastWriteTime -gt (Get-Date).AddDays(-$Days) } |
+    ForEach-Object {
+      if ($null -ne $_) { Copy-Item $_.FullName $Target -Force }  # quietly
+    }
+  return $true
+}
+Backup-Csv -Target 'D:\backup' -Days 0x1E
 ```
 
 ```markdown
