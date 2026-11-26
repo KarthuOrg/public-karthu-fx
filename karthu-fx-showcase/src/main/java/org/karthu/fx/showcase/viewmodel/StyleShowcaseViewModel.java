@@ -6,16 +6,11 @@ import java.util.List;
 import java.util.Map;
 
 import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyBooleanProperty;
-import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
-import javafx.collections.transformation.FilteredList;
 import javafx.scene.control.TreeItem;
 
-import org.karthu.fx.form.SearchInput;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
 
@@ -24,12 +19,12 @@ import static org.karthu.fx.showcase.viewmodel.ShowcaseSection.JAVAFX;
 import static org.karthu.fx.showcase.viewmodel.ShowcaseSection.KARTHU_FX;
 
 /**
- * ViewModel for the style showcase application: the pages, the navigation tree built over them and the open page.
+ * ViewModel for the style showcase application: the pages, the navigation tree built over them, the text its search
+ * matches, and the open page.
  * <p>
  * The pages are one ordered list; their order is the display order inside a group and among a section's directly
- * attached pages. The tree is built from the filtered view of that list ({@link #getFilteredItems()}), rebuilt whenever
- * it changes, under one root that stays the same node. A search field connected through
- * {@link #connectSearch(SearchInput)} narrows that list as the user types.
+ * attached pages. The tree is built from that list once, every heading unfolded. The view shows it in a navigation
+ * tree, which searches it and keeps the user's folding: the view model never filters or rebuilds it.
  */
 public class StyleShowcaseViewModel {
 
@@ -40,11 +35,8 @@ public class StyleShowcaseViewModel {
     private static final String NO_GROUP = null;
 
     private final ObservableList<ShowcaseItem> showcaseItems;
-    private final FilteredList<ShowcaseItem> filteredItems;
     private final TreeItem<NavigationEntry> navigationRoot = new TreeItem<>();
     private final ObjectProperty<ShowcaseItem> selectedItem = new SimpleObjectProperty<>();
-    private final ReadOnlyBooleanWrapper hasPages = new ReadOnlyBooleanWrapper(true);
-    private final ReadOnlyBooleanWrapper rebuilding = new ReadOnlyBooleanWrapper(false);
 
     public StyleShowcaseViewModel() {
         showcaseItems = FXCollections.observableArrayList(
@@ -100,12 +92,9 @@ public class StyleShowcaseViewModel {
                 page(KARTHU_FX, NO_GROUP, "Icons", "icons-showcase.fxml", BootstrapIcons.EMOJI_SMILE),
                 page(EXAMPLES, NO_GROUP, "Job Scheduler", "job-scheduler-showcase.fxml", BootstrapIcons.ALARM)
         );
-        filteredItems = new FilteredList<>(showcaseItems);
         navigationRoot.setExpanded(true);
-        rebuildNavigation();
-        filteredItems.addListener((ListChangeListener<ShowcaseItem>) change -> rebuildNavigation());
-        // Initial selection is driven by the controller, which selects the first page's row so that the change event
-        // fires and the first page gets loaded.
+        buildNavigation();
+        // The open page at start is the controller's to choose: it opens the first page and selects its row.
     }
 
     private static ShowcaseItem page(ShowcaseSection section, String group, String name, String fxmlFileName,
@@ -123,19 +112,9 @@ public class StyleShowcaseViewModel {
     }
 
     /**
-     * The pages the navigation tree shows: all of them until a predicate narrows the list. The tree is rebuilt
-     * whenever this list changes.
-     *
-     * @return the filtered view of {@link #getShowcaseItems()}
-     */
-    public FilteredList<ShowcaseItem> getFilteredItems() {
-        return filteredItems;
-    }
-
-    /**
-     * The navigation tree's root, hidden in the view: its children are the sections that hold a page among the
-     * filtered pages, each with its groups first, in the order of their first page, then its directly attached pages.
-     * Every node is expanded. The root stays the same node when the tree is rebuilt.
+     * The navigation tree's root, hidden in the view: its children are the sections, each with its groups first, in
+     * the order of their first page, then its directly attached pages. Every heading starts unfolded; from then on the
+     * user folds and unfolds them.
      *
      * @return the root
      */
@@ -144,74 +123,24 @@ public class StyleShowcaseViewModel {
     }
 
     /**
-     * The tree node of a page.
+     * The text the navigation's search matches for an entry of the tree. A section or group heading is matched by its
+     * name, and a matching heading keeps all its pages in the search's result. A page is matched by its name, its
+     * group's name and its section's name, separated by whitespace so that no word spans two of them: several words
+     * then narrow across them, "form path" finding the Path Input of the Form Inputs.
      *
-     * @param page the page
-     * @return its node, or {@code null} when the tree does not show it
-     */
-    public TreeItem<NavigationEntry> navigationNodeOf(ShowcaseItem page) {
-        return findPage(navigationRoot, page);
-    }
-
-    /**
-     * The first hit of the search: the first page the tree shows, top to bottom.
-     *
-     * @return the page, or {@code null} while the tree shows none
-     */
-    public ShowcaseItem firstHit() {
-        TreeItem<NavigationEntry> node = findPage(navigationRoot, null);
-        if (node == null) {
-            return null;
-        }
-        return (ShowcaseItem) node.getValue();
-    }
-
-    /**
-     * Connects a search field to the pages: from now on the field narrows {@link #getFilteredItems()} as the user
-     * types, through the field's own list filter, so matching follows karthu-fx's search rule (words, case and accents
-     * ignored). A page's text for the search is its name, its group's name and its section's name, separated by
-     * whitespace, so that no word spans two of them and a group's or section's name finds all of its pages.
-     *
-     * @param search the search field
-     */
-    public void connectSearch(SearchInput search) {
-        search.filter(filteredItems, item -> searchText(item));
-    }
-
-    /**
-     * The text a page is matched against: its name, its group's name if it has a group, and its section's name.
-     *
-     * @param item the page
+     * @param entry the entry
      * @return the text, its parts separated by a space
      */
-    private static String searchText(ShowcaseItem item) {
-        StringBuilder text = new StringBuilder(item.displayName());
-        if (item.group() != null) {
-            text.append(' ').append(item.group());
+    public String searchText(NavigationEntry entry) {
+        if (!(entry instanceof ShowcaseItem page)) {
+            return entry.text();
         }
-        text.append(' ').append(item.section().displayName());
+        StringBuilder text = new StringBuilder(page.displayName());
+        if (page.group() != null) {
+            text.append(' ').append(page.group());
+        }
+        text.append(' ').append(page.section().displayName());
         return text.toString();
-    }
-
-    /**
-     * Whether the filtered pages hold at least one page, so that the tree shows a row: false while a search finds
-     * nothing.
-     *
-     * @return the property, true at start
-     */
-    public ReadOnlyBooleanProperty hasPagesProperty() {
-        return hasPages.getReadOnlyProperty();
-    }
-
-    /**
-     * True while the tree is being rebuilt, back to false when the new nodes are in place. A view reads a change of the
-     * tree's selection while it is true as no choice of the user's, and selects the open page's row again when it turns
-     * false.
-     *
-     * @return the property
-     */
-    public ReadOnlyBooleanProperty rebuildingProperty() {
-        return rebuilding.getReadOnlyProperty();
     }
 
     public ObjectProperty<ShowcaseItem> selectedItemProperty() {
@@ -226,13 +155,13 @@ public class StyleShowcaseViewModel {
         selectedItem.set(item);
     }
 
-    /** Builds the sections, groups and page leaves from the filtered pages and puts them under the root. */
-    private void rebuildNavigation() {
+    /** Builds the sections, groups and page leaves from the pages and puts them under the root. */
+    private void buildNavigation() {
         List<TreeItem<NavigationEntry>> sections = new ArrayList<>();
         for (ShowcaseSection section : ShowcaseSection.values()) {
             Map<String, TreeItem<NavigationEntry>> groups = new LinkedHashMap<>();
             List<TreeItem<NavigationEntry>> attached = new ArrayList<>();
-            for (ShowcaseItem item : filteredItems) {
+            for (ShowcaseItem item : showcaseItems) {
                 if (item.section() != section) {
                     continue;
                 }
@@ -256,38 +185,12 @@ public class StyleShowcaseViewModel {
             sectionNode.getChildren().addAll(attached);
             sections.add(sectionNode);
         }
-        rebuilding.set(true);
-        try {
-            navigationRoot.getChildren().setAll(sections);
-            hasPages.set(!filteredItems.isEmpty());
-        } finally {
-            rebuilding.set(false);
-        }
+        navigationRoot.getChildren().setAll(sections);
     }
 
     private static TreeItem<NavigationEntry> expanded(NavigationEntry heading) {
         TreeItem<NavigationEntry> node = new TreeItem<>(heading);
         node.setExpanded(true);
         return node;
-    }
-
-    /**
-     * Walks the tree depth first, top to bottom, for the node of a page.
-     *
-     * @param node the node to start at
-     * @param page the page, or {@code null} for the first page of all
-     * @return the node, or {@code null} when the tree below {@code node} shows no such page
-     */
-    private static TreeItem<NavigationEntry> findPage(TreeItem<NavigationEntry> node, ShowcaseItem page) {
-        if (node.getValue() instanceof ShowcaseItem found && (page == null || found == page)) {
-            return node;
-        }
-        for (TreeItem<NavigationEntry> child : node.getChildren()) {
-            TreeItem<NavigationEntry> result = findPage(child, page);
-            if (result != null) {
-                return result;
-            }
-        }
-        return null;
     }
 }

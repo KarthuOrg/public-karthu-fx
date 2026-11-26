@@ -264,6 +264,15 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   by karthu-fx's search rule, and shows *No matches* when none does. Ctrl+F puts the focus into
   the search, Esc clears it, Arrow down moves to the first hit and Enter opens it, also on a page
   row. Every page looks and works as before.
+- The showcase's navigation lies in a side bar at the window's left edge: its one tab,
+  *Components*, holds a `NavigationTree` of the sections, groups and pages, which opens a page as
+  soon as it is selected, while a section or group opens no page and folds with a click. The side
+  bar collapses to its stripe to give the page the room. The search keeps finding a page by its
+  own, its group's and its section's names, a section or group that matches keeps all its pages,
+  the counter counts the matching sections and groups too, and clearing the search gives the tree
+  back folded as it was. Ctrl+F anywhere in the window expands the side bar and puts the focus
+  into the search; the Shortcuts page keeps its own Ctrl+F. The column's *COMPONENTS* heading
+  and the showcase's own navigation stylesheet are gone.
 - The theme has a third stylesheet, `light.css`, beside `base.css` and `dark.css`. A native image
   that names the resources it includes one by one names `light.css` too, or the theme has no
   colours to load for Light.
@@ -277,6 +286,12 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 - A selected `ToggleButton` no longer shows a strip of its colour below its border after it lost
   the focus, and no longer bleeds slightly around it while focused: the theme's toggle buttons
   paint their background exactly inside the border, in both schemes. No colour changes.
+
+### Removed
+
+- The theme no longer styles the style classes of the showcase's former list sidebar
+  (`showcase-sidebar`, `showcase-sidebar-header`, `category-header`, `sidebar-item-icon`,
+  `sidebar-item-label`), which nothing uses any more.
 
 ## [1.1.0-RC1] - 2026-11-14
 

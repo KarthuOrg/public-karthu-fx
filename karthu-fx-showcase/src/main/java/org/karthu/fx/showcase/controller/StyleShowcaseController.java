@@ -3,41 +3,33 @@ package org.karthu.fx.showcase.controller;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.WeakChangeListener;
-import javafx.css.PseudoClass;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.geometry.Pos;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
-import javafx.scene.control.TextField;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
-import javafx.scene.control.TreeCell;
-import javafx.scene.control.TreeItem;
-import javafx.scene.control.TreeView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 
-import org.kordamp.ikonli.javafx.FontIcon;
+import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
 
 import org.karthu.fx.dialog.CustomDialog;
-import org.karthu.fx.form.SearchInput;
-import org.karthu.fx.showcase.viewmodel.GroupHeading;
 import org.karthu.fx.showcase.viewmodel.NavigationEntry;
-import org.karthu.fx.showcase.viewmodel.SectionHeading;
 import org.karthu.fx.showcase.viewmodel.ShowcaseItem;
 import org.karthu.fx.showcase.viewmodel.StyleShowcaseViewModel;
+import org.karthu.fx.sidebar.NavigationTree;
+import org.karthu.fx.sidebar.OpenMode;
+import org.karthu.fx.sidebar.SideBar;
+import org.karthu.fx.sidebar.SideBarTab;
 import org.karthu.fx.theme.Appearance;
 import org.karthu.fx.theme.ThemeManager;
 import org.slf4j.Logger;
@@ -59,13 +51,7 @@ public class StyleShowcaseController {
     private static final KeyCombination FIND = new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN);
 
     @FXML
-    private SearchInput navigationSearch;
-
-    @FXML
-    private TreeView<NavigationEntry> navigationTree;
-
-    @FXML
-    private Label noMatches;
+    private SideBar sideBar;
 
     @FXML
     private StackPane contentArea;
@@ -93,21 +79,37 @@ public class StyleShowcaseController {
     /** Shows a choice of the theme's scheme made elsewhere on the switch. Held here: the theme holds it weakly. */
     private final ChangeListener<Appearance> showChoice = (observable, oldChoice, newChoice) -> showScheme(newChoice);
 
+    /** The navigation: the sections, groups and pages, the content of the side bar's one tab. */
+    private final NavigationTree<NavigationEntry> navigation = new NavigationTree<>();
+
+    /** The side bar's one tab, which holds the navigation. */
+    private SideBarTab componentsTab;
+
     private StyleShowcaseViewModel viewModel;
     private final Map<String, Parent> pageCache = new HashMap<>();
 
-    /** Ctrl+F on the window's scene: the focus into the search, unless a handler before it took the key. */
+    /** Ctrl+F on the window's scene: the focus into the navigation's search, unless a handler before it took the key. */
     private final EventHandler<KeyEvent> findHandler = this::find;
 
     /** The scene {@link #findHandler} is added to, null while the window has none. */
     private Scene findScene;
 
     /**
-     * Binds the scheme switch of the toolbar to the theme's choice, in both directions: a choice on the switch is the
-     * choice of every window, and a choice made elsewhere shows on the switch. Called by the FXML loader.
+     * Gives the side bar its one tab, the navigation, and binds the scheme switch of the toolbar to the theme's
+     * choice, in both directions: a choice on the switch is the choice of every window, and a choice made elsewhere
+     * shows on the switch. Called by the FXML loader.
      */
     @FXML
     private void initialize() {
+        componentsTab = new SideBarTab("components", "Components", BootstrapIcons.GRID, navigation);
+        sideBar.getTabs().add(componentsTab);
+        sideBar.setSelectedTab(componentsTab);
+        navigation.getSearchInput().setPromptText("Search pages");
+
+        // Ctrl+F anywhere in the window. Inside the navigation the tree takes it itself, to the same end.
+        sideBar.sceneProperty().addListener((obs, oldScene, newScene) -> addFindHandler(newScene));
+        addFindHandler(sideBar.getScene());
+
         lightScheme.setUserData(Appearance.LIGHT);
         darkScheme.setUserData(Appearance.DARK);
         systemScheme.setUserData(Appearance.SYSTEM);
@@ -144,37 +146,27 @@ public class StyleShowcaseController {
     public void initViewModel(StyleShowcaseViewModel viewModel) {
         this.viewModel = viewModel;
 
-        // The tree of sections, groups and pages; its root is the view model's and stays hidden.
-        navigationTree.setShowRoot(false);
-        navigationTree.setRoot(viewModel.getNavigationRoot());
-        navigationTree.setCellFactory(tree -> new NavigationCell());
+        // A page row shows its icon and name, a section or group row its name. Selecting a page row opens the page; a
+        // heading is handed over too and opens nothing, the open page stays.
+        navigation.setTextFunction(entry -> entry.text());
+        navigation.setIconFunction(entry -> entry instanceof ShowcaseItem page ? page.icon() : null);
+        navigation.setOpenMode(OpenMode.SELECTION);
+        navigation.setOnOpen(entry -> {
+            if (entry instanceof ShowcaseItem page) {
+                viewModel.selectItem(page);
+            }
+        });
+        navigation.setRoot(viewModel.getNavigationRoot());
 
-        // The search narrows the tree; "No matches" shows while it leaves no page.
-        viewModel.connectSearch(navigationSearch);
-        noMatches.visibleProperty().bind(viewModel.hasPagesProperty().not());
-
-        // A page row opens its page; a section or group row opens nothing and leaves the open page as it is. While the
-        // tree is rebuilt its selection moves on its own: that is no choice of the user's and opens nothing.
-        navigationTree.getSelectionModel().selectedItemProperty().addListener(
-                (obs, oldNode, newNode) -> {
-                    if (viewModel.rebuildingProperty().get()) {
-                        return;
-                    }
-                    if (newNode != null && newNode.getValue() instanceof ShowcaseItem page) {
-                        viewModel.selectItem(page);
-                    }
-                }
-        );
-
-        // After a rebuild the open page's row is selected again when the tree shows it; otherwise no row is selected
-        // and the page stays open.
-        viewModel.rebuildingProperty().addListener(
-                (obs, wasRebuilding, isRebuilding) -> {
-                    if (!isRebuilding && viewModel.getSelectedItem() != null) {
-                        selectPageRow(viewModel.getSelectedItem());
-                    }
-                }
-        );
+        // The search finds a page by its own, its group's and its section's names, a heading by its own. When the
+        // search leaves the tree without a selection, the open page's row is selected again as soon as the tree shows
+        // it, during the search and after it; that opens nothing.
+        navigation.setSearchTextFunction(entry -> viewModel.searchText(entry));
+        navigation.getSearchInput().textProperty().addListener((obs, oldText, newText) -> {
+            if (navigation.getSelectedValue() == null && viewModel.getSelectedItem() != null) {
+                navigation.select(viewModel.getSelectedItem());
+            }
+        });
 
         // ViewModel selection listener: load page when ViewModel selection changes
         viewModel.selectedItemProperty().addListener(
@@ -185,31 +177,11 @@ public class StyleShowcaseController {
                 }
         );
 
-        // The keyboard: Ctrl+F anywhere in the window, Arrow down and Enter in the search, Enter on a page row. Esc in
-        // the search is the field's own: it empties a field with text and consumes the key.
-        navigationTree.sceneProperty().addListener((obs, oldScene, newScene) -> addFindHandler(newScene));
-        addFindHandler(navigationTree.getScene());
-        navigationSearch.addEventFilter(KeyEvent.KEY_PRESSED, this::searchKeyPressed);
-        navigationTree.addEventFilter(KeyEvent.KEY_PRESSED, this::treeKeyPressed);
-
-        // Select the first page's row, which opens the page
+        // The first page, Buttons, opens at start, its row selected.
         if (!viewModel.getShowcaseItems().isEmpty()) {
-            selectPageRow(viewModel.getShowcaseItems().get(0));
-        }
-    }
-
-    /**
-     * Selects the tree row of a page, which opens the page; clears the tree's selection when the tree does not show the
-     * page, which leaves the open page as it is.
-     *
-     * @param page the page
-     */
-    private void selectPageRow(ShowcaseItem page) {
-        TreeItem<NavigationEntry> node = viewModel.navigationNodeOf(page);
-        if (node == null) {
-            navigationTree.getSelectionModel().clearSelection();
-        } else {
-            navigationTree.getSelectionModel().select(node);
+            ShowcaseItem first = viewModel.getShowcaseItems().get(0);
+            navigation.select(first);
+            viewModel.selectItem(first);
         }
     }
 
@@ -233,57 +205,18 @@ public class StyleShowcaseController {
         }
     }
 
-    /** Ctrl+F that nothing took before: the focus into the search field, its text selected. */
+    /**
+     * Ctrl+F that nothing took before: the side bar shows the navigation, expanded if it was collapsed, and the focus
+     * goes into the navigation's search, its text selected.
+     */
     private void find(KeyEvent event) {
         if (event.isConsumed() || !FIND.match(event)) {
             return;
         }
-        TextField text = navigationSearch.getTextField();
-        text.requestFocus();
-        text.selectAll();
+        sideBar.setSelectedTab(componentsTab);
+        sideBar.setCollapsed(false);
+        navigation.focusSearch();
         event.consume();
-    }
-
-    /**
-     * Arrow down and Enter in the search field, without a modifier: Arrow down moves the focus to the tree and selects
-     * the first hit's row, Enter selects that row and keeps the focus in the field; selecting the row opens the page.
-     * Without a hit both pass on. A filter, ahead of the text field's own keys; the field's own Enter acts only while it
-     * searches a Markdown view, which this one never does.
-     */
-    private void searchKeyPressed(KeyEvent event) {
-        if (hasModifier(event) || (event.getCode() != KeyCode.DOWN && event.getCode() != KeyCode.ENTER)) {
-            return;
-        }
-        ShowcaseItem firstHit = viewModel.firstHit();
-        if (firstHit == null) {
-            return;
-        }
-        if (event.getCode() == KeyCode.DOWN) {
-            navigationTree.requestFocus();
-        }
-        selectPageRow(firstHit);
-        navigationTree.scrollTo(navigationTree.getSelectionModel().getSelectedIndex());
-        event.consume();
-    }
-
-    /**
-     * Enter on a page row, without a modifier: the row the tree's focus is on is selected, which opens its page. On a
-     * section or group row Enter passes on and opens nothing. The tree's arrow keys stay its own.
-     */
-    private void treeKeyPressed(KeyEvent event) {
-        if (event.getCode() != KeyCode.ENTER || hasModifier(event)) {
-            return;
-        }
-        TreeItem<NavigationEntry> focused = navigationTree.getFocusModel().getFocusedItem();
-        if (focused != null && focused.getValue() instanceof ShowcaseItem) {
-            navigationTree.getSelectionModel().select(focused);
-            event.consume();
-        }
-    }
-
-    /** Whether a key came with Alt, Ctrl, Meta or Shift held. */
-    private static boolean hasModifier(KeyEvent event) {
-        return event.isAltDown() || event.isControlDown() || event.isMetaDown() || event.isShiftDown();
     }
 
     @FXML
@@ -293,7 +226,7 @@ public class StyleShowcaseController {
 
     @FXML
     private void onAbout() {
-        CustomDialog.info(navigationTree.getScene().getWindow(),
+        CustomDialog.info(sideBar.getScene().getWindow(),
                 "About Karthu FX", "Karthu FX Showcase",
                 "Version 1.0.0\n\nA showcase for previewing and testing the Karthu FX component library.");
     }
@@ -323,90 +256,9 @@ public class StyleShowcaseController {
 
         contentArea.getChildren().setAll(page);
         // A page entering the scene may have added a handler of its own to it: Ctrl+F's comes after it.
-        addFindHandler(navigationTree.getScene());
+        addFindHandler(sideBar.getScene());
 
         // Reset scroll to top
         contentScrollPane.setVvalue(0.0);
-    }
-
-    /**
-     * A row of the navigation tree: a page with its icon and name, or a section or group heading. A heading row carries
-     * the pseudo-class {@code :section-heading} or {@code :group-heading}, its label the style class
-     * {@code navigation-section-header} or {@code navigation-group-header}. A click on a heading row selects it and
-     * expands or collapses it, on its disclosure arrow as anywhere else on the row.
-     */
-    private static final class NavigationCell extends TreeCell<NavigationEntry> {
-
-        private static final PseudoClass SECTION_HEADING = PseudoClass.getPseudoClass("section-heading");
-        private static final PseudoClass GROUP_HEADING = PseudoClass.getPseudoClass("group-heading");
-
-        NavigationCell() {
-            addEventFilter(MouseEvent.MOUSE_PRESSED, this::headingPressed);
-            addEventFilter(MouseEvent.MOUSE_RELEASED, this::headingReleased);
-        }
-
-        /**
-         * A primary press on a heading row: the row selected, the tree focused, the heading expanded or collapsed. The
-         * press is consumed, so the cell's own behaviour, which toggles a heading on its arrow, on the second click of a
-         * double click, and acts on the release when the row is already selected, does nothing more: every click
-         * toggles exactly once.
-         */
-        private void headingPressed(MouseEvent event) {
-            if (!isPrimaryOnHeading(event)) {
-                return;
-            }
-            TreeItem<NavigationEntry> heading = getTreeItem();
-            TreeView<NavigationEntry> tree = getTreeView();
-            tree.requestFocus();
-            tree.getSelectionModel().select(heading);
-            tree.getFocusModel().focus(tree.getRow(heading));
-            heading.setExpanded(!heading.isExpanded());
-            event.consume();
-        }
-
-        /** A primary release on a heading row: consumed, its press did all there is to do. */
-        private void headingReleased(MouseEvent event) {
-            if (isPrimaryOnHeading(event)) {
-                event.consume();
-            }
-        }
-
-        private boolean isPrimaryOnHeading(MouseEvent event) {
-            return event.getButton() == MouseButton.PRIMARY && !isEmpty() && getTreeItem() != null
-                    && !(getItem() instanceof ShowcaseItem);
-        }
-
-        @Override
-        protected void updateItem(NavigationEntry entry, boolean empty) {
-            super.updateItem(entry, empty);
-            setText(null);
-            pseudoClassStateChanged(SECTION_HEADING, !empty && entry instanceof SectionHeading);
-            pseudoClassStateChanged(GROUP_HEADING, !empty && entry instanceof GroupHeading);
-            if (empty || entry == null) {
-                setGraphic(null);
-                return;
-            }
-            switch (entry) {
-                case ShowcaseItem page -> setGraphic(pageRow(page));
-                case SectionHeading section -> setGraphic(heading(section.text(), "navigation-section-header"));
-                case GroupHeading group -> setGraphic(heading(group.text(), "navigation-group-header"));
-            }
-        }
-
-        private static HBox pageRow(ShowcaseItem page) {
-            FontIcon icon = FontIcon.of(page.icon(), 14);
-            icon.getStyleClass().add("sidebar-item-icon");
-            Label name = new Label(page.displayName());
-            name.getStyleClass().add("sidebar-item-label");
-            HBox row = new HBox(8, icon, name);
-            row.setAlignment(Pos.CENTER_LEFT);
-            return row;
-        }
-
-        private static Label heading(String text, String styleClass) {
-            Label heading = new Label(text);
-            heading.getStyleClass().add(styleClass);
-            return heading;
-        }
     }
 }

@@ -5,6 +5,7 @@ import javafx.event.Event;
 import javafx.event.EventType;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Bounds;
+import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -18,8 +19,10 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,6 +30,10 @@ import org.karthu.fx.form.SearchInput;
 import org.karthu.fx.showcase.viewmodel.NavigationEntry;
 import org.karthu.fx.showcase.viewmodel.ShowcaseItem;
 import org.karthu.fx.showcase.viewmodel.StyleShowcaseViewModel;
+import org.karthu.fx.sidebar.NavigationTree;
+import org.karthu.fx.sidebar.OpenMode;
+import org.karthu.fx.sidebar.SideBar;
+import org.karthu.fx.sidebar.SideBarTab;
 import org.karthu.fx.theme.ThemeManager;
 
 import java.io.IOException;
@@ -38,15 +45,17 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * The showcase window's navigation, loaded from the window's FXML in a scene that is never shown: the tree of sections,
- * groups and pages in the sidebar, the page it opens at start, heading rows that open nothing, and the search above
- * the tree that narrows it.
+ * The showcase window's navigation, loaded from the window's FXML in a scene that is never shown: a side bar at the
+ * window's left edge with one tab, a navigation tree of sections, groups and pages that opens a page when the user
+ * selects it, the page it opens at start, headings that open nothing and fold with a click, the search above the tree
+ * and the window's Ctrl+F.
  */
 class StyleShowcaseNavigationTest {
 
@@ -64,87 +73,181 @@ class StyleShowcaseNavigationTest {
     }
 
     @Test
-    @DisplayName("the sidebar is a tree with a hidden root under the COMPONENTS heading")
-    void sidebarIsATree() throws IOException {
+    @DisplayName("the window's left column is a side bar with one open tab, Components, holding a navigation tree of "
+            + "the view model's tree that opens a page on selection")
+    void leftColumnIsASideBar() throws IOException {
         Window window = load();
 
-        assertFalse(window.tree.isShowRoot());
-        assertSame(window.viewModel.getNavigationRoot(), window.tree.getRoot());
-        VBox sidebar = (VBox) window.root.lookup(".showcase-sidebar");
-        Label header = (Label) sidebar.getChildren().get(0);
-        assertEquals("COMPONENTS", header.getText());
-        assertTrue(sidebar.getChildren().contains(window.tree.getParent()), "the tree sits in the sidebar");
+        assertSame(window.sideBar, ((BorderPane) window.root).getLeft());
+        assertEquals(Side.LEFT, window.sideBar.getSide());
+        assertEquals(1, window.sideBar.getTabs().size());
+        SideBarTab tab = window.sideBar.getTabs().get(0);
+        assertEquals("Components", tab.getTitle());
+        assertNotNull(tab.getIcon(), "the tab's icon on the stripe");
+        assertSame(tab, window.sideBar.getSelectedTab());
+        assertFalse(window.sideBar.isCollapsed());
+        assertSame(window.navigation, tab.getContent());
+        assertEquals(OpenMode.SELECTION, window.navigation.getOpenMode());
+        assertSame(window.viewModel.getNavigationRoot(), window.navigation.getRoot());
+        assertEquals("Search pages", window.search.getPromptText());
     }
 
     @Test
-    @DisplayName("at start the first page, Buttons, is selected in the tree and open")
+    @DisplayName("the column has no heading of its own: the side bar's header names the tab, Components")
+    void noHeadingOfItsOwn() throws IOException {
+        Window window = load();
+        laidOut(window);
+
+        Label title = (Label) window.sideBar.lookup(".side-bar-title");
+        assertNotNull(title, "the side bar's header title");
+        assertEquals("Components", title.getText());
+        for (Node node : window.root.lookupAll(".label")) {
+            if (node instanceof Label label) {
+                assertFalse("COMPONENTS".equals(label.getText()), "the column's old heading");
+            }
+        }
+        assertNull(window.root.lookup(".showcase-sidebar"), "the old column");
+    }
+
+    @Test
+    @DisplayName("at start the first page, Buttons, is open and selected in the tree, the tree's focus on it")
     void firstPageOpenAtStart() throws IOException {
         Window window = load();
 
         ShowcaseItem buttons = window.viewModel.getShowcaseItems().get(0);
         assertEquals("Buttons", buttons.displayName());
-        assertSame(buttons, window.tree.getSelectionModel().getSelectedItem().getValue());
+        assertSame(buttons, window.navigation.getSelectedValue());
+        assertSame(buttons, window.tree.getFocusModel().getFocusedItem().getValue());
         assertSame(buttons, window.viewModel.getSelectedItem());
         assertEquals("Buttons", openPageTitle(window));
     }
 
     @Test
-    @DisplayName("selecting a section or group row opens nothing and keeps the open page; a page row opens its page")
-    void headingRowsOpenNothing() throws IOException {
-        Window window = load();
-        Node openPage = window.contentArea.getChildren().get(0);
-
-        TreeItem<NavigationEntry> javaFx = window.tree.getRoot().getChildren().get(0);
-        window.tree.getSelectionModel().select(javaFx);
-        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
-        assertSame(openPage, window.contentArea.getChildren().get(0));
-
-        TreeItem<NavigationEntry> selection = javaFx.getChildren().get(1);
-        window.tree.getSelectionModel().select(selection);
-        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
-        assertSame(openPage, window.contentArea.getChildren().get(0));
-
-        window.tree.getSelectionModel().select(javaFx.getChildren().get(0).getChildren().get(1));
-        assertEquals("Text Field", window.viewModel.getSelectedItem().displayName());
-        assertEquals("Text Field", openPageTitle(window));
-    }
-
-    @Test
-    @DisplayName("heading rows carry their own style classes; page rows keep their icon and name")
-    void rowsLaidOut() throws IOException {
+    @DisplayName("the tree shows the sections, their groups and pages in the showcase's order, each page with its "
+            + "icon and name, a heading with its name alone")
+    void rowsInOrder() throws IOException {
         Window window = load();
         laidOut(window);
 
-        assertEquals(List.of("JavaFX", "karthu-fx", "Examples"), texts(window.tree, ".navigation-section-header"));
-        assertEquals(List.of("Inputs", "Selection", "Data Display", "Layout", "Navigation", "Form Inputs", "Components",
-                "Dialogs"), texts(window.tree, ".navigation-group-header"));
-        List<String> pages = texts(window.tree, ".sidebar-item-label");
-        assertEquals(44, pages.size());
-        assertEquals("Buttons", pages.get(0));
-        assertEquals(44, window.tree.lookupAll(".sidebar-item-icon").size());
-
-        // The showcase's navigation sheet is applied: a section heading larger than a page name, a group heading smaller.
-        Label section = (Label) window.tree.lookup(".navigation-section-header");
-        Label group = (Label) window.tree.lookup(".navigation-group-header");
-        assertEquals(13, section.getFont().getSize(), 0.01);
-        assertEquals(11, group.getFont().getSize(), 0.01);
+        List<String> rows = rows(window);
+        assertEquals(List.of("JavaFX", "  Inputs", "    Buttons", "    Text Field"), rows.subList(0, 4));
+        assertEquals(55, rows.size(), "3 sections, 8 groups and 44 pages");
+        assertEquals("Job Scheduler", window.tree.getTreeItem(54).getValue().text());
+        assertEquals(List.of("Buttons", "Text Field", "Text Area"), texts(window, 2, 5));
+        assertEquals(List.of("JavaFX", "Inputs"), texts(window, 0, 2));
+        assertNotNull(cellOf(window.tree, row(window, "Buttons")).lookup(".navigation-tree-icon"),
+                "a page row shows its icon");
+        assertNull(cellOf(window.tree, row(window, "Inputs")).lookup(".navigation-tree-icon"),
+                "a heading row shows no icon");
     }
 
     @Test
-    @DisplayName("a search field with an English prompt sits above the tree in the sidebar")
-    void searchAboveTheTree() throws IOException {
+    @DisplayName("a click on a page row opens its page and folds nothing")
+    void clickOnAPageRowOpensIt() throws IOException {
         Window window = load();
+        laidOut(window);
+        TreeItem<NavigationEntry> textField = row(window, "Text Field");
 
-        VBox sidebar = (VBox) window.root.lookup(".showcase-sidebar");
-        int search = sidebar.getChildren().indexOf(window.search);
-        assertTrue(search >= 0, "the search sits in the sidebar");
-        int tree = sidebar.getChildren().indexOf(window.tree.getParent());
-        assertTrue(search < tree, "the search sits above the tree");
-        assertEquals("Search pages", window.search.getPromptText());
+        click(window, textField, false, 1);
+
+        assertEquals("Text Field", window.viewModel.getSelectedItem().displayName());
+        assertEquals("Text Field", openPageTitle(window));
+        assertSame(textField.getValue(), window.navigation.getSelectedValue());
+        assertTrue(textField.getParent().isExpanded());
     }
 
     @Test
-    @DisplayName("typing narrows the tree to the hits, under their sections and groups, all expanded")
+    @DisplayName("a click on a section or group row selects and folds it, a second click unfolds it; the open page "
+            + "stays")
+    void clickOnAHeadingRowFoldsIt() throws IOException {
+        Window window = load();
+        laidOut(window);
+        Node openPage = window.contentArea.getChildren().get(0);
+        TreeItem<NavigationEntry> selection = row(window, "Selection");
+
+        click(window, selection, false, 1);
+        assertFalse(selection.isExpanded(), "the group folded");
+        assertSame(selection.getValue(), window.navigation.getSelectedValue());
+        assertFalse(rows(window).contains("    ComboBox"));
+        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
+        assertSame(openPage, window.contentArea.getChildren().get(0));
+
+        click(window, selection, false, 1);
+        assertTrue(selection.isExpanded(), "the group unfolded again");
+        assertTrue(rows(window).contains("    ComboBox"));
+
+        TreeItem<NavigationEntry> javaFx = row(window, "JavaFX");
+        click(window, javaFx, false, 1);
+        assertFalse(javaFx.isExpanded(), "the section folded");
+        assertFalse(rows(window).contains("    Buttons"));
+        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
+        assertSame(openPage, window.contentArea.getChildren().get(0));
+    }
+
+    @Test
+    @DisplayName("a click on a heading row's disclosure arrow folds and unfolds it once, and each click of a double "
+            + "click on the row folds or unfolds it once")
+    void arrowAndDoubleClickOnAHeadingRow() throws IOException {
+        Window window = load();
+        laidOut(window);
+        TreeItem<NavigationEntry> selection = row(window, "Selection");
+
+        click(window, selection, true, 1);
+        assertFalse(selection.isExpanded(), "the arrow folded the group");
+        click(window, selection, true, 1);
+        assertTrue(selection.isExpanded(), "the arrow unfolded the group");
+
+        click(window, selection, false, 1);
+        assertFalse(selection.isExpanded());
+        click(window, selection, false, 2);
+        assertTrue(selection.isExpanded(), "the second click unfolded the group again");
+        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
+    }
+
+    @Test
+    @DisplayName("the arrow keys: down onto the next page opens it, left and right on a heading fold and unfold it "
+            + "and open nothing")
+    void arrowKeys() throws IOException {
+        Window window = load();
+        laidOut(window);
+
+        press(window.tree, KeyCode.DOWN, false);
+        assertEquals("Text Field", window.viewModel.getSelectedItem().displayName());
+        assertEquals("Text Field", openPageTitle(window));
+
+        TreeItem<NavigationEntry> selection = row(window, "Selection");
+        window.navigation.select(selection.getValue());
+        press(window.tree, KeyCode.LEFT, false);
+        assertFalse(selection.isExpanded(), "Arrow left folded the group");
+        press(window.tree, KeyCode.RIGHT, false);
+        assertTrue(selection.isExpanded(), "Arrow right unfolded the group");
+        assertEquals("Text Field", window.viewModel.getSelectedItem().displayName());
+    }
+
+    @Test
+    @DisplayName("Enter on a page row opens that page; on a heading row it folds the heading and opens nothing")
+    void enterOnARow() throws IOException {
+        Window window = load();
+        laidOut(window);
+        TreeItem<NavigationEntry> inputs = row(window, "Inputs");
+
+        window.tree.getFocusModel().focus(window.tree.getRow(inputs));
+        press(window.tree, KeyCode.ENTER, false);
+        assertFalse(inputs.isExpanded(), "Enter folded the group");
+        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
+
+        press(window.tree, KeyCode.ENTER, false);
+        assertTrue(inputs.isExpanded(), "Enter unfolded the group");
+        window.tree.getFocusModel().focus(window.tree.getRow(row(window, "Text Area")));
+        press(window.tree, KeyCode.ENTER, false);
+        assertEquals("Text Area", window.viewModel.getSelectedItem().displayName());
+        assertEquals("Text Area", window.navigation.getSelectedValue().text());
+        assertEquals("Text Area", openPageTitle(window));
+    }
+
+    @Test
+    @DisplayName("typing narrows the tree to the hits under their sections and groups, all unfolded; several words "
+            + "narrow further, across a page's name and its group's: \"form path\" leaves the Path Input")
     void typingNarrowsTheTree() throws IOException {
         Window window = load();
         laidOut(window);
@@ -152,81 +255,202 @@ class StyleShowcaseNavigationTest {
         window.search.setText("form path");
         window.root.layout();
 
-        assertEquals(List.of("karthu-fx"), texts(window.tree, ".navigation-section-header"));
-        assertEquals(List.of("Form Inputs"), texts(window.tree, ".navigation-group-header"));
-        assertEquals(List.of("Path Input"), texts(window.tree, ".sidebar-item-label"));
+        assertEquals(List.of("karthu-fx", "  Form Inputs", "    Path Input"), rows(window));
     }
 
     @Test
-    @DisplayName("\"No matches\" shows while no page is left and goes when one is")
+    @DisplayName("a group's name finds all its pages and a section's name all of its own: \"form\" leaves every Form "
+            + "Input page, \"karthu\" every karthu-fx page")
+    void headingNamesFindTheirPages() throws IOException {
+        Window window = load();
+        laidOut(window);
+
+        window.search.setText("form");
+        assertEquals(List.of("karthu-fx", "  Form Inputs",
+                "    Overview", "    Text Input", "    Password Input", "    Number Input", "    Combo Input",
+                "    Editable Combo Input", "    Text Area Input", "    Path Input", "    Cron Input", "    Search Input"),
+                rows(window));
+
+        window.search.setText("karthu");
+        List<String> rows = rows(window);
+        assertEquals("karthu-fx", rows.get(0));
+        assertEquals(23, rows.size(), "the section, its 3 groups and its 19 pages");
+        assertEquals("  Icons", rows.get(rows.size() - 1));
+    }
+
+    @Test
+    @DisplayName("the counter counts every matching entry, headings included, out of all entries")
+    void counterCountsEveryMatchingEntry() throws IOException {
+        Window window = load();
+        laidOut(window);
+
+        window.search.setText("dialog");
+        window.root.applyCss();
+        window.root.layout();
+
+        Label counter = (Label) window.search.lookup(".form-search-count");
+        assertNotNull(counter, "the search's counter");
+        assertEquals("3 of 55", counter.getText(), "the group Dialogs, Dialog / Alert and Settings Dialog");
+    }
+
+    @Test
+    @DisplayName("\"No matches\" shows while nothing matches and goes when something does")
     void noMatches() throws IOException {
         Window window = load();
         laidOut(window);
-        Label noMatches = (Label) window.root.lookup(".navigation-no-matches");
+        Label noMatches = (Label) window.navigation.lookup(".navigation-tree-no-matches");
         assertNotNull(noMatches, "the no-matches label");
-        assertEquals("No matches", noMatches.getText());
         assertFalse(noMatches.isVisible());
 
         window.search.setText("tabpanes");
-        window.root.layout();
         assertTrue(noMatches.isVisible());
-        assertEquals(List.of(), texts(window.tree, ".sidebar-item-label"));
+        assertEquals("No matches", noMatches.getText());
+        assertEquals(List.of(), rows(window));
 
         window.search.setText("tabpane");
-        window.root.layout();
         assertFalse(noMatches.isVisible());
-        assertEquals(List.of("TabPane"), texts(window.tree, ".sidebar-item-label"));
+        assertEquals(List.of("JavaFX", "  Layout", "    TabPane"), rows(window));
     }
 
     @Test
-    @DisplayName("the open page stays open while its row is hidden; its row is selected again when it is among the hits")
-    void openPageSurvivesTheSearch() throws IOException {
-        Window window = load();
-        selectPage(window, "TabPane");
-        Node openPage = window.contentArea.getChildren().get(0);
-
-        window.search.setText("form");
-        assertNull(window.tree.getSelectionModel().getSelectedItem(), "no row selected while the page is hidden");
-        assertEquals("TabPane", window.viewModel.getSelectedItem().displayName());
-        assertSame(openPage, window.contentArea.getChildren().get(0));
-
-        window.search.setText("tab");
-        assertSame(window.viewModel.getSelectedItem(), window.tree.getSelectionModel().getSelectedItem().getValue());
-        assertSame(openPage, window.contentArea.getChildren().get(0));
-    }
-
-    @Test
-    @DisplayName("clearing the search restores the full, expanded tree with the open page's row selected")
-    void clearingRestoresTheTree() throws IOException {
+    @DisplayName("clearing the search gives the tree back folded as the user left it, the open page's row selected")
+    void clearingKeepsTheUsersFolding() throws IOException {
         Window window = load();
         laidOut(window);
+        TreeItem<NavigationEntry> selection = row(window, "Selection");
+        TreeItem<NavigationEntry> karthuFx = row(window, "karthu-fx");
+        click(window, selection, false, 1);
+        click(window, karthuFx, false, 1);
         selectPage(window, "Text Field");
 
-        window.search.setText("dialog");
-        window.root.layout();
-        assertEquals(2, texts(window.tree, ".sidebar-item-label").size());
+        window.search.setText("combo");
+        assertEquals(List.of("JavaFX", "  Selection", "    ComboBox", "karthu-fx", "  Form Inputs", "    Combo Input",
+                "    Editable Combo Input"), rows(window), "the search finds pages in folded headings");
 
         window.search.setText("");
-        window.root.layout();
-        assertEquals(44, texts(window.tree, ".sidebar-item-label").size());
-        assertEquals(List.of("JavaFX", "karthu-fx", "Examples"), texts(window.tree, ".navigation-section-header"));
-        assertEquals("Text Field", window.tree.getSelectionModel().getSelectedItem().getValue().text());
+        assertFalse(selection.isExpanded(), "Selection is folded again");
+        assertFalse(karthuFx.isExpanded(), "karthu-fx is folded again");
+        assertTrue(rows(window).contains("  Selection"));
+        assertFalse(rows(window).contains("    ComboBox"));
+        assertSame(page(window, "Text Field"), window.navigation.getSelectedValue());
         assertEquals("Text Field", openPageTitle(window));
     }
 
     @Test
-    @DisplayName("Ctrl+F puts the focus into the search field and selects its text")
+    @DisplayName("the open page stays open while the search hides its row, and its row is selected again once the "
+            + "tree shows it, during the search and after it")
+    void openPageSurvivesTheSearch() throws IOException {
+        Window window = load();
+        laidOut(window);
+        selectPage(window, "TabPane");
+        Node openPage = window.contentArea.getChildren().get(0);
+
+        window.search.setText("form");
+        assertNull(window.navigation.getSelectedValue(), "no row selected while the page is hidden");
+        assertEquals("TabPane", window.viewModel.getSelectedItem().displayName());
+        assertSame(openPage, window.contentArea.getChildren().get(0));
+
+        window.search.setText("tab");
+        assertSame(window.viewModel.getSelectedItem(), window.navigation.getSelectedValue());
+        assertSame(openPage, window.contentArea.getChildren().get(0));
+
+        window.search.setText("form");
+        window.search.setText("");
+        assertSame(window.viewModel.getSelectedItem(), window.navigation.getSelectedValue());
+        assertSame(openPage, window.contentArea.getChildren().get(0));
+    }
+
+    @Test
+    @DisplayName("Esc in the search field clears it and brings the whole tree back")
+    void escClearsTheSearch() throws IOException {
+        Window window = load();
+        laidOut(window);
+        window.search.setText("dialog");
+
+        press(window.search.getTextField(), KeyCode.ESCAPE, false);
+
+        assertEquals("", window.search.getText());
+        assertEquals(55, rows(window).size());
+    }
+
+    @Test
+    @DisplayName("Arrow down in the search field moves the focus to the tree and selects the first hit, which opens")
+    void arrowDownSelectsTheFirstHit() throws IOException {
+        Window window = load();
+        laidOut(window);
+        window.search.setText("tab");
+
+        press(window.search.getTextField(), KeyCode.DOWN, false);
+
+        assertSame(window.tree, window.root.getScene().getFocusOwner());
+        assertEquals("TableView", window.navigation.getSelectedValue().text());
+        assertEquals("TableView", window.viewModel.getSelectedItem().displayName());
+        assertEquals("TableView", openPageTitle(window));
+        assertEquals("tab", window.search.getText(), "the search stays");
+    }
+
+    @Test
+    @DisplayName("Enter in the search field opens the first hit; without hits it opens nothing")
+    void enterInTheSearchOpensTheFirstHit() throws IOException {
+        Window window = load();
+        laidOut(window);
+
+        window.search.setText("zebra");
+        press(window.search.getTextField(), KeyCode.ENTER, false);
+        assertEquals("Buttons", openPageTitle(window));
+
+        window.search.setText("layout split");
+        press(window.search.getTextField(), KeyCode.ENTER, false);
+        assertEquals("SplitPane", window.viewModel.getSelectedItem().displayName());
+        assertEquals("SplitPane", window.navigation.getSelectedValue().text());
+        assertEquals("SplitPane", openPageTitle(window));
+        assertSame(window.search.getTextField(), window.root.getScene().getFocusOwner(), "the focus stays");
+    }
+
+    @Test
+    @DisplayName("Enter in the search field on a first hit that is a heading selects the heading and opens nothing")
+    void enterOnAHeadingHitOpensNothing() throws IOException {
+        Window window = load();
+        laidOut(window);
+
+        window.search.setText("dialog");
+        press(window.search.getTextField(), KeyCode.ENTER, false);
+
+        assertEquals("Dialogs", window.navigation.getSelectedValue().text());
+        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
+        assertEquals("Buttons", openPageTitle(window));
+    }
+
+    @Test
+    @DisplayName("Ctrl+F anywhere in the window puts the focus into the navigation's search and selects its text")
     void ctrlFFocusesTheSearch() throws IOException {
         Window window = load();
         laidOut(window);
         window.search.setText("tab");
-        window.tree.requestFocus();
+        Node pageButton = window.contentArea.lookup(".button");
+        assertNotNull(pageButton, "a button of the open page");
 
-        press(window.tree, KeyCode.F, true);
+        press(pageButton, KeyCode.F, true);
 
         TextField text = window.search.getTextField();
         assertSame(text, window.root.getScene().getFocusOwner());
         assertEquals("tab", text.getSelectedText());
+    }
+
+    @Test
+    @DisplayName("Ctrl+F while the side bar is collapsed expands it and puts the focus into the navigation's search")
+    void ctrlFExpandsTheSideBar() throws IOException {
+        Window window = load();
+        laidOut(window);
+        Node pageButton = window.contentArea.lookup(".button");
+        window.sideBar.setCollapsed(true);
+        window.root.layout();
+
+        press(pageButton, KeyCode.F, true);
+
+        assertFalse(window.sideBar.isCollapsed());
+        assertSame(window.sideBar.getTabs().get(0), window.sideBar.getSelectedTab());
+        assertSame(window.search.getTextField(), window.root.getScene().getFocusOwner());
     }
 
     @Test
@@ -260,8 +484,8 @@ class StyleShowcaseNavigationTest {
 
         press(toolbar, KeyCode.F, true);
 
-        assertTrue(((Label) window.root.lookup("#lastCommandLabel")).getText().contains("(search.find)"),
-                ((Label) window.root.lookup("#lastCommandLabel")).getText());
+        Label lastCommand = (Label) window.root.lookup("#lastCommandLabel");
+        assertTrue(lastCommand.getText().contains("(search.find)"), lastCommand.getText());
         assertSame(toolbar, window.root.getScene().getFocusOwner());
     }
 
@@ -272,182 +496,23 @@ class StyleShowcaseNavigationTest {
         laidOut(window);
         selectPage(window, "Shortcuts");
         selectPage(window, "Buttons");
+        Node pageButton = window.contentArea.lookup(".button");
 
-        press(window.tree, KeyCode.F, true);
+        press(pageButton, KeyCode.F, true);
 
         assertSame(window.search.getTextField(), window.root.getScene().getFocusOwner());
-    }
-
-    @Test
-    @DisplayName("Esc in the search field clears it and brings the full tree back")
-    void escClearsTheSearch() throws IOException {
-        Window window = load();
-        laidOut(window);
-        window.search.setText("dialog");
-        window.root.layout();
-
-        press(window.search.getTextField(), KeyCode.ESCAPE, false);
-        window.root.layout();
-
-        assertEquals("", window.search.getText());
-        assertEquals(44, texts(window.tree, ".sidebar-item-label").size());
-    }
-
-    @Test
-    @DisplayName("Arrow down in the search field moves the focus to the tree and selects the first hit, which opens")
-    void arrowDownSelectsTheFirstHit() throws IOException {
-        Window window = load();
-        laidOut(window);
-        window.search.setText("dialog");
-
-        press(window.search.getTextField(), KeyCode.DOWN, false);
-
-        assertSame(window.tree, window.root.getScene().getFocusOwner());
-        assertEquals("Dialog / Alert", window.tree.getSelectionModel().getSelectedItem().getValue().text());
-        assertEquals("Dialog / Alert", window.viewModel.getSelectedItem().displayName());
-        assertEquals("dialog", window.search.getText(), "the search stays");
-    }
-
-    @Test
-    @DisplayName("Enter in the search field opens the first hit")
-    void enterInTheSearchOpensTheFirstHit() throws IOException {
-        Window window = load();
-        laidOut(window);
-        window.search.setText("form path");
-
-        press(window.search.getTextField(), KeyCode.ENTER, false);
-
-        assertEquals("Path Input", window.viewModel.getSelectedItem().displayName());
-        assertEquals("Path Input", window.tree.getSelectionModel().getSelectedItem().getValue().text());
-        assertEquals("Path Input", openPageTitle(window));
-    }
-
-    @Test
-    @DisplayName("Enter in the search field without hits opens nothing")
-    void enterWithoutHitsOpensNothing() throws IOException {
-        Window window = load();
-        laidOut(window);
-        window.search.setText("zebra");
-
-        press(window.search.getTextField(), KeyCode.ENTER, false);
-
-        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
-        assertEquals("Buttons", openPageTitle(window));
-    }
-
-    @Test
-    @DisplayName("Enter on a page row opens that page; on a heading row it opens nothing")
-    void enterOnARow() throws IOException {
-        Window window = load();
-        laidOut(window);
-        TreeItem<NavigationEntry> javaFx = window.tree.getRoot().getChildren().get(0);
-        TreeItem<NavigationEntry> inputs = javaFx.getChildren().get(0);
-
-        window.tree.getFocusModel().focus(window.tree.getRow(inputs));
-        press(window.tree, KeyCode.ENTER, false);
-        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
-
-        window.tree.getFocusModel().focus(window.tree.getRow(inputs.getChildren().get(2)));
-        press(window.tree, KeyCode.ENTER, false);
-        assertEquals("Text Area", window.viewModel.getSelectedItem().displayName());
-        assertEquals("Text Area", window.tree.getSelectionModel().getSelectedItem().getValue().text());
-        assertEquals("Text Area", openPageTitle(window));
-    }
-
-    @Test
-    @DisplayName("a click on a section or group row collapses it, a second click expands it; the open page stays")
-    void clickOnAHeadingRowTogglesIt() throws IOException {
-        Window window = load();
-        laidOut(window);
-        Node openPage = window.contentArea.getChildren().get(0);
-        TreeItem<NavigationEntry> javaFx = window.tree.getRoot().getChildren().get(0);
-        TreeItem<NavigationEntry> selection = javaFx.getChildren().get(1);
-
-        click(window, selection, false, 1);
-        assertFalse(selection.isExpanded(), "the group collapsed");
-        assertFalse(texts(window.tree, ".sidebar-item-label").contains("ComboBox"));
-        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
-        assertSame(openPage, window.contentArea.getChildren().get(0));
-
-        click(window, selection, false, 1);
-        assertTrue(selection.isExpanded(), "the group expanded again");
-        assertTrue(texts(window.tree, ".sidebar-item-label").contains("ComboBox"));
-
-        click(window, javaFx, false, 1);
-        assertFalse(javaFx.isExpanded(), "the section collapsed");
-        assertFalse(texts(window.tree, ".sidebar-item-label").contains("Buttons"));
-        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
-        assertSame(openPage, window.contentArea.getChildren().get(0));
-    }
-
-    @Test
-    @DisplayName("a click on a heading row's disclosure arrow toggles it once")
-    void clickOnTheArrowTogglesOnce() throws IOException {
-        Window window = load();
-        laidOut(window);
-        TreeItem<NavigationEntry> selection = window.tree.getRoot().getChildren().get(0).getChildren().get(1);
-
-        click(window, selection, true, 1);
-        assertFalse(selection.isExpanded(), "the arrow collapsed the group");
-
-        click(window, selection, true, 1);
-        assertTrue(selection.isExpanded(), "the arrow expanded the group");
-    }
-
-    @Test
-    @DisplayName("each click of a double click on a heading row toggles it once")
-    void doubleClickOnAHeadingRow() throws IOException {
-        Window window = load();
-        laidOut(window);
-        TreeItem<NavigationEntry> selection = window.tree.getRoot().getChildren().get(0).getChildren().get(1);
-
-        click(window, selection, false, 1);
-        assertFalse(selection.isExpanded());
-        click(window, selection, false, 2);
-        assertTrue(selection.isExpanded(), "the second click expanded the group again");
-    }
-
-    @Test
-    @DisplayName("a click on a page row opens it and toggles nothing")
-    void clickOnAPageRowOpensIt() throws IOException {
-        Window window = load();
-        laidOut(window);
-        TreeItem<NavigationEntry> textField = window.tree.getRoot().getChildren().get(0).getChildren().get(0)
-                .getChildren().get(1);
-
-        click(window, textField, false, 1);
-
-        assertEquals("Text Field", window.viewModel.getSelectedItem().displayName());
-        assertEquals("Text Field", openPageTitle(window));
-        assertTrue(textField.getParent().isExpanded());
-    }
-
-    @Test
-    @DisplayName("Arrow left and right on a selected heading row collapse and expand it once")
-    void arrowKeysOnAHeadingRow() throws IOException {
-        Window window = load();
-        laidOut(window);
-        TreeItem<NavigationEntry> selection = window.tree.getRoot().getChildren().get(0).getChildren().get(1);
-        window.tree.getSelectionModel().select(selection);
-
-        press(window.tree, KeyCode.LEFT, false);
-        assertFalse(selection.isExpanded(), "Arrow left collapsed the group");
-
-        press(window.tree, KeyCode.RIGHT, false);
-        assertTrue(selection.isExpanded(), "Arrow right expanded the group");
-        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
     }
 
     // --- Helpers -------------------------------------------------------------------------------------
 
     /**
-     * Clicks the primary button on the row of a tree node, as the platform sends it: pressed, released, clicked. The
+     * Clicks the primary button on the row of a tree item, as the platform sends it: pressed, released, clicked. The
      * click lands on the row's disclosure arrow, or on the row's right end, away from the arrow.
      */
-    private static void click(Window window, TreeItem<NavigationEntry> node, boolean onArrow, int clickCount) {
+    private static void click(Window window, TreeItem<NavigationEntry> item, boolean onArrow, int clickCount) {
         window.root.applyCss();
         window.root.layout();
-        TreeCell<NavigationEntry> cell = cellOf(window.tree, node);
+        TreeCell<NavigationEntry> cell = cellOf(window.tree, item);
         Node target = cell;
         double x;
         double y;
@@ -469,22 +534,21 @@ class StyleShowcaseNavigationTest {
         window.root.layout();
     }
 
-    private static void fireMouse(Node target, EventType<MouseEvent> type, double x, double y,
-            int clickCount) {
+    private static void fireMouse(Node target, EventType<MouseEvent> type, double x, double y, int clickCount) {
         boolean primaryDown = type == MouseEvent.MOUSE_PRESSED;
         Event.fireEvent(target, new MouseEvent(type, x, y, x, y, MouseButton.PRIMARY, clickCount, false, false, false,
                 false, primaryDown, false, false, false, false, true, null));
     }
 
-    /** The visible cell that shows a tree node. */
+    /** The visible cell that shows a tree item. */
     @SuppressWarnings("unchecked")
-    private static TreeCell<NavigationEntry> cellOf(TreeView<NavigationEntry> tree, TreeItem<NavigationEntry> node) {
+    private static TreeCell<NavigationEntry> cellOf(TreeView<NavigationEntry> tree, TreeItem<NavigationEntry> item) {
         for (Node candidate : tree.lookupAll(".tree-cell")) {
-            if (candidate instanceof TreeCell<?> cell && cell.getTreeItem() == node && cell.isVisible()) {
+            if (candidate instanceof TreeCell<?> cell && cell.getTreeItem() == item && cell.isVisible()) {
                 return (TreeCell<NavigationEntry>) cell;
             }
         }
-        throw new AssertionError("no cell shows " + node.getValue().text());
+        throw new AssertionError("no cell shows " + item.getValue().text());
     }
 
     /**
@@ -498,7 +562,8 @@ class StyleShowcaseNavigationTest {
     }
 
     /** The loaded window: its root, its view model and the parts the tests look at. */
-    private record Window(Parent root, StyleShowcaseViewModel viewModel, TreeView<NavigationEntry> tree,
+    private record Window(Parent root, StyleShowcaseViewModel viewModel, SideBar sideBar,
+                          NavigationTree<NavigationEntry> navigation, TreeView<NavigationEntry> tree,
                           StackPane contentArea, SearchInput search) {
     }
 
@@ -510,13 +575,14 @@ class StyleShowcaseNavigationTest {
         StyleShowcaseViewModel viewModel = new StyleShowcaseViewModel();
         StyleShowcaseController controller = loader.getController();
         controller.initViewModel(viewModel);
-        TreeView<NavigationEntry> tree = (TreeView<NavigationEntry>) root.lookup("#navigationTree");
-        assertNotNull(tree, "the navigation tree");
+        SideBar sideBar = assertInstanceOf(SideBar.class, ((BorderPane) root).getLeft(), "the window's side bar");
+        assertFalse(sideBar.getTabs().isEmpty(), "the side bar's tab");
+        NavigationTree<NavigationEntry> navigation = assertInstanceOf(NavigationTree.class,
+                sideBar.getTabs().get(0).getContent(), "the navigation tree");
         StackPane contentArea = (StackPane) ((ScrollPane) root.lookup("#contentScrollPane")).getContent();
         assertNotNull(contentArea, "the content area");
-        SearchInput search = (SearchInput) root.lookup("#navigationSearch");
-        assertNotNull(search, "the navigation's search");
-        return new Window(root, viewModel, tree, contentArea, search);
+        return new Window(root, viewModel, sideBar, navigation, navigation.getTreeView(), contentArea,
+                navigation.getSearchInput());
     }
 
     /** Puts the window into a scene that is never shown, in the theme, laid out tall enough for every row. */
@@ -528,14 +594,60 @@ class StyleShowcaseNavigationTest {
         return scene;
     }
 
-    /** Selects the row of the named page, which opens it. */
-    private static void selectPage(Window window, String name) {
+    /** The page of the given name. */
+    private static ShowcaseItem page(Window window, String name) {
         for (ShowcaseItem page : window.viewModel.getShowcaseItems()) {
             if (page.displayName().equals(name)) {
-                window.tree.getSelectionModel().select(window.viewModel.navigationNodeOf(page));
+                return page;
             }
         }
+        throw new AssertionError("no page " + name);
+    }
+
+    /** Opens the named page as the user does: a click on its row. */
+    private static void selectPage(Window window, String name) {
+        click(window, row(window, name), false, 1);
         assertEquals(name, window.viewModel.getSelectedItem().displayName());
+    }
+
+    /** The item of the shown tree that holds the entry of the given text, sections and groups included. */
+    private static TreeItem<NavigationEntry> row(Window window, String text) {
+        for (int index = 0; index < window.tree.getExpandedItemCount(); index++) {
+            TreeItem<NavigationEntry> item = window.tree.getTreeItem(index);
+            if (item.getValue().text().equals(text)) {
+                return item;
+            }
+        }
+        throw new AssertionError("no row " + text);
+    }
+
+    /** The texts of the rows the tree shows, top to bottom, two spaces per level below the hidden root. */
+    private static List<String> rows(Window window) {
+        List<String> rows = new ArrayList<>();
+        for (int index = 0; index < window.tree.getExpandedItemCount(); index++) {
+            TreeItem<NavigationEntry> item = window.tree.getTreeItem(index);
+            rows.add("  ".repeat(window.tree.getTreeItemLevel(item) - 1) + item.getValue().text());
+        }
+        return rows;
+    }
+
+    /**
+     * The texts the cells of the given rows show, from the first row to the one before the last: the runs of each
+     * row's text node, so that the text is what the user reads.
+     */
+    private static List<String> texts(Window window, int from, int to) {
+        List<String> texts = new ArrayList<>();
+        for (int index = from; index < to; index++) {
+            TreeCell<NavigationEntry> cell = cellOf(window.tree, window.tree.getTreeItem(index));
+            TextFlow text = (TextFlow) cell.lookup(".navigation-tree-text");
+            assertNotNull(text, "the text of row " + index);
+            StringBuilder shown = new StringBuilder();
+            for (Node run : text.getChildren()) {
+                shown.append(((Text) run).getText());
+            }
+            texts.add(shown.toString());
+        }
+        return texts;
     }
 
     private static String openPageTitle(Window window) {
@@ -543,22 +655,5 @@ class StyleShowcaseNavigationTest {
         Label title = (Label) window.contentArea.getChildren().get(0).lookup(".showcase-page-title");
         assertNotNull(title, "the open page's title");
         return title.getText();
-    }
-
-    /** The texts of the labels with the given style class, in the order of the tree's rows. */
-    private static List<String> texts(TreeView<NavigationEntry> tree, String selector) {
-        List<Label> labels = new ArrayList<>();
-        for (Node node : tree.lookupAll(selector)) {
-            if (node instanceof Label label && label.getParent() != null && node.isVisible()) {
-                labels.add(label);
-            }
-        }
-        labels.sort((first, second) -> Double.compare(
-                first.localToScene(0, 0).getY(), second.localToScene(0, 0).getY()));
-        List<String> texts = new ArrayList<>();
-        for (Label label : labels) {
-            texts.add(label.getText());
-        }
-        return texts;
     }
 }

@@ -516,7 +516,9 @@ dependency.
   as soon as it is selected, and notes, a list of the application's own with a *New Note* button
   in its header and *Clear Notes* in its menu; a switch puts the side bar on the left or the right,
   and read-outs name what was opened and the state an application would keep. The showcase's
-  window has no command registry of its own, so the page's side bar registers no commands.
+  window has no command registry of its own, so the page's side bar registers no commands. The
+  window's own navigation is a side bar as well: its one tab, *Components*, is a navigation tree
+  of the showcase's sections, groups and pages that opens a page as soon as it is selected.
 
 ## Icons
 
