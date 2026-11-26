@@ -1,11 +1,14 @@
 package org.karthu.fx.sidebar;
 
 import javafx.application.Platform;
+import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.css.PseudoClass;
 import javafx.event.Event;
 import javafx.event.EventType;
 import javafx.geometry.Bounds;
 import javafx.geometry.Side;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -235,7 +238,8 @@ class SideBarTest {
     }
 
     @Test
-    @DisplayName("the open panel sits beside the content, 260 px wide, and the content starts where it ends")
+    @DisplayName("the open panel sits beside the content, 260 px wide, and the content starts where its resize edge "
+            + "ends")
     void panelDockedBesideTheContent() {
         SideBarTab files = tab("files", "Files", BootstrapIcons.FOLDER);
         SideBar sideBar = new SideBar();
@@ -249,12 +253,14 @@ class SideBarTest {
 
         assertTrue(panelShows(sideBar), "selecting a tab of an expanded side bar shows its panel");
         assertEquals(260, panel(sideBar).getWidth());
-        assertEquals(collapsedWidth + 260, sideBar.getWidth(), 0.5);
+        assertEquals(collapsedWidth + 260 + resizeEdge(sideBar).getWidth(), sideBar.getWidth(), 0.5,
+                "the stripe, the panel and its resize edge");
         assertEquals(sideBar.getWidth(), content.getLayoutX(), 0.5, "the content is narrower, never covered");
 
         sideBar.setCollapsed(true);
         relayOut(sideBar);
         assertFalse(panelShows(sideBar));
+        assertFalse(resizeEdge(sideBar).isVisible() || resizeEdge(sideBar).isManaged(), "nor its resize edge");
         assertEquals(collapsedWidth, content.getLayoutX(), 0.5, "collapsed, the content gets the room at once");
     }
 
@@ -274,8 +280,10 @@ class SideBarTest {
         assertEquals(0, sceneBounds(stripe(sideBar)).getMinX(), 0.5, "the stripe at the window's edge");
         assertEquals(sceneBounds(stripe(sideBar)).getMaxX(), sceneBounds(panel(sideBar)).getMinX(), 0.5,
                 "the panel beside it");
-        assertEquals(sceneBounds(panel(sideBar)).getMaxX(), sceneBounds(leftContent).getMinX(), 0.5,
-                "the content beside the panel");
+        assertEquals(sceneBounds(panel(sideBar)).getMaxX(), sceneBounds(resizeEdge(sideBar)).getMinX(), 0.5,
+                "the resize edge on the panel's inner side");
+        assertEquals(sceneBounds(resizeEdge(sideBar)).getMaxX(), sceneBounds(leftContent).getMinX(), 0.5,
+                "the content beside it");
         assertTrue(sideBar.getPseudoClassStates().contains(PseudoClass.getPseudoClass("left")));
 
         sideBar.setSide(Side.RIGHT);
@@ -286,8 +294,10 @@ class SideBarTest {
         assertEquals(900, sceneBounds(stripe(sideBar)).getMaxX(), 0.5, "the stripe at the window's right edge");
         assertEquals(sceneBounds(stripe(sideBar)).getMinX(), sceneBounds(panel(sideBar)).getMaxX(), 0.5,
                 "the panel to its left");
-        assertEquals(sceneBounds(panel(sideBar)).getMinX(), sceneBounds(rightContent).getMaxX(), 0.5,
-                "the content to the panel's left");
+        assertEquals(sceneBounds(panel(sideBar)).getMinX(), sceneBounds(resizeEdge(sideBar)).getMaxX(), 0.5,
+                "the resize edge on the panel's inner side, its left");
+        assertEquals(sceneBounds(resizeEdge(sideBar)).getMinX(), sceneBounds(rightContent).getMaxX(), 0.5,
+                "the content to its left");
         assertTrue(sideBar.getPseudoClassStates().contains(PseudoClass.getPseudoClass("right")));
         assertFalse(sideBar.getPseudoClassStates().contains(PseudoClass.getPseudoClass("left")));
         assertEquals(List.of(true), stripeMarks(sideBar));
@@ -303,6 +313,212 @@ class SideBarTest {
         assertThrows(IllegalArgumentException.class, () -> sideBar.setSide(Side.BOTTOM));
         assertThrows(IllegalArgumentException.class, () -> sideBar.sideProperty().set(null));
         assertEquals(Side.RIGHT, sideBar.getSide(), "a refused side changes nothing");
+    }
+
+    // --- Width ---------------------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("dragging the resize edge on the panel's inner side makes the panel wider or narrower")
+    void dragTheEdgeOnTheLeft() {
+        SideBarTab files = tab("files", "Files", BootstrapIcons.FOLDER);
+        SideBar sideBar = new SideBar();
+        sideBar.getTabs().add(files);
+        sideBar.setSelectedTab(files);
+        Scene scene = laidOut(sideBar);
+        Node content = ((BorderPane) scene.getRoot()).getCenter();
+        Region edge = resizeEdge(sideBar);
+        assertEquals(Cursor.H_RESIZE, edge.getCursor(), "the horizontal resize cursor");
+
+        drag(edge, 20, 40);
+        relayOut(sideBar);
+        assertEquals(300, sideBar.getContentWidth(), "dragged to the right: wider");
+        assertEquals(300, panel(sideBar).getWidth());
+        assertEquals(sceneBounds(edge).getMaxX(), sceneBounds(content).getMinX(), 0.5, "the content narrower");
+
+        drag(edge, -90);
+        relayOut(sideBar);
+        assertEquals(210, sideBar.getContentWidth(), "dragged to the left: narrower");
+        assertEquals(210, panel(sideBar).getWidth());
+        assertFalse(sideBar.isCollapsed());
+
+        drag(MouseButton.SECONDARY, edge, 40);
+        assertEquals(210, sideBar.getContentWidth(), "a drag with another button leaves the width");
+    }
+
+    @Test
+    @DisplayName("on the right the resize edge lies on the panel's left: dragging it to the left makes the panel wider")
+    void dragTheEdgeOnTheRight() {
+        SideBarTab files = tab("files", "Files", BootstrapIcons.FOLDER);
+        SideBar sideBar = new SideBar();
+        sideBar.setSide(Side.RIGHT);
+        sideBar.getTabs().add(files);
+        sideBar.setSelectedTab(files);
+        Scene scene = laidOut(sideBar);
+        Node content = ((BorderPane) scene.getRoot()).getCenter();
+        Region edge = resizeEdge(sideBar);
+        assertEquals(Cursor.H_RESIZE, edge.getCursor());
+
+        drag(edge, -25, -50);
+        relayOut(sideBar);
+        assertEquals(310, sideBar.getContentWidth(), "dragged to the left: wider");
+        assertEquals(310, panel(sideBar).getWidth());
+        assertEquals(sceneBounds(edge).getMinX(), sceneBounds(content).getMaxX(), 0.5, "the content narrower");
+        assertEquals(900, sceneBounds(stripe(sideBar)).getMaxX(), 0.5, "the stripe stays at the window's edge");
+
+        drag(edge, 70.4);
+        relayOut(sideBar);
+        assertEquals(240, sideBar.getContentWidth(), "dragged to the right: narrower, in whole pixels");
+        assertEquals(240, panel(sideBar).getWidth());
+    }
+
+    @Test
+    @DisplayName("a drag stops at the largest and at the smallest width, and never collapses the side bar")
+    void dragWithinTheLimits() {
+        SideBarTab files = tab("files", "Files", BootstrapIcons.FOLDER);
+        SideBar sideBar = new SideBar();
+        sideBar.getTabs().add(files);
+        sideBar.setSelectedTab(files);
+        laidOut(sideBar);
+        Region edge = resizeEdge(sideBar);
+        assertEquals(160, sideBar.getMinContentWidth(), "the smallest width by default");
+        assertEquals(600, sideBar.getMaxContentWidth(), "the largest width by default");
+
+        drag(edge, 500);
+        relayOut(sideBar);
+        assertEquals(600, sideBar.getContentWidth(), "dragged beyond the largest width: it stops there");
+        assertEquals(600, panel(sideBar).getWidth());
+
+        drag(edge, -1000);
+        assertEquals(160, sideBar.getContentWidth(), "dragged below the smallest width: it stops there");
+        assertFalse(sideBar.isCollapsed(), "and does not collapse");
+        assertTrue(panelShows(sideBar));
+        assertEquals(160, panel(sideBar).getWidth());
+
+        drag(edge, -100, 50);
+        assertEquals(210, sideBar.getContentWidth(), "back from below the limit, the edge follows the pointer again");
+
+        sideBar.setMinContentWidth(200);
+        sideBar.setMaxContentWidth(400);
+        drag(edge, 1000);
+        assertEquals(400, sideBar.getContentWidth(), "the application's largest width");
+        drag(edge, -1000);
+        assertEquals(200, sideBar.getContentWidth(), "the application's smallest width");
+    }
+
+    @Test
+    @DisplayName("the width holds for every tab: switching tabs, collapsing and expanding never move the content")
+    void widthSharedByTheTabs() {
+        SideBarTab files = tab("files", "Files", BootstrapIcons.FOLDER);
+        Region wideContent = new Region();
+        wideContent.setPrefWidth(500);
+        SideBarTab wide = new SideBarTab("wide", "Wide", BootstrapIcons.ARROWS_ANGLE_EXPAND, wideContent);
+        SideBar sideBar = new SideBar();
+        sideBar.getTabs().addAll(files, wide);
+        sideBar.setSelectedTab(files);
+        Scene scene = laidOut(sideBar);
+        Node content = ((BorderPane) scene.getRoot()).getCenter();
+        drag(resizeEdge(sideBar), 60);
+        relayOut(sideBar);
+        double contentLeft = sceneBounds(content).getMinX();
+
+        click(stripeButton(sideBar, "Wide"));
+        relayOut(sideBar);
+        assertEquals(320, sideBar.getContentWidth());
+        assertEquals(320, panel(sideBar).getWidth(), "another tab, a content that would rather be wider");
+        assertEquals(contentLeft, sceneBounds(content).getMinX(), 0.5, "the content did not move");
+
+        click(stripeButton(sideBar, "Wide"));
+        click(stripeButton(sideBar, "Files"));
+        relayOut(sideBar);
+        assertEquals(320, panel(sideBar).getWidth(), "collapsed and expanded on another tab");
+        assertEquals(contentLeft, sceneBounds(content).getMinX(), 0.5);
+    }
+
+    @Test
+    @DisplayName("the application sets the width, kept within the limits it sets, and reads back the user's")
+    void widthSetByTheApplication() {
+        SideBarTab files = tab("files", "Files", BootstrapIcons.FOLDER);
+        SideBar sideBar = new SideBar();
+        sideBar.getTabs().add(files);
+        sideBar.setSelectedTab(files);
+        assertEquals(260, sideBar.getContentWidth(), "the default width");
+
+        sideBar.setContentWidth(340);
+        laidOut(sideBar);
+        assertEquals(340, panel(sideBar).getWidth(), "restored before the side bar shows");
+
+        sideBar.setContentWidth(1000);
+        assertEquals(600, sideBar.getContentWidth(), "beyond the largest width: the largest");
+        sideBar.setContentWidth(50);
+        assertEquals(160, sideBar.getContentWidth(), "below the smallest width: the smallest");
+        relayOut(sideBar);
+        assertEquals(160, panel(sideBar).getWidth());
+
+        sideBar.setMinContentWidth(200);
+        assertEquals(200, sideBar.getContentWidth(), "a smallest width above the width raises it");
+        sideBar.setContentWidth(500);
+        sideBar.setMaxContentWidth(450);
+        assertEquals(450, sideBar.getContentWidth(), "a largest width below the width lowers it");
+        sideBar.setMinContentWidth(480);
+        assertEquals(480, sideBar.getContentWidth(), "limits that cross: the smallest wins, as in JavaFX's layout");
+        relayOut(sideBar);
+        assertEquals(480, panel(sideBar).getWidth());
+
+        sideBar.setMaxContentWidth(600);
+        sideBar.setMinContentWidth(160);
+        assertEquals(480, sideBar.getContentWidth(), "wider limits leave the width");
+        List<Double> stored = new ArrayList<>();
+        sideBar.contentWidthProperty().addListener((observable, was, is) -> stored.add(is.doubleValue()));
+        drag(resizeEdge(sideBar), 10, 20);
+        assertEquals(List.of(490.0, 500.0), stored, "the user's width, for the application to store");
+    }
+
+    @Test
+    @DisplayName("a bound width shows within the limits, and the resize edge leaves it to the binding")
+    void boundWidth() {
+        SideBarTab files = tab("files", "Files", BootstrapIcons.FOLDER);
+        SideBar sideBar = new SideBar();
+        sideBar.getTabs().add(files);
+        sideBar.setSelectedTab(files);
+        DoubleProperty applicationWidth = new SimpleDoubleProperty(300);
+        sideBar.contentWidthProperty().bind(applicationWidth);
+        laidOut(sideBar);
+        assertEquals(300, panel(sideBar).getWidth());
+
+        drag(resizeEdge(sideBar), 50);
+        relayOut(sideBar);
+        assertEquals(300, sideBar.getContentWidth(), "a drag does not move a bound width");
+        assertEquals(300, panel(sideBar).getWidth());
+
+        applicationWidth.set(900);
+        relayOut(sideBar);
+        assertEquals(600, panel(sideBar).getWidth(), "a bound width beyond the largest shows at the largest");
+        applicationWidth.set(10);
+        relayOut(sideBar);
+        assertEquals(160, panel(sideBar).getWidth(), "below the smallest at the smallest");
+    }
+
+    @Test
+    @DisplayName("a width that is no number, and a limit below zero, infinite or no number, are refused")
+    void widthsRefused() {
+        SideBar sideBar = new SideBar();
+
+        assertThrows(IllegalArgumentException.class, () -> sideBar.setContentWidth(Double.NaN));
+        assertThrows(IllegalArgumentException.class, () -> sideBar.setMinContentWidth(-1));
+        assertThrows(IllegalArgumentException.class, () -> sideBar.setMinContentWidth(Double.NaN));
+        assertThrows(IllegalArgumentException.class, () -> sideBar.setMinContentWidth(Double.POSITIVE_INFINITY));
+        assertThrows(IllegalArgumentException.class, () -> sideBar.setMaxContentWidth(-1));
+        assertThrows(IllegalArgumentException.class, () -> sideBar.setMaxContentWidth(Double.NaN));
+        assertThrows(IllegalArgumentException.class, () -> sideBar.setMaxContentWidth(Double.POSITIVE_INFINITY));
+        assertEquals(260, sideBar.getContentWidth(), "a refused value changes nothing");
+        assertEquals(160, sideBar.getMinContentWidth());
+        assertEquals(600, sideBar.getMaxContentWidth());
+
+        sideBar.setContentWidth(Double.POSITIVE_INFINITY);
+        assertEquals(600, sideBar.getContentWidth(), "an infinite width is the largest");
+        sideBar.setMinContentWidth(0);
+        sideBar.setContentWidth(Double.NEGATIVE_INFINITY);
+        assertEquals(0, sideBar.getContentWidth(), "a smallest width of zero is allowed");
     }
 
     // --- Focus ---------------------------------------------------------------------------------------
@@ -540,7 +756,8 @@ class SideBarTest {
 
     @Test
     @DisplayName("the theme draws the stripe on the surface with a line towards the panel, its buttons flat and "
-            + "square, the open tab's icon in the accent colour on a raised background")
+            + "square, the open tab's icon in the accent colour on a raised background, the resize edge with the "
+            + "panel's line towards the content")
     void look() {
         SideBarTab files = tab("files", "Files", BootstrapIcons.FOLDER);
         SideBarTab search = tab("search", "Search", BootstrapIcons.SEARCH);
@@ -585,12 +802,23 @@ class SideBarTest {
         assertEquals(fill(secondary), hideIcon.getIconColor());
         assertEquals(fill(surface), panel(sideBar).getBackground().getFills().get(0).getFill(),
                 "the panel on the surface");
+        assertNoBorder(panel(sideBar).getBorder());
+        Region edge = resizeEdge(sideBar);
+        assertEquals(fill(surface), edge.getBackground().getFills().get(0).getFill(),
+                "the resize edge continues the panel's surface");
+        BorderStroke edgeLine = edge.getBorder().getStrokes().get(0);
+        assertEquals(fill(border), edgeLine.getRightStroke(), "and draws the panel's line towards the content");
+        assertEquals(1, edgeLine.getWidths().getRight());
+        assertEquals(0, edgeLine.getWidths().getLeft());
 
         sideBar.setSide(Side.RIGHT);
         relayOut(sideBar);
         BorderStroke mirrored = stripe(sideBar).getBorder().getStrokes().get(0);
         assertEquals(1, mirrored.getWidths().getLeft(), "on the right the line lies on the stripe's left");
         assertEquals(0, mirrored.getWidths().getRight());
+        BorderStroke mirroredEdgeLine = resizeEdge(sideBar).getBorder().getStrokes().get(0);
+        assertEquals(1, mirroredEdgeLine.getWidths().getLeft(), "and on the resize edge's left");
+        assertEquals(0, mirroredEdgeLine.getWidths().getRight());
     }
 
     // --- Helpers -------------------------------------------------------------------------------------
@@ -779,10 +1007,44 @@ class SideBarTest {
         fireMouse(target, MouseEvent.MOUSE_CLICKED, x, y);
     }
 
+    /** The resize edge on the panel's inner side. */
+    private static Region resizeEdge(SideBar sideBar) {
+        return (Region) sideBar.lookup(".side-bar-resize-edge");
+    }
+
+    /** A drag of the primary button on a node, as {@link #drag(MouseButton, Node, double...)} describes it. */
+    private static void drag(Node target, double... distances) {
+        drag(MouseButton.PRIMARY, target, distances);
+    }
+
+    /**
+     * A drag of a button on a node as the platform sends it: pressed at its centre, dragged through each horizontal
+     * distance from there in turn, released at the last. The platform sends the whole gesture to the node it was
+     * pressed on, also where the pointer leaves it.
+     */
+    private static void drag(MouseButton button, Node target, double... distances) {
+        Bounds bounds = target.localToScene(target.getLayoutBounds());
+        double x = bounds.getCenterX();
+        double y = bounds.getCenterY();
+        fireMouse(target, MouseEvent.MOUSE_PRESSED, button, x, y);
+        double last = 0;
+        for (double distance : distances) {
+            fireMouse(target, MouseEvent.MOUSE_DRAGGED, button, x + distance, y);
+            last = distance;
+        }
+        fireMouse(target, MouseEvent.MOUSE_RELEASED, button, x + last, y);
+    }
+
     private static void fireMouse(Node target, EventType<MouseEvent> type, double x, double y) {
-        boolean primaryDown = type == MouseEvent.MOUSE_PRESSED;
-        Event.fireEvent(target, new MouseEvent(type, x, y, x, y, MouseButton.PRIMARY, 1, false, false, false,
-                false, primaryDown, false, false, false, false, true, null));
+        fireMouse(target, type, MouseButton.PRIMARY, x, y);
+    }
+
+    private static void fireMouse(Node target, EventType<MouseEvent> type, MouseButton button, double x, double y) {
+        boolean down = type == MouseEvent.MOUSE_PRESSED || type == MouseEvent.MOUSE_DRAGGED;
+        boolean primaryDown = down && button == MouseButton.PRIMARY;
+        boolean secondaryDown = down && button == MouseButton.SECONDARY;
+        Event.fireEvent(target, new MouseEvent(type, x, y, x, y, button, 1, false, false, false, false, primaryDown,
+                false, secondaryDown, false, false, true, null));
     }
 
     /** A region filled with a theme token, so that a test compares against the token, not against its value. */

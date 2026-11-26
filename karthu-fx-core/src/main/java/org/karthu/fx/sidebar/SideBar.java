@@ -4,9 +4,12 @@ import javafx.beans.InvalidationListener;
 import javafx.beans.Observable;
 import javafx.beans.WeakInvalidationListener;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
@@ -16,6 +19,7 @@ import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -27,8 +31,11 @@ import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.ContextMenuEvent;
+import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
@@ -69,8 +76,14 @@ import java.util.Set;
  * the open tab's button collapses it, and while collapsed expands it again. The hide button in the panel's header and
  * the menu's <i>Hide</i> collapse it too. Collapsing keeps the selected tab, so expanding shows it again. When the
  * selected tab is removed or hidden, the side bar collapses and selects no tab. Everything happens at once, without
- * animation, and the panel always lies beside the content, which becomes narrower, never under the panel. The panel
- * is 260 px wide, for every tab.
+ * animation, and the panel always lies beside the content, which becomes narrower, never under the panel.
+ *
+ * <p><b>Width.</b> The panel has one {@linkplain #contentWidthProperty() content width} for every tab, 260 px by
+ * default, so that switching tabs never moves the application's content. The user drags the resize edge on the
+ * panel's inner side, the one towards the content, to make the panel wider or narrower, within the
+ * {@linkplain #minContentWidthProperty() smallest} (160 px by default) and the
+ * {@linkplain #maxContentWidthProperty() largest} width (600 px by default). A drag below the smallest width stops
+ * there and never collapses the side bar.
  *
  * <p><b>Focus.</b> Opening a tab by a click on its stripe button puts the keyboard focus into its content, where the
  * user starts: a content that implements {@link SideBarContent} takes it as it says (a {@link NavigationTree} in its
@@ -92,8 +105,9 @@ import java.util.Set;
  * two instances.
  *
  * <p><b>State.</b> The side bar stores nothing. An application that brings the layout back after a restart stores the
- * selected tab's {@linkplain SideBarTab#getId() id} and the collapsed flag from the properties, and sets them again on
- * the next start; a tab it selects before adding it shows once it is added.
+ * content width, the selected tab's {@linkplain SideBarTab#getId() id} and the collapsed flag from the properties, and
+ * sets them again on the next start, the limits of the width before the width; a tab it selects before adding it
+ * shows once it is added.
  *
  * <p><b>Texts.</b> The tooltips and accessible texts of the menu button ({@linkplain #moreTextProperty() More}) and
  * the hide button, which is also the text of the menu's item ({@linkplain #hideTextProperty() Hide}), are properties
@@ -101,9 +115,9 @@ import java.util.Set;
  *
  * <p><b>Style classes</b>, a public contract: renaming one is a breaking change. The theme draws the stripe on the
  * surface with a 1 px line towards the panel, its buttons flat and square with the icon 16 px in the secondary text
- * colour, the open tab's in the accent colour on the raised grey of a button; the panel on the surface with a 1 px
- * line towards the content, the header's title in regular weight and its icon buttons 14 px in the secondary text
- * colour.
+ * colour, the open tab's in the accent colour on the raised grey of a button; the panel on the surface, its resize
+ * edge continuing it with a 1 px line towards the content, the header's title in regular weight and its icon buttons
+ * 14 px in the secondary text colour.
  * <ul>
  *   <li>{@code side-bar}: the side bar, an {@link HBox}, with the pseudo-class {@code :left} or {@code :right} of its
  *       side</li>
@@ -117,6 +131,8 @@ import java.util.Set;
  *       {@link Button}s beside {@code icon-button}, with the Bootstrap icons {@code THREE_DOTS_VERTICAL} and
  *       {@code DASH}</li>
  *   <li>{@code side-bar-content}: the holder of the open tab's content, a {@link StackPane}</li>
+ *   <li>{@code side-bar-resize-edge}: the resize edge on the panel's inner side, a {@link Region} a few pixels wide
+ *       with the horizontal resize cursor, shown with the panel</li>
  *   <li>{@code side-bar-menu}: the menu, a {@link ContextMenu}, and {@code side-bar-hide-item}: its <i>Hide</i></li>
  * </ul>
  * A header button of the application's own, styled as an {@code icon-button}, takes the look of the header's.
@@ -127,8 +143,16 @@ import java.util.Set;
  */
 public class SideBar extends HBox {
 
-    /** The width of the panel, the same for every tab. */
-    private static final double PANEL_WIDTH = 260;
+    /** The content width until the application sets one. */
+    private static final double DEFAULT_CONTENT_WIDTH = 260;
+    /** The smallest and the largest content width until the application sets its own. */
+    private static final double DEFAULT_MIN_CONTENT_WIDTH = 160;
+    private static final double DEFAULT_MAX_CONTENT_WIDTH = 600;
+    /**
+     * How wide the resize edge is, its line towards the content included: a grip the pointer finds without aiming at
+     * a single pixel. Set in code, not by the theme, so that the edge has its grip without the theme too.
+     */
+    private static final double RESIZE_EDGE_WIDTH = 5;
     private static final PseudoClass LEFT_PSEUDO_CLASS = PseudoClass.getPseudoClass("left");
     private static final PseudoClass RIGHT_PSEUDO_CLASS = PseudoClass.getPseudoClass("right");
 
@@ -148,6 +172,31 @@ public class SideBar extends HBox {
     private final BooleanProperty collapsed = new SimpleBooleanProperty(this, "collapsed", false);
     private final StringProperty moreText = new SimpleStringProperty(this, "moreText", "More");
     private final StringProperty hideText = new SimpleStringProperty(this, "hideText", "Hide");
+    // The limits of the content width, each a WidthLimit, which refuses what is no width and keeps the content width
+    // within the limits. Line comments here, as the properties' documentation is their methods'.
+    private final DoubleProperty minContentWidth = new WidthLimit("minContentWidth", DEFAULT_MIN_CONTENT_WIDTH);
+    private final DoubleProperty maxContentWidth = new WidthLimit("maxContentWidth", DEFAULT_MAX_CONTENT_WIDTH);
+    // The width of the panel: set refuses NaN and puts any other width within the limits, so that the application
+    // reads back the width the panel shows.
+    private final DoubleProperty contentWidth = new SimpleDoubleProperty(this, "contentWidth", DEFAULT_CONTENT_WIDTH) {
+        @Override
+        public void set(double width) {
+            if (Double.isNaN(width)) {
+                throw new IllegalArgumentException("a content width is a number of pixels, not NaN");
+            }
+            super.set(withinLimits(width));
+        }
+    };
+    /** The width the panel shows: the content width within the limits, also where a binding sets it. */
+    private final DoubleBinding shownContentWidth = Bindings.createDoubleBinding(
+            () -> withinLimits(contentWidth.get()), contentWidth, minContentWidth, maxContentWidth);
+    /** The resize edge on the panel's inner side, between the panel and the application's content. */
+    private final Region resizeEdge = new Region();
+    /** Whether the user drags the resize edge now. */
+    private boolean resizing;
+    /** Where a drag of the resize edge began: the pointer's x in the scene, and the content width then. */
+    private double resizeStartX;
+    private double resizeStartWidth;
 
     private final VBox stripe = new VBox();
     private final Label titleLabel = new Label();
@@ -189,9 +238,17 @@ public class SideBar extends HBox {
         getStyleClass().add("side-bar");
         stripe.getStyleClass().add("side-bar-stripe");
         panel.getStyleClass().add("side-bar-panel");
-        panel.setMinWidth(PANEL_WIDTH);
-        panel.setPrefWidth(PANEL_WIDTH);
-        panel.setMaxWidth(PANEL_WIDTH);
+        panel.minWidthProperty().bind(shownContentWidth);
+        panel.prefWidthProperty().bind(shownContentWidth);
+        panel.maxWidthProperty().bind(shownContentWidth);
+        resizeEdge.getStyleClass().add("side-bar-resize-edge");
+        resizeEdge.setCursor(Cursor.H_RESIZE);
+        resizeEdge.setMinWidth(RESIZE_EDGE_WIDTH);
+        resizeEdge.setPrefWidth(RESIZE_EDGE_WIDTH);
+        resizeEdge.setMaxWidth(RESIZE_EDGE_WIDTH);
+        resizeEdge.addEventHandler(MouseEvent.MOUSE_PRESSED, this::resizeEdgePressed);
+        resizeEdge.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::resizeEdgeDragged);
+        resizeEdge.addEventHandler(MouseEvent.MOUSE_RELEASED, this::resizeEdgeReleased);
         header.getStyleClass().add("side-bar-header");
         header.setAlignment(Pos.CENTER_LEFT);
         titleLabel.getStyleClass().add("side-bar-title");
@@ -323,6 +380,109 @@ public class SideBar extends HBox {
     }
 
     /**
+     * The width of the panel in pixels, one for every tab, so that switching tabs never moves the application's
+     * content (default 260 px). A drag of the resize edge sets it in whole pixels. It stays within the
+     * {@linkplain #minContentWidthProperty() smallest} and the {@linkplain #maxContentWidthProperty() largest} width:
+     * a width set beyond them is set to the nearer one, and a change of the limits moves the width within them, so the
+     * application reads back the width the panel shows. Setting NaN is refused with an
+     * {@link IllegalArgumentException}. A bound width is the binding's: the panel shows it within the limits, and the
+     * resize edge does not move it.
+     *
+     * @return the content width property
+     * @since 1.1.0-RC2
+     */
+    public final DoubleProperty contentWidthProperty() {
+        return contentWidth;
+    }
+
+    /**
+     * Returns the width of the panel.
+     *
+     * @return the content width in pixels
+     * @since 1.1.0-RC2
+     */
+    public final double getContentWidth() {
+        return contentWidth.get();
+    }
+
+    /**
+     * Sets the width of the panel; a width beyond the limits is set to the nearer limit.
+     *
+     * @param width the content width in pixels
+     * @throws IllegalArgumentException when the width is NaN
+     * @since 1.1.0-RC2
+     */
+    public final void setContentWidth(double width) {
+        contentWidth.set(width);
+    }
+
+    /**
+     * The smallest width of the panel in pixels (default 160 px): a drag of the resize edge stops there and never
+     * collapses the side bar. Where it is larger than the {@linkplain #maxContentWidthProperty() largest} width, it
+     * wins, as a node's minimum width does in a JavaFX layout. Setting a value that is no finite number of pixels,
+     * zero or more, is refused with an {@link IllegalArgumentException}.
+     *
+     * @return the smallest content width property
+     * @since 1.1.0-RC2
+     */
+    public final DoubleProperty minContentWidthProperty() {
+        return minContentWidth;
+    }
+
+    /**
+     * Returns the smallest width of the panel.
+     *
+     * @return the smallest content width in pixels
+     * @since 1.1.0-RC2
+     */
+    public final double getMinContentWidth() {
+        return minContentWidth.get();
+    }
+
+    /**
+     * Sets the smallest width of the panel; a narrower content width becomes this width.
+     *
+     * @param width the smallest content width in pixels
+     * @throws IllegalArgumentException when the width is negative, infinite or NaN
+     * @since 1.1.0-RC2
+     */
+    public final void setMinContentWidth(double width) {
+        minContentWidth.set(width);
+    }
+
+    /**
+     * The largest width of the panel in pixels (default 600 px): a drag of the resize edge stops there. Setting a
+     * value that is no finite number of pixels, zero or more, is refused with an {@link IllegalArgumentException}.
+     *
+     * @return the largest content width property
+     * @since 1.1.0-RC2
+     */
+    public final DoubleProperty maxContentWidthProperty() {
+        return maxContentWidth;
+    }
+
+    /**
+     * Returns the largest width of the panel.
+     *
+     * @return the largest content width in pixels
+     * @since 1.1.0-RC2
+     */
+    public final double getMaxContentWidth() {
+        return maxContentWidth.get();
+    }
+
+    /**
+     * Sets the largest width of the panel; a wider content width becomes this width.
+     *
+     * @param width the largest content width in pixels
+     * @throws IllegalArgumentException when the width is negative, infinite or NaN
+     * @since 1.1.0-RC2
+     */
+    public final void setMaxContentWidth(double width) {
+        maxContentWidth.set(width);
+    }
+
+    /**
      * The tooltip and accessible text of the menu button (default <i>More</i>), a property so that an application can
      * translate it.
      *
@@ -412,7 +572,7 @@ public class SideBar extends HBox {
      */
     private void arrange() {
         boolean right = side.get() == Side.RIGHT;
-        List<Node> parts = right ? List.of(panel, stripe) : List.of(stripe, panel);
+        List<Node> parts = right ? List.of(resizeEdge, panel, stripe) : List.of(stripe, panel, resizeEdge);
         setChildren(getChildren(), parts);
         pseudoClassStateChanged(LEFT_PSEUDO_CLASS, !right);
         pseudoClassStateChanged(RIGHT_PSEUDO_CLASS, right);
@@ -488,6 +648,8 @@ public class SideBar extends HBox {
         SideBarTab shown = shownTab();
         panel.setVisible(shown != null);
         panel.setManaged(shown != null);
+        resizeEdge.setVisible(shown != null);
+        resizeEdge.setManaged(shown != null);
         SideBarTab selected = selectedTab.get();
         watchPanelTab(selected != null && tabs.contains(selected) ? selected : null);
         updateHeader();
@@ -581,6 +743,50 @@ public class SideBar extends HBox {
     }
 
     /**
+     * The primary button pressed on the resize edge: a drag begins, from the pointer's place and today's width. A
+     * width the application has bound is the binding's, and the edge leaves it.
+     */
+    private void resizeEdgePressed(MouseEvent event) {
+        if (event.getButton() == MouseButton.PRIMARY && !contentWidth.isBound()) {
+            resizing = true;
+            resizeStartX = event.getSceneX();
+            resizeStartWidth = contentWidth.get();
+            event.consume();
+        }
+    }
+
+    /**
+     * The resize edge dragged: the panel's inner side follows the pointer, in whole pixels, and stops at the limits,
+     * so that a drag below the smallest width never collapses the side bar. On the left the inner side is the panel's
+     * right, so a move to the right widens it; on the right mirrored. The platform sends the drag to the edge also
+     * where the pointer has left it.
+     */
+    private void resizeEdgeDragged(MouseEvent event) {
+        if (resizing) {
+            double moved = event.getSceneX() - resizeStartX;
+            double wanted = side.get() == Side.RIGHT ? resizeStartWidth - moved : resizeStartWidth + moved;
+            contentWidth.set(Math.round(wanted));
+            event.consume();
+        }
+    }
+
+    /** The button released: the drag of the resize edge ends where it is. */
+    private void resizeEdgeReleased(MouseEvent event) {
+        if (resizing) {
+            resizing = false;
+            event.consume();
+        }
+    }
+
+    /**
+     * A width within the limits. Where the limits cross, the smallest width wins, as a JavaFX layout gives a node's
+     * minimum width precedence over its maximum.
+     */
+    private double withinLimits(double width) {
+        return Math.max(minContentWidth.get(), Math.min(width, maxContentWidth.get()));
+    }
+
+    /**
      * Puts the focus into a tab's content, where the user starts: as the content says, if it takes part in the
      * contract, else into the content node itself.
      */
@@ -661,6 +867,34 @@ public class SideBar extends HBox {
         button.accessibleTextProperty().bind(text);
         button.setOnAction(event -> action.run());
         return button;
+    }
+
+    /**
+     * A limit of the content width, the smallest or the largest: it refuses a value that is no finite number of
+     * pixels, zero or more, and a change puts the content width within the limits, unless the application has bound
+     * the content width; the panel shows a bound width within the limits anyway.
+     */
+    private final class WidthLimit extends SimpleDoubleProperty {
+
+        private WidthLimit(String name, double initialValue) {
+            super(SideBar.this, name, initialValue);
+        }
+
+        @Override
+        public void set(double limit) {
+            if (Double.isNaN(limit) || Double.isInfinite(limit) || limit < 0) {
+                throw new IllegalArgumentException("a limit of the content width is a finite number of pixels, zero "
+                        + "or more, not " + limit);
+            }
+            super.set(limit);
+        }
+
+        @Override
+        protected void invalidated() {
+            if (!contentWidth.isBound()) {
+                contentWidth.set(contentWidth.get());
+            }
+        }
     }
 
     /** A tab's button on the stripe: its icon, its title as tooltip and accessible text. */

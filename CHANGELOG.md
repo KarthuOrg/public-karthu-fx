@@ -42,10 +42,14 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   title, the tab's buttons, the content's buttons (Expand All and Collapse All of a
   `NavigationTree`), a three-dot menu button and a hide button. The menu (`getMenu()`), which the
   menu button and a right click on the header or a stripe button open, lists the tab's items, the
-  content's, a separator and *Hide*. `selectedTab` and `collapsed` are properties the application
-  stores and sets again; removing or hiding the selected tab collapses the side bar and selects
-  no tab. The texts *More* and *Hide* are properties. The theme draws the stripe on the surface
-  with the open tab's icon in the accent colour.
+  content's, a separator and *Hide*. The panel has one width for every tab (`contentWidth`, 260 px
+  by default), which the user drags at the resize edge on the panel's inner side, between
+  `minContentWidth` (160 px) and `maxContentWidth` (600 px); a drag below the smallest width
+  stops there and never collapses, a width the application sets is kept within the limits.
+  `contentWidth`, `selectedTab` and `collapsed` are properties the application stores and sets
+  again; removing or hiding the selected tab collapses the side bar and selects no tab. The texts
+  *More* and *Hide* are properties. The theme draws the stripe on the surface with the open tab's
+  icon in the accent colour.
 - `MarkdownView` colours PowerShell: a code block of the language `powershell`, `pwsh` or `ps1`
   shows comments (also `<# ... #>`), strings and here-strings, variables (`$env:PATH`, `${...}`,
   splatted `@args`), `$true`, `$false` and `$null` as literals, keywords in any case, the
