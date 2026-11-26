@@ -4026,6 +4026,97 @@ Text {
 }
 
 /* ===================================================================
+ * Navigation tree (NavigationTree, package org.karthu.fx.sidebar) — a
+ * tree of the application's entries that lies on the panel around it:
+ * no border and no background of its own. Rows like the showcase's
+ * navigation: the hover colour, the selected row in the selection
+ * colour with a 2px accent bar on its left, its icon and text in the
+ * accent colour, the text bold. The header buttons (Expand All,
+ * Collapse All) sit wherever the application or a side bar puts them,
+ * so their rules do not depend on the tree. The style classes are a
+ * documented contract (NavigationTree's JavaDoc); colours are the
+ * theme's tokens, no token of its own.
+ * =================================================================== */
+.navigation-tree {
+    -fx-background-color: transparent;
+}
+
+.navigation-tree .tree-view,
+.navigation-tree .tree-view:focused {
+    -fx-background-color: transparent;
+    -fx-background-insets: 0;
+    -fx-border-color: transparent;
+    -fx-border-width: 0;
+    -fx-padding: 0;
+}
+
+.navigation-tree .tree-view .tree-cell {
+    -fx-padding: 6 12 6 8;
+    -fx-background-color: transparent;
+    -fx-font-size: 13px;
+}
+
+.navigation-tree .tree-view .tree-cell:hover:filled {
+    -fx-background-color: -fx-hover-color;
+}
+
+.navigation-tree .tree-view .tree-cell:selected {
+    -fx-background-color: -fx-accent-color, -fx-selection-color;
+    -fx-background-insets: 0, 0 0 0 2;
+}
+
+.navigation-tree .tree-view .tree-cell .tree-disclosure-node .arrow {
+    -fx-background-color: -fx-text-secondary-color;
+}
+
+.navigation-tree .navigation-tree-entry {
+    -fx-spacing: 8;
+}
+
+.navigation-tree .navigation-tree-icon {
+    -fx-icon-size: 14;
+    -fx-icon-color: -fx-text-secondary-color;
+}
+
+.navigation-tree .tree-cell:selected .navigation-tree-icon {
+    -fx-icon-color: -fx-accent-color;
+}
+
+/* Text-node fills: they win over the theme's .tree-view .tree-cell .text rules. */
+.navigation-tree .tree-cell .navigation-tree-text .text {
+    -fx-fill: -fx-text-color;
+}
+
+.navigation-tree .tree-cell:selected .navigation-tree-text {
+    -fx-font-weight: bold;
+}
+
+.navigation-tree .tree-cell:selected .navigation-tree-text .text {
+    -fx-fill: -fx-accent-color;
+}
+
+/* The placeholder of an empty tree lies at the top, its label in the secondary text colour. */
+.navigation-tree .navigation-tree-placeholder {
+    -fx-padding: 16 12 0 12;
+}
+
+.navigation-tree .navigation-tree-placeholder > .label {
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+.navigation-tree-expand-all .ikonli-font-icon,
+.navigation-tree-collapse-all .ikonli-font-icon {
+    -fx-icon-size: 14;
+    -fx-icon-color: -fx-text-secondary-color;
+}
+
+.navigation-tree-expand-all:hover .ikonli-font-icon,
+.navigation-tree-collapse-all:hover .ikonli-font-icon {
+    -fx-icon-color: -fx-text-color;
+}
+
+/* ===================================================================
  * Showcase Layout — toolbar, sidebar, content area, cards
  * =================================================================== */
 

@@ -8,6 +8,20 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 
 ### Added
 
+- `NavigationTree` in the new package `org.karthu.fx.sidebar`: a tree of the application's own
+  `TreeItem`s under a hidden root, for a navigation at the edge of a window, each entry with an
+  Ikonli icon and a text from the application's functions. The application chooses with the new
+  enum `OpenMode` whether a double click or Enter opens an entry (`DOUBLE_CLICK`, the default) or
+  whether the user's change of the selection does (`SELECTION`); the open handler receives the
+  entry's value. A double click or Enter (a single click while selection opens) also folds or
+  unfolds a folder, the disclosure arrow always does. It offers the selected value (read-only),
+  `select(value)`, `expandAll()` and `collapseAll()`, a placeholder for an empty tree and its
+  inner `TreeView`. The new interface `SideBarContent` is what a panel's content tells a side bar:
+  its header buttons, its menu items, where the focus goes and how to focus its search. The
+  navigation tree's header buttons are Expand All and Collapse All, their tooltips properties.
+  The theme draws the tree without border or own background, with the showcase navigation's rows.
+  The module now requires `org.kordamp.ikonli.core` transitively, as the icon function returns
+  its `Ikon`.
 - `MarkdownView` colours PowerShell: a code block of the language `powershell`, `pwsh` or `ps1`
   shows comments (also `<# ... #>`), strings and here-strings, variables (`$env:PATH`, `${...}`,
   splatted `@args`), `$true`, `$false` and `$null` as literals, keywords in any case, the
