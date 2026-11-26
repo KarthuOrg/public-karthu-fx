@@ -4028,10 +4028,10 @@ Text {
 /* ===================================================================
  * Navigation tree (NavigationTree, package org.karthu.fx.sidebar) — a
  * tree of the application's entries that lies on the panel around it:
- * no border and no background of its own. Rows like the showcase's
- * navigation: the hover colour, the selected row in the selection
- * colour with a 2px accent bar on its left, its icon and text in the
- * accent colour, the text bold. The header buttons (Expand All,
+ * no border and no background of its own, under its search field. Rows
+ * like the showcase's navigation: the hover colour, the selected row in
+ * the selection colour with a 2px accent bar on its left, its icon and
+ * text in the accent colour, the text bold. The header buttons (Expand All,
  * Collapse All) sit wherever the application or a side bar puts them,
  * so their rules do not depend on the tree. The style classes are a
  * documented contract (NavigationTree's JavaDoc); colours are the
@@ -4082,17 +4082,17 @@ Text {
     -fx-icon-color: -fx-accent-color;
 }
 
-/* Text-node fills: they win over the theme's .tree-view .tree-cell .text rules. */
-.navigation-tree .tree-cell .navigation-tree-text .text {
-    -fx-fill: -fx-text-color;
-}
-
-.navigation-tree .tree-cell:selected .navigation-tree-text {
+/* An entry's text is a highlight node of the search field: its runs in
+ * the text colour, a mark bold in the accent colour (the theme's rules for
+ * search-highlight). On the selected row the runs are bold in the accent
+ * colour, and a mark, which would not show there, is underlined. */
+.navigation-tree .tree-cell:selected .navigation-tree-text .search-text {
+    -fx-fill: -fx-accent-color;
     -fx-font-weight: bold;
 }
 
-.navigation-tree .tree-cell:selected .navigation-tree-text .text {
-    -fx-fill: -fx-accent-color;
+.navigation-tree .tree-cell:selected .navigation-tree-text .search-match {
+    -fx-underline: true;
 }
 
 /* The placeholder of an empty tree lies at the top, its label in the secondary text colour. */
@@ -4101,6 +4101,19 @@ Text {
 }
 
 .navigation-tree .navigation-tree-placeholder > .label {
+    -fx-font-size: 13px;
+    -fx-text-fill: -fx-text-secondary-color;
+}
+
+/* The search field above the tree, over its full width with a little room
+ * around it; "No matches" lies at the top of the tree area like the
+ * placeholder. */
+.navigation-tree .navigation-tree-search-bar {
+    -fx-padding: 4 8 6 8;
+}
+
+.navigation-tree .navigation-tree-no-matches {
+    -fx-padding: 16 12 0 12;
     -fx-font-size: 13px;
     -fx-text-fill: -fx-text-secondary-color;
 }

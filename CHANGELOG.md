@@ -19,6 +19,15 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   inner `TreeView`. The new interface `SideBarContent` is what a panel's content tells a side bar:
   its header buttons, its menu items, where the focus goes and how to focus its search. The
   navigation tree's header buttons are Expand All and Collapse All, their tooltips properties.
+  A `SearchInput` above the tree (`getSearchInput()`) narrows it to the entries that match by
+  karthu-fx's search rule and the folders above them, all unfolded, a matching folder keeping all
+  its entries; the cells and the open handler still receive the application's values. The default
+  cell marks the matching characters, an application's own cells use the field's `highlight`, and
+  the field counts the hits out of all entries ("3 of 43"); "No matches" (`noMatchesText`) shows
+  when nothing matches. A search text function lets the search find an entry by a text it does
+  not show. Emptying the field gives back the tree folded exactly as the user left it, the selected
+  entry unfolded to and scrolled to. Ctrl+F inside the tree focuses the field (as the content's
+  `focusSearch()` does), Arrow down moves to the first hit, Enter opens it, Escape clears.
   The theme draws the tree without border or own background, with the showcase navigation's rows.
   The module now requires `org.kordamp.ikonli.core` transitively, as the icon function returns
   its `Ikon`.

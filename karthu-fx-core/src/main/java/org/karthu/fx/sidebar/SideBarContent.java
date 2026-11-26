@@ -13,8 +13,9 @@ import java.util.List;
  * items.
  *
  * <p>{@link NavigationTree} implements it: its header buttons are Expand All and Collapse All, it has no menu items,
- * and it takes the focus in its tree on the selected entry. An application's own content implements it the same
- * way, for example a list whose header offers a button that adds an entry:
+ * it takes the focus in its tree on the selected entry, and it focuses its search field, the field's text selected. An
+ * application's own content implements it the same way, for example a list whose header offers a button that adds an
+ * entry:
  * <pre>{@code
  * class WorkflowList extends ListView<Workflow> implements SideBarContent {
  *     private final Button add = new Button();

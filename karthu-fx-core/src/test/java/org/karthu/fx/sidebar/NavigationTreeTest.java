@@ -30,9 +30,12 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.karthu.fx.form.SearchInput;
 import org.karthu.fx.theme.ThemeManager;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
@@ -41,11 +44,13 @@ import org.kordamp.ikonli.javafx.FontIcon;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -372,6 +377,25 @@ class NavigationTreeTest {
         assertTrue(rows(tree).contains("70"), "the tree scrolled only as far as needed");
     }
 
+    @Test
+    @DisplayName("select scrolls to an entry inside a folded folder, which it unfolds")
+    void selectScrollsIntoAFoldedFolder() {
+        TreeItem<Integer> root = new TreeItem<>(0);
+        TreeItem<Integer> folder = new TreeItem<>(100);
+        for (int number = 1; number <= 80; number++) {
+            folder.getChildren().add(new TreeItem<>(number));
+        }
+        root.getChildren().add(folder);
+        NavigationTree<Integer> tree = new NavigationTree<>(root);
+        laidOut(tree);
+        assertEquals(List.of("100"), rows(tree));
+
+        tree.select(77);
+
+        assertTrue(folder.isExpanded());
+        assertTrue(rows(tree).contains("77"), "the selected entry shows");
+    }
+
     // --- Expand All and Collapse All ----------------------------------------------------------------
 
     @Test
@@ -500,10 +524,498 @@ class NavigationTreeTest {
         assertEquals(14, expandAll.getIconSize());
     }
 
+    // --- Search -------------------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("the search field sits above the tree over its full width, and the inner field is exposed")
+    void searchFieldAboveTheTree() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        laidOut(tree);
+
+        SearchInput search = tree.getSearchInput();
+        Bounds field = search.localToScene(search.getLayoutBounds());
+        Bounds view = tree.getTreeView().localToScene(tree.getTreeView().getLayoutBounds());
+        assertTrue(field.getMaxY() <= view.getMinY(), "the field lies above the tree view");
+        assertTrue(field.getWidth() > tree.getWidth() - 24, "the field spans the tree's width");
+        assertTrue(shows(tree, search));
+    }
+
+    @Test
+    @DisplayName("a search shows the hits and the folders above them, every folder unfolded, the application's tree untouched")
+    void searchShowsHitsAndTheirFolders() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        laidOut(tree);
+
+        search(tree, "carrot");
+
+        assertEquals(List.of("Vegetables", "Roots", "Carrot"), rows(tree));
+        assertFalse(sample.roots.isExpanded(), "the application's folder stays folded");
+        assertSame(sample.root, tree.getRoot());
+    }
+
+    @Test
+    @DisplayName("a folder that matches keeps all its entries, its folders unfolded")
+    void folderHitKeepsItsEntries() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        laidOut(tree);
+
+        search(tree, "VEGETAB");
+
+        assertEquals(List.of("Vegetables", "Roots", "Carrot", "Leek"), rows(tree));
+    }
+
+    @Test
+    @DisplayName("the search follows karthu-fx's search rule: several words narrow, case and accents ignored")
+    void searchRule() {
+        TreeItem<String> root = new TreeItem<>("root");
+        root.getChildren().add(new TreeItem<>("Zürich Main Station"));
+        root.getChildren().add(new TreeItem<>("Zurich Airport"));
+        root.getChildren().add(new TreeItem<>("Bern Station"));
+        NavigationTree<String> tree = new NavigationTree<>(root);
+        laidOut(tree);
+
+        search(tree, "zurich");
+        assertEquals(List.of("Zürich Main Station", "Zurich Airport"), rows(tree));
+
+        search(tree, "STATION zür");
+        assertEquals(List.of("Zürich Main Station"), rows(tree));
+    }
+
+    @Test
+    @DisplayName("the field counts the hits out of all entries, folded ones included, the root not counted")
+    void counter() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        laidOut(tree);
+        assertNull(counter(tree), "no counter without a search");
+
+        search(tree, "a");
+        assertEquals("5 of 8", counter(tree), "Apple, Banana, Vegetables, Carrot and Water");
+
+        search(tree, "carrot");
+        assertEquals("1 of 8", counter(tree));
+
+        search(tree, "");
+        assertNull(counter(tree));
+    }
+
+    @Test
+    @DisplayName("with no hits the tree area shows \"No matches\", a text property, until the search finds an entry")
+    void noMatches() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        laidOut(tree);
+        Label noMatches = (Label) tree.lookup(".navigation-tree-no-matches");
+        assertFalse(shows(tree, noMatches), "not without a search");
+
+        search(tree, "cheese");
+
+        assertEquals(List.of(), rows(tree));
+        assertTrue(shows(tree, noMatches));
+        assertEquals("No matches", noMatches.getText());
+        assertEquals("0 of 8", counter(tree));
+        tree.setNoMatchesText("Keine Treffer");
+        assertEquals("Keine Treffer", noMatches.getText());
+        assertEquals("Keine Treffer", tree.noMatchesTextProperty().get());
+        assertEquals("Keine Treffer", tree.getNoMatchesText());
+
+        search(tree, "leek");
+        assertFalse(shows(tree, noMatches), "the search finds an entry");
+        search(tree, "cheese");
+        search(tree, "");
+        assertFalse(shows(tree, noMatches), "the search ended");
+    }
+
+    @Test
+    @DisplayName("the default cell marks the matching characters of the shown text, following the search")
+    void highlighting() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        laidOut(tree);
+        assertEquals("Banana", marked(rowCell(tree, "Banana")), "no marks without a search");
+
+        search(tree, "an");
+        assertEquals("B[anan]a", marked(rowCell(tree, "Banana")));
+
+        search(tree, "nana b");
+        assertEquals("[B]a[nana]", marked(rowCell(tree, "Banana")));
+        assertEquals("Fruits", marked(rowCell(tree, "Fruits")), "a folder above a hit has no marks");
+    }
+
+    @Test
+    @DisplayName("a mark shows bold in the accent colour; on the selected row the text is, and its marks are underlined")
+    void highlightLook() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        Region accent = swatch("-fx-accent-color");
+        Region text = swatch("-fx-text-color");
+        laidOut(tree, accent, text);
+        search(tree, "a");
+        tree.select(sample.banana.getValue());
+        relayOut(tree);
+
+        List<Text> apple = runs(rowCell(tree, "Apple"));
+        assertLook("A", fill(accent), true, false, apple.get(0));
+        assertLook("pple", fill(text), false, false, apple.get(1));
+
+        List<Text> banana = runs(rowCell(tree, "Banana"));
+        assertLook("B", fill(accent), true, false, banana.get(0));
+        assertLook("a", fill(accent), true, true, banana.get(1));
+    }
+
+    @Test
+    @DisplayName("clearing the search shows the application's tree folded as the user left it, whatever the search unfolded or folded")
+    void foldingBackAfterClearing() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        laidOut(tree);
+        sample.fruits.setExpanded(false);
+        assertEquals(List.of("Fruits", "Vegetables", "Roots", "Leek", "Water"), rows(tree));
+
+        search(tree, "e");
+        assertEquals(List.of("Fruits", "Apple", "Vegetables", "Roots", "Carrot", "Leek", "Water"), rows(tree),
+                "every folder of the copy unfolded");
+        tree.collapseAll();
+        assertEquals(List.of("Fruits", "Vegetables", "Water"), rows(tree), "Collapse All folds the copy");
+        tree.expandAll();
+        search(tree, "");
+
+        assertSame(sample.root, tree.getTreeView().getRoot());
+        assertEquals(List.of("Fruits", "Vegetables", "Roots", "Leek", "Water"), rows(tree));
+        assertFalse(sample.fruits.isExpanded());
+        assertTrue(sample.vegetables.isExpanded());
+        assertFalse(sample.roots.isExpanded());
+    }
+
+    @Test
+    @DisplayName("clearing the search unfolds the folders above the selected entry, selects it and scrolls to it")
+    void selectedEntryShowsAfterClearing() {
+        TreeItem<String> root = new TreeItem<>("root");
+        TreeItem<String> numbers = new TreeItem<>("Numbers");
+        for (int number = 1; number <= 80; number++) {
+            numbers.getChildren().add(new TreeItem<>("Number " + number));
+        }
+        TreeItem<String> letters = new TreeItem<>("Letters");
+        letters.getChildren().add(new TreeItem<>("Alpha"));
+        root.getChildren().add(letters);
+        root.getChildren().add(numbers);
+        NavigationTree<String> tree = new NavigationTree<>(root);
+        laidOut(tree);
+        assertEquals(List.of("Letters", "Numbers"), rows(tree));
+
+        search(tree, "number 77");
+        click(tree, rowCell(tree, "Number 77"), 1);
+        assertEquals("Number 77", tree.getSelectedValue());
+        search(tree, "");
+
+        assertTrue(numbers.isExpanded(), "the folder above the selected entry unfolded");
+        assertFalse(letters.isExpanded(), "the other folder stays folded");
+        assertSame(numbers.getChildren().get(76), tree.getTreeView().getSelectionModel().getSelectedItem());
+        assertEquals("Number 77", tree.getSelectedValue());
+        assertTrue(rows(tree).contains("Number 77"), "the selected entry shows");
+    }
+
+    @Test
+    @DisplayName("the selection survives a search that shows its entry, and is cleared by one that does not")
+    void selectionThroughASearch() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        tree.setOpenMode(OpenMode.SELECTION);
+        List<Food> opened = new ArrayList<>();
+        tree.setOnOpen(opened::add);
+        laidOut(tree);
+        tree.select(sample.appleValue);
+        List<Food> selectedValues = new ArrayList<>();
+        tree.selectedValueProperty().addListener((observable, oldValue, newValue) -> selectedValues.add(newValue));
+
+        search(tree, "app");
+        assertSame(sample.appleValue, tree.getSelectedValue(), "a hit");
+        assertTrue(rowCell(tree, "Apple").isSelected(), "its row shows selected");
+        search(tree, "fruits");
+        assertSame(sample.appleValue, tree.getSelectedValue(), "shown, as its folder is a hit");
+        assertEquals(List.of(), selectedValues, "the selected value never changed on the way");
+
+        search(tree, "ban");
+        assertNull(tree.getSelectedValue(), "not shown: the selection is cleared");
+        search(tree, "a");
+        assertNull(tree.getSelectedValue(), "a cleared selection does not come back");
+        search(tree, "");
+        assertNull(tree.getSelectedValue());
+        assertEquals(List.of(), opened, "the search opens nothing");
+    }
+
+    @Test
+    @DisplayName("during a search the selected value and the open handler carry the application's values")
+    void valuesDuringASearch() {
+        for (OpenMode mode : OpenMode.values()) {
+            Sample sample = new Sample();
+            NavigationTree<Food> tree = sample.tree();
+            tree.setOpenMode(mode);
+            List<Food> opened = new ArrayList<>();
+            tree.setOnOpen(opened::add);
+            laidOut(tree);
+            search(tree, "carrot");
+
+            click(tree, rowCell(tree, "Carrot"), 1);
+            if (mode == OpenMode.DOUBLE_CLICK) {
+                click(tree, rowCell(tree, "Carrot"), 2);
+            }
+
+            assertEquals(1, opened.size(), mode + ": opened once");
+            assertSame(sample.carrotValue, opened.get(0), mode + ": the application's value, not a copy");
+            assertSame(sample.carrotValue, tree.getSelectedValue(), mode + ": the selected value");
+            assertNotSame(sample.carrot, tree.getTreeView().getSelectionModel().getSelectedItem(),
+                    mode + ": the tree view shows a copy of the application's item");
+        }
+    }
+
+    @Test
+    @DisplayName("a search text function lets the search find an entry by a text it does not show, which shows no marks")
+    void ownSearchText() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        laidOut(tree);
+        assertNull(tree.getSearchTextFunction(), "by default the shown text");
+        tree.setSearchTextFunction(food -> food == sample.carrotValue ? "Carrot orange root" : food.name());
+
+        search(tree, "orange");
+
+        assertEquals(List.of("Vegetables", "Roots", "Carrot"), rows(tree));
+        assertEquals("Carrot", marked(rowCell(tree, "Carrot")), "the marks show only in the shown text");
+        assertEquals("1 of 8", counter(tree));
+
+        tree.searchTextFunctionProperty().set(null);
+        assertEquals(List.of(), rows(tree), "a changed function applies to the search under way");
+        assertEquals("0 of 8", counter(tree));
+    }
+
+    @Test
+    @DisplayName("cells of the application's own receive its values during a search and mark the hits with the same helper")
+    void ownCellsDuringASearch() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        List<Food> shownValues = new ArrayList<>();
+        tree.getTreeView().setCellFactory(view -> new TreeCell<>() {
+            @Override
+            protected void updateItem(Food food, boolean empty) {
+                super.updateItem(food, empty);
+                setText(null);
+                if (empty || food == null) {
+                    setGraphic(null);
+                    return;
+                }
+                shownValues.add(food);
+                TextFlow name = tree.getSearchInput().highlight(food.name());
+                name.getStyleClass().add("own-name");
+                setGraphic(name);
+            }
+        });
+        laidOut(tree);
+
+        search(tree, "ban");
+
+        TreeCell<?> banana = null;
+        for (TreeCell<?> cell : shownCells(tree)) {
+            if (cell.getItem() == sample.banana.getValue()) {
+                banana = cell;
+            }
+        }
+        assertTrue(banana != null, "a row shows the application's value");
+        TextFlow name = (TextFlow) banana.lookup(".own-name");
+        assertEquals("[Ban]ana", marked(name));
+        assertTrue(shownValues.contains(sample.fruitsValue));
+    }
+
+    @Test
+    @DisplayName("during a search a change of the application's tree shows at once: an entry added or removed, a value replaced")
+    void treeChangeDuringASearch() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        laidOut(tree);
+        search(tree, "berry");
+        assertEquals(List.of(), rows(tree));
+
+        TreeItem<Food> strawberry = new TreeItem<>(new Food("Strawberry", BootstrapIcons.FILE));
+        sample.fruits.getChildren().add(strawberry);
+        assertEquals(List.of("Fruits", "Strawberry"), rows(tree));
+        assertEquals("1 of 9", counter(tree));
+        tree.select(strawberry.getValue());
+
+        Food renamed = new Food("Wild Strawberry", BootstrapIcons.FILE);
+        strawberry.setValue(renamed);
+        assertEquals(List.of("Fruits", "Wild Strawberry"), rows(tree));
+        assertSame(renamed, tree.getSelectedValue(), "the selected value follows the replaced value");
+
+        sample.water.setValue(new Food("Berry Water", BootstrapIcons.DROPLET));
+        assertEquals(List.of("Fruits", "Wild Strawberry", "Berry Water"), rows(tree));
+
+        sample.fruits.getChildren().remove(strawberry);
+        assertEquals(List.of("Berry Water"), rows(tree));
+        assertNull(tree.getSelectedValue(), "the selected entry is gone");
+        assertEquals("1 of 8", counter(tree));
+
+        TreeItem<Food> other = new TreeItem<>(new Food("Other", BootstrapIcons.FOLDER));
+        other.getChildren().add(new TreeItem<>(new Food("Blueberry", BootstrapIcons.FILE)));
+        tree.setRoot(other);
+        assertEquals(List.of("Blueberry"), rows(tree), "a new root is searched too");
+        assertEquals("1 of 1", counter(tree));
+        assertTrue(sample.fruits.isExpanded(), "the application's folding stayed as it was");
+    }
+
+    // --- Keys of the search ---------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("Ctrl+F inside the tree focuses the search field and selects its text; outside it is not the tree's")
+    void ctrlFFocusesTheSearch() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        TextField elsewhere = new TextField();
+        laidOut(tree, elsewhere);
+        tree.getSearchInput().setText("fru");
+        TextField field = tree.getSearchInput().getTextField();
+
+        pressAt(tree.getTreeView(), KeyCode.F, true);
+        assertSame(field, tree.getScene().getFocusOwner());
+        assertEquals("fru", field.getSelectedText());
+
+        field.deselect();
+        pressAt(field, KeyCode.F, true);
+        assertEquals("fru", field.getSelectedText(), "in the field too");
+
+        pressAt(elsewhere, KeyCode.F, true);
+        assertSame(elsewhere, tree.getScene().getFocusOwner());
+    }
+
+    @Test
+    @DisplayName("Arrow down in the field moves the focus to the tree on the first hit, which opens it only in selection mode")
+    void arrowDownMovesToTheFirstHit() {
+        for (OpenMode mode : OpenMode.values()) {
+            Sample sample = new Sample();
+            NavigationTree<Food> tree = sample.tree();
+            tree.setOpenMode(mode);
+            List<Food> opened = new ArrayList<>();
+            tree.setOnOpen(opened::add);
+            laidOut(tree);
+            search(tree, "e");
+            assertEquals("Fruits", rows(tree).get(0), "the folder above the first hit comes first");
+
+            pressAt(tree.getSearchInput().getTextField(), KeyCode.DOWN, false);
+
+            assertSame(tree.getTreeView(), tree.getScene().getFocusOwner(), mode.name());
+            assertSame(sample.appleValue, tree.getSelectedValue(), mode + ": the first hit, not the folder above it");
+            assertSame(sample.appleValue, tree.getTreeView().getFocusModel().getFocusedItem().getValue(), mode.name());
+            List<Food> expected = mode == OpenMode.SELECTION ? List.of(sample.appleValue) : List.of();
+            assertEquals(expected, opened, mode + ": selecting opens only where selection opens");
+        }
+    }
+
+    @Test
+    @DisplayName("Enter in the field selects the first hit and opens it, the focus staying in the field")
+    void enterOpensTheFirstHit() {
+        for (OpenMode mode : OpenMode.values()) {
+            Sample sample = new Sample();
+            NavigationTree<Food> tree = sample.tree();
+            tree.setOpenMode(mode);
+            List<Food> opened = new ArrayList<>();
+            tree.setOnOpen(opened::add);
+            laidOut(tree);
+            search(tree, "lee");
+            TextField field = tree.getSearchInput().getTextField();
+
+            pressAt(field, KeyCode.ENTER, false);
+
+            assertSame(field, tree.getScene().getFocusOwner(), mode.name());
+            assertSame(sample.leek.getValue(), tree.getSelectedValue(), mode.name());
+            assertEquals(List.of(sample.leek.getValue()), opened, mode + ": opened once");
+        }
+    }
+
+    @Test
+    @DisplayName("without a hit Arrow down and Enter do nothing; in an empty field Arrow down moves to the selected entry")
+    void keysWithoutAHit() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        tree.setOpenMode(OpenMode.SELECTION);
+        List<Food> opened = new ArrayList<>();
+        tree.setOnOpen(opened::add);
+        laidOut(tree);
+        TextField field = tree.getSearchInput().getTextField();
+
+        search(tree, "cheese");
+        pressAt(field, KeyCode.DOWN, false);
+        pressAt(field, KeyCode.ENTER, false);
+        assertSame(field, tree.getScene().getFocusOwner());
+        assertNull(tree.getSelectedValue());
+
+        search(tree, "");
+        tree.select(sample.waterValue);
+        pressAt(field, KeyCode.ENTER, false);
+        assertSame(field, tree.getScene().getFocusOwner(), "Enter in an empty field is no search");
+        pressAt(field, KeyCode.DOWN, false);
+        assertSame(tree.getTreeView(), tree.getScene().getFocusOwner());
+        assertSame(sample.water, tree.getTreeView().getFocusModel().getFocusedItem());
+        assertSame(sample.waterValue, tree.getSelectedValue(), "the selection stays");
+        assertEquals(List.of(), opened);
+    }
+
+    @Test
+    @DisplayName("Escape in the field clears the search and shows the application's tree again")
+    void escapeClears() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        laidOut(tree);
+        search(tree, "carrot");
+
+        pressAt(tree.getSearchInput().getTextField(), KeyCode.ESCAPE, false);
+        relayOut(tree);
+
+        assertEquals("", tree.getSearchInput().getText());
+        assertSame(sample.root, tree.getTreeView().getRoot());
+        assertEquals(List.of("Fruits", "Apple", "Banana", "Vegetables", "Roots", "Leek", "Water"), rows(tree));
+    }
+
+    @Test
+    @DisplayName("as a side bar's content the tree focuses its search field, its text selected")
+    void contentContractFocusesTheSearch() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        laidOut(tree);
+        tree.getSearchInput().setText("app");
+        tree.getTreeView().requestFocus();
+
+        assertTrue(tree.focusSearch());
+
+        TextField field = tree.getSearchInput().getTextField();
+        assertSame(field, tree.getScene().getFocusOwner());
+        assertEquals("app", field.getSelectedText());
+    }
+
+    @Test
+    @DisplayName("an empty tree shows its placeholder during a search, not \"No matches\"")
+    void placeholderDuringASearch() {
+        TreeItem<String> root = new TreeItem<>("root");
+        NavigationTree<String> tree = new NavigationTree<>(root);
+        Label placeholder = new Label("No workflows yet");
+        tree.setPlaceholder(placeholder);
+        laidOut(tree);
+        Node noMatches = tree.lookup(".navigation-tree-no-matches");
+
+        search(tree, "flow");
+
+        assertTrue(shows(tree, placeholder));
+        assertFalse(shows(tree, noMatches));
+        root.getChildren().add(new TreeItem<>("Import"));
+        assertFalse(shows(tree, placeholder));
+        assertTrue(shows(tree, noMatches), "the tree has an entry now, which the search does not find");
+    }
+
     // --- Content contract ----------------------------------------------------------------------------
 
     @Test
-    @DisplayName("as a side bar's content the tree has no menu items and no search, and takes the focus on its selection")
+    @DisplayName("as a side bar's content the tree has no menu items, and takes the focus on its selection")
     void contentContract() {
         Sample sample = new Sample();
         NavigationTree<Food> tree = sample.tree();
@@ -517,7 +1029,6 @@ class NavigationTreeTest {
         assertSame(tree.getTreeView(), tree.getScene().getFocusOwner());
         assertSame(sample.carrot, tree.getTreeView().getFocusModel().getFocusedItem());
         assertEquals(List.of(), tree.getMenuItems());
-        assertFalse(tree.focusSearch(), "no search to focus");
     }
 
     @Test
@@ -615,6 +1126,22 @@ class NavigationTreeTest {
         return scene;
     }
 
+    /** Puts a text into the tree's search field, as the user types it, and lays the tree out again. */
+    private static void search(NavigationTree<?> tree, String text) {
+        tree.getSearchInput().setText(text);
+        relayOut(tree);
+    }
+
+    /** The text of the search field's counter, null while it does not show. */
+    private static String counter(NavigationTree<?> tree) {
+        Label counter = (Label) tree.getSearchInput().lookup(".form-search-count");
+        relayOut(tree);
+        if (!counter.isVisible() || !counter.isManaged()) {
+            return null;
+        }
+        return counter.getText();
+    }
+
     /** Lays the tree's scene out again, after a change. */
     private static void relayOut(NavigationTree<?> tree) {
         Parent root = tree.getScene().getRoot();
@@ -626,10 +1153,71 @@ class NavigationTreeTest {
     private static List<String> rows(NavigationTree<?> tree) {
         List<String> texts = new ArrayList<>();
         for (TreeCell<?> cell : shownCells(tree)) {
-            Label text = (Label) cell.lookup(".navigation-tree-text");
-            texts.add(text.getText());
+            texts.add(rowText(cell));
         }
         return texts;
+    }
+
+    /** The text a row of the default cell shows: the runs of its highlight node, or an own cell's text. */
+    private static String rowText(TreeCell<?> cell) {
+        Node text = cell.lookup(".navigation-tree-text");
+        if (text == null) {
+            return cell.getText();
+        }
+        StringBuilder shown = new StringBuilder();
+        for (Text run : runs(cell)) {
+            shown.append(run.getText());
+        }
+        return shown.toString();
+    }
+
+    /** The shown cell whose row shows a text. */
+    private static TreeCell<?> rowCell(NavigationTree<?> tree, String text) {
+        for (TreeCell<?> cell : shownCells(tree)) {
+            if (text.equals(rowText(cell))) {
+                return cell;
+            }
+        }
+        throw new AssertionError("no row shows " + text);
+    }
+
+    /** The runs of the highlight node of a row of the default cell, left to right. */
+    private static List<Text> runs(TreeCell<?> cell) {
+        TextFlow flow = (TextFlow) cell.lookup(".navigation-tree-text");
+        assertTrue(flow.getStyleClass().contains("search-highlight"), "the text is a highlight node");
+        List<Text> runs = new ArrayList<>();
+        for (Node child : flow.getChildren()) {
+            runs.add((Text) child);
+        }
+        return runs;
+    }
+
+    /** The text of a row of the default cell, with its marks in brackets. */
+    private static String marked(TreeCell<?> cell) {
+        return marked((TextFlow) cell.lookup(".navigation-tree-text"));
+    }
+
+    /** The text of a highlight node, with its marks in brackets. */
+    private static String marked(TextFlow flow) {
+        StringBuilder marked = new StringBuilder();
+        for (Node child : flow.getChildren()) {
+            Text run = (Text) child;
+            if (run.getStyleClass().contains("search-match")) {
+                marked.append('[').append(run.getText()).append(']');
+            } else {
+                marked.append(run.getText());
+            }
+        }
+        return marked.toString();
+    }
+
+    /** Checks a run's text and its look in the theme: its fill, bold or not, underlined or not. */
+    private static void assertLook(String expected, Paint fill, boolean bold, boolean underlined, Text run) {
+        assertEquals(expected, run.getText());
+        assertEquals(fill, run.getFill(), () -> "the fill of " + run);
+        assertEquals(bold, run.getFont().getStyle().toLowerCase(Locale.ROOT).contains("bold"),
+                () -> "bold " + !bold + ": " + run + ", " + run.getFont());
+        assertEquals(underlined, run.isUnderline(), () -> "underlined " + !underlined + ": " + run);
     }
 
     /** The icons of the rows the tree shows, top to bottom; null for a row without an icon. */
@@ -679,7 +1267,16 @@ class NavigationTreeTest {
      * row's disclosure arrow, or on the row's right end, away from the arrow.
      */
     private static void click(NavigationTree<?> tree, TreeItem<?> item, boolean onArrow, int clickCount) {
-        TreeCell<?> cell = cellOf(tree, item);
+        click(tree, cellOf(tree, item), onArrow, clickCount);
+    }
+
+    /** A click of the primary button on a shown row, away from its arrow, such as a row of a search's copy. */
+    private static void click(NavigationTree<?> tree, TreeCell<?> cell, int clickCount) {
+        click(tree, cell, false, clickCount);
+    }
+
+    /** A click of the primary button on a shown row: on its arrow, or on its right end. */
+    private static void click(NavigationTree<?> tree, TreeCell<?> cell, boolean onArrow, int clickCount) {
         Node target = cell;
         double x;
         double y;
@@ -712,6 +1309,13 @@ class NavigationTreeTest {
         assertSame(view, view.getScene().getFocusOwner(), "the tree view did not take the focus");
         Event.fireEvent(view, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, false, false, false, false));
         relayOut(tree);
+    }
+
+    /** Gives a node the focus and presses a key there, with Ctrl or without a modifier. */
+    private static void pressAt(Node node, KeyCode code, boolean ctrl) {
+        node.requestFocus();
+        assertSame(node, node.getScene().getFocusOwner(), "the node did not take the focus");
+        Event.fireEvent(node, new KeyEvent(KeyEvent.KEY_PRESSED, "", "", code, false, ctrl, false, false));
     }
 
     /** A region filled with a theme token, so that a test compares against the token, not against its value. */

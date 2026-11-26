@@ -9,9 +9,14 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.collections.transformation.FilteredList;
 import javafx.event.Event;
 import javafx.event.EventDispatchChain;
 import javafx.event.EventDispatcher;
+import javafx.event.EventHandler;
+import javafx.event.WeakEventHandler;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -23,7 +28,10 @@ import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.skin.VirtualFlow;
 import javafx.scene.input.InputEvent;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
@@ -31,23 +39,29 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.TextFlow;
+import org.karthu.fx.form.SearchInput;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
 import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Deque;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
  * A tree of the application's entries for the edge of a window: the ready-made content of a side bar's panel, or a
  * navigation on its own in any layout. It shows the application's own tree of JavaFX {@link TreeItem}s under a hidden
- * root, each entry with its icon and its text, and tells the application when the user opens an entry, handing over
- * the entry's value.
+ * root, each entry with its icon and its text, under a search field that narrows it, and tells the application when
+ * the user opens an entry, handing over the entry's value.
  *
  * <p><b>The application's tree.</b> The {@linkplain #rootProperty() root} is the application's, and so are its items
  * and values: the tree shows them as they are and follows every change of them, an item added or removed, a value
@@ -55,6 +69,38 @@ import java.util.function.Function;
  * when it is set, since a folded hidden root would show nothing. An entry's text comes from the
  * {@linkplain #textFunctionProperty() text function} (by default the value's string form), its icon from the
  * {@linkplain #iconFunctionProperty() icon function}, an Ikonli icon or none.
+ *
+ * <p><b>Search.</b> A {@linkplain #getSearchInput() search field} lies above the tree over its full width. An entry is
+ * a <i>hit</i> when its {@linkplain #searchTextFunctionProperty() search text} (by default the shown text) matches
+ * the search by karthu-fx's search rule: the search's words each occur as a contiguous part, case and accents ignored
+ * (see {@link SearchInput}). While the field holds text, the tree view shows a copy of the application's tree instead
+ * of the tree itself: every hit, every folder above a hit, and for a hit with children all its entries, so a folder
+ * whose own name matches keeps its whole content. Every folder of the copy is unfolded, and every item of it carries
+ * the application's value, so the cells, the {@linkplain #selectedValueProperty() selected value} and the open handler
+ * receive the application's values during a search as at any other time. A change of the application's tree during
+ * the search (an item added or removed, a value replaced) shows at once.
+ * <ul>
+ *   <li>The default cell marks the characters of the shown text that match, through the field's
+ *       {@linkplain SearchInput#highlight(String) highlight}; cells of the application's own use the same helper:
+ *       {@code tree.getSearchInput().highlight(text)}.</li>
+ *   <li>The field's counter shows the hits out of all entries, folded ones included and the hidden root not counted:
+ *       <i>3 of 43</i>. While the search finds no entry, the tree area shows
+ *       {@linkplain #noMatchesTextProperty() <i>No matches</i>}; while the application's tree has no entry, its
+ *       placeholder instead.</li>
+ *   <li>The selected entry stays selected through a change of the search while the copy shows it, as a hit, a folder
+ *       above one or an entry of a matching folder; otherwise the selection is cleared and does not come back. Neither
+ *       opens anything.</li>
+ *   <li>Emptying the field shows the application's tree again, folded exactly as the user left it, since the search
+ *       only ever folds and unfolds its copy: only the folders above the selected entry unfold, so that it shows,
+ *       selected and scrolled to.</li>
+ * </ul>
+ *
+ * <p><b>Keys of the search</b>, the tree's own, without a command registry: Ctrl+F (Cmd+F on macOS) while the focus
+ * is inside the tree puts it into the search field and selects its text, as {@link #focusSearch()} does. In the field,
+ * during a search, Arrow down moves the focus to the tree and selects the first hit in the order of the rows, a change
+ * of the selection by the user, which opens it in {@link OpenMode#SELECTION}; Enter selects the first hit and opens it
+ * in either mode, the focus staying in the field. Without a hit both pass on. In an empty field Arrow down moves the
+ * focus to the tree, on its selected entry, and Enter passes on. Escape empties the field, the field's own key.
  *
  * <p><b>Opening.</b> The {@linkplain #openModeProperty() open mode} decides how the user opens an entry, the
  * {@linkplain #onOpenProperty() open handler} receives the entry's value, the application's own, never a copy:
@@ -77,15 +123,15 @@ import java.util.function.Function;
  * unfolds the folders above it and scrolls it into view.
  *
  * <p><b>Expand All and Collapse All.</b> {@link #expandAll()} unfolds every entry with children, {@link #collapseAll()}
- * folds every entry below the hidden root. Both act on the tree the tree view shows, and both are offered as buttons:
- * as a {@link SideBarContent}, the tree's {@linkplain #getHeaderButtons() header buttons} are Expand All and Collapse
- * All, which a side bar puts into its panel's header and an application that uses the tree alone places itself. Their
- * tooltips are {@linkplain #expandAllTextProperty() properties}. The tree has no menu items, and opening its panel puts
- * the focus into the tree, on the selected entry.
+ * folds every entry below the hidden root. Both act on the tree the tree view shows, during a search the copy, and both
+ * are offered as buttons: as a {@link SideBarContent}, the tree's {@linkplain #getHeaderButtons() header buttons} are
+ * Expand All and Collapse All, which a side bar puts into its panel's header and an application that uses the tree
+ * alone places itself. Their tooltips are {@linkplain #expandAllTextProperty() properties}. The tree has no menu items,
+ * opening its panel puts the focus into the tree, on the selected entry, and its search is focused as by Ctrl+F.
  *
  * <p><b>Placeholder.</b> While the application's tree has no entry, or there is no root, the tree shows the
  * application's {@linkplain #placeholderProperty() placeholder} at its top, such as a label that says what would
- * appear there.
+ * appear there, also during a search.
  *
  * <p><b>The inner tree view</b> is {@linkplain #getTreeView() exposed}, so an application can give it a context menu,
  * its own cells or anything else a tree view offers. Opening and folding work on the tree view, not in its cells, so
@@ -95,15 +141,23 @@ import java.util.function.Function;
  * <p><b>Style classes</b>, a public contract: renaming one is a breaking change. The theme draws the tree without
  * border and without a background of its own, so it lies on the panel around it, and its rows like the navigation of
  * karthu-fx's showcase: the hover colour, the selected row in the selection colour with a 2 px accent bar on its
- * left, its icon and text in the accent colour.
+ * left, its icon and text in the accent colour, the text bold. A mark of the search shows bold in the accent colour,
+ * on the selected row underlined.
  * <ul>
  *   <li>{@code navigation-tree}: the tree, a {@link VBox}</li>
- *   <li>{@code navigation-tree-area}: the area of the tree view and the placeholder, a {@link StackPane}</li>
+ *   <li>{@code navigation-tree-search-bar}: the holder of the search field, a {@link StackPane}, the tree's first
+ *       child, which gives the field its room</li>
+ *   <li>{@code navigation-tree-search}: the search field, a {@link SearchInput} with its own style classes</li>
+ *   <li>{@code navigation-tree-area}: the area of the tree view, the placeholder and <i>No matches</i>, a
+ *       {@link StackPane}</li>
  *   <li>{@code navigation-tree-entry}: what the default cell shows, an {@link HBox} of the icon and the text</li>
  *   <li>{@code navigation-tree-icon}: an entry's icon, a {@link FontIcon}, 14 px in the secondary text colour</li>
- *   <li>{@code navigation-tree-text}: an entry's text, a {@link Label}</li>
+ *   <li>{@code navigation-tree-text}: an entry's text, a highlight node of the search field, a {@link TextFlow} beside
+ *       {@code search-highlight}, whose runs carry {@code search-text} and, marked, {@code search-match}</li>
  *   <li>{@code navigation-tree-placeholder}: the holder of the placeholder, a {@link StackPane} at the top of the
  *       tree area, its label in the secondary text colour</li>
+ *   <li>{@code navigation-tree-no-matches}: <i>No matches</i>, a {@link Label} at the top of the tree area, in the
+ *       secondary text colour</li>
  *   <li>{@code navigation-tree-expand-all}, {@code navigation-tree-collapse-all}: the header buttons, {@link Button}s
  *       beside {@code icon-button}, with the Bootstrap icons {@code ARROWS_EXPAND} and {@code ARROWS_COLLAPSE}, 14 px
  *       in the secondary text colour</li>
@@ -115,6 +169,9 @@ import java.util.function.Function;
  * @since 1.1.0-RC2
  */
 public class NavigationTree<T> extends VBox implements SideBarContent {
+
+    /** Ctrl+F, Cmd+F on macOS: the focus into the search field. */
+    private static final KeyCombination FIND = new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN);
 
     private final ObjectProperty<TreeItem<T>> root = new SimpleObjectProperty<>(this, "root");
     private final ObjectProperty<Function<? super T, String>> textFunction =
@@ -128,18 +185,29 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
     private final ObjectProperty<Node> placeholder = new SimpleObjectProperty<>(this, "placeholder");
     private final StringProperty expandAllText = new SimpleStringProperty(this, "expandAllText", "Expand All");
     private final StringProperty collapseAllText = new SimpleStringProperty(this, "collapseAllText", "Collapse All");
+    private final ObjectProperty<Function<? super T, String>> searchTextFunction =
+            new SimpleObjectProperty<>(this, "searchTextFunction");
+    private final StringProperty noMatchesText = new SimpleStringProperty(this, "noMatchesText", "No matches");
 
+    private final SearchInput searchInput = new SearchInput();
+    /** Holds the search field above the tree area, the tree's first child; the theme gives it its padding. */
+    private final StackPane searchBar = new StackPane(searchInput);
     private final TreeView<T> treeView = new TreeView<>();
     /** Holds the placeholder over the tree view while the application's tree is empty. */
     private final StackPane placeholderHolder = new StackPane();
-    /** The tree view and the placeholder; a search field can go above it, as the tree's first child. */
-    private final StackPane treeArea = new StackPane(treeView, placeholderHolder);
+    /** Lies over the tree view while a search finds nothing. */
+    private final Label noMatches = new Label();
+    /** The tree view, the placeholder and "No matches", under the search field. */
+    private final StackPane treeArea = new StackPane(treeView, placeholderHolder, noMatches);
     private final Button expandAllButton = headerButton("navigation-tree-expand-all", BootstrapIcons.ARROWS_EXPAND,
             expandAllText, this::expandAll);
     private final Button collapseAllButton = headerButton("navigation-tree-collapse-all",
             BootstrapIcons.ARROWS_COLLAPSE, collapseAllText, this::collapseAll);
 
-    /** How many input events the tree view is dispatching now: a change of the selection meanwhile is the user's. */
+    /**
+     * How many of the user's input events are handled now, by the tree view or by the search field's keys: a change
+     * of the selection meanwhile is the user's.
+     */
     private int userInputs;
     /** How many of the tree's own changes of the selection are under way, which open nothing. */
     private int quietSelections;
@@ -160,6 +228,34 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
     private final WeakInvalidationListener weakRootChildrenChanged = new WeakInvalidationListener(rootChildrenChanged);
     private final ChangeListener<TreeItem<T>> selectionChanged =
             (observable, oldItem, newItem) -> selectionChanged(newItem);
+
+    /**
+     * Every entry of the application's tree below its root, in the order of the rows, folded or not, while a search
+     * is under way; empty otherwise. The search field counts it as all entries.
+     */
+    private final ObservableList<TreeItem<T>> entries = FXCollections.observableArrayList();
+    /**
+     * The hits: the entries whose search text matches. The search field owns the predicate, so the hits follow
+     * karthu-fx's search rule and the field counts them, "3 of 43", as it counts any list it filters.
+     */
+    private final FilteredList<TreeItem<T>> hits = new FilteredList<>(entries);
+    /** Whether the search field holds text, so that the tree view shows the copy of the hits. */
+    private boolean searching;
+    /** Whether the entries are being refreshed: the hits follow, and the copy is built once afterwards. */
+    private boolean refreshingEntries;
+    /** How many switches of the tree view's root are under way: the selected value follows once it shows. */
+    private int rootSwitches;
+    /** The root of the copy the tree view shows during a search, null otherwise. */
+    private TreeItem<T> copyRoot;
+    /** The application's item of every item of the copy. */
+    private final Map<TreeItem<T>, TreeItem<T>> originals = new IdentityHashMap<>();
+    /** The item of the copy of every application's item the copy holds. */
+    private final Map<TreeItem<T>, TreeItem<T>> copies = new IdentityHashMap<>();
+    private final EventHandler<TreeItem.TreeModificationEvent<T>> applicationTreeChanged =
+            event -> applicationTreeChanged();
+    /** Held weakly by the application's root, so that a root outliving the tree never keeps it alive. */
+    private final WeakEventHandler<TreeItem.TreeModificationEvent<T>> weakApplicationTreeChanged =
+            new WeakEventHandler<>(applicationTreeChanged);
 
     /**
      * Creates a navigation tree without a root: it shows no entry, and the placeholder once there is one.
@@ -186,7 +282,27 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
         placeholderHolder.setAlignment(Pos.TOP_LEFT);
         // Over the tree view, but clicks beside the placeholder's own nodes reach the tree view under it.
         placeholderHolder.setPickOnBounds(false);
-        getChildren().add(treeArea);
+        noMatches.getStyleClass().add("navigation-tree-no-matches");
+        noMatches.textProperty().bind(noMatchesText);
+        noMatches.setMouseTransparent(true);
+        noMatches.setVisible(false);
+        StackPane.setAlignment(noMatches, Pos.TOP_LEFT);
+        searchBar.getStyleClass().add("navigation-tree-search-bar");
+        searchInput.getStyleClass().add("navigation-tree-search");
+        searchInput.setMaxWidth(Double.MAX_VALUE);
+        getChildren().addAll(searchBar, treeArea);
+
+        // The field filters the flat list of the entries: its predicate decides the hits by karthu-fx's search rule,
+        // and its counter shows them out of all entries. The copy follows the hits, and the text decides whether the
+        // copy or the application's tree shows; either listener may hear a change first, both end in the same state.
+        searchInput.filter(hits, item -> searchTextOf(item.getValue()));
+        hits.addListener((InvalidationListener) observable -> hitsChanged());
+        searchInput.textProperty().addListener((observable, oldText, newText) -> searchTextChanged());
+        // The navigation's own keys, without a command registry: Ctrl+F wherever the focus is inside it, a handler, so
+        // that a node inside that takes the key keeps it; Arrow down and Enter in the field, a filter ahead of the text
+        // field's own keys. Escape is the field's own: it empties it, which ends the search.
+        addEventHandler(KeyEvent.KEY_PRESSED, this::findPressed);
+        searchInput.addEventFilter(KeyEvent.KEY_PRESSED, this::searchKeyPressed);
 
         // Filters on the tree view, not handlers in the cells: opening and folding stay with an application's own
         // cells, and the cells' own behaviour never sees a press the tree handled itself.
@@ -210,8 +326,13 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
         });
 
         this.root.addListener((observable, oldRoot, newRoot) -> rootChanged(oldRoot, newRoot));
-        textFunction.addListener(observable -> treeView.refresh());
+        textFunction.addListener(observable -> {
+            treeView.refresh();
+            // The shown text is the default search text.
+            applicationTreeChanged();
+        });
         iconFunction.addListener(observable -> treeView.refresh());
+        searchTextFunction.addListener(observable -> applicationTreeChanged());
         placeholder.addListener(observable -> updatePlaceholder());
         setRoot(root);
         updatePlaceholder();
@@ -241,7 +362,8 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
     }
 
     /**
-     * Sets the root of the application's tree, which is unfolded. The selection is cleared.
+     * Sets the root of the application's tree, which is unfolded. The selection is cleared. During a search the new
+     * tree is searched at once.
      *
      * @param root the root, null for none
      * @since 1.1.0-RC2
@@ -405,7 +527,7 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
      * Selects the entry that holds the value: the first one in the order of the rows whose value equals it, the hidden
      * root not counted. The folders above it unfold, the keyboard focus of the tree moves to it, and the tree scrolls
      * as far as needed to show it. When no entry holds the value, or the value is null, the selection is cleared. It
-     * opens nothing, in either mode.
+     * opens nothing, in either mode. During a search it looks among the entries the search shows.
      *
      * @param value the value; null clears the selection
      * @return true when an entry holds the value and is selected now, false when the selection was cleared
@@ -415,21 +537,90 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
         TreeItem<T> item = value == null ? null : findBelow(treeView.getRoot(), value);
         quietSelections++;
         try {
-            if (item == null) {
-                treeView.getSelectionModel().clearSelection();
-                return false;
-            }
-            for (TreeItem<T> parent = item.getParent(); parent != null; parent = parent.getParent()) {
-                parent.setExpanded(true);
-            }
-            int row = treeView.getRow(item);
-            treeView.getSelectionModel().clearAndSelect(row);
-            treeView.getFocusModel().focus(row);
-            showRow(row);
-            return true;
+            selectItem(item);
+            return item != null;
         } finally {
             quietSelections--;
         }
+    }
+
+    // --- Search ---------------------------------------------------------------------------------------
+
+    /**
+     * Returns the search field above the tree, for what a search field offers beyond the tree's search: its text, its
+     * placeholder, its counter's format, the highlight nodes for cells of the application's own
+     * ({@link SearchInput#highlight(String)}). The tree connects it to its entries: an application does not connect it
+     * to a list or a view of its own, which would end the tree's search.
+     *
+     * @return the search field
+     * @since 1.1.0-RC2
+     */
+    public final SearchInput getSearchInput() {
+        return searchInput;
+    }
+
+    /**
+     * The text the search matches for an entry, from its value, which may hold more than the shown text, such as a
+     * summary and keywords. Null, the default, matches the shown text (see {@link #textFunctionProperty()}); a
+     * function's null result counts as the empty text. The marks of a hit show only in what the entry shows. A change
+     * applies to a search under way at once.
+     *
+     * @return the search text function property
+     * @since 1.1.0-RC2
+     */
+    public final ObjectProperty<Function<? super T, String>> searchTextFunctionProperty() {
+        return searchTextFunction;
+    }
+
+    /**
+     * Returns the search text function.
+     *
+     * @return the search text function, null for the shown text
+     * @since 1.1.0-RC2
+     */
+    public final Function<? super T, String> getSearchTextFunction() {
+        return searchTextFunction.get();
+    }
+
+    /**
+     * Sets the text the search matches for an entry, from its value.
+     *
+     * @param function the search text function, null for the shown text
+     * @since 1.1.0-RC2
+     */
+    public final void setSearchTextFunction(Function<? super T, String> function) {
+        searchTextFunction.set(function);
+    }
+
+    /**
+     * The text the tree area shows while a search finds no entry (default <i>No matches</i>), a property so that an
+     * application can translate it.
+     *
+     * @return the no matches text property
+     * @since 1.1.0-RC2
+     */
+    public final StringProperty noMatchesTextProperty() {
+        return noMatchesText;
+    }
+
+    /**
+     * Returns the text the tree area shows while a search finds no entry.
+     *
+     * @return the no matches text
+     * @since 1.1.0-RC2
+     */
+    public final String getNoMatchesText() {
+        return noMatchesText.get();
+    }
+
+    /**
+     * Sets the text the tree area shows while a search finds no entry.
+     *
+     * @param text the no matches text
+     * @since 1.1.0-RC2
+     */
+    public final void setNoMatchesText(String text) {
+        noMatchesText.set(text);
     }
 
     // --- Expand All and Collapse All ----------------------------------------------------------------
@@ -564,6 +755,21 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
         }
     }
 
+    /**
+     * Puts the keyboard focus into the search field and selects its text, so that what the user types replaces the
+     * search, as Ctrl+F inside the tree does.
+     *
+     * @return true, as the tree has a search
+     * @since 1.1.0-RC2
+     */
+    @Override
+    public boolean focusSearch() {
+        TextField field = searchInput.getTextField();
+        field.requestFocus();
+        field.selectAll();
+        return true;
+    }
+
     // --- Placeholder ---------------------------------------------------------------------------------
 
     /**
@@ -603,7 +809,8 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
     /**
      * Returns the inner tree view, for what a tree view offers beyond the navigation tree: a context menu, cells of
      * the application's own, a selection read or made directly. Its root is managed by the navigation tree (set
-     * {@link #rootProperty()} instead), and it never shows its root.
+     * {@link #rootProperty()} instead), and it never shows its root. During a search its root is the copy's, whose
+     * items carry the application's values; a cell reads the value, not the item.
      *
      * @return the tree view
      * @since 1.1.0-RC2
@@ -617,27 +824,266 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
     private void rootChanged(TreeItem<T> oldRoot, TreeItem<T> newRoot) {
         if (oldRoot != null) {
             oldRoot.getChildren().removeListener(weakRootChildrenChanged);
+            oldRoot.removeEventHandler(TreeItem.childrenModificationEvent(), weakApplicationTreeChanged);
+            oldRoot.removeEventHandler(TreeItem.valueChangedEvent(), weakApplicationTreeChanged);
         }
         if (newRoot != null) {
             newRoot.setExpanded(true);
             newRoot.getChildren().addListener(weakRootChildrenChanged);
+            // A change anywhere in the application's tree reaches its root: JavaFX's tree items pass their events on
+            // to their parents.
+            newRoot.addEventHandler(TreeItem.childrenModificationEvent(), weakApplicationTreeChanged);
+            newRoot.addEventHandler(TreeItem.valueChangedEvent(), weakApplicationTreeChanged);
         }
-        treeView.setRoot(newRoot);
+        if (searching) {
+            refreshEntries();
+            showCopy();
+        } else {
+            treeView.setRoot(newRoot);
+        }
         updatePlaceholder();
     }
 
-    /** Shows the placeholder while the application's tree has no entry, and hides it otherwise. */
+    /**
+     * Shows the placeholder while the application's tree has no entry, and hides it otherwise; shows "No matches" while
+     * a search shows no entry and the placeholder does not show.
+     */
     private void updatePlaceholder() {
         TreeItem<T> applicationRoot = root.get();
         boolean empty = applicationRoot == null || applicationRoot.getChildren().isEmpty();
         Node node = placeholder.get();
-        if (empty && node != null) {
+        boolean placeholderShows = empty && node != null;
+        if (placeholderShows) {
             placeholderHolder.getChildren().setAll(node);
             placeholderHolder.setVisible(true);
         } else {
             placeholderHolder.getChildren().clear();
             placeholderHolder.setVisible(false);
         }
+        boolean copyEmpty = copyRoot == null || copyRoot.getChildren().isEmpty();
+        noMatches.setVisible(searching && copyEmpty && !placeholderShows);
+    }
+
+    // --- Search --------------------------------------------------------------------------------------
+
+    /** The search text changed: a search starts when the field gets text, and ends when it loses it. */
+    private void searchTextChanged() {
+        String text = searchInput.getText();
+        boolean hasText = text != null && !text.isEmpty();
+        if (hasText && !searching) {
+            searching = true;
+            refreshEntries();
+            showCopy();
+        } else if (!hasText && searching) {
+            endSearch();
+        }
+    }
+
+    /** The hits changed, as the search field set a new predicate: the copy follows during a search. */
+    private void hitsChanged() {
+        if (searching && !refreshingEntries) {
+            showCopy();
+        }
+    }
+
+    /**
+     * The application's tree changed somewhere (an item added or removed, a value replaced), or what the search
+     * matches did: during a search the entries are read again and the copy built anew.
+     */
+    private void applicationTreeChanged() {
+        if (searching) {
+            refreshEntries();
+            showCopy();
+        }
+    }
+
+    /** Reads every entry of the application's tree again; the hits follow, and the field counts them. */
+    private void refreshEntries() {
+        refreshingEntries = true;
+        try {
+            entries.setAll(entriesBelow(root.get()));
+        } finally {
+            refreshingEntries = false;
+        }
+    }
+
+    /**
+     * Shows a new copy of the application's tree: every hit, every folder above a hit, and for a hit with children
+     * all its descendants, every folder unfolded, each item carrying the application's value. The selected entry stays
+     * selected when the copy holds it.
+     */
+    private void showCopy() {
+        TreeItem<T> selected = selectedOriginal();
+        originals.clear();
+        copies.clear();
+        Set<TreeItem<T>> hitSet = Collections.newSetFromMap(new IdentityHashMap<>());
+        hitSet.addAll(hits);
+        TreeItem<T> applicationRoot = root.get();
+        TreeItem<T> newCopyRoot = null;
+        if (applicationRoot != null) {
+            newCopyRoot = new TreeItem<>(applicationRoot.getValue());
+            newCopyRoot.setExpanded(true);
+            for (TreeItem<T> child : applicationRoot.getChildren()) {
+                TreeItem<T> copy = copyOf(child, hitSet, false);
+                if (copy != null) {
+                    newCopyRoot.getChildren().add(copy);
+                }
+            }
+        }
+        copyRoot = newCopyRoot;
+        showRoot(newCopyRoot, selected == null ? null : copies.get(selected));
+        updatePlaceholder();
+    }
+
+    /**
+     * The copy of an application's item, or null when the search leaves it out: a hit, an item below a hit, or a
+     * folder with a hit below it is copied, with the copies of its children, unfolded.
+     *
+     * @param belowHit whether a folder above the item is a hit, which keeps all its entries
+     */
+    private TreeItem<T> copyOf(TreeItem<T> original, Set<TreeItem<T>> hitSet, boolean belowHit) {
+        boolean hit = hitSet.contains(original);
+        List<TreeItem<T>> children = new ArrayList<>();
+        for (TreeItem<T> child : original.getChildren()) {
+            TreeItem<T> copy = copyOf(child, hitSet, belowHit || hit);
+            if (copy != null) {
+                children.add(copy);
+            }
+        }
+        if (!hit && !belowHit && children.isEmpty()) {
+            return null;
+        }
+        TreeItem<T> copy = new TreeItem<>(original.getValue());
+        copy.getChildren().setAll(children);
+        copy.setExpanded(true);
+        originals.put(copy, original);
+        copies.put(original, copy);
+        return copy;
+    }
+
+    /**
+     * Ends the search: the tree view shows the application's tree again, folded as the user left it, except that the
+     * folders above the selected entry unfold, so it shows, selected and scrolled to.
+     */
+    private void endSearch() {
+        TreeItem<T> selected = selectedOriginal();
+        searching = false;
+        copyRoot = null;
+        originals.clear();
+        copies.clear();
+        refreshingEntries = true;
+        try {
+            entries.clear();
+        } finally {
+            refreshingEntries = false;
+        }
+        TreeItem<T> applicationRoot = root.get();
+        if (selected != null && !isBelow(selected, applicationRoot)) {
+            selected = null;
+        }
+        showRoot(applicationRoot, selected);
+        updatePlaceholder();
+    }
+
+    /** The application's item of the selected entry: the selected item, or during a search its original. */
+    private TreeItem<T> selectedOriginal() {
+        TreeItem<T> shown = treeView.getSelectionModel().getSelectedItem();
+        if (shown != null && copyRoot != null && treeView.getRoot() == copyRoot) {
+            return originals.get(shown);
+        }
+        return shown;
+    }
+
+    /**
+     * Lets the tree view show a root and selects an item of it, the folders above it unfolded, or nothing; nothing
+     * opens, and the selected value changes once, to the value of the item selected at the end.
+     */
+    private void showRoot(TreeItem<T> newRoot, TreeItem<T> selected) {
+        quietSelections++;
+        rootSwitches++;
+        try {
+            treeView.setRoot(newRoot);
+            selectItem(selected);
+        } finally {
+            rootSwitches--;
+            quietSelections--;
+        }
+        selectedValue.set(watchedItem == null ? null : watchedItem.getValue());
+    }
+
+    /** Ctrl+F inside the tree: the focus into the search field, its text selected. */
+    private void findPressed(KeyEvent event) {
+        if (FIND.match(event)) {
+            focusSearch();
+            event.consume();
+        }
+    }
+
+    /**
+     * Arrow down and Enter in the search field, without a modifier. During a search, on the first hit in the order
+     * of the rows: Arrow down moves the focus to the tree and selects the hit, a change of the selection by the user,
+     * which opens it in selection mode; Enter selects the hit and opens it, the focus staying in the field. Without
+     * a hit both pass on. Without a search Arrow down moves the focus to the tree, on its selected entry, and Enter
+     * passes on.
+     */
+    private void searchKeyPressed(KeyEvent event) {
+        KeyCode code = event.getCode();
+        if ((code != KeyCode.DOWN && code != KeyCode.ENTER) || event.isAltDown() || event.isControlDown()
+                || event.isMetaDown() || event.isShiftDown()) {
+            return;
+        }
+        if (!searching) {
+            if (code == KeyCode.DOWN) {
+                focusContent();
+                event.consume();
+            }
+            return;
+        }
+        TreeItem<T> firstHit = hits.isEmpty() ? null : copies.get(hits.getFirst());
+        if (firstHit == null) {
+            return;
+        }
+        if (code == KeyCode.DOWN) {
+            treeView.requestFocus();
+            userInputs++;
+            try {
+                selectItem(firstHit);
+            } finally {
+                userInputs--;
+            }
+        } else {
+            quietSelections++;
+            try {
+                selectItem(firstHit);
+            } finally {
+                quietSelections--;
+            }
+            open(firstHit.getValue());
+        }
+        event.consume();
+    }
+
+    /** Whether an item lies below a root, the root itself not counted. */
+    private static boolean isBelow(TreeItem<?> item, TreeItem<?> root) {
+        if (root == null) {
+            return false;
+        }
+        for (TreeItem<?> parent = item.getParent(); parent != null; parent = parent.getParent()) {
+            if (parent == root) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** The search text of an entry: the search text function's, or the shown text; never null. */
+    private String searchTextOf(T value) {
+        Function<? super T, String> function = searchTextFunction.get();
+        if (function == null) {
+            return textOf(value);
+        }
+        String text = function.apply(value);
+        return text == null ? "" : text;
     }
 
     /** Dispatches an event through the tree view's own dispatcher, marking the time of an input event. */
@@ -664,6 +1110,11 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
         watchedItem = newItem;
         if (newItem != null) {
             newItem.valueProperty().addListener(weakSelectedItemValueChanged);
+        }
+        if (rootSwitches > 0) {
+            // The tree view switches between the application's tree and the copy, whose items carry the same values:
+            // the selected value follows the selection at the end of the switch, without passing through null.
+            return;
         }
         selectedValue.set(newItem == null ? null : newItem.getValue());
         if (newItem != null && userInputs > 0 && quietSelections == 0 && !opening
@@ -777,6 +1228,24 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
         return point != null && disclosure.getBoundsInParent().contains(point);
     }
 
+    /**
+     * Selects an item of the shown tree, the folders above it unfolded, the tree's keyboard focus on it, scrolled into
+     * view as far as needed; null clears the selection. Whether the change opens anything is the caller's to mark.
+     */
+    private void selectItem(TreeItem<T> item) {
+        if (item == null) {
+            treeView.getSelectionModel().clearSelection();
+            return;
+        }
+        for (TreeItem<T> parent = item.getParent(); parent != null; parent = parent.getParent()) {
+            parent.setExpanded(true);
+        }
+        int row = treeView.getRow(item);
+        treeView.getSelectionModel().clearAndSelect(row);
+        treeView.getFocusModel().focus(row);
+        showRow(row);
+    }
+
     /** Selects an entry for the user, as a click does: the tree view takes the focus, its row the selection. */
     private void selectByUser(TreeItem<T> item) {
         int row = treeView.getRow(item);
@@ -816,6 +1285,9 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
             return;
         }
         if (treeView.lookup(".virtual-flow") instanceof VirtualFlow<?> flow) {
+            // The flow counts the rows at its next layout: after a folder unfolded or a new root, it would scroll by a
+            // stale count, so the tree view lays out first.
+            treeView.layout();
             flow.scrollTo(row);
         } else {
             treeView.scrollTo(row);
@@ -888,7 +1360,10 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
         return function == null ? null : function.apply(value);
     }
 
-    /** The default cell: the entry's icon, if it has one, and its text, side by side. */
+    /**
+     * The default cell: the entry's icon, if it has one, and its text, side by side, the text a highlight node of the
+     * search field, which marks the search's words by itself as the user types.
+     */
     private final class EntryCell extends TreeCell<T> {
 
         @Override
@@ -908,7 +1383,7 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
                 icon.getStyleClass().add("navigation-tree-icon");
                 entry.getChildren().add(icon);
             }
-            Label text = new Label(textOf(value));
+            TextFlow text = searchInput.highlight(textOf(value));
             text.getStyleClass().add("navigation-tree-text");
             entry.getChildren().add(text);
             setGraphic(entry);
