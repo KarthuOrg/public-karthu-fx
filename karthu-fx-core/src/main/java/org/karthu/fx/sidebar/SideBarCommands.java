@@ -74,8 +74,10 @@ final class SideBarCommands {
         CommandContext context = registry.addContext(idPrefix, sideBar.getCommandContextName(), sideBar);
         context.nameProperty().bind(sideBar.commandContextNameProperty());
         addTabCommands(sideBar.getTabs());
-        hide =registry.addCommand(group, context, idPrefix + ".hide", sideBar.getHideCommandName(),
-                suggestedKeys ? Shortcut.of(KeyCode.ESCAPE, Shortcut.Modifier.SHIFT) : null, sideBar::hide);
+        // Hide keeps its key also without suggested keys: it holds in the side bar's own context, so it clashes with
+        // no other side bar's, and the user could not record Shift+Escape, which has neither Ctrl nor Alt.
+        hide = registry.addCommand(group, context, idPrefix + ".hide", sideBar.getHideCommandName(),
+                Shortcut.of(KeyCode.ESCAPE, Shortcut.Modifier.SHIFT), sideBar::hide);
         hide.nameProperty().bind(sideBar.hideCommandNameProperty());
         hide.bind(hideKey);
         sideBar.addEventFilter(KeyEvent.KEY_PRESSED, this::hideKeyPressed);
@@ -169,6 +171,15 @@ final class SideBarCommands {
                 addTabCommand(tab);
             }
         }
+    }
+
+    /**
+     * Returns Hide Side Bar, whose key the hide button's tooltip names.
+     *
+     * @return the command
+     */
+    Command hideCommand() {
+        return hide;
     }
 
     /**

@@ -57,8 +57,10 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   while the focus is in it, in a text field of the panel too; *Search in Side Bar*
   (`<prefix>.search`), without a key, expands it and focuses the selected tab's search. A tab
   added later gets its command, a removed or hidden tab's is disabled, and a second side bar
-  registers with `registerCommands(registry, group, idPrefix, false)`, its keys left to the user.
-  The stripe's tooltips name a tab's key ("Files (Alt+1)"), and the names of the commands and of
+  registers with `registerCommands(registry, group, idPrefix, false)`, its tabs' keys left to the
+  user, while *Hide Side Bar* keeps Shift+Escape, which holds only in its own side bar.
+  The stripe's tooltips name a tab's key ("Files (Alt+1)"), the hide button's the key of *Hide
+  Side Bar* ("Hide (Shift+Escape)"), and the names of the commands and of
   their context are properties (`showTabCommandFormat`, `hideCommandName`, `searchCommandName`,
   `commandContextName`). When the panel hides with the focus in it, the focus goes back to where
   it last was outside the side bar.

@@ -7,6 +7,7 @@ import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.TextField;
@@ -38,6 +39,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -49,7 +51,8 @@ import static org.karthu.fx.command.Shortcut.Modifier.SHIFT;
 /**
  * The side bar's commands through its public interface and the registry's, in a themed scene that is never shown: the
  * commands it registers with their keys, running them by their keys or a bound menu item, where Hide Side Bar holds,
- * the keys switched off, tabs added, removed and hidden after registering, the texts, the stripe's tooltips, and where
+ * the keys switched off, tabs added, removed and hidden after registering, the texts, the tooltips of the stripe and
+ * of the hide button, and where
  * the focus goes when the panel hides.
  */
 class SideBarCommandsTest {
@@ -253,7 +256,8 @@ class SideBarCommandsTest {
 
         assertEquals(List.of("left.show.files", "left.hide", "left.search", "right.show.outline", "right.show.notes",
                 "right.hide", "right.search"), ids(registry));
-        assertEquals(Arrays.asList(null, null, null, null), defaults(registry).subList(3, 7), "no keys at all");
+        assertEquals(Arrays.asList(null, null, Shortcut.of(KeyCode.ESCAPE, SHIFT), null),
+                defaults(registry).subList(3, 7), "no keys but Hide Side Bar's");
         assertEquals(Shortcut.of(KeyCode.DIGIT1, ALT), command(registry, "left.show.files").getShortcut());
         assertEquals("Notes", stripeButton(right, "Notes").getTooltip().getText(), "a tooltip without a key");
 
@@ -262,6 +266,41 @@ class SideBarCommandsTest {
         pressOnFocusOwner(scene, KeyCode.DIGIT0, ALT);
         assertEquals("notes", right.getSelectedTab().getId(), "the key the user recorded opens the tab");
         assertEquals("Notes (Alt+0)", stripeButton(right, "Notes").getTooltip().getText());
+    }
+
+    @Test
+    @DisplayName("without suggested keys Hide Side Bar keeps Shift+Escape, which holds in its own side bar only: the "
+            + "second side bar hides on it while the focus is in it, the first stays open")
+    void hideKeepsItsKeyWithoutSuggestedKeys() {
+        SideBar left = new SideBar();
+        SideBarTab files = tab("files", "Files");
+        left.getTabs().add(files);
+        SideBar right = new SideBar();
+        SideBarTab outline = tab("outline", "Outline");
+        right.getTabs().add(outline);
+        BorderPane window = new BorderPane(new TextField("the application's content"));
+        window.setLeft(left);
+        window.setRight(right);
+        Scene scene = new Scene(window, 900, 600);
+        ThemeManager.apply(scene);
+        window.applyCss();
+        window.layout();
+        CommandRegistry registry = new CommandRegistry(scene);
+        CommandGroup view = registry.addGroup("view", "View");
+        left.registerCommands(registry, view, "left");
+
+        right.registerCommands(registry, view, "right", false);
+
+        assertEquals(Shortcut.of(KeyCode.ESCAPE, SHIFT), command(registry, "right.hide").getDefaultShortcut());
+        assertNull(command(registry, "right.show.outline").getDefaultShortcut(), "only the tabs lose their keys");
+        assertNotSame(command(registry, "left.hide").getContext(), command(registry, "right.hide").getContext(),
+                "each Hide Side Bar in a context of its own, so the two do not clash");
+        left.setSelectedTab(files);
+        right.setSelectedTab(outline);
+        outline.getContent().requestFocus();
+        pressOnFocusOwner(scene, KeyCode.ESCAPE, SHIFT);
+        assertTrue(right.isCollapsed(), "the side bar with the focus hides");
+        assertFalse(left.isCollapsed(), "the other stays open");
     }
 
     // --- Tabs after registering ---------------------------------------------------------------------
@@ -368,6 +407,31 @@ class SideBarCommandsTest {
         outline.setVisible(true);
         assertEquals("Outline (Alt+3)", stripeButton(sideBar, "Outline").getTooltip().getText(), "a tab shown "
                 + "later");
+    }
+
+    @Test
+    @DisplayName("the hide button's tooltip names the key of Hide Side Bar once the commands are registered, as the "
+            + "stripe's tooltips do, and follows the key and the text")
+    void hideButtonTooltipWithItsKey() {
+        SideBarTab files = tab("files", "Files");
+        SideBar sideBar = new SideBar();
+        sideBar.getTabs().add(files);
+        sideBar.setSelectedTab(files);
+        Scene scene = laidOut(sideBar);
+        Button hideButton = (Button) sideBar.lookup(".side-bar-hide-button");
+        assertEquals("Hide", hideButton.getTooltip().getText(), "no commands, no key");
+
+        CommandRegistry registry = registered(sideBar, scene);
+        assertEquals("Hide (Shift+Escape)", hideButton.getTooltip().getText(), "the key's display text, as the "
+                + "list of shortcuts shows it");
+        assertEquals("Hide", hideButton.getAccessibleText(), "the accessible text stays the text");
+
+        registry.setChangedShortcuts(Map.of("sidebar.hide", "Ctrl+Shift+H"));
+        assertEquals("Hide (Ctrl+Shift+H)", hideButton.getTooltip().getText(), "the user's key");
+        sideBar.setHideText("Ausblenden");
+        assertEquals("Ausblenden (Ctrl+Shift+H)", hideButton.getTooltip().getText());
+        registry.setChangedShortcuts(Map.of("sidebar.hide", ""));
+        assertEquals("Ausblenden", hideButton.getTooltip().getText(), "a removed key");
     }
 
     // --- Texts --------------------------------------------------------------------------------------

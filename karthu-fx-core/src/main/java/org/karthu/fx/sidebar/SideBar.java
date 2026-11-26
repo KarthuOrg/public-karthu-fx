@@ -103,7 +103,8 @@ import java.util.Set;
  * {@link #registerCommands(CommandRegistry, CommandGroup, String) registerCommands}: then a command per tab opens the
  * tab (Alt+1 to Alt+9 for the first nine), <i>Hide Side Bar</i> collapses the side bar on Shift+Escape while the focus
  * is in it, and <i>Search in Side Bar</i> puts the focus into the selected tab's search; the commands join the
- * application's list of shortcuts, where the user changes their keys. Without a registry there are no commands.
+ * application's list of shortcuts, where the user changes their keys, and the hide button's tooltip names the key of
+ * <i>Hide Side Bar</i>, such as <i>Hide (Shift+Escape)</i>. Without a registry there are no commands.
  *
  * <p><b>Header.</b> The panel's header is one row: the tab's title on the left, then on the right the tab's own
  * {@linkplain SideBarTab#getHeaderButtons() header buttons}, the content's {@linkplain SideBarContent#getHeaderButtons()
@@ -218,8 +219,13 @@ public class SideBar extends HBox {
     private final VBox stripe = new VBox();
     private final Label titleLabel = new Label();
     private final Button menuButton = headerButton("side-bar-menu-button", BootstrapIcons.THREE_DOTS_VERTICAL,
-            moreText, this::menuButtonFired);
+            moreText, moreText, this::menuButtonFired);
+    /** The display text of the current key of Hide Side Bar; empty while there is none or no commands. */
+    private final StringProperty hideShortcutText = new SimpleStringProperty(this, "hideShortcutText", "");
+    /** The hide button: its tooltip names the key of Hide Side Bar, as a stripe button's names its tab's. */
     private final Button hideButton = headerButton("side-bar-hide-button", BootstrapIcons.DASH, hideText,
+            Bindings.createStringBinding(() -> tooltipText(hideText.get(), hideShortcutText.get()), hideText,
+                    hideShortcutText),
             () -> collapsed.set(true));
     /** The header row: the title, the tab's buttons, the content's buttons, More and Hide. */
     private final HBox header = new HBox();
@@ -552,7 +558,8 @@ public class SideBar extends HBox {
     /**
      * The tooltip and accessible text of the hide button and the text of the menu's built-in item (default
      * <i>Hide</i>), a property so that an application can translate it. <i>Hide</i> rather than <i>Collapse</i>, so
-     * that it is not taken for a content's Collapse All.
+     * that it is not taken for a content's Collapse All. Once the side bar's commands are registered, the hide button's
+     * tooltip adds the key of <i>Hide Side Bar</i> in brackets, such as <i>Hide (Shift+Escape)</i>.
      *
      * @return the hide text property
      * @since 1.1.0-RC2
@@ -640,12 +647,14 @@ public class SideBar extends HBox {
      *       focus into the selected tab's search ({@link SideBarContent#focusSearch()}), or into its content when the
      *       content has no search. It selects no tab, and is disabled while no visible tab is selected.</li>
      * </ul>
-     * <p>Without suggested keys the commands come without keys, for a second side bar whose keys would clash with the
-     * first's: the user records keys for them. The registry's rules hold as for any command: one registry per window,
-     * a suggested key that another command of the same context suggests too is logged, and the keys the user changed
-     * come back through {@link CommandRegistry#setChangedShortcuts(java.util.Map)}, after the side bar's commands are
-     * registered. A stripe button's tooltip names its tab's key, such as <i>Files (Alt+1)</i>, and follows its every
-     * change.
+     * <p>Without suggested keys the tabs' commands come without keys, for a second side bar whose Alt+1 to Alt+9 would
+     * clash with the first's: the user records keys for them. <i>Hide Side Bar</i> keeps Shift+Escape either way: it
+     * holds in the side bar's own context, so it clashes with no other side bar's, and a user could not record it, as
+     * it has neither Ctrl nor Alt. The registry's rules hold as for any command: one registry per window, a suggested
+     * key that another command of the same context suggests too is logged, and the keys the user changed come back
+     * through {@link CommandRegistry#setChangedShortcuts(java.util.Map)}, after the side bar's commands are registered.
+     * A stripe button's tooltip names its tab's key, such as <i>Files (Alt+1)</i>, and the hide button's the key of
+     * <i>Hide Side Bar</i>, such as <i>Hide (Shift+Escape)</i>, both following every change of the key.
      *
      * <p>The commands' names follow the side bar's texts {@linkplain #showTabCommandFormatProperty() Show {0}},
      * {@linkplain #hideCommandNameProperty() Hide Side Bar} and {@linkplain #searchCommandNameProperty() Search in Side
@@ -655,7 +664,8 @@ public class SideBar extends HBox {
      * @param registry      the command registry of the side bar's window
      * @param group         the group the commands are shown in, one of the registry's, such as <i>View</i>
      * @param idPrefix      the start of the commands' ids, such as {@code sidebar}
-     * @param suggestedKeys whether the commands come with their suggested keys; false leaves them without keys
+     * @param suggestedKeys whether the tabs' commands come with their suggested keys; false leaves them without keys,
+     *                      while <i>Hide Side Bar</i> keeps Shift+Escape
      * @throws NullPointerException     when the registry, the group or the prefix is null
      * @throws IllegalArgumentException when the prefix is blank, the group is not one of the registry's, or the
      *                                  registry has a context or a command with one of the side bar's ids already, or
@@ -669,6 +679,7 @@ public class SideBar extends HBox {
             throw new IllegalStateException("the side bar's commands are registered already");
         }
         commands = new SideBarCommands(this, registry, group, idPrefix, suggestedKeys);
+        hideShortcutText.bind(commands.hideCommand().shortcutDisplayTextProperty());
         updateCommands();
     }
 
@@ -1196,13 +1207,14 @@ public class SideBar extends HBox {
         return ikon == null ? null : FontIcon.of(ikon);
     }
 
-    /** A button of the header: an icon button whose tooltip and accessible text follow a text property. */
-    private static Button headerButton(String styleClass, Ikon ikon, StringProperty text, Runnable action) {
+    /** A button of the header: an icon button whose accessible text follows a text property, its tooltip another. */
+    private static Button headerButton(String styleClass, Ikon ikon, StringProperty text,
+                                       ObservableValue<String> tooltipText, Runnable action) {
         Button button = new Button();
         button.getStyleClass().addAll("icon-button", styleClass);
         button.setGraphic(FontIcon.of(ikon));
         Tooltip tooltip = new Tooltip();
-        tooltip.textProperty().bind(text);
+        tooltip.textProperty().bind(tooltipText);
         button.setTooltip(tooltip);
         button.accessibleTextProperty().bind(text);
         button.setOnAction(event -> action.run());
