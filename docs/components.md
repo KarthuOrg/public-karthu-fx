@@ -497,7 +497,8 @@ dependency.
   out of all entries (*3 of 43*), and *No matches* shows when nothing matches. A search text
   function (`searchTextFunction`) lets the search find an entry by a text it does not show, such as
   a summary or keywords. Emptying the field gives back the tree folded exactly as the user left it,
-  the selected entry unfolded to and scrolled to. The search text stays while the side bar is
+  the selected entry unfolded to and scrolled to; a field of whitespace only is no search either,
+  and the field shows no counter for it. The search text stays while the side bar is
   collapsed. Cells of the application's own receive the application's values during a search too
   and mark the hits with the field's `highlight(text)`. Keys of its own, without a registry: Ctrl+F
   inside the tree focuses the field, Arrow down moves to the first hit, Enter opens it, Escape

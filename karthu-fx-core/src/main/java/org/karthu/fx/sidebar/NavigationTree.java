@@ -40,6 +40,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.TextFlow;
 import org.karthu.fx.form.SearchInput;
+import org.karthu.fx.form.search.SearchQuery;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
 import org.kordamp.ikonli.javafx.FontIcon;
@@ -69,18 +70,19 @@ import java.util.function.Supplier;
  * <p><b>Search.</b> A {@linkplain #getSearchInput() search field} lies above the tree over its full width. An entry is
  * a <i>hit</i> when its {@linkplain #searchTextFunctionProperty() search text} (by default the shown text) matches
  * the search by karthu-fx's search rule: the search's words each occur as a contiguous part, case and accents ignored
- * (see {@link SearchInput}). While the field holds text, the tree view shows a copy of the application's tree instead
- * of the tree itself: every hit, every folder above a hit, and for a hit with children all its entries, so a folder
- * whose own name matches keeps its whole content. Every folder of the copy is unfolded, and every item of it carries
- * the application's value, so the cells, the {@linkplain #selectedValueProperty() selected value} and the open handler
- * receive the application's values during a search as at any other time. A change of the application's tree during
- * the search (an item added or removed, a value replaced) shows at once.
+ * (see {@link SearchInput}). While the field holds a search, text other than whitespace only, the tree view shows a
+ * copy of the application's tree instead of the tree itself: every hit, every folder above a hit, and for a hit with
+ * children all its entries, so a folder whose own name matches keeps its whole content. Every folder of the copy is
+ * unfolded, and every item of it carries the application's value, so the cells, the
+ * {@linkplain #selectedValueProperty() selected value} and the open handler receive the application's values during a
+ * search as at any other time. A change of the application's tree during the search (an item added or removed, a value
+ * replaced) shows at once.
  * <ul>
  *   <li>The default cell marks the characters of the shown text that match, through the field's
  *       {@linkplain SearchInput#highlight(String) highlight}; cells of the application's own use the same helper:
  *       {@code tree.getSearchInput().highlight(text)}.</li>
- *   <li>The field's counter shows the hits out of all entries, folded ones included and the hidden root not counted:
- *       <i>3 of 43</i>. While the search finds no entry, the tree area shows
+ *   <li>During a search the field's counter shows the hits out of all entries, folded ones included and the hidden
+ *       root not counted: <i>3 of 43</i>. While the search finds no entry, the tree area shows
  *       {@linkplain #noMatchesTextProperty() <i>No matches</i>}; while the application's tree has no entry, its
  *       placeholder instead.</li>
  *   <li>The selected entry stays selected through a change of the search while the copy shows it, as a hit, a folder
@@ -89,14 +91,17 @@ import java.util.function.Supplier;
  *   <li>Emptying the field shows the application's tree again, folded exactly as the user left it, since the search
  *       only ever folds and unfolds its copy: only the folders above the selected entry unfold, so that it shows,
  *       selected and scrolled to.</li>
+ *   <li>A field of whitespace only holds no search, as by karthu-fx's search rule it matches every entry and marks
+ *       nothing: the tree shows the application's tree as in an empty field, and the field shows no counter.</li>
  * </ul>
  *
  * <p><b>Keys of the search</b>, the tree's own, without a command registry: Ctrl+F (Cmd+F on macOS) while the focus
  * is inside the tree puts it into the search field and selects its text, as {@link #focusSearch()} does. In the field,
  * during a search, Arrow down moves the focus to the tree and selects the first hit in the order of the rows, a change
  * of the selection by the user, which opens it in {@link OpenMode#SELECTION}; Enter selects the first hit and opens it
- * in either mode, the focus staying in the field. Without a hit both pass on. In an empty field Arrow down moves the
- * focus to the tree, on its selected entry, and Enter passes on. Escape empties the field, the field's own key.
+ * in either mode, the focus staying in the field. Without a hit both pass on. Without a search, in an empty field or
+ * one of whitespace only, Arrow down moves the focus to the tree, on its selected entry, and Enter passes on. Escape
+ * empties the field, the field's own key.
  *
  * <p><b>Opening.</b> The {@linkplain #openModeProperty() open mode} decides how the user opens an entry, the
  * {@linkplain #onOpenProperty() open handler} receives the entry's value, the application's own, never a copy:
@@ -241,7 +246,10 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
      * karthu-fx's search rule and the field counts them, "3 of 43", as it counts any list it filters.
      */
     private final FilteredList<TreeItem<T>> hits = new FilteredList<>(entries);
-    /** Whether the search field holds text, so that the tree view shows the copy of the hits. */
+    /**
+     * Whether the search field holds a search, text other than whitespace only, so that the tree view shows the copy
+     * of the hits and the field filters and counts the entries.
+     */
     private boolean searching;
     /** The refresh of the entries: the hits follow, and the copy is built once afterwards. */
     private final Phase entriesRefresh = new Phase();
@@ -290,10 +298,10 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
         searchInput.setMaxWidth(Double.MAX_VALUE);
         getChildren().addAll(searchBar, treeArea);
 
-        // The field filters the flat list of the entries: its predicate decides the hits by karthu-fx's search rule,
-        // and its counter shows them out of all entries. The copy follows the hits, and the text decides whether the
-        // copy or the application's tree shows; either listener may hear a change first, both end in the same state.
-        searchInput.filter(hits, item -> searchTextOf(item.getValue()));
+        // During a search the field filters the flat list of the entries: its predicate decides the hits by
+        // karthu-fx's search rule, and its counter shows them out of all entries. The copy follows the hits, and the
+        // text decides whether the copy or the application's tree shows; either listener may hear a change first, both
+        // end in the same state. Without a search the field filters nothing, so it shows no counter.
         hits.addListener((InvalidationListener) observable -> hitsChanged());
         searchInput.textProperty().addListener((observable, oldText, newText) -> searchTextChanged());
         // The navigation's own keys, without a command registry: Ctrl+F wherever the focus is inside it, a handler, so
@@ -542,8 +550,8 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
     /**
      * Returns the search field above the tree, for what a search field offers beyond the tree's search: its text, its
      * placeholder, its counter's format, the highlight nodes for cells of the application's own
-     * ({@link SearchInput#highlight(String)}). The tree connects it to its entries: an application does not connect it
-     * to a list or a view of its own, which would end the tree's search.
+     * ({@link SearchInput#highlight(String)}). The tree connects it to its entries while it holds a search: an
+     * application does not connect it to a list or a view of its own, which would end the tree's search.
      *
      * @return the search field
      * @since 1.1.0-RC2
@@ -852,16 +860,28 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
 
     // --- Search --------------------------------------------------------------------------------------
 
-    /** The search text changed: a search starts when the field gets text, and ends when it loses it. */
+    /**
+     * The search text changed: a search starts when the field gets a word, and ends when it holds none, empty or
+     * whitespace only, which by karthu-fx's search rule is the empty search and matches every entry.
+     */
     private void searchTextChanged() {
-        String text = searchInput.getText();
-        boolean hasText = text != null && !text.isEmpty();
-        if (hasText && !searching) {
-            searching = true;
-            searchAgain();
-        } else if (!hasText && searching) {
+        boolean hasSearch = !SearchQuery.of(searchInput.getText()).isEmpty();
+        if (hasSearch && !searching) {
+            startSearch();
+        } else if (!hasSearch && searching) {
             endSearch();
         }
+    }
+
+    /**
+     * Starts a search: the field filters the entries, and the tree view shows the copy of the hits. The field is
+     * connected before the search starts, while there are no entries yet, so that the hits are read once, with the
+     * entries.
+     */
+    private void startSearch() {
+        searchInput.filter(hits, item -> searchTextOf(item.getValue()));
+        searching = true;
+        searchAgain();
     }
 
     /** The hits changed, as the search field set a new predicate: the copy follows during a search. */
@@ -907,7 +927,9 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
         TreeItem<T> selected = selectedOriginal();
         searching = false;
         copy = null;
-        // Without a search the entries are not kept, so that they never hold an item the application removed.
+        // Without a search the field filters nothing, so that it shows no counter, and the entries are not kept, so
+        // that they never hold an item the application removed.
+        searchInput.filter(null, null);
         entries.clear();
         TreeItem<T> applicationRoot = root.get();
         if (selected != null && !isBelow(selected, applicationRoot)) {

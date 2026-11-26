@@ -59,8 +59,9 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   counts the hits out of all entries ("3 of 43"); "No matches" (`noMatchesText`) shows when
   nothing matches. A search text function lets the search find an entry by a text it does not
   show. Emptying the field gives back the tree folded exactly as the user left it, the selected
-  entry unfolded to and scrolled to. Ctrl+F inside the tree focuses the field, Arrow down moves
-  to the first hit, Enter opens it, Escape clears.
+  entry unfolded to and scrolled to; a field of whitespace only is no search either, and shows
+  no counter. Ctrl+F inside the tree focuses the field, Arrow down moves to the first hit, Enter
+  opens it, Escape clears.
 
   The new interface `SideBarContent` is what a panel's content tells the side bar: its header
   buttons, its menu items, where the focus goes when its tab opens and how to focus its search. A

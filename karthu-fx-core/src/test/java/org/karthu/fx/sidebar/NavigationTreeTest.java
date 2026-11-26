@@ -603,6 +603,33 @@ class NavigationTreeTest {
     }
 
     @Test
+    @DisplayName("a field of whitespace only is no search: the application's tree as the user folded it, no counter")
+    void blankFieldIsNoSearch() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        laidOut(tree);
+        Node noMatches = tree.lookup(".navigation-tree-no-matches");
+        List<String> folded = List.of("Fruits", "Apple", "Banana", "Vegetables", "Roots", "Leek", "Water");
+
+        for (String blank : List.of(" ", "   ", "\t  ")) {
+            search(tree, blank);
+            assertSame(sample.root, tree.getTreeView().getRoot(), "the application's own root for \"" + blank + "\"");
+            assertEquals(folded, rows(tree), "folded as the user left it, Roots too");
+            assertNull(counter(tree), "the field counts nothing, as in an empty field");
+            assertFalse(shows(tree, noMatches));
+        }
+
+        search(tree, " leek ");
+        assertEquals(List.of("Vegetables", "Leek"), rows(tree), "words between spaces are a search");
+        assertEquals("1 of 8", counter(tree));
+
+        search(tree, "  ");
+        assertSame(sample.root, tree.getTreeView().getRoot(), "back to no search");
+        assertEquals(folded, rows(tree));
+        assertNull(counter(tree));
+    }
+
+    @Test
     @DisplayName("with no hits the tree area shows \"No matches\", a text property, until the search finds an entry")
     void noMatches() {
         Sample sample = new Sample();
