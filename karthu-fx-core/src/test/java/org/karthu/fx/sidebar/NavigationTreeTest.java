@@ -542,7 +542,7 @@ class NavigationTreeTest {
     }
 
     @Test
-    @DisplayName("a search shows the hits and the folders above them, every folder unfolded, the application's tree untouched")
+    @DisplayName("a search shows the hits and the folders above them, all unfolded, the application's tree untouched")
     void searchShowsHitsAndTheirFolders() {
         Sample sample = new Sample();
         NavigationTree<Food> tree = sample.tree();
@@ -646,7 +646,7 @@ class NavigationTreeTest {
     }
 
     @Test
-    @DisplayName("a mark shows bold in the accent colour; on the selected row the text is, and its marks are underlined")
+    @DisplayName("a mark is bold in the accent colour; on the selected row the text is, and its marks are underlined")
     void highlightLook() {
         Sample sample = new Sample();
         NavigationTree<Food> tree = sample.tree();
@@ -667,7 +667,7 @@ class NavigationTreeTest {
     }
 
     @Test
-    @DisplayName("clearing the search shows the application's tree folded as the user left it, whatever the search unfolded or folded")
+    @DisplayName("clearing the search shows the application's tree folded as the user left it")
     void foldingBackAfterClearing() {
         Sample sample = new Sample();
         NavigationTree<Food> tree = sample.tree();
@@ -773,7 +773,7 @@ class NavigationTreeTest {
     }
 
     @Test
-    @DisplayName("a search text function lets the search find an entry by a text it does not show, which shows no marks")
+    @DisplayName("a search text function lets the search find an entry by a text it does not show, without marks")
     void ownSearchText() {
         Sample sample = new Sample();
         NavigationTree<Food> tree = sample.tree();
@@ -793,7 +793,7 @@ class NavigationTreeTest {
     }
 
     @Test
-    @DisplayName("cells of the application's own receive its values during a search and mark the hits with the same helper")
+    @DisplayName("cells of the application's own receive its values during a search and mark hits with the same helper")
     void ownCellsDuringASearch() {
         Sample sample = new Sample();
         NavigationTree<Food> tree = sample.tree();
@@ -830,7 +830,7 @@ class NavigationTreeTest {
     }
 
     @Test
-    @DisplayName("during a search a change of the application's tree shows at once: an entry added or removed, a value replaced")
+    @DisplayName("during a search a change of the application's tree shows at once: entries added, removed, replaced")
     void treeChangeDuringASearch() {
         Sample sample = new Sample();
         NavigationTree<Food> tree = sample.tree();
@@ -890,7 +890,7 @@ class NavigationTreeTest {
     }
 
     @Test
-    @DisplayName("Arrow down in the field moves the focus to the tree on the first hit, which opens it only in selection mode")
+    @DisplayName("Arrow down in the field moves the focus to the first hit, which opens only in selection mode")
     void arrowDownMovesToTheFirstHit() {
         for (OpenMode mode : OpenMode.values()) {
             Sample sample = new Sample();
@@ -934,7 +934,7 @@ class NavigationTreeTest {
     }
 
     @Test
-    @DisplayName("without a hit Arrow down and Enter do nothing; in an empty field Arrow down moves to the selected entry")
+    @DisplayName("without a hit Arrow down and Enter do nothing; in an empty field Arrow down goes to the selection")
     void keysWithoutAHit() {
         Sample sample = new Sample();
         NavigationTree<Food> tree = sample.tree();

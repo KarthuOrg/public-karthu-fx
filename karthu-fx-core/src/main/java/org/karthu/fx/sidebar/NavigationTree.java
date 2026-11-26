@@ -252,7 +252,7 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
     /** The item of the copy of every application's item the copy holds. */
     private final Map<TreeItem<T>, TreeItem<T>> copies = new IdentityHashMap<>();
     private final EventHandler<TreeItem.TreeModificationEvent<T>> applicationTreeChanged =
-            event -> applicationTreeChanged();
+            event -> searchAgain();
     /** Held weakly by the application's root, so that a root outliving the tree never keeps it alive. */
     private final WeakEventHandler<TreeItem.TreeModificationEvent<T>> weakApplicationTreeChanged =
             new WeakEventHandler<>(applicationTreeChanged);
@@ -329,10 +329,10 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
         textFunction.addListener(observable -> {
             treeView.refresh();
             // The shown text is the default search text.
-            applicationTreeChanged();
+            searchAgain();
         });
         iconFunction.addListener(observable -> treeView.refresh());
-        searchTextFunction.addListener(observable -> applicationTreeChanged());
+        searchTextFunction.addListener(observable -> searchAgain());
         placeholder.addListener(observable -> updatePlaceholder());
         setRoot(root);
         updatePlaceholder();
@@ -836,8 +836,7 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
             newRoot.addEventHandler(TreeItem.valueChangedEvent(), weakApplicationTreeChanged);
         }
         if (searching) {
-            refreshEntries();
-            showCopy();
+            searchAgain();
         } else {
             treeView.setRoot(newRoot);
         }
@@ -872,8 +871,7 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
         boolean hasText = text != null && !text.isEmpty();
         if (hasText && !searching) {
             searching = true;
-            refreshEntries();
-            showCopy();
+            searchAgain();
         } else if (!hasText && searching) {
             endSearch();
         }
@@ -887,10 +885,11 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
     }
 
     /**
-     * The application's tree changed somewhere (an item added or removed, a value replaced), or what the search
-     * matches did: during a search the entries are read again and the copy built anew.
+     * During a search, reads the entries of the application's tree again and builds the copy anew: when the search
+     * starts, and when the tree changed somewhere (an item added or removed, a value replaced, a new root) or what the
+     * search matches did. Without a search it does nothing.
      */
-    private void applicationTreeChanged() {
+    private void searchAgain() {
         if (searching) {
             refreshEntries();
             showCopy();
@@ -971,12 +970,8 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
         copyRoot = null;
         originals.clear();
         copies.clear();
-        refreshingEntries = true;
-        try {
-            entries.clear();
-        } finally {
-            refreshingEntries = false;
-        }
+        // Without a search the entries are not kept, so that they never hold an item the application removed.
+        entries.clear();
         TreeItem<T> applicationRoot = root.get();
         if (selected != null && !isBelow(selected, applicationRoot)) {
             selected = null;
