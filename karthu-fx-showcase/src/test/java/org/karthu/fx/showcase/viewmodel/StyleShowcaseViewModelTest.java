@@ -66,7 +66,7 @@ class StyleShowcaseViewModelTest {
                 "    Overview", "    Text Input", "    Password Input", "    Number Input", "    Combo Input",
                 "    Editable Combo Input", "    Text Area Input", "    Path Input", "    Cron Input", "    Search Input",
                 "  Components",
-                "    Toggle Switch", "    Twin Column Selector", "    Key-Value Editor",
+                "    Toggle Switch", "    Twin Column Selector", "    Key-Value Editor", "    Side Bar",
                 "  Dialogs",
                 "    Dialog / Alert", "    Settings Dialog",
                 "  Markdown", "  Shortcuts", "  Icons",
@@ -108,7 +108,7 @@ class StyleShowcaseViewModelTest {
     void pagesAsToday() {
         StyleShowcaseViewModel viewModel = new StyleShowcaseViewModel();
 
-        assertEquals(43, viewModel.getShowcaseItems().size());
+        assertEquals(44, viewModel.getShowcaseItems().size());
         Set<String> names = new HashSet<>();
         Set<String> files = new HashSet<>();
         for (ShowcaseItem item : viewModel.getShowcaseItems()) {
@@ -149,7 +149,7 @@ class StyleShowcaseViewModelTest {
 
         viewModel.getFilteredItems().setPredicate(null);
         assertSame(root, viewModel.getNavigationRoot(), "the root stays the same node");
-        assertEquals(43, leaves(root));
+        assertEquals(44, leaves(root));
     }
 
     @Test
@@ -202,7 +202,7 @@ class StyleShowcaseViewModelTest {
                 "    Overview", "    Text Input", "    Password Input", "    Number Input", "    Combo Input",
                 "    Editable Combo Input", "    Text Area Input", "    Path Input", "    Cron Input", "    Search Input",
                 "  Components",
-                "    Toggle Switch", "    Twin Column Selector", "    Key-Value Editor",
+                "    Toggle Switch", "    Twin Column Selector", "    Key-Value Editor", "    Side Bar",
                 "  Dialogs",
                 "    Dialog / Alert", "    Settings Dialog",
                 "  Markdown", "  Shortcuts", "  Icons"), tree);
@@ -239,7 +239,7 @@ class StyleShowcaseViewModelTest {
         assertFalse(viewModel.hasPagesProperty().get());
 
         field.setText("");
-        assertEquals(43, leaves(viewModel.getNavigationRoot()));
+        assertEquals(44, leaves(viewModel.getNavigationRoot()));
         assertTrue(viewModel.hasPagesProperty().get());
     }
 

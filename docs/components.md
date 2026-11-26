@@ -12,6 +12,7 @@ documented in the JavaDoc; the style classes, pseudo-classes and colour tokens a
 - [Markdown view](#markdown-view)
 - [Form fields](#form-fields)
 - [Commands and keyboard shortcuts](#commands-and-keyboard-shortcuts)
+- [Side bar and navigation tree](#side-bar-and-navigation-tree)
 - [Icons](#icons)
 
 ## Theming
@@ -420,6 +421,102 @@ the user changes in a dialog. No new dependency.
   keys of their own, and two switches that disable a command. It reads out the last command that
   ran and the text list the application would keep, hands a stored list with entries it cannot use
   back to the registry, opens the dialog, and holds the editor in a card with buttons of its own.
+
+## Side bar and navigation tree
+
+Package `org.karthu.fx.sidebar` (from 1.1.0-RC2): navigation for the edge of a window, like the
+tool window bar of an IDE. A side bar opens one panel at a time beside the application's content,
+and a navigation tree is the ready-made content of a panel, or a navigation on its own. No new
+dependency.
+
+- **The side bar.** `SideBar` is one node the application places beside its content like any
+  other, for example in the left or the right region of a `BorderPane`. At the window's edge it
+  shows a narrow stripe with one icon button per tab, the tab's title as its tooltip and as the
+  text a screen reader names. A click on a button opens its tab's panel between the stripe and the
+  content, which becomes narrower, never covered, and puts the focus into the tab's content. A
+  click on another tab switches, a click on the open tab collapses the side bar to its stripe, and
+  a click while collapsed expands it again; the hide button in the panel's header and *Hide* in its
+  menu collapse it too. One tab is open at a time, its button marked in the accent colour, and
+  everything happens at once, without animation. `side` is `LEFT` (the default) or `RIGHT`,
+  mirrored; two side bars, one on each side, are two instances.
+- **Tabs.** A `SideBarTab` has an id, stable for its life, a title, an Ikonli icon, any node as
+  its content, a visible flag, and its own header buttons and menu items. `getTabs()` holds them in
+  the order of their stripe buttons. The application adds, removes and hides tabs at any time; a
+  hidden tab has no button, and removing or hiding the open tab collapses the side bar and selects
+  no tab. The user does not reorder them.
+- **Header and menu.** The panel's header is one row: the tab's title, the tab's own buttons, the
+  content's buttons, the three-dot menu button and the hide button. The menu, which the menu button
+  opens and a right click on the header or on a stripe button too, lists the tab's items, the
+  content's items and, below a separator, *Hide*. Buttons follow the toolbar rule in
+  [`STYLEGUIDE.md`](../STYLEGUIDE.md): actions first, view options next, settings last in the
+  menu, and only what more than 5 % of the users need as a button.
+- **What the content tells the side bar.** A content node that implements `SideBarContent` adds
+  its own header buttons and menu items, says where the focus goes when its tab opens, and how to
+  focus its search; every method has a default, so a node implements only what it offers. Any
+  other node is shown as it is, with the tab's own buttons and items.
+- **Width.** The panel has one width for every tab, `contentWidth`, 260 pixels by default, so that
+  switching tabs never moves the content. The user drags the resize edge on the panel's inner side,
+  within `minContentWidth` (160 pixels) and `maxContentWidth` (600 pixels); a drag below the
+  smallest width stops there and never collapses the side bar. A width the application sets is
+  kept within the limits too, so it reads back the width the panel shows.
+- **Keeping the layout.** The side bar stores nothing. An application that brings the layout back
+  after a restart keeps `contentWidth`, the selected tab's id and `collapsed`, and sets them again
+  on the next start, the limits before the width.
+- **Commands and keys.** `registerCommands(registry, group, idPrefix)` adds the side bar's commands
+  to the application's `CommandRegistry`, where the user finds them in the list of shortcuts and
+  changes their keys: per tab *Show* and its title, on Alt+1 to Alt+9 for the first nine, which
+  opens the tab with the focus in its content, or collapses the side bar when the tab is open;
+  *Hide Side Bar* on Shift+Escape while the focus is in the side bar, in its search field too; and
+  *Search in Side Bar*, without a key, which expands the side bar and puts the focus into the
+  selected tab's search. A tab added later gets its command, a removed or hidden tab's is disabled.
+  A second side bar registers with `registerCommands(registry, group, idPrefix, false)`: its tabs'
+  commands come without keys, for the user to record, while its *Hide Side Bar* keeps Shift+Escape,
+  which holds in its own side bar only. The stripe's tooltips name the tabs' keys (*Files
+  (Alt+1)*), the hide button's the key of *Hide Side Bar* (*Hide (Shift+Escape)*), following every
+  change. Without a registry there are no commands, and the side bar works by mouse.
+- **Focus.** Opening a tab by a click or by its command puts the focus into its content: a
+  navigation tree's tree, on its selected entry. When the panel hides with the focus in it, the
+  focus goes back to where it last was outside the side bar.
+- **The navigation tree.** `NavigationTree<T>` shows the application's own tree of JavaFX
+  `TreeItem`s under a hidden root and follows every change of it. An entry's text comes from the
+  text function (by default the value's string form), its Ikonli icon, or none, from the icon
+  function. The `OpenMode` decides how the user opens an entry: `DOUBLE_CLICK`, the default, by a
+  double click or Enter, as in a file manager; `SELECTION` as soon as the user selects it, by a
+  click or an arrow key, as in a list of pages. The open handler (`onOpen`) receives the entry's
+  value, the application's own; a folder's too, which the application ignores when it has no use
+  for it. A double click or Enter (a single click in `SELECTION` mode) also folds or unfolds a
+  folder, and the disclosure arrow always does. `selectedValue` is read-only, `select(value)`
+  selects the entry that holds a value, unfolds the folders above it and scrolls to it, and
+  `expandAll()` and `collapseAll()` unfold and fold the whole tree. A placeholder shows while the
+  tree has no entry. The inner `TreeView` is exposed, for a context menu or the application's own
+  cells.
+- **Search.** A `SearchInput` over the full width above the tree (`getSearchInput()`) narrows it as
+  the user types to the entries that match by karthu-fx's search rule (several words narrow, case
+  and accents ignored) and the folders above them, all unfolded; a folder whose own name matches
+  keeps all its entries. The default cell marks the matching characters, the field counts the hits
+  out of all entries (*3 of 43*), and *No matches* shows when nothing matches. A search text
+  function (`searchTextFunction`) lets the search find an entry by a text it does not show, such as
+  a summary or keywords. Emptying the field gives back the tree folded exactly as the user left it,
+  the selected entry unfolded to and scrolled to. The search text stays while the side bar is
+  collapsed. Cells of the application's own receive the application's values during a search too
+  and mark the hits with the field's `highlight(text)`. Keys of its own, without a registry: Ctrl+F
+  inside the tree focuses the field, Arrow down moves to the first hit, Enter opens it, Escape
+  clears the search.
+- **On its own.** A navigation tree stands in any layout without a side bar. As a `SideBarContent`
+  it offers *Expand All* and *Collapse All* as its `getHeaderButtons()`, which the application then
+  places itself.
+- **Texts and styling.** Every text is a property with an English default: *More*, *Hide*, the
+  names of the commands and of their context (*Show {0}*, *Hide Side Bar*, *Search in Side Bar*,
+  *Side Bar*), *Expand All*, *Collapse All* and *No matches*. Colours come from the theme's tokens,
+  in both schemes; the style classes (`side-bar`, `side-bar-tab`, `navigation-tree` and their
+  parts) are listed in [`STYLEGUIDE.md`](../STYLEGUIDE.md) (*Side bar and navigation tree*).
+- **In the showcase.** The *Side Bar* page in the *Components* group: an example window with a
+  side bar of three tabs, a project's files in a navigation tree that opens a file on a double
+  click or Enter and finds a file by its kind too, a guide in a navigation tree that opens a page
+  as soon as it is selected, and notes, a list of the application's own with a *New Note* button
+  in its header and *Clear Notes* in its menu; a switch puts the side bar on the left or the right,
+  and read-outs name what was opened and the state an application would keep. The showcase's
+  window has no command registry of its own, so the page's side bar registers no commands.
 
 ## Icons
 

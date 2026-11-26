@@ -13,8 +13,8 @@ them all.
 
 - **A demonstration.** It shows what JavaFX components built with an AI assistant look like:
   themed dialogs, a settings dialog, form inputs, a Markdown view, commands with keyboard
-  shortcuts the user can change, and a few custom controls, all in one theme with two colour
-  schemes, Nebula Light and Nebula Dark.
+  shortcuts the user can change, a side bar with a searchable navigation tree, and a few custom
+  controls, all in one theme with two colour schemes, Nebula Light and Nebula Dark.
 - **A showcase application.** Every component and every themed standard control has a page to
   click through, in either scheme: a switch in its toolbar chooses Light, Dark or System.
 - **Free to read and to copy from.** The licence is MIT-0: take what is useful, no attribution
@@ -68,6 +68,15 @@ Its tables are real tables: click a header to sort, drag a header to move or res
 show and hide columns, and select cells to copy them into a spreadsheet.
 
 <img src="docs/images/markdown-tables.png" alt="Markdown tables, the second one sorted by its first column" width="75%">
+
+### A side bar as in an IDE
+
+`SideBar` puts an application's panels at the left or right edge of its window, like the tool
+window bar of an IDE: a narrow stripe of icons, one panel open at a time beside the content,
+collapsed to the stripe with a click, its width dragged at its edge, and its tabs on Alt+1 to
+Alt+9 among the application's commands.
+Its ready-made content, `NavigationTree`, shows the application's own tree under a search field
+that narrows it to the hits and, once cleared, gives the tree back folded as the user left it.
 
 ## Have a look
 

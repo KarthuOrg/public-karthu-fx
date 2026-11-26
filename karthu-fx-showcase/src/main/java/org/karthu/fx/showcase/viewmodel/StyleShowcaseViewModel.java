@@ -92,6 +92,7 @@ public class StyleShowcaseViewModel {
                         BootstrapIcons.ARROW_LEFT_RIGHT),
                 page(KARTHU_FX, "Components", "Key-Value Editor", "key-value-editor-showcase.fxml",
                         BootstrapIcons.LIST_CHECK),
+                page(KARTHU_FX, "Components", "Side Bar", "side-bar-showcase.fxml", BootstrapIcons.LAYOUT_SIDEBAR),
                 page(KARTHU_FX, "Dialogs", "Dialog / Alert", "dialog-showcase.fxml", BootstrapIcons.CHAT_SQUARE_TEXT),
                 page(KARTHU_FX, "Dialogs", "Settings Dialog", "settings-dialog-showcase.fxml", BootstrapIcons.GEAR),
                 page(KARTHU_FX, NO_GROUP, "Markdown", "markdown-showcase.fxml", BootstrapIcons.MARKDOWN),

@@ -119,9 +119,9 @@ class StyleShowcaseNavigationTest {
         assertEquals(List.of("Inputs", "Selection", "Data Display", "Layout", "Navigation", "Form Inputs", "Components",
                 "Dialogs"), texts(window.tree, ".navigation-group-header"));
         List<String> pages = texts(window.tree, ".sidebar-item-label");
-        assertEquals(43, pages.size());
+        assertEquals(44, pages.size());
         assertEquals("Buttons", pages.get(0));
-        assertEquals(43, window.tree.lookupAll(".sidebar-item-icon").size());
+        assertEquals(44, window.tree.lookupAll(".sidebar-item-icon").size());
 
         // The showcase's navigation sheet is applied: a section heading larger than a page name, a group heading smaller.
         Label section = (Label) window.tree.lookup(".navigation-section-header");
@@ -208,7 +208,7 @@ class StyleShowcaseNavigationTest {
 
         window.search.setText("");
         window.root.layout();
-        assertEquals(43, texts(window.tree, ".sidebar-item-label").size());
+        assertEquals(44, texts(window.tree, ".sidebar-item-label").size());
         assertEquals(List.of("JavaFX", "karthu-fx", "Examples"), texts(window.tree, ".navigation-section-header"));
         assertEquals("Text Field", window.tree.getSelectionModel().getSelectedItem().getValue().text());
         assertEquals("Text Field", openPageTitle(window));
@@ -290,7 +290,7 @@ class StyleShowcaseNavigationTest {
         window.root.layout();
 
         assertEquals("", window.search.getText());
-        assertEquals(43, texts(window.tree, ".sidebar-item-label").size());
+        assertEquals(44, texts(window.tree, ".sidebar-item-label").size());
     }
 
     @Test

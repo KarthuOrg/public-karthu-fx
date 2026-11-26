@@ -700,6 +700,66 @@ renaming one is a breaking change.
 | `:refused` | `shortcuts-recorder`, while it shows why the last key was refused | the message in `-fx-status-error` |
 | `:selected`, `:hover` | `shortcuts-row`, `shortcuts-group-row` (the list cell's own) | the list's selection and hover; the row's pencil and × show |
 
+**Side bar and navigation tree** (`SideBar`, `SideBarTab`, `NavigationTree`, package
+`org.karthu.fx.sidebar`) — a side bar at the window's left or right edge, like the tool window bar
+of an IDE: a narrow stripe of icon buttons, one per tab, and, while a tab is open, its panel beside
+the application's content, a header row over the tab's content, with a resize edge on the panel's
+inner side. The panel lies beside the content and makes it narrower, never over it, and opens and
+closes at once, without animation. On the right (`:right`) the stripe, the panel and the edge are
+mirrored. A navigation tree is the ready-made content of a tab: a search field over the full width
+and a tree without border or background of its own, so it lies on the panel. Rules in `base.css`
+under *Side bar* and *Navigation tree*, colours through the theme's tokens only, no token of its
+own: `-fx-surface-color` (the stripe, the panel, the resize edge), `-fx-control-border` (the
+stripe's line towards the panel, the edge's line towards the content), `-fx-hover-color` (a stripe
+button and a tree row under the pointer), `-fx-button-color` and `-fx-button-hover-color` (the open
+tab's stripe button), `-fx-accent-color` (the open tab's icon, the selected row's bar, icon and
+text), `-fx-selection-color` (the selected row), `-fx-text-color` (the title, an icon under the
+pointer, the entries' text) and `-fx-text-secondary-color` (the icons at rest, the disclosure
+arrows, the placeholder and *No matches*). The style classes are a public contract, also listed in
+the classes' JavaDoc: renaming one is a breaking change.
+
+The header follows the toolbar rule of IntelliJ's tool windows: left to right, actions first (the
+tab's own buttons, such as *New*), view options next (the content's buttons, *Expand All* and
+*Collapse All* of a navigation tree), settings last (the three-dot menu, which holds the tab's and
+the content's further items and, below a separator, *Hide*), then the hide button. Icon buttons
+only, no separators between them. A button goes into the header only when more than 5 % of the
+users need it; everything else is an item of the menu, which a right click on the header or on a
+stripe button opens too.
+
+| Style class | On | Look |
+|---|---|---|
+| `side-bar` | the side bar, an `HBox`: the stripe, the panel and the resize edge, the panel's inner side towards the content | no look of its own; `:left` or `:right`, its side |
+| `side-bar-stripe` | the stripe at the window's edge, a `VBox` of the stripe buttons | `-fx-surface-color`, padding 4, 4px between the buttons, a 1px `-fx-control-border` line towards the panel (on its right on the left side, on its left on the right side) |
+| `side-bar-tab` | a tab's stripe button, a `ToggleButton` with the tab's icon only, the title as tooltip and accessible text, the tooltip with the key of the tab's command once the commands are registered (*Files (Alt+1)*); not focus traversable; `:selected` while its tab is open | flat like the key-value editor's lock: 28 x 28, radius 3, no frame, transparent, `-fx-hover-color` under the pointer, hand cursor; icon 16px in `-fx-text-secondary-color`, `-fx-text-color` under the pointer; `:selected` the icon in `-fx-accent-color` on `-fx-button-color` (`-fx-button-hover-color` under the pointer). Collapsed, no button is selected |
+| `side-bar-panel` | the open tab's panel, a `VBox` of the header and the content, as wide as the content width (260px by default) | `-fx-surface-color` |
+| `side-bar-header` | the header row, an `HBox`: the title, the tab's buttons, the content's buttons, the menu button, the hide button | padding `4 4 4 8`, 2px between its parts, centred vertically |
+| `side-bar-title` | the tab's title, a `Label` that takes the room left of the buttons | 13px, regular weight, `-fx-text-color` |
+| `side-bar-menu-button` | the three-dot menu button, a `Button` beside `icon-button`, Bootstrap `THREE_DOTS_VERTICAL`, tooltip *More*; always shown | the theme's icon button; icon 14px in `-fx-text-secondary-color`, `-fx-text-color` under the pointer, as every `icon-button` of the header, the tab's and the content's included |
+| `side-bar-hide-button` | the hide button, a `Button` beside `icon-button`, Bootstrap `DASH`, tooltip *Hide*, with the key of *Hide Side Bar* once the commands are registered (*Hide (Shift+Escape)*) | as the menu button |
+| `side-bar-menu` | the menu, a `ContextMenu` (keeps `context-menu`): the tab's items, the content's, a separator and *Hide* | the theme's context menu |
+| `side-bar-hide-item` | the menu's *Hide*, a `MenuItem`; disabled in the menu of a tab that is not open | the theme's menu item |
+| `side-bar-content` | the holder of the open tab's content, a `StackPane` that fills the panel below the header | no look of its own |
+| `side-bar-resize-edge` | the resize edge on the panel's inner side, a `Region` 5px wide (set in code, so it has its grip without the theme), shown with the panel; horizontal resize cursor | `-fx-surface-color`, continuing the panel, with a 1px `-fx-control-border` line towards the content |
+| `navigation-tree` | the navigation tree, a `VBox`: the search bar over the tree area | transparent; its `TreeView` without border, background or padding |
+| `navigation-tree-search-bar` | the holder of the search field, a `StackPane`, the tree's first child | padding `4 8 6 8` |
+| `navigation-tree-search` | the search field, a `SearchInput` (keeps its own classes) | the search input's |
+| `navigation-tree-area` | the area of the tree view, the placeholder and *No matches*, a `StackPane` | no look of its own |
+| `navigation-tree-entry` | what the default cell shows, an `HBox` of the icon and the text | 8px between icon and text; the row (a `tree-cell`) padding `6 12 6 8`, 13px, transparent, `-fx-hover-color` under the pointer, its disclosure arrow `-fx-text-secondary-color`; the selected row `-fx-selection-color` with a 2px `-fx-accent-color` bar on its left |
+| `navigation-tree-icon` | an entry's icon, a `FontIcon`; none where the icon function gives none | 14px, `-fx-text-secondary-color`; on the selected row `-fx-accent-color` |
+| `navigation-tree-text` | an entry's text, a highlight node of the search field, a `TextFlow` beside `search-highlight`, whose runs carry `search-text` and, marked, `search-match` | the search highlight's: the text in `-fx-text-color`, a mark bold in `-fx-accent-color`; on the selected row the text bold in `-fx-accent-color` and a mark underlined |
+| `navigation-tree-placeholder` | the holder of the application's placeholder for an empty tree, a `StackPane` at the top of the tree area | padding `16 12 0 12`; a `Label` in it 13px in `-fx-text-secondary-color` |
+| `navigation-tree-no-matches` | *No matches*, a `Label` at the top of the tree area while the search finds no entry | padding `16 12 0 12`, 13px, `-fx-text-secondary-color` |
+| `navigation-tree-expand-all`, `navigation-tree-collapse-all` | *Expand All* and *Collapse All*, the tree's header buttons, `Button`s beside `icon-button`, Bootstrap `ARROWS_EXPAND` and `ARROWS_COLLAPSE`, wherever a side bar or the application places them | icon 14px in `-fx-text-secondary-color`, `-fx-text-color` under the pointer |
+
+| Pseudo-class | On | Look |
+|---|---|---|
+| `:left`, `:right` | `side-bar`, its side | the stripe's line and the resize edge's line face the panel and the content on that side |
+| `:selected` | `side-bar-tab`, while its tab is open | the icon in `-fx-accent-color` on `-fx-button-color` |
+
+A header button of the application's own is an `icon-button` with a Bootstrap icon and a tooltip,
+in a tab's `getHeaderButtons()` or a content's `SideBarContent.getHeaderButtons()`: it takes the
+header's look without a rule of its own.
+
 **Form fields** (package `org.karthu.fx.form`) — a collection of standardized form inputs that
 look and behave alike: text, password, number (with spinner arrows), combo, editable combo, text
 area, path and cron, each in the same shell, and the form row that holds any of them. Every input
