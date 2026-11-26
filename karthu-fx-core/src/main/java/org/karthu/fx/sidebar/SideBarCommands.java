@@ -49,7 +49,7 @@ final class SideBarCommands {
      * combination, which matches a key press as the registry does, and firing it runs the command unless it is
      * disabled. The registry offers no other public way to either.
      */
-    private final MenuItem hideKey = new MenuItem();
+    private final MenuItem hideCommandItem = new MenuItem();
 
     /**
      * Registers a side bar's commands: a command per tab in the order of the tabs, then Hide Side Bar in a context of
@@ -69,17 +69,17 @@ final class SideBarCommands {
         this.group = group;
         this.idPrefix = idPrefix;
         this.suggestedKeys = suggestedKeys;
-        checkFree(sideBar.getTabs());
+        checkFree();
 
         CommandContext context = registry.addContext(idPrefix, sideBar.getCommandContextName(), sideBar);
         context.nameProperty().bind(sideBar.commandContextNameProperty());
-        addTabCommands(sideBar.getTabs());
+        addTabCommands();
         // Hide keeps its key also without suggested keys: it holds in the side bar's own context, so it clashes with
         // no other side bar's, and the user could not record Shift+Escape, which has neither Ctrl nor Alt.
         hide = registry.addCommand(group, context, idPrefix + ".hide", sideBar.getHideCommandName(),
                 Shortcut.of(KeyCode.ESCAPE, Shortcut.Modifier.SHIFT), sideBar::hide);
         hide.nameProperty().bind(sideBar.hideCommandNameProperty());
-        hide.bind(hideKey);
+        hide.bind(hideCommandItem);
         sideBar.addEventFilter(KeyEvent.KEY_PRESSED, this::hideKeyPressed);
         search = registry.addCommand(group, idPrefix + ".search", sideBar.getSearchCommandName(), null,
                 sideBar::searchSelectedTab);
@@ -93,14 +93,14 @@ final class SideBarCommands {
      * it there. A key with Ctrl or Alt reaches the registry anyway, and follows its rules.
      */
     private void hideKeyPressed(KeyEvent event) {
-        KeyCombination key = hideKey.getAccelerator();
-        if (key == null || hideKey.isDisable() || !(event.getTarget() instanceof TextInputControl)
+        KeyCombination key = hideCommandItem.getAccelerator();
+        if (key == null || hideCommandItem.isDisable() || !(event.getTarget() instanceof TextInputControl)
                 || event.isControlDown() || event.isAltDown() || event.isMetaDown()
                 || event.getCode().isFunctionKey()) {
             return;
         }
         if (key.match(event)) {
-            hideKey.fire();
+            hideCommandItem.fire();
             event.consume();
         }
     }
@@ -109,7 +109,8 @@ final class SideBarCommands {
      * Refuses a registration whose group is not the registry's, or whose context or command ids the registry has
      * already, before anything is added.
      */
-    private void checkFree(List<SideBarTab> tabs) {
+    private void checkFree() {
+        List<SideBarTab> tabs = sideBar.getTabs();
         if (!registry.getGroups().contains(group)) {
             throw new IllegalArgumentException("the group " + group.getId() + " is not one of the registry's");
         }
@@ -137,17 +138,14 @@ final class SideBarCommands {
 
     /**
      * Follows the side bar's tabs: a tab with a new id gets its command, each command is named after the first tab
-     * with its id and is enabled while such a tab is visible, and the search is enabled while there is a selected tab
-     * to search.
-     *
-     * @param tabs      the side bar's tabs
-     * @param canSearch whether the side bar has a selected tab among its visible tabs
+     * with its id and is enabled while such a tab is visible, and the search is enabled while the side bar has a
+     * selected tab among its visible tabs to search.
      */
-    void update(List<SideBarTab> tabs, boolean canSearch) {
-        addTabCommands(tabs);
+    void update() {
+        addTabCommands();
         Map<String, SideBarTab> firstById = new HashMap<>();
         Set<String> visibleIds = new HashSet<>();
-        for (SideBarTab tab : tabs) {
+        for (SideBarTab tab : sideBar.getTabs()) {
             firstById.putIfAbsent(tab.getId(), tab);
             if (tab.isVisible()) {
                 visibleIds.add(tab.getId());
@@ -161,12 +159,12 @@ final class SideBarCommands {
             }
             command.setDisabled(!visibleIds.contains(entry.getKey()));
         }
-        search.setDisabled(!canSearch);
+        search.setDisabled(sideBar.selectedVisibleTab() == null);
     }
 
-    /** Adds a command for each tab whose id has none yet, in the order of the tabs. */
-    private void addTabCommands(List<SideBarTab> tabs) {
-        for (SideBarTab tab : tabs) {
+    /** Adds a command for each tab of the side bar whose id has none yet, in the order of the tabs. */
+    private void addTabCommands() {
+        for (SideBarTab tab : sideBar.getTabs()) {
             if (!tabCommands.containsKey(tab.getId())) {
                 addTabCommand(tab);
             }

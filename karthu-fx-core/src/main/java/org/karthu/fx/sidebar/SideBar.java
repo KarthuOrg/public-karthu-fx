@@ -13,15 +13,12 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.geometry.Side;
-import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -33,8 +30,6 @@ import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.Tooltip;
 import javafx.scene.input.ContextMenuEvent;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
@@ -48,7 +43,6 @@ import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
 import org.kordamp.ikonli.javafx.FontIcon;
 
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -166,11 +160,6 @@ public class SideBar extends HBox {
     /** The smallest and the largest content width until the application sets its own. */
     private static final double DEFAULT_MIN_CONTENT_WIDTH = 160;
     private static final double DEFAULT_MAX_CONTENT_WIDTH = 600;
-    /**
-     * How wide the resize edge is, its line towards the content included: a grip the pointer finds without aiming at
-     * a single pixel. Set in code, not by the theme, so that the edge has its grip without the theme too.
-     */
-    private static final double RESIZE_EDGE_WIDTH = 5;
     private static final PseudoClass LEFT_PSEUDO_CLASS = PseudoClass.getPseudoClass("left");
     private static final PseudoClass RIGHT_PSEUDO_CLASS = PseudoClass.getPseudoClass("right");
 
@@ -209,21 +198,16 @@ public class SideBar extends HBox {
     private final DoubleBinding shownContentWidth = Bindings.createDoubleBinding(
             () -> withinLimits(contentWidth.get()), contentWidth, minContentWidth, maxContentWidth);
     /** The resize edge on the panel's inner side, between the panel and the application's content. */
-    private final Region resizeEdge = new Region();
-    /** Whether the user drags the resize edge now. */
-    private boolean resizing;
-    /** Where a drag of the resize edge began: the pointer's x in the scene, and the content width then. */
-    private double resizeStartX;
-    private double resizeStartWidth;
+    private final ResizeEdge resizeEdge = new ResizeEdge(contentWidth, side);
 
     private final VBox stripe = new VBox();
     private final Label titleLabel = new Label();
-    private final Button menuButton = headerButton("side-bar-menu-button", BootstrapIcons.THREE_DOTS_VERTICAL,
-            moreText, moreText, this::menuButtonFired);
+    private final Button menuButton = HeaderButtons.iconButton("side-bar-menu-button",
+            BootstrapIcons.THREE_DOTS_VERTICAL, moreText, moreText, this::menuButtonFired);
     /** The display text of the current key of Hide Side Bar; empty while there is none or no commands. */
     private final StringProperty hideShortcutText = new SimpleStringProperty(this, "hideShortcutText", "");
     /** The hide button: its tooltip names the key of Hide Side Bar, as a stripe button's names its tab's. */
-    private final Button hideButton = headerButton("side-bar-hide-button", BootstrapIcons.DASH, hideText,
+    private final Button hideButton = HeaderButtons.iconButton("side-bar-hide-button", BootstrapIcons.DASH, hideText,
             Bindings.createStringBinding(() -> tooltipText(hideText.get(), hideShortcutText.get()), hideText,
                     hideShortcutText),
             () -> collapsed.set(true));
@@ -245,11 +229,14 @@ public class SideBar extends HBox {
     /** Held weakly by the tabs, so that a tab outliving the side bar never keeps it alive. */
     private final WeakInvalidationListener weakTabVisibilityChanged =
             new WeakInvalidationListener(tabVisibilityChanged);
-    /** The tab whose panel the header and the content are built for, whose buttons and content it listens to. */
-    private SideBarTab panelTab;
-    private final InvalidationListener panelTabChanged = observable -> updatePanel();
-    /** Held weakly by the panel's tab, so that a tab outliving the side bar never keeps it alive. */
-    private final WeakInvalidationListener weakPanelTabChanged = new WeakInvalidationListener(panelTabChanged);
+    /**
+     * The tab the panel is built for, whose title, buttons and content the panel holds, whether it shows or not: the
+     * selected tab while it is among the tabs. The side bar listens to its buttons and its content.
+     */
+    private SideBarTab panelOwner;
+    private final InvalidationListener panelOwnerChanged = observable -> updatePanel();
+    /** Held weakly by the panel's owner, so that a tab outliving the side bar never keeps it alive. */
+    private final WeakInvalidationListener weakPanelOwnerChanged = new WeakInvalidationListener(panelOwnerChanged);
 
     // The names of the commands and their context. Line comments, as each property's documentation is its method's.
     private final StringProperty showTabCommandFormat =
@@ -260,14 +247,8 @@ public class SideBar extends HBox {
     private final StringProperty commandContextName = new SimpleStringProperty(this, "commandContextName", "Side Bar");
     /** The side bar's commands in the application's registry; null until they are registered. */
     private SideBarCommands commands;
-    /**
-     * Where the focus last was outside the side bar, where it goes back when the panel hides with the focus in it;
-     * held weakly, so that a node the application dropped is not kept alive.
-     */
-    private WeakReference<Node> focusOutside;
-    /** Follows the focus of the side bar's scene, while the side bar is in it. */
-    private final ChangeListener<Node> focusOwnerChanged =
-            (observable, oldOwner, newOwner) -> rememberFocusOutside(newOwner);
+    /** Where the focus goes back to when the panel hides with the focus in it. */
+    private final FocusReturn focusReturn = new FocusReturn(this);
 
     /**
      * Creates a side bar on the left without tabs: it shows an empty stripe until the application adds tabs, and the
@@ -282,14 +263,6 @@ public class SideBar extends HBox {
         panel.minWidthProperty().bind(shownContentWidth);
         panel.prefWidthProperty().bind(shownContentWidth);
         panel.maxWidthProperty().bind(shownContentWidth);
-        resizeEdge.getStyleClass().add("side-bar-resize-edge");
-        resizeEdge.setCursor(Cursor.H_RESIZE);
-        resizeEdge.setMinWidth(RESIZE_EDGE_WIDTH);
-        resizeEdge.setPrefWidth(RESIZE_EDGE_WIDTH);
-        resizeEdge.setMaxWidth(RESIZE_EDGE_WIDTH);
-        resizeEdge.addEventHandler(MouseEvent.MOUSE_PRESSED, this::resizeEdgePressed);
-        resizeEdge.addEventHandler(MouseEvent.MOUSE_DRAGGED, this::resizeEdgeDragged);
-        resizeEdge.addEventHandler(MouseEvent.MOUSE_RELEASED, this::resizeEdgeReleased);
         header.getStyleClass().add("side-bar-header");
         header.setAlignment(Pos.CENTER_LEFT);
         titleLabel.getStyleClass().add("side-bar-title");
@@ -307,7 +280,6 @@ public class SideBar extends HBox {
         selectedTab.addListener(observable -> updatePanel());
         collapsed.addListener(observable -> updatePanel());
         updatePanel();
-        sceneProperty().addListener(this::sceneChanged);
     }
 
     /**
@@ -836,7 +808,7 @@ public class SideBar extends HBox {
             }
         }
         if (selectedRemoved && !tabs.contains(selected)) {
-            putAway();
+            deselectAndCollapse();
         }
         Set<SideBarTab> current = Collections.newSetFromMap(new IdentityHashMap<>());
         current.addAll(tabs);
@@ -862,13 +834,13 @@ public class SideBar extends HBox {
     private void tabVisibilityChanged(Observable visibleFlag) {
         SideBarTab selected = selectedTab.get();
         if (selected != null && visibleFlag == selected.visibleProperty() && !selected.isVisible()) {
-            putAway();
+            deselectAndCollapse();
         }
         updateStripe();
     }
 
-    /** The selected tab went away: the side bar collapses and selects no tab. */
-    private void putAway() {
+    /** The selected tab went away, removed or hidden: the side bar collapses and selects no tab. */
+    private void deselectAndCollapse() {
         collapsed.set(true);
         selectedTab.set(null);
     }
@@ -890,40 +862,41 @@ public class SideBar extends HBox {
      * without a selected tab among the visible tabs, only the stripe shows and no button is marked.
      */
     private void updatePanel() {
-        SideBarTab shown = shownTab();
-        boolean heldFocus = holdsFocus();
-        panel.setVisible(shown != null);
-        panel.setManaged(shown != null);
-        resizeEdge.setVisible(shown != null);
-        resizeEdge.setManaged(shown != null);
+        SideBarTab open = openTab();
+        boolean focusWasInside = focusReturn.isFocusInside();
+        panel.setVisible(open != null);
+        panel.setManaged(open != null);
+        resizeEdge.setVisible(open != null);
+        resizeEdge.setManaged(open != null);
         SideBarTab selected = selectedTab.get();
-        watchPanelTab(selected != null && tabs.contains(selected) ? selected : null);
+        setPanelOwner(selected != null && tabs.contains(selected) ? selected : null);
         updateHeader();
-        Node content = panelTab == null ? null : panelTab.getContent();
-        List<Node> held = new ArrayList<>();
+        Node content = panelOwner == null ? null : panelOwner.getContent();
+        List<Node> contentChildren = new ArrayList<>();
         if (content != null) {
-            held.add(content);
+            contentChildren.add(content);
         }
-        setChildren(contentHolder.getChildren(), held);
+        setChildren(contentHolder.getChildren(), contentChildren);
         for (Map.Entry<SideBarTab, StripeButton> entry : stripeButtons.entrySet()) {
-            entry.getValue().setSelected(entry.getKey() == shown);
+            entry.getValue().setSelected(entry.getKey() == open);
         }
-        if (heldFocus && shown == null) {
-            returnFocus();
+        if (focusWasInside && open == null) {
+            // The panel hid with the focus in it, which would leave the focus on a hidden node.
+            focusReturn.returnFocus();
         }
         updateCommands();
     }
 
     /**
-     * Builds the header row for the panel's tab: its title, its own buttons, the buttons of its content if the
+     * Builds the header row for the panel's owner: its title, its own buttons, the buttons of its content if the
      * content takes part in the contract, the menu button and the hide button.
      */
     private void updateHeader() {
         List<Node> row = new ArrayList<>();
         row.add(titleLabel);
-        if (panelTab != null) {
-            row.addAll(panelTab.getHeaderButtons());
-            if (panelTab.getContent() instanceof SideBarContent content) {
+        if (panelOwner != null) {
+            row.addAll(panelOwner.getHeaderButtons());
+            if (panelOwner.getContent() instanceof SideBarContent content) {
                 row.addAll(content.getHeaderButtons());
             }
         }
@@ -933,25 +906,25 @@ public class SideBar extends HBox {
     }
 
     /**
-     * Makes a tab the panel's: the header's title follows its title, and a change of its header buttons or its
+     * Makes a tab the panel's owner: the header's title follows its title, and a change of its header buttons or its
      * content builds the panel again.
      */
-    private void watchPanelTab(SideBarTab tab) {
-        if (tab == panelTab) {
+    private void setPanelOwner(SideBarTab tab) {
+        if (tab == panelOwner) {
             return;
         }
-        if (panelTab != null) {
-            panelTab.getHeaderButtons().removeListener(weakPanelTabChanged);
-            panelTab.contentProperty().removeListener(weakPanelTabChanged);
+        if (panelOwner != null) {
+            panelOwner.getHeaderButtons().removeListener(weakPanelOwnerChanged);
+            panelOwner.contentProperty().removeListener(weakPanelOwnerChanged);
         }
-        panelTab = tab;
+        panelOwner = tab;
         if (tab == null) {
             titleLabel.textProperty().unbind();
             titleLabel.setText(null);
         } else {
             titleLabel.textProperty().bind(tab.titleProperty());
-            tab.getHeaderButtons().addListener(weakPanelTabChanged);
-            tab.contentProperty().addListener(weakPanelTabChanged);
+            tab.getHeaderButtons().addListener(weakPanelOwnerChanged);
+            tab.contentProperty().addListener(weakPanelOwnerChanged);
         }
     }
 
@@ -964,10 +937,20 @@ public class SideBar extends HBox {
         }
     }
 
-    /** The tab whose panel shows: the selected tab, while expanded and while it is one of the visible tabs. */
-    private SideBarTab shownTab() {
+    /** The open tab, whose panel shows: the selected tab while it has a stripe button and the side bar is expanded. */
+    private SideBarTab openTab() {
+        return collapsed.get() ? null : selectedVisibleTab();
+    }
+
+    /**
+     * The selected tab while it has a stripe button: one of the tabs, and visible. Package-private: the search command
+     * is enabled while there is one.
+     *
+     * @return the selected tab, null while there is none or it has no stripe button
+     */
+    SideBarTab selectedVisibleTab() {
         SideBarTab selected = selectedTab.get();
-        if (selected == null || collapsed.get() || !selected.isVisible() || !tabs.contains(selected)) {
+        if (selected == null || !selected.isVisible() || !tabs.contains(selected)) {
             return null;
         }
         return selected;
@@ -978,7 +961,7 @@ public class SideBar extends HBox {
      * it selects the tab, expands and puts the focus into the tab's content.
      */
     private void stripeButtonFired(SideBarTab tab) {
-        boolean opening = tab != shownTab();
+        boolean opening = tab != openTab();
         if (opening) {
             selectedTab.set(tab);
             collapsed.set(false);
@@ -989,42 +972,6 @@ public class SideBar extends HBox {
         updatePanel();
         if (opening) {
             focusContent(tab);
-        }
-    }
-
-    /**
-     * The primary button pressed on the resize edge: a drag begins, from the pointer's place and today's width. A
-     * width the application has bound is the binding's, and the edge leaves it.
-     */
-    private void resizeEdgePressed(MouseEvent event) {
-        if (event.getButton() == MouseButton.PRIMARY && !contentWidth.isBound()) {
-            resizing = true;
-            resizeStartX = event.getSceneX();
-            resizeStartWidth = contentWidth.get();
-            event.consume();
-        }
-    }
-
-    /**
-     * The resize edge dragged: the panel's inner side follows the pointer, in whole pixels, and stops at the limits,
-     * so that a drag below the smallest width never collapses the side bar. On the left the inner side is the panel's
-     * right, so a move to the right widens it; on the right mirrored. The platform sends the drag to the edge also
-     * where the pointer has left it.
-     */
-    private void resizeEdgeDragged(MouseEvent event) {
-        if (resizing) {
-            double moved = event.getSceneX() - resizeStartX;
-            double wanted = side.get() == Side.RIGHT ? resizeStartWidth - moved : resizeStartWidth + moved;
-            contentWidth.set(Math.round(wanted));
-            event.consume();
-        }
-    }
-
-    /** The button released: the drag of the resize edge ends where it is. */
-    private void resizeEdgeReleased(MouseEvent event) {
-        if (resizing) {
-            resizing = false;
-            event.consume();
         }
     }
 
@@ -1049,58 +996,6 @@ public class SideBar extends HBox {
         }
     }
 
-    /** The side bar entered another scene, or left its scene: it follows the focus of the scene it is in. */
-    private void sceneChanged(ObservableValue<? extends Scene> observable, Scene oldScene, Scene newScene) {
-        if (oldScene != null) {
-            oldScene.focusOwnerProperty().removeListener(focusOwnerChanged);
-        }
-        if (newScene != null) {
-            newScene.focusOwnerProperty().addListener(focusOwnerChanged);
-            rememberFocusOutside(newScene.getFocusOwner());
-        }
-    }
-
-    /** Remembers the focus owner when it lies outside the side bar: where the focus goes back to on hiding. */
-    private void rememberFocusOutside(Node owner) {
-        if (owner != null && !isInside(owner)) {
-            focusOutside = new WeakReference<>(owner);
-        }
-    }
-
-    /** Whether the focus owner of the side bar's scene lies in the side bar. */
-    private boolean holdsFocus() {
-        Scene scene = getScene();
-        return scene != null && scene.getFocusOwner() != null && isInside(scene.getFocusOwner());
-    }
-
-    /** Whether a node is the side bar or lies in it. */
-    private boolean isInside(Node node) {
-        for (Node at = node; at != null; at = at.getParent()) {
-            if (at == this) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    /**
-     * The panel hid while the focus was in it, which leaves the focus on a hidden node: it goes back to where it last
-     * was outside the side bar, such as the application's content the user worked in before opening the panel, while
-     * that node is still in the scene, shown and enabled. Else JavaFX moves it on.
-     */
-    private void returnFocus() {
-        Node target = focusOutside == null ? null : focusOutside.get();
-        if (target == null || target.getScene() != getScene() || target.isDisabled()) {
-            return;
-        }
-        for (Node at = target; at != null; at = at.getParent()) {
-            if (!at.isVisible()) {
-                return;
-            }
-        }
-        target.requestFocus();
-    }
-
     /**
      * Keeps the side bar's commands in line with its tabs, once they are registered: a command for every tab id, each
      * enabled while a visible tab has its id, the search while a visible tab is selected.
@@ -1109,8 +1004,7 @@ public class SideBar extends HBox {
         if (commands == null) {
             return;
         }
-        SideBarTab selected = selectedTab.get();
-        commands.update(tabs, selected != null && selected.isVisible() && tabs.contains(selected));
+        commands.update();
         for (Map.Entry<SideBarTab, StripeButton> entry : stripeButtons.entrySet()) {
             entry.getValue().showShortcutOf(commands.tabCommand(entry.getKey().getId()));
         }
@@ -1139,8 +1033,8 @@ public class SideBar extends HBox {
      * focus itself when it has none. Without a visible selected tab nothing happens.
      */
     void searchSelectedTab() {
-        SideBarTab selected = selectedTab.get();
-        if (selected == null || !selected.isVisible() || !tabs.contains(selected)) {
+        SideBarTab selected = selectedVisibleTab();
+        if (selected == null) {
             return;
         }
         collapsed.set(false);
@@ -1152,15 +1046,15 @@ public class SideBar extends HBox {
 
     /** The menu button: the open tab's menu, under the button. */
     private void menuButtonFired() {
-        if (panelTab != null) {
-            openMenu(panelTab, menuButton, null);
+        if (panelOwner != null) {
+            openMenu(panelOwner, menuButton, null);
         }
     }
 
     /** A right click on the header, on its title, its buttons or beside them: the open tab's menu, at the pointer. */
     private void headerMenuRequested(ContextMenuEvent event) {
-        if (panelTab != null) {
-            openMenu(panelTab, header, event);
+        if (panelOwner != null) {
+            openMenu(panelOwner, header, event);
             event.consume();
         }
     }
@@ -1197,7 +1091,7 @@ public class SideBar extends HBox {
         if (!items.isEmpty()) {
             items.add(new SeparatorMenuItem());
         }
-        hideItem.setDisable(tab != shownTab());
+        hideItem.setDisable(tab != openTab());
         items.add(hideItem);
         filled.getItems().setAll(items);
     }
@@ -1205,20 +1099,6 @@ public class SideBar extends HBox {
     /** The icon a stripe button shows; null for none. */
     private static Node iconNode(Ikon ikon) {
         return ikon == null ? null : FontIcon.of(ikon);
-    }
-
-    /** A button of the header: an icon button whose accessible text follows a text property, its tooltip another. */
-    private static Button headerButton(String styleClass, Ikon ikon, StringProperty text,
-                                       ObservableValue<String> tooltipText, Runnable action) {
-        Button button = new Button();
-        button.getStyleClass().addAll("icon-button", styleClass);
-        button.setGraphic(FontIcon.of(ikon));
-        Tooltip tooltip = new Tooltip();
-        tooltip.textProperty().bind(tooltipText);
-        button.setTooltip(tooltip);
-        button.accessibleTextProperty().bind(text);
-        button.setOnAction(event -> action.run());
-        return button;
     }
 
     /**

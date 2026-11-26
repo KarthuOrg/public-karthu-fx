@@ -22,13 +22,12 @@ import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.Tooltip;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 import javafx.scene.control.skin.VirtualFlow;
 import javafx.scene.input.InputEvent;
-import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
@@ -47,15 +46,12 @@ import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Deque;
-import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * A tree of the application's entries for the edge of a window: the ready-made content of a side bar's panel, or a
@@ -172,6 +168,10 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
 
     /** Ctrl+F, Cmd+F on macOS: the focus into the search field. */
     private static final KeyCombination FIND = new KeyCodeCombination(KeyCode.F, KeyCombination.SHORTCUT_DOWN);
+    /** Enter without a modifier: a combination without modifiers matches only while none is pressed. */
+    private static final KeyCombination ENTER = new KeyCodeCombination(KeyCode.ENTER);
+    /** Arrow down without a modifier. */
+    private static final KeyCombination ARROW_DOWN = new KeyCodeCombination(KeyCode.DOWN);
 
     private final ObjectProperty<TreeItem<T>> root = new SimpleObjectProperty<>(this, "root");
     private final ObjectProperty<Function<? super T, String>> textFunction =
@@ -199,20 +199,22 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
     private final Label noMatches = new Label();
     /** The tree view, the placeholder and "No matches", under the search field. */
     private final StackPane treeArea = new StackPane(treeView, placeholderHolder, noMatches);
-    private final Button expandAllButton = headerButton("navigation-tree-expand-all", BootstrapIcons.ARROWS_EXPAND,
-            expandAllText, this::expandAll);
-    private final Button collapseAllButton = headerButton("navigation-tree-collapse-all",
-            BootstrapIcons.ARROWS_COLLAPSE, collapseAllText, this::collapseAll);
+    private final Button expandAllButton = HeaderButtons.iconButton("navigation-tree-expand-all",
+            BootstrapIcons.ARROWS_EXPAND, expandAllText, expandAllText, this::expandAll);
+    private final Button collapseAllButton = HeaderButtons.iconButton("navigation-tree-collapse-all",
+            BootstrapIcons.ARROWS_COLLAPSE, collapseAllText, collapseAllText, this::collapseAll);
 
+    // Whose a change of the selection is decides whether it opens the entry in selection mode: the user's opens it,
+    // the tree's own and one the open handler causes do not. The phases mark the time of each.
     /**
-     * How many of the user's input events are handled now, by the tree view or by the search field's keys: a change
-     * of the selection meanwhile is the user's.
+     * The user's input events, handled by the tree view or by the search field's keys: a change of the selection
+     * meanwhile is the user's.
      */
-    private int userInputs;
-    /** How many of the tree's own changes of the selection are under way, which open nothing. */
-    private int quietSelections;
-    /** Whether the open handler runs now: a change of the selection it causes opens nothing more. */
-    private boolean opening;
+    private final Phase userInput = new Phase();
+    /** The tree's own changes of the selection, which open nothing. */
+    private final Phase quietSelection = new Phase();
+    /** The open handler's run: a change of the selection it causes opens nothing more. */
+    private final Phase openHandlerRun = new Phase();
     /** Whether the release of the primary button belongs to a press the tree handled itself. */
     private boolean releaseTaken;
 
@@ -241,16 +243,12 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
     private final FilteredList<TreeItem<T>> hits = new FilteredList<>(entries);
     /** Whether the search field holds text, so that the tree view shows the copy of the hits. */
     private boolean searching;
-    /** Whether the entries are being refreshed: the hits follow, and the copy is built once afterwards. */
-    private boolean refreshingEntries;
-    /** How many switches of the tree view's root are under way: the selected value follows once it shows. */
-    private int rootSwitches;
-    /** The root of the copy the tree view shows during a search, null otherwise. */
-    private TreeItem<T> copyRoot;
-    /** The application's item of every item of the copy. */
-    private final Map<TreeItem<T>, TreeItem<T>> originals = new IdentityHashMap<>();
-    /** The item of the copy of every application's item the copy holds. */
-    private final Map<TreeItem<T>, TreeItem<T>> copies = new IdentityHashMap<>();
+    /** The refresh of the entries: the hits follow, and the copy is built once afterwards. */
+    private final Phase entriesRefresh = new Phase();
+    /** A switch of the tree view's root: the selected value follows once the new root shows. */
+    private final Phase rootSwitch = new Phase();
+    /** The copy the tree view shows during a search, null otherwise. */
+    private SearchCopy<T> copy;
     private final EventHandler<TreeItem.TreeModificationEvent<T>> applicationTreeChanged =
             event -> searchAgain();
     /** Held weakly by the application's root, so that a root outliving the tree never keeps it alive. */
@@ -535,13 +533,8 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
      */
     public final boolean select(T value) {
         TreeItem<T> item = value == null ? null : findBelow(treeView.getRoot(), value);
-        quietSelections++;
-        try {
-            selectItem(item);
-            return item != null;
-        } finally {
-            quietSelections--;
-        }
+        quietSelection.run(() -> revealAndSelect(item));
+        return item != null;
     }
 
     // --- Search ---------------------------------------------------------------------------------------
@@ -632,16 +625,13 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
      * @since 1.1.0-RC2
      */
     public final void expandAll() {
-        quietSelections++;
-        try {
+        quietSelection.run(() -> {
             for (TreeItem<T> item : entriesBelow(treeView.getRoot())) {
                 if (!item.isLeaf()) {
                     item.setExpanded(true);
                 }
             }
-        } finally {
-            quietSelections--;
-        }
+        });
     }
 
     /**
@@ -653,14 +643,11 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
      * @since 1.1.0-RC2
      */
     public final void collapseAll() {
-        quietSelections++;
-        try {
+        quietSelection.run(() -> {
             for (TreeItem<T> item : entriesBelow(treeView.getRoot())) {
                 item.setExpanded(false);
             }
-        } finally {
-            quietSelections--;
-        }
+        });
     }
 
     /**
@@ -859,7 +846,7 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
             placeholderHolder.getChildren().clear();
             placeholderHolder.setVisible(false);
         }
-        boolean copyEmpty = copyRoot == null || copyRoot.getChildren().isEmpty();
+        boolean copyEmpty = copy == null || copy.isEmpty();
         noMatches.setVisible(searching && copyEmpty && !placeholderShows);
     }
 
@@ -879,7 +866,7 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
 
     /** The hits changed, as the search field set a new predicate: the copy follows during a search. */
     private void hitsChanged() {
-        if (searching && !refreshingEntries) {
+        if (searching && !entriesRefresh.isUnderWay()) {
             showCopy();
         }
     }
@@ -898,66 +885,18 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
 
     /** Reads every entry of the application's tree again; the hits follow, and the field counts them. */
     private void refreshEntries() {
-        refreshingEntries = true;
-        try {
-            entries.setAll(entriesBelow(root.get()));
-        } finally {
-            refreshingEntries = false;
-        }
+        entriesRefresh.run(() -> entries.setAll(entriesBelow(root.get())));
     }
 
     /**
-     * Shows a new copy of the application's tree: every hit, every folder above a hit, and for a hit with children
-     * all its descendants, every folder unfolded, each item carrying the application's value. The selected entry stays
+     * Shows a new copy of the application's tree for the hits (see {@link SearchCopy}). The selected entry stays
      * selected when the copy holds it.
      */
     private void showCopy() {
         TreeItem<T> selected = selectedOriginal();
-        originals.clear();
-        copies.clear();
-        Set<TreeItem<T>> hitSet = Collections.newSetFromMap(new IdentityHashMap<>());
-        hitSet.addAll(hits);
-        TreeItem<T> applicationRoot = root.get();
-        TreeItem<T> newCopyRoot = null;
-        if (applicationRoot != null) {
-            newCopyRoot = new TreeItem<>(applicationRoot.getValue());
-            newCopyRoot.setExpanded(true);
-            for (TreeItem<T> child : applicationRoot.getChildren()) {
-                TreeItem<T> copy = copyOf(child, hitSet, false);
-                if (copy != null) {
-                    newCopyRoot.getChildren().add(copy);
-                }
-            }
-        }
-        copyRoot = newCopyRoot;
-        showRoot(newCopyRoot, selected == null ? null : copies.get(selected));
+        copy = new SearchCopy<>(root.get(), hits);
+        showRoot(copy.root(), selected == null ? null : copy.copyOf(selected));
         updatePlaceholder();
-    }
-
-    /**
-     * The copy of an application's item, or null when the search leaves it out: a hit, an item below a hit, or a
-     * folder with a hit below it is copied, with the copies of its children, unfolded.
-     *
-     * @param belowHit whether a folder above the item is a hit, which keeps all its entries
-     */
-    private TreeItem<T> copyOf(TreeItem<T> original, Set<TreeItem<T>> hitSet, boolean belowHit) {
-        boolean hit = hitSet.contains(original);
-        List<TreeItem<T>> children = new ArrayList<>();
-        for (TreeItem<T> child : original.getChildren()) {
-            TreeItem<T> copy = copyOf(child, hitSet, belowHit || hit);
-            if (copy != null) {
-                children.add(copy);
-            }
-        }
-        if (!hit && !belowHit && children.isEmpty()) {
-            return null;
-        }
-        TreeItem<T> copy = new TreeItem<>(original.getValue());
-        copy.getChildren().setAll(children);
-        copy.setExpanded(true);
-        originals.put(copy, original);
-        copies.put(original, copy);
-        return copy;
     }
 
     /**
@@ -967,9 +906,7 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
     private void endSearch() {
         TreeItem<T> selected = selectedOriginal();
         searching = false;
-        copyRoot = null;
-        originals.clear();
-        copies.clear();
+        copy = null;
         // Without a search the entries are not kept, so that they never hold an item the application removed.
         entries.clear();
         TreeItem<T> applicationRoot = root.get();
@@ -983,8 +920,8 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
     /** The application's item of the selected entry: the selected item, or during a search its original. */
     private TreeItem<T> selectedOriginal() {
         TreeItem<T> shown = treeView.getSelectionModel().getSelectedItem();
-        if (shown != null && copyRoot != null && treeView.getRoot() == copyRoot) {
-            return originals.get(shown);
+        if (shown != null && copy != null && treeView.getRoot() == copy.root()) {
+            return copy.originalOf(shown);
         }
         return shown;
     }
@@ -994,15 +931,10 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
      * opens, and the selected value changes once, to the value of the item selected at the end.
      */
     private void showRoot(TreeItem<T> newRoot, TreeItem<T> selected) {
-        quietSelections++;
-        rootSwitches++;
-        try {
+        quietSelection.run(() -> rootSwitch.run(() -> {
             treeView.setRoot(newRoot);
-            selectItem(selected);
-        } finally {
-            rootSwitches--;
-            quietSelections--;
-        }
+            revealAndSelect(selected);
+        }));
         selectedValue.set(watchedItem == null ? null : watchedItem.getValue());
     }
 
@@ -1022,37 +954,26 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
      * passes on.
      */
     private void searchKeyPressed(KeyEvent event) {
-        KeyCode code = event.getCode();
-        if ((code != KeyCode.DOWN && code != KeyCode.ENTER) || event.isAltDown() || event.isControlDown()
-                || event.isMetaDown() || event.isShiftDown()) {
+        boolean arrowDown = ARROW_DOWN.match(event);
+        if (!arrowDown && !ENTER.match(event)) {
             return;
         }
         if (!searching) {
-            if (code == KeyCode.DOWN) {
+            if (arrowDown) {
                 focusContent();
                 event.consume();
             }
             return;
         }
-        TreeItem<T> firstHit = hits.isEmpty() ? null : copies.get(hits.getFirst());
+        TreeItem<T> firstHit = hits.isEmpty() ? null : copy.copyOf(hits.getFirst());
         if (firstHit == null) {
             return;
         }
-        if (code == KeyCode.DOWN) {
+        if (arrowDown) {
             treeView.requestFocus();
-            userInputs++;
-            try {
-                selectItem(firstHit);
-            } finally {
-                userInputs--;
-            }
+            userInput.run(() -> revealAndSelect(firstHit));
         } else {
-            quietSelections++;
-            try {
-                selectItem(firstHit);
-            } finally {
-                quietSelections--;
-            }
+            quietSelection.run(() -> revealAndSelect(firstHit));
             open(firstHit.getValue());
         }
         event.consume();
@@ -1086,12 +1007,7 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
         if (!(event instanceof InputEvent)) {
             return treeDispatcher.dispatchEvent(event, tail);
         }
-        userInputs++;
-        try {
-            return treeDispatcher.dispatchEvent(event, tail);
-        } finally {
-            userInputs--;
-        }
+        return userInput.call(() -> treeDispatcher.dispatchEvent(event, tail));
     }
 
     /**
@@ -1106,14 +1022,14 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
         if (newItem != null) {
             newItem.valueProperty().addListener(weakSelectedItemValueChanged);
         }
-        if (rootSwitches > 0) {
+        if (rootSwitch.isUnderWay()) {
             // The tree view switches between the application's tree and the copy, whose items carry the same values:
             // the selected value follows the selection at the end of the switch, without passing through null.
             return;
         }
         selectedValue.set(newItem == null ? null : newItem.getValue());
-        if (newItem != null && userInputs > 0 && quietSelections == 0 && !opening
-                && openMode.get() == OpenMode.SELECTION) {
+        if (newItem != null && userInput.isUnderWay() && !quietSelection.isUnderWay()
+                && !openHandlerRun.isUnderWay() && openMode.get() == OpenMode.SELECTION) {
             open(newItem.getValue());
         }
     }
@@ -1141,13 +1057,13 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
         }
         if (openMode.get() == OpenMode.SELECTION) {
             if (!item.isLeaf()) {
-                selectByUser(item);
+                selectAsClicked(item);
                 toggle(item);
                 event.consume();
                 releaseTaken = true;
             }
         } else if (event.getClickCount() == 2) {
-            selectByUser(item);
+            selectAsClicked(item);
             toggle(item);
             open(item.getValue());
             event.consume();
@@ -1169,15 +1085,14 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
      * change of the selection.
      */
     private void keyPressed(KeyEvent event) {
-        if (event.getCode() != KeyCode.ENTER || event.isAltDown() || event.isControlDown() || event.isMetaDown()
-                || event.isShiftDown()) {
+        if (!ENTER.match(event)) {
             return;
         }
         TreeItem<T> item = treeView.getFocusModel().getFocusedItem();
         if (item == null) {
             return;
         }
-        selectByUser(item);
+        selectAsClicked(item);
         toggle(item);
         if (openMode.get() != OpenMode.SELECTION) {
             open(item.getValue());
@@ -1227,7 +1142,7 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
      * Selects an item of the shown tree, the folders above it unfolded, the tree's keyboard focus on it, scrolled into
      * view as far as needed; null clears the selection. Whether the change opens anything is the caller's to mark.
      */
-    private void selectItem(TreeItem<T> item) {
+    private void revealAndSelect(TreeItem<T> item) {
         if (item == null) {
             treeView.getSelectionModel().clearSelection();
             return;
@@ -1236,15 +1151,21 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
             parent.setExpanded(true);
         }
         int row = treeView.getRow(item);
-        treeView.getSelectionModel().clearAndSelect(row);
-        treeView.getFocusModel().focus(row);
+        selectRow(row);
         showRow(row);
     }
 
-    /** Selects an entry for the user, as a click does: the tree view takes the focus, its row the selection. */
-    private void selectByUser(TreeItem<T> item) {
-        int row = treeView.getRow(item);
+    /**
+     * Selects the entry of a row the user clicked or pressed Enter on, as a click does: the tree view takes the focus,
+     * the row the selection. The row shows already, so nothing unfolds or scrolls.
+     */
+    private void selectAsClicked(TreeItem<T> item) {
         treeView.requestFocus();
+        selectRow(treeView.getRow(item));
+    }
+
+    /** Selects a row of the tree view and puts its keyboard focus there. */
+    private void selectRow(int row) {
         treeView.getSelectionModel().clearAndSelect(row);
         treeView.getFocusModel().focus(row);
     }
@@ -1259,15 +1180,10 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
     /** Hands a value to the open handler, unless the handler runs already. */
     private void open(T value) {
         Consumer<? super T> handler = onOpen.get();
-        if (handler == null || opening) {
+        if (handler == null || openHandlerRun.isUnderWay()) {
             return;
         }
-        opening = true;
-        try {
-            handler.accept(value);
-        } finally {
-            opening = false;
-        }
+        openHandlerRun.run(() -> handler.accept(value));
     }
 
     /**
@@ -1324,19 +1240,6 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
         return entries;
     }
 
-    /** A header button: an icon button whose tooltip and accessible text follow a text property. */
-    private static Button headerButton(String styleClass, Ikon ikon, StringProperty text, Runnable action) {
-        Button button = new Button();
-        button.getStyleClass().addAll("icon-button", styleClass);
-        button.setGraphic(FontIcon.of(ikon));
-        Tooltip tooltip = new Tooltip();
-        tooltip.textProperty().bind(text);
-        button.setTooltip(tooltip);
-        button.accessibleTextProperty().bind(text);
-        button.setOnAction(event -> action.run());
-        return button;
-    }
-
     /** The text of an entry: the text function's, or the value's string form; never null. */
     private String textOf(T value) {
         Function<? super T, String> function = textFunction.get();
@@ -1382,6 +1285,41 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
             text.getStyleClass().add("navigation-tree-text");
             entry.getChildren().add(text);
             setGraphic(entry);
+        }
+    }
+
+    /**
+     * A stretch of the tree's own work that a change of the selection asks about, such as the user's input or the
+     * tree's own selection: under way while any run of it is, as runs may nest.
+     */
+    private static final class Phase {
+
+        /** How many runs are under way now. */
+        private int runs;
+
+        /** Whether a run is under way now. */
+        boolean isUnderWay() {
+            return runs > 0;
+        }
+
+        /** Runs a piece of work within the phase. */
+        void run(Runnable work) {
+            runs++;
+            try {
+                work.run();
+            } finally {
+                runs--;
+            }
+        }
+
+        /** Runs a piece of work within the phase and returns its result. */
+        <R> R call(Supplier<R> work) {
+            runs++;
+            try {
+                return work.get();
+            } finally {
+                runs--;
+            }
         }
     }
 }

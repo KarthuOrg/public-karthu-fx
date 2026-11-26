@@ -110,8 +110,8 @@ public class SideBarShowcaseController {
         NavigationTree<SampleEntry> tree = new NavigationTree<>(root);
         tree.setTextFunction(entry -> entry.name());
         // The search finds a file by its kind too, a text the tree does not show: markdown finds the .md files.
-        tree.setSearchTextFunction(entry -> entry.name() + "\n" + projectKind(entry));
-        tree.setIconFunction(entry -> projectIcon(entry));
+        tree.setSearchTextFunction(entry -> entry.name() + "\n" + ProjectKind.of(entry).text());
+        tree.setIconFunction(entry -> ProjectKind.of(entry).icon());
         tree.setOnOpen(entry -> opened(entry, "Project"));
         return tree;
     }
@@ -172,33 +172,49 @@ public class SideBarShowcaseController {
         }
     }
 
-    /** A project file's kind, which the search finds and the tree does not show. */
-    private static String projectKind(SampleEntry entry) {
-        if (entry.folder()) {
-            return "Folder";
-        }
-        String name = entry.name();
-        if (name.endsWith(".md")) {
-            return "Markdown document";
-        }
-        if (name.endsWith(".java")) {
-            return "Java source";
-        }
-        if (name.endsWith(".css")) {
-            return "Stylesheet";
-        }
-        return "Build file";
-    }
+    /**
+     * The kind of an entry of the project: its text, which the search finds and the tree does not show, and its icon.
+     */
+    private enum ProjectKind {
+        FOLDER("Folder", BootstrapIcons.FOLDER),
+        MARKDOWN("Markdown document", BootstrapIcons.FILE_EARMARK_TEXT),
+        JAVA("Java source", BootstrapIcons.FILE_EARMARK_CODE),
+        STYLESHEET("Stylesheet", BootstrapIcons.FILE_EARMARK_CODE),
+        BUILD("Build file", BootstrapIcons.FILE_EARMARK_CODE);
 
-    /** A project file's icon: a folder, or a file by its kind. */
-    private static Ikon projectIcon(SampleEntry entry) {
-        if (entry.folder()) {
-            return BootstrapIcons.FOLDER;
+        private final String text;
+        private final Ikon icon;
+
+        ProjectKind(String text, Ikon icon) {
+            this.text = text;
+            this.icon = icon;
         }
-        if (entry.name().endsWith(".md")) {
-            return BootstrapIcons.FILE_EARMARK_TEXT;
+
+        /** The kind of an entry: a folder, or a file by the end of its name. */
+        static ProjectKind of(SampleEntry entry) {
+            if (entry.folder()) {
+                return FOLDER;
+            }
+            String name = entry.name();
+            if (name.endsWith(".md")) {
+                return MARKDOWN;
+            }
+            if (name.endsWith(".java")) {
+                return JAVA;
+            }
+            if (name.endsWith(".css")) {
+                return STYLESHEET;
+            }
+            return BUILD;
         }
-        return BootstrapIcons.FILE_EARMARK_CODE;
+
+        String text() {
+            return text;
+        }
+
+        Ikon icon() {
+            return icon;
+        }
     }
 
     /** A folder of a sample tree, unfolded or folded, with its entries. */
