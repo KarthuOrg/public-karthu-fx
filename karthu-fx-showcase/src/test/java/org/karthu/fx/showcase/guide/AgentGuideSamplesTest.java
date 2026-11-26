@@ -2,6 +2,7 @@ package org.karthu.fx.showcase.guide;
 
 import javafx.application.ColorScheme;
 import javafx.application.Platform;
+import javafx.beans.InvalidationListener;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.value.ChangeListener;
@@ -17,10 +18,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.Tooltip;
+import javafx.scene.control.TreeItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
@@ -71,8 +75,14 @@ import org.karthu.fx.settings.SettingGroup;
 import org.karthu.fx.settings.SettingsDialog;
 import org.karthu.fx.settings.SettingsDialogResult;
 import org.karthu.fx.settings.SettingsModel;
+import org.karthu.fx.sidebar.NavigationTree;
+import org.karthu.fx.sidebar.OpenMode;
+import org.karthu.fx.sidebar.SideBar;
+import org.karthu.fx.sidebar.SideBarTab;
 import org.karthu.fx.theme.Appearance;
 import org.karthu.fx.theme.ThemeManager;
+import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
+import org.kordamp.ikonli.javafx.FontIcon;
 
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -90,6 +100,7 @@ import java.util.concurrent.TimeUnit;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -545,6 +556,133 @@ class AgentGuideSamplesTest {
     /** Stands for the application's own storage of the keys the user changed. */
     private void storeKeys(Map<String, String> keys) {
         keptKeys = keys;
+    }
+
+    @Test
+    @DisplayName("Navigation tree: the application's tree items, icons, a search by a hidden text, opening on"
+            + " selection, a placeholder and a selection from code")
+    void navigationTree() {
+        TreeItem<String> pages = new TreeItem<>("Guide");
+        TreeItem<String> start = new TreeItem<>("Getting Started");
+        start.getChildren().addAll(new TreeItem<>("Installation"), new TreeItem<>("First Window"));
+        pages.getChildren().addAll(start, new TreeItem<>("Release Notes"));
+
+        NavigationTree<String> guide = new NavigationTree<>(pages);
+        guide.setIconFunction(page -> page.equals("Getting Started") ? null : BootstrapIcons.FILE_TEXT);
+        guide.setSearchTextFunction(page -> page + "\n" + summaryOf(page));
+        guide.setOpenMode(OpenMode.SELECTION);
+        List<String> openedPages = new ArrayList<>();
+        guide.setOnOpen(page -> {
+            if (!page.equals("Getting Started")) {
+                openedPages.add(page);
+            }
+        });
+        guide.setPlaceholder(new Label("No pages yet"));
+        guide.select("Installation");
+
+        assertEquals("Installation", guide.getSelectedValue());
+        assertEquals(List.of(), openedPages, "a selection from code opens nothing");
+        guide.getSearchInput().setText("maven");
+        TreeItem<String> shown = guide.getTreeView().getRoot();
+        assertEquals(1, shown.getChildren().size(), "only the chapter above the hit");
+        assertEquals("Installation", shown.getChildren().get(0).getChildren().get(0).getValue(),
+                "found by its summary, which the tree does not show");
+        assertEquals("Installation", guide.getSelectedValue(), "the selection stays through the search");
+        guide.getSearchInput().setText("");
+        assertSame(pages, guide.getTreeView().getRoot(), "the application's own tree again");
+    }
+
+    /** Stands for the application's own text of a page, which the search finds and the tree does not show. */
+    private static String summaryOf(String page) {
+        return page.equals("Installation") ? "Maven coordinates and the module path" : "";
+    }
+
+    @Test
+    @DisplayName("Side bar: tabs with a navigation tree and a list, the list's own button and menu item, the"
+            + " commands, and the layout kept by the application")
+    void sideBar() {
+        NavigationTree<String> guide = new NavigationTree<>(new TreeItem<>("Guide"));
+
+        ListView<String> notes = new ListView<>(FXCollections.observableArrayList("Call the printer service"));
+        Button newNote = new Button();
+        newNote.getStyleClass().add("icon-button");
+        newNote.setGraphic(new FontIcon(BootstrapIcons.PLUS));
+        newNote.setTooltip(new Tooltip("New Note"));
+        newNote.setOnAction(event -> notes.getItems().add("A new note"));
+        MenuItem clearNotes = new MenuItem("Clear Notes");
+        clearNotes.setOnAction(event -> notes.getItems().clear());
+
+        SideBarTab guideTab = new SideBarTab("guide", "Guide", BootstrapIcons.BOOK, guide);
+        SideBarTab notesTab = new SideBarTab("notes", "Notes", BootstrapIcons.STICKY, notes);
+        notesTab.getHeaderButtons().add(newNote);
+        notesTab.getMenuItems().add(clearNotes);
+        SideBar sideBar = new SideBar();
+        sideBar.getTabs().addAll(guideTab, notesTab);
+
+        BorderPane window = new BorderPane(new TextArea());
+        window.setLeft(sideBar);
+        Scene scene = new Scene(window, 1000, 700);
+        ThemeManager.apply(scene);
+        CommandRegistry registry = new CommandRegistry(scene);
+        sideBar.registerCommands(registry, registry.addGroup("view", "View"), "sidebar");
+
+        sideBar.setContentWidth(storedWidth());
+        for (SideBarTab tab : sideBar.getTabs()) {
+            if (tab.getId().equals(storedTabId())) {
+                sideBar.setSelectedTab(tab);
+            }
+        }
+        sideBar.setCollapsed(storedCollapsed());
+        InvalidationListener keepLayout = observable -> storeLayout(sideBar.getContentWidth(),
+                sideBar.getSelectedTab() == null ? "" : sideBar.getSelectedTab().getId(), sideBar.isCollapsed());
+        sideBar.contentWidthProperty().addListener(keepLayout);
+        sideBar.selectedTabProperty().addListener(keepLayout);
+        sideBar.collapsedProperty().addListener(keepLayout);
+
+        assertSame(notesTab, sideBar.getSelectedTab(), "the stored tab");
+        assertEquals(300, sideBar.getContentWidth(), "the stored width");
+        assertFalse(sideBar.isCollapsed());
+        List<String> commandIds = new ArrayList<>();
+        for (Command command : registry.getCommands()) {
+            commandIds.add(command.getId());
+        }
+        assertEquals(List.of("sidebar.show.guide", "sidebar.show.notes", "sidebar.hide", "sidebar.search"),
+                commandIds);
+        newNote.fire();
+        assertEquals(List.of("Call the printer service", "A new note"), notes.getItems());
+        clearNotes.fire();
+        assertEquals(List.of(), notes.getItems());
+        sideBar.setCollapsed(true);
+        assertEquals("notes", keptTabId, "the application heard the change and kept the layout");
+        assertTrue(keptCollapsed);
+        assertEquals(300, keptWidth);
+    }
+
+    /** Stands for the application's own storage of the side bar's width. */
+    private static double storedWidth() {
+        return 300;
+    }
+
+    /** Stands for the application's own storage of the side bar's open tab. */
+    private static String storedTabId() {
+        return "notes";
+    }
+
+    /** Stands for the application's own storage of whether the side bar was collapsed. */
+    private static boolean storedCollapsed() {
+        return false;
+    }
+
+    /** What the application kept last, by {@link #storeLayout(double, String, boolean)}. */
+    private double keptWidth;
+    private String keptTabId;
+    private boolean keptCollapsed;
+
+    /** Stands for the application's own storage of the side bar's layout. */
+    private void storeLayout(double width, String tabId, boolean collapsed) {
+        keptWidth = width;
+        keptTabId = tabId;
+        keptCollapsed = collapsed;
     }
 
     /** Compiled only: the dialog is a window. */

@@ -23,7 +23,11 @@
  * {@link org.karthu.fx.command.Shortcut}), which run when their keys are pressed in a window or in a part of it
  * ({@link org.karthu.fx.command.CommandContext}) and drive the menu items and buttons bound to them, and whose keys
  * the user changes in a dialog ({@link org.karthu.fx.command.ShortcutsDialog}) or in its content placed in a window
- * of the application ({@link org.karthu.fx.command.ShortcutsEditor}).
+ * of the application ({@link org.karthu.fx.command.ShortcutsEditor}), and a navigation for the edge of a window: a
+ * side bar with a stripe of tabs that opens one panel at a time ({@link org.karthu.fx.sidebar.SideBar},
+ * {@link org.karthu.fx.sidebar.SideBarTab}), a tree of the application's entries
+ * ({@link org.karthu.fx.sidebar.NavigationTree}) and the contract of a side bar's content
+ * ({@link org.karthu.fx.sidebar.SideBarContent}).
  *
  * <p>The module requires only {@code slf4j-api} for logging; the consuming application provides
  * the binding.
@@ -36,7 +40,8 @@ module org.karthu.fx {
     requires transitive java.prefs;
     requires org.kordamp.ikonli.javafx;
     requires org.kordamp.ikonli.bootstrapicons;
-    requires org.kordamp.ikonli.core;
+    // Transitive: NavigationTree's icon function returns an Ikon of ikonli's core in its exported signature.
+    requires transitive org.kordamp.ikonli.core;
 
     exports org.karthu.fx.theme;
     // The theme's skins, which base.css names with -fx-skin: JavaFX's controls create them by reflection, so the
@@ -65,4 +70,7 @@ module org.karthu.fx {
     // folding, so that their parsed form, their messages, their plain text, their conversions and their folding can
     // change without an API change.
     exports org.karthu.fx.form;
+    // Navigation for the edge of a window: the side bar and its tabs, the navigation tree and the contract of a side
+    // bar's content.
+    exports org.karthu.fx.sidebar;
 }

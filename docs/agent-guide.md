@@ -32,6 +32,10 @@ requires org.karthu.fx;
 requires javafx.controls;
 ```
 
+An application that names icons itself, such as the icons of a side bar's tabs, also requires
+`org.kordamp.ikonli.bootstrapicons` (the icons) and, for an icon node of its own (`FontIcon`),
+`org.kordamp.ikonli.javafx`.
+
 Only these packages are API. Anything else in the jar is internal and not exported:
 
 | Package | Holds |
@@ -40,6 +44,7 @@ Only these packages are API. Anything else in the jar is internal and not export
 | `org.karthu.fx.form` | form inputs, the form row, search fields |
 | `org.karthu.fx.markdown` | `MarkdownView` and what an application plugs into it |
 | `org.karthu.fx.command` | `CommandRegistry`, `Command`, `Shortcut`, the `ShortcutsDialog` and `ShortcutsEditor` (from 1.1.0-RC2) |
+| `org.karthu.fx.sidebar` | `SideBar`, `SideBarTab`, `NavigationTree`, `OpenMode`, `SideBarContent` (from 1.1.0-RC2) |
 | `org.karthu.fx.dialog` | `CustomDialog` |
 | `org.karthu.fx.settings` | settings dialog and its model |
 | `org.karthu.fx.components` | `ToggleSwitch`, `TwinColumnSelector`, `KeyValueEditor` |
@@ -108,6 +113,19 @@ Keep these; most mistakes come from breaking one of them.
     A key on Ctrl+Alt, such as Ctrl+Alt+S, never runs while a text input has the focus, a default
     or one the user recorded, since AltGr arrives as Ctrl+Alt (function and navigation keys are
     the exception): a command that must run while the user types needs a key without Alt.
+18. **Panels at the edge of a window are a `SideBar` with `SideBarTab`s, a tree in them a
+    `NavigationTree`.** Do not build a collapsible panel, a tree with a search field of its own, or
+    Expand All and Collapse All yourself. Give the tree the application's own `TreeItem`s: its
+    open handler and its cells receive the application's values, also during a search, and the
+    user's folding comes back after it.
+19. **The side bar stores nothing, and its keys are commands of the window's registry.** Keep
+    `contentWidth`, the selected tab's id and `collapsed` with the application's settings and set
+    them again at start. Hand the side bar the window's `CommandRegistry` with `registerCommands`,
+    once, before the registry gets the user's keys back with `setChangedShortcuts`; a second side
+    bar registers with `false`, so that its tabs' keys do not clash with the first's.
+20. **A panel's header holds only buttons more than 5 % of the users need**, its actions before
+    the content's view options; everything else is an item of the tab's menu. The side bar adds the
+    menu button and the hide button itself.
 
 ## 3. Which component for what
 
@@ -135,6 +153,9 @@ Keep these; most mistakes come from breaking one of them.
 | Menu items, buttons and keys of the application's commands, keys the user may change | `CommandRegistry` with `Command`s |
 | A dialog in which the user changes the keys | `ShortcutsDialog` |
 | The same on a settings page of the application's own | `ShortcutsEditor` |
+| Panels at the left or right edge of a window, one open at a time, collapsed to a stripe, as an IDE's tool windows | `SideBar` with `SideBarTab`s |
+| A tree of the application's entries with a search field, to open one, in a side bar or alone | `NavigationTree<T>` |
+| Header buttons, menu items or the focus of a panel's own content | `SideBarContent` |
 | Light, dark or the operating system's colour scheme | `ThemeManager.setAppearance(Appearance)` |
 | A colour of the application's own, in both schemes | a token of its own under `.root:light` and `.root:dark`; in code `ThemeManager.colorSchemeProperty()` |
 | Window position and size kept between runs | `ConfigService`, `WindowState` |
@@ -142,7 +163,8 @@ Keep these; most mistakes come from breaking one of them.
 
 ## 4. Samples
 
-Imports are left out; every type comes from one of the packages of section 1 or from JavaFX.
+Imports are left out; every type comes from one of the packages of section 1, from JavaFX or, for
+icons, from Ikonli (`BootstrapIcons`, `FontIcon`).
 
 ### Start of an application
 
@@ -577,6 +599,109 @@ discardKeys.setOnAction(event -> editor.discard());
 - Every text of the dialog and the editor is a property with an English default
   (`setTitle`, `setSearchPromptText`, `setNotAssignedText` and so on).
 
+### Navigation tree
+
+```java
+TreeItem<String> pages = new TreeItem<>("Guide");
+TreeItem<String> start = new TreeItem<>("Getting Started");
+start.getChildren().addAll(new TreeItem<>("Installation"), new TreeItem<>("First Window"));
+pages.getChildren().addAll(start, new TreeItem<>("Release Notes"));
+
+NavigationTree<String> guide = new NavigationTree<>(pages);
+guide.setIconFunction(page -> page.equals("Getting Started") ? null : BootstrapIcons.FILE_TEXT);
+guide.setSearchTextFunction(page -> page + "\n" + summaryOf(page));
+guide.setOpenMode(OpenMode.SELECTION);
+List<String> openedPages = new ArrayList<>();
+guide.setOnOpen(page -> {
+    if (!page.equals("Getting Started")) {
+        openedPages.add(page);
+    }
+});
+guide.setPlaceholder(new Label("No pages yet"));
+guide.select("Installation");
+```
+
+- From 1.1.0-RC2 on. The tree shows the application's own tree items under the hidden root and
+  follows every change of them. The text of an entry is the value's string form; for values of
+  another type set `setTextFunction`. The icon function gives an Ikonli icon or null for none.
+- `OpenMode.DOUBLE_CLICK`, the default, opens an entry on a double click or Enter, as a file
+  manager does; `OpenMode.SELECTION` as soon as the user selects it, as a list of pages does. The
+  handler gets the application's value, also a folder's: ignore what you have no use for. A
+  selection from code (`select`) opens nothing.
+- The search field above the tree (`getSearchInput()`) narrows it by karthu-fx's search rule; a
+  folder whose own name matches keeps all its entries, and emptying the field gives the tree back
+  folded as the user left it. `setSearchTextFunction` lets the search find an entry by a text the
+  tree does not show, such as a summary; `summaryOf` stands for the application's own text. Do not
+  filter the tree items yourself and put no search field of your own above the tree.
+- `getTreeView()` takes a context menu or cells of the application's own; such a cell marks the
+  hits with `getSearchInput().highlight(text)`. Used alone, without a side bar, the tree's
+  `getHeaderButtons()` (Expand All and Collapse All) are the application's to place.
+
+### Side bar
+
+```java
+ListView<String> notes = new ListView<>(FXCollections.observableArrayList("Call the printer service"));
+Button newNote = new Button();
+newNote.getStyleClass().add("icon-button");
+newNote.setGraphic(new FontIcon(BootstrapIcons.PLUS));
+newNote.setTooltip(new Tooltip("New Note"));
+newNote.setOnAction(event -> notes.getItems().add("A new note"));
+MenuItem clearNotes = new MenuItem("Clear Notes");
+clearNotes.setOnAction(event -> notes.getItems().clear());
+
+SideBarTab guideTab = new SideBarTab("guide", "Guide", BootstrapIcons.BOOK, guide);
+SideBarTab notesTab = new SideBarTab("notes", "Notes", BootstrapIcons.STICKY, notes);
+notesTab.getHeaderButtons().add(newNote);
+notesTab.getMenuItems().add(clearNotes);
+SideBar sideBar = new SideBar();
+sideBar.getTabs().addAll(guideTab, notesTab);
+
+BorderPane window = new BorderPane(new TextArea());
+window.setLeft(sideBar);
+Scene scene = new Scene(window, 1000, 700);
+ThemeManager.apply(scene);
+CommandRegistry registry = new CommandRegistry(scene);
+sideBar.registerCommands(registry, registry.addGroup("view", "View"), "sidebar");
+
+sideBar.setContentWidth(storedWidth());
+for (SideBarTab tab : sideBar.getTabs()) {
+    if (tab.getId().equals(storedTabId())) {
+        sideBar.setSelectedTab(tab);
+    }
+}
+sideBar.setCollapsed(storedCollapsed());
+InvalidationListener keepLayout = observable -> storeLayout(sideBar.getContentWidth(),
+        sideBar.getSelectedTab() == null ? "" : sideBar.getSelectedTab().getId(), sideBar.isCollapsed());
+sideBar.contentWidthProperty().addListener(keepLayout);
+sideBar.selectedTabProperty().addListener(keepLayout);
+sideBar.collapsedProperty().addListener(keepLayout);
+```
+
+- From 1.1.0-RC2 on. `guide` is the navigation tree of the sample above. Place the side bar beside
+  the content like any node; on the right, `window.setRight(sideBar)` with
+  `sideBar.setSide(Side.RIGHT)`. A click on a stripe button opens its tab beside the content, a
+  click on the open tab, the hide button or *Hide* in the menu collapse the side bar to its stripe.
+- A tab's id is stable: the application keeps it, and the id of the tab's command is made from it
+  (`sidebar.show.guide`). Every tab has a content node of its own, since a node sits in one
+  place only.
+- A tab's own header buttons stand before the content's (a navigation tree's Expand All and
+  Collapse All): `icon-button`s with an icon and a tooltip, only for what more than 5 % of the
+  users need; the rest goes into `getMenuItems()`. A content of the application's own adds its
+  buttons and items, and says where the focus goes, by implementing `SideBarContent`.
+- `registerCommands` adds *Show Guide* and *Show Notes* on Alt+1 and Alt+2, *Hide Side Bar* on
+  Shift+Escape while the focus is in the side bar, and *Search in Side Bar* without a key; the
+  stripe's tooltips name the keys. Register once, before `registry.setChangedShortcuts(...)`
+  hands back the user's keys. A second side bar passes `false` as a fourth argument: its tabs'
+  commands come without keys, and its *Hide Side Bar* keeps Shift+Escape, which holds in its own
+  side bar only. Without a registry there are no keys.
+- The side bar stores nothing: `storedWidth`, `storedTabId`, `storedCollapsed` and `storeLayout`
+  stand for the application's own settings. Set the limits (`setMinContentWidth`,
+  `setMaxContentWidth`, 160 and 600 pixels by default) before the width, which is kept within
+  them.
+- Translate with `setMoreText`, `setHideText`, `setShowTabCommandFormat("{0} anzeigen")`,
+  `setHideCommandName`, `setSearchCommandName` and `setCommandContextName`, and the tree's
+  `setExpandAllText`, `setCollapseAllText` and `setNoMatchesText`.
+
 ### Controls
 
 ```java
@@ -681,3 +806,6 @@ if (result == SettingsDialogResult.OK) {
 - Every key of the application is a command of the window's `CommandRegistry`, menu items and
   buttons are bound to their commands, and no text names a key that it does not take from
   `shortcutDisplayTextProperty()`.
+- Panels at the window's edge are tabs of a `SideBar`, whose commands are registered with the
+  window's registry, and the application keeps its width, its open tab and whether it is
+  collapsed.

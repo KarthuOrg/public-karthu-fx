@@ -8,6 +8,83 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 
 ### Added
 
+- A side bar and a navigation tree, in the new package `org.karthu.fx.sidebar`: panels at the
+  edge of a window that the user opens one at a time and collapses again, like the tool window bar
+  of an IDE, and a searchable tree of the application's entries as their ready-made content.
+
+  `SideBar` sits at the left or the right edge of a window (`side`, `LEFT` by default, `RIGHT`
+  mirrored, any other side refused), placed beside the application's content like any node. Its
+  stripe shows one flat button per visible `SideBarTab`, the tab's Ikonli icon with its title as
+  tooltip and accessible text. A click opens the tab's panel beside the content, which becomes
+  narrower and is never covered, and puts the focus into the tab's content; a click on another tab
+  switches, a click on the open tab collapses the side bar to its stripe and the next expands it
+  again, at once, without animation. When the panel hides with the focus in it, the focus goes
+  back to where it last was outside the side bar. A tab has a stable id, a title, an icon, any
+  content node, a visible flag, and its own header buttons and menu items; the application adds,
+  removes and hides tabs at any time, and removing or hiding the open tab collapses the side bar
+  and selects no tab. The panel's header row shows the title, the tab's buttons, the content's
+  buttons, a three-dot menu button and a hide button. The menu (`getMenu()`), which the menu
+  button and a right click on the header or a stripe button open, lists the tab's items, the
+  content's, a separator and *Hide*. The panel has one width for every tab (`contentWidth`,
+  260 px by default), which the user drags at the resize edge on the panel's inner side, between
+  `minContentWidth` (160 px) and `maxContentWidth` (600 px); a drag below the smallest width
+  stops there and never collapses, and a width the application sets is kept within the limits.
+  The side bar stores nothing: `contentWidth`, `selectedTab` and `collapsed` are properties the
+  application keeps and sets again on its next start.
+
+  `registerCommands(registry, group, idPrefix)` hands the side bar the application's
+  `CommandRegistry`: per tab a command *Show* and its title (`<prefix>.show.<tab id>`) opens the
+  tab with the focus in its content, or collapses the side bar when the tab is open, on Alt+1 to
+  Alt+9 for the first nine tabs; *Hide Side Bar* (`<prefix>.hide`) collapses it on Shift+Escape
+  while the focus is in it, in a text field of the panel too; *Search in Side Bar*
+  (`<prefix>.search`), without a key, expands it and focuses the selected tab's search. A tab
+  added later gets its command, a removed or hidden tab's is disabled. A second side bar
+  registers with `registerCommands(registry, group, idPrefix, false)`: its tabs' keys are left to
+  the user, while its *Hide Side Bar* keeps Shift+Escape, which holds only in its own side bar.
+  The stripe's tooltips name a tab's key ("Files (Alt+1)"), the hide button's the key of *Hide
+  Side Bar* ("Hide (Shift+Escape)"), both following every change of the key.
+
+  `NavigationTree` is the ready-made content of a tab, or a navigation on its own in any layout:
+  the application's own `TreeItem`s under a hidden root, each entry with an Ikonli icon and a text
+  from the application's functions. The new enum `OpenMode` chooses whether a double click or
+  Enter opens an entry (`DOUBLE_CLICK`, the default) or the user's change of the selection does
+  (`SELECTION`); the open handler receives the entry's value. A double click or Enter (a single
+  click while selection opens) also folds or unfolds a folder, the disclosure arrow always does.
+  The tree offers the selected value (read-only), `select(value)`, `expandAll()` and
+  `collapseAll()`, a placeholder for an empty tree and its inner `TreeView`. A `SearchInput` above
+  the tree (`getSearchInput()`) narrows it to the entries that match by karthu-fx's search rule
+  and the folders above them, all unfolded, a matching folder keeping all its entries; the cells
+  and the open handler still receive the application's values. The default cell marks the
+  matching characters, an application's own cells use the field's `highlight`, and the field
+  counts the hits out of all entries ("3 of 43"); "No matches" (`noMatchesText`) shows when
+  nothing matches. A search text function lets the search find an entry by a text it does not
+  show. Emptying the field gives back the tree folded exactly as the user left it, the selected
+  entry unfolded to and scrolled to; a field of whitespace only is no search either, and shows
+  no counter. Ctrl+F inside the tree focuses the field, Arrow down moves to the first hit without
+  children (a folder only when every hit has children), Enter opens it, Escape clears.
+
+  The new interface `SideBarContent` is what a panel's content tells the side bar: its header
+  buttons, its menu items, where the focus goes when its tab opens and how to focus its search. A
+  navigation tree's header buttons are *Expand All* and *Collapse All*; any other node is shown as
+  it is, with the tab's own buttons and items. Every text is a property with an English default:
+  *More*, *Hide*, the tooltips of *Expand All* and *Collapse All*, *No matches*, and the names of
+  the commands and of their context (`showTabCommandFormat`, `hideCommandName`,
+  `searchCommandName`, `commandContextName`). The theme draws the stripe on the surface with the
+  open tab's icon in the accent colour, and the tree without border or own background, a row in
+  the hover colour under the pointer, the selected row in the selection colour with a 2 px accent
+  bar on its left and its icon and text in the accent colour. The side bar carries the
+  pseudo-class `:left` or `:right` of its side. STYLEGUIDE.md lists the style classes and the
+  rule for the panel's header: actions first, view options next, settings last, and only buttons
+  more than 5 % of the users need. The module now requires `org.kordamp.ikonli.core`
+  transitively, as a tab's icon and the tree's icon function are its `Ikon`.
+
+  The showcase's *Side Bar* page, in the group *Components*, is an example window with a side bar
+  of three tabs: a project's files in a navigation tree that opens a file on a double click or
+  Enter, a guide in one that opens a page as soon as it is selected, and notes, a list with a
+  header button and a menu item of its tab's own. A switch puts the side bar on the left or the
+  right, and read-outs name what was opened and the state an application keeps.
+  `docs/components.md` describes the package, and the agent guide has its rules and tested
+  samples.
 - `MarkdownView` colours PowerShell: a code block of the language `powershell`, `pwsh` or `ps1`
   shows comments (also `<# ... #>`), strings and here-strings, variables (`$env:PATH`, `${...}`,
   splatted `@args`), `$true`, `$false` and `$null` as literals, keywords in any case, the
@@ -181,15 +258,22 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 
 ### Changed
 
-- The showcase's navigation is a tree of three sections: *JavaFX* with the standard controls in
-  the groups *Inputs*, *Selection*, *Data Display*, *Layout* and *Navigation*, *karthu-fx* with
-  its own components in *Form Inputs*, *Components* and *Dialogs*, and *Examples* with the *Job
-  Scheduler*; a page that would be alone in a group sits directly under its section. A click on a
-  section or group expands or collapses it and leaves the open page open. A search field above the
-  tree, karthu-fx's `SearchInput`, narrows it to the pages whose name, group or section matches,
-  by karthu-fx's search rule, and shows *No matches* when none does. Ctrl+F puts the focus into
-  the search, Esc clears it, Arrow down moves to the first hit and Enter opens it, also on a page
-  row. Every page looks and works as before.
+- The showcase's navigation is a side bar at the window's left edge, which collapses to its
+  stripe to give the page the room. Its one tab, *Components*, holds a `NavigationTree` of three
+  sections: *JavaFX* with the standard controls in the groups *Inputs*, *Selection*, *Data
+  Display*, *Layout* and *Navigation*, *karthu-fx* with its own components in *Form Inputs*,
+  *Components* and *Dialogs*, and *Examples* with the *Job Scheduler*; a page that would be alone
+  in a group sits directly under its section. A page opens as soon as it is selected; a click on
+  a section or group folds or unfolds it, opens no page and leaves the open page open. The search
+  field above the tree narrows it to the pages whose name, group or section matches, by
+  karthu-fx's search rule: a section or group that matches keeps all its pages, the matches are
+  marked, the counter counts the matching sections and groups too, and *No matches* shows when
+  nothing does. Clearing the search gives the tree back folded as the user left it. The open page
+  stays open while a search hides its row, and its row is selected again as soon as the tree
+  shows it. Ctrl+F anywhere in the window expands the side bar and puts the focus into the search
+  (the Shortcuts page keeps its own Ctrl+F), Esc clears it, Arrow down moves to the first page
+  among the hits and Enter opens it. Every page looks and works as before; the column's
+  *COMPONENTS* heading and the showcase's own navigation stylesheet are gone.
 - The theme has a third stylesheet, `light.css`, beside `base.css` and `dark.css`. A native image
   that names the resources it includes one by one names `light.css` too, or the theme has no
   colours to load for Light.
@@ -203,6 +287,12 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 - A selected `ToggleButton` no longer shows a strip of its colour below its border after it lost
   the focus, and no longer bleeds slightly around it while focused: the theme's toggle buttons
   paint their background exactly inside the border, in both schemes. No colour changes.
+
+### Removed
+
+- The theme no longer styles the style classes of the showcase's former list sidebar
+  (`showcase-sidebar`, `showcase-sidebar-header`, `category-header`, `sidebar-item-icon`,
+  `sidebar-item-label`), which nothing uses any more.
 
 ## [1.1.0-RC1] - 2026-11-14
 

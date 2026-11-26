@@ -17,8 +17,8 @@ its `.asc` signature and checksums. The parent is a POM only. The two extra jars
 never reaches `package` and does not build them.
 
 - The `-sources` jar holds every source of the module, `module-info.java` included.
-- The `-javadoc` jar documents the packages the module exports: `components`, `config`, `dialog`,
-  `form`, `markdown`, `services`, `settings` and `theme` of `org.karthu.fx`.
+- The `-javadoc` jar documents the packages the module exports: `command`, `components`, `config`,
+  `dialog`, `form`, `markdown`, `services`, `settings`, `sidebar` and `theme` of `org.karthu.fx`.
 - The javadoc runs on the module path with every doclint group (`-Xdoclint:all`, missing comments
   included) and fails the build on any warning. JavaDoc on every exported type and member is a
   rule of the code base (`CLAUDE.md`), and a finding is fixed in the JavaDoc, not silenced.

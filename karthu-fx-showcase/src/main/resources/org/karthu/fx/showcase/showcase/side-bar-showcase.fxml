@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- The page of the side bar. The controller builds the side bar and puts it at the left of the example window, a
+     frame that stands for an application's window: the side bar beside the application's content. The texts' minimum
+     height is their preferred one (-Infinity is USE_PREF_SIZE), and so is the example window's: the showcase fits a
+     page to its window's height, which would cut them. -->
+
+<VBox xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="org.karthu.fx.showcase.controller.showcase.SideBarShowcaseController"
+      styleClass="showcase-page" spacing="16">
+
+    <Label text="Side Bar" styleClass="showcase-page-title"/>
+    <Label text="Navigation for the edge of a window, package org.karthu.fx.sidebar, like the tool window bar of an IDE. A SideBar shows a narrow stripe with one button per SideBarTab, and the open tab's panel beside the application's content, which it makes narrower and never covers: a header row with the tab's title and buttons over the tab's content. A tab holds any node; a NavigationTree is the ready-made one, the application's own tree under a search field. The side bar stores nothing: the application keeps its width, its open tab and whether it is collapsed."
+           styleClass="showcase-page-description" wrapText="true" minHeight="-Infinity"/>
+
+    <VBox styleClass="showcase-card" spacing="12">
+        <Label text="A side bar with three tabs" styleClass="showcase-card-title"/>
+        <Label text="Click a stripe button to open its tab, another to switch, the open one or the hide button in the header to collapse the side bar to its stripe; a right click on a stripe button or the header opens the tab's menu, as the three-dot button does. Drag the panel's inner edge to make it wider or narrower, between 160 and 600 pixels, the same width for every tab. Project opens a file with a double click or Enter, Guide opens a page as soon as you select it, and a click on one of its chapters folds it. Type into a tree's search field: the tree narrows to the hits and the folders that hold them, Arrow down moves to the first hit that is a file or a page, past a folder or chapter whose name matches too, Enter opens it, and Esc clears the search and gives the tree back folded as you left it. Project also finds a file by its kind, which it does not show: try markdown. Notes is content of the application's own, a list with a New Note button in its header and Clear Notes in its menu."
+               styleClass="showcase-page-description" wrapText="true" minHeight="-Infinity"/>
+        <Label text="In an application, Alt+1 to Alt+9 open the tabs and Shift+Escape hides the side bar once it registers the side bar's commands with its CommandRegistry, and the stripe's tooltips name those keys. The showcase's window has no registry of its own, so this side bar works with the mouse and the trees' own keys."
+               styleClass="showcase-page-description" wrapText="true" minHeight="-Infinity"/>
+        <HBox fx:id="sideSwitch" spacing="12" alignment="CENTER_LEFT"/>
+        <BorderPane fx:id="exampleWindow" prefHeight="460" minHeight="-Infinity"
+                    style="-fx-border-color: -fx-control-border; -fx-border-width: 1;">
+            <center>
+                <VBox styleClass="showcase-content" spacing="8">
+                    <Label text="The application's content" styleClass="showcase-card-title"/>
+                    <Label fx:id="openedLabel" text="Opened: nothing yet"/>
+                    <Label fx:id="stateLabel"/>
+                </VBox>
+            </center>
+        </BorderPane>
+    </VBox>
+
+</VBox>
