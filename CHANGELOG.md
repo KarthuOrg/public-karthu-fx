@@ -22,6 +22,21 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   The theme draws the tree without border or own background, with the showcase navigation's rows.
   The module now requires `org.kordamp.ikonli.core` transitively, as the icon function returns
   its `Ikon`.
+- `SideBar` and `SideBarTab` in `org.karthu.fx.sidebar`: a side bar for the left or right edge
+  of a window (`side`, `LEFT` by default, `RIGHT` mirrored, any other side refused), placed
+  beside the application's content like any node. Its stripe shows one flat button per visible
+  tab, the tab's Ikonli icon with its title as tooltip and accessible text. A click opens the
+  tab's panel beside the content and puts the focus into its content, a click on another tab
+  switches, a click on the open tab collapses the side bar to its stripe and expands it again,
+  at once, without animation. A tab has a stable id, a title, an icon, any content node, a
+  visible flag, and its own header buttons and menu items. The panel's header row shows the
+  title, the tab's buttons, the content's buttons (Expand All and Collapse All of a
+  `NavigationTree`), a three-dot menu button and a hide button. The menu (`getMenu()`), which the
+  menu button and a right click on the header or a stripe button open, lists the tab's items, the
+  content's, a separator and *Hide*. `selectedTab` and `collapsed` are properties the application
+  stores and sets again; removing or hiding the selected tab collapses the side bar and selects
+  no tab. The texts *More* and *Hide* are properties. The theme draws the stripe on the surface
+  with the open tab's icon in the accent colour.
 - `MarkdownView` colours PowerShell: a code block of the language `powershell`, `pwsh` or `ps1`
   shows comments (also `<# ... #>`), strings and here-strings, variables (`$env:PATH`, `${...}`,
   splatted `@args`), `$true`, `$false` and `$null` as literals, keywords in any case, the
