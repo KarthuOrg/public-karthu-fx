@@ -133,7 +133,8 @@ public class SideBar extends HBox {
     private static final PseudoClass RIGHT_PSEUDO_CLASS = PseudoClass.getPseudoClass("right");
 
     private final ObservableList<SideBarTab> tabs = FXCollections.observableArrayList();
-    /** The side, LEFT or RIGHT: set refuses any other, so a refused side never reaches the listeners. */
+    // LEFT or RIGHT: set refuses any other, so a refused side never reaches the listeners. A line comment, as the
+    // property's documentation is its method's.
     private final ObjectProperty<Side> side = new SimpleObjectProperty<>(this, "side", Side.LEFT) {
         @Override
         public void set(Side newSide) {
