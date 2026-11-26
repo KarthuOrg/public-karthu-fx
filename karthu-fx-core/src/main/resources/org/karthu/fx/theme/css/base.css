@@ -4134,15 +4134,16 @@ Text {
  * stripe at the window's edge, one flat square button per tab, and the
  * open tab's panel beside it: a header row and the tab's content. The
  * stripe lies on the surface with a 1px line towards the panel, the
- * panel on the surface with a 1px line towards the application's
- * content; on the right side (:right) both lines are mirrored. The
- * stripe buttons are drawn like the key-value editor's lock: no frame,
- * the icon 16px in the secondary text colour, the open tab's
- * (:selected) in the accent colour on the raised grey of a button. The
- * header's title in regular weight, its icon buttons (the side bar's,
- * the tab's and the content's) 14px in the secondary text colour. The
- * style classes are a documented contract (SideBar's JavaDoc); colours
- * are the theme's tokens, no token of its own.
+ * panel on the surface, its resize edge on its inner side with a 1px
+ * line towards the application's content; on the right side (:right)
+ * both lines are mirrored. The stripe buttons are drawn like the
+ * key-value editor's lock: no frame, the icon 16px in the secondary
+ * text colour, the open tab's (:selected) in the accent colour on the
+ * raised grey of a button. The header's title in regular weight, its
+ * icon buttons (the side bar's, the tab's and the content's) 14px in
+ * the secondary text colour. The style classes are a documented
+ * contract (SideBar's JavaDoc); colours are the theme's tokens, no
+ * token of its own.
  * =================================================================== */
 .side-bar-stripe {
     -fx-background-color: -fx-surface-color;
@@ -4201,11 +4202,16 @@ Text {
 
 .side-bar-panel {
     -fx-background-color: -fx-surface-color;
+}
+
+/* The resize edge continues the panel's surface and draws its line towards the content; its width is set in code. */
+.side-bar-resize-edge {
+    -fx-background-color: -fx-surface-color;
     -fx-border-color: -fx-control-border;
     -fx-border-width: 0 1 0 0;
 }
 
-.side-bar:right .side-bar-panel {
+.side-bar:right .side-bar-resize-edge {
     -fx-border-width: 0 0 0 1;
 }
 
