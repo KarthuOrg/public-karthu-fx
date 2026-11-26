@@ -961,6 +961,39 @@ class NavigationTreeTest {
     }
 
     @Test
+    @DisplayName("Arrow down and Enter take the first hit without children in the order of the rows, a folder only when "
+            + "every hit has children")
+    void firstHitWithoutChildren() {
+        for (OpenMode mode : OpenMode.values()) {
+            Sample sample = new Sample();
+            NavigationTree<Food> tree = sample.tree();
+            tree.setOpenMode(mode);
+            List<Food> opened = new ArrayList<>();
+            tree.setOnOpen(opened::add);
+            laidOut(tree);
+            TextField field = tree.getSearchInput().getTextField();
+            search(tree, "r");
+            assertEquals(List.of("Fruits", "Apple", "Banana", "Vegetables", "Roots", "Carrot", "Water"), rows(tree),
+                    "the hits Fruits, Roots, Carrot and Water");
+
+            pressAt(field, KeyCode.ENTER, false);
+            assertSame(sample.carrotValue, tree.getSelectedValue(), mode + ": past the folders Fruits and Roots");
+            assertEquals(List.of(sample.carrotValue), opened, mode.name());
+
+            search(tree, "veg");
+            pressAt(field, KeyCode.ENTER, false);
+            Food vegetables = sample.vegetables.getValue();
+            assertSame(vegetables, tree.getSelectedValue(), mode + ": the one hit has children, so it is the first");
+            assertEquals(List.of(sample.carrotValue, vegetables), opened, mode.name());
+
+            search(tree, "r");
+            pressAt(field, KeyCode.DOWN, false);
+            assertSame(tree.getTreeView(), tree.getScene().getFocusOwner(), mode.name());
+            assertSame(sample.carrotValue, tree.getSelectedValue(), mode + ": Arrow down takes the same hit as Enter");
+        }
+    }
+
+    @Test
     @DisplayName("without a hit Arrow down and Enter do nothing; in an empty field Arrow down goes to the selection")
     void keysWithoutAHit() {
         Sample sample = new Sample();

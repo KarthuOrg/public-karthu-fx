@@ -408,17 +408,19 @@ class StyleShowcaseNavigationTest {
     }
 
     @Test
-    @DisplayName("Enter in the search field on a first hit that is a heading selects the heading and opens nothing")
-    void enterOnAHeadingHitOpensNothing() throws IOException {
+    @DisplayName("Enter in the search field passes over a heading that matches and opens the first page among the hits: "
+            + "\"dialog\" opens Dialog / Alert, not the group Dialogs above it")
+    void enterPassesOverAHeadingHit() throws IOException {
         Window window = load();
         laidOut(window);
 
         window.search.setText("dialog");
+        assertEquals("  Dialogs", rows(window).get(1), "the group comes first among the hits");
         press(window.search.getTextField(), KeyCode.ENTER, false);
 
-        assertEquals("Dialogs", window.navigation.getSelectedValue().text());
-        assertEquals("Buttons", window.viewModel.getSelectedItem().displayName());
-        assertEquals("Buttons", openPageTitle(window));
+        assertEquals("Dialog / Alert", window.navigation.getSelectedValue().text());
+        assertEquals("Dialog / Alert", window.viewModel.getSelectedItem().displayName());
+        assertEquals("Dialog / Alert", openPageTitle(window));
     }
 
     @Test

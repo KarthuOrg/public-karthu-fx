@@ -501,8 +501,10 @@ dependency.
   and the field shows no counter for it. The search text stays while the side bar is
   collapsed. Cells of the application's own receive the application's values during a search too
   and mark the hits with the field's `highlight(text)`. Keys of its own, without a registry: Ctrl+F
-  inside the tree focuses the field, Arrow down moves to the first hit, Enter opens it, Escape
-  clears the search.
+  inside the tree focuses the field, Arrow down moves to the first hit without children, past a
+  folder whose name matches too (a folder only when every hit has children), Enter opens it,
+  Escape clears the search. In a field without a search Arrow down moves the focus to the tree's
+  selected entry.
 - **On its own.** A navigation tree stands in any layout without a side bar. As a `SideBarContent`
   it offers *Expand All* and *Collapse All* as its `getHeaderButtons()`, which the application then
   places itself.

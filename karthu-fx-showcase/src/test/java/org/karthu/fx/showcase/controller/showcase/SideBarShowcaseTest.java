@@ -116,8 +116,8 @@ class SideBarShowcaseTest {
     }
 
     @Test
-    @DisplayName("Guide opens a page as soon as the user selects it, here the first hit of its search by Enter; a "
-            + "chapter opens nothing")
+    @DisplayName("Guide opens a page as soon as the user selects it, here the first page among the hits of its search "
+            + "by Enter, past a chapter that matches; a chapter, the first hit only when no page matches, opens nothing")
     void guideOpensOnSelection() throws IOException {
         Parent root = layOut();
         SideBar sideBar = sideBar(root);
@@ -128,11 +128,17 @@ class SideBarShowcaseTest {
 
         guide.getSearchInput().setText("components");
         press(guide.getSearchInput().getTextField(), KeyCode.ENTER);
+        assertEquals("Components", guide.getSelectedValue().name(), "no page matches: the chapter is the first hit");
         assertEquals("Opened: nothing yet", openedLabel(root).getText(), "the chapter Components opens nothing");
 
         guide.getSearchInput().setText("first");
         press(guide.getSearchInput().getTextField(), KeyCode.ENTER);
         assertEquals("Opened: First Window (Guide)", openedLabel(root).getText());
+
+        guide.getSearchInput().setText("in");
+        press(guide.getSearchInput().getTextField(), KeyCode.ENTER);
+        assertEquals("Opened: Installation (Guide)", openedLabel(root).getText(),
+                "the first page among the hits, past the chapter Getting Started");
     }
 
     @Test

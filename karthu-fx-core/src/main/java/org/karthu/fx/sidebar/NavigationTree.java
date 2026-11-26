@@ -97,11 +97,12 @@ import java.util.function.Supplier;
  *
  * <p><b>Keys of the search</b>, the tree's own, without a command registry: Ctrl+F (Cmd+F on macOS) while the focus
  * is inside the tree puts it into the search field and selects its text, as {@link #focusSearch()} does. In the field,
- * during a search, Arrow down moves the focus to the tree and selects the first hit in the order of the rows, a change
- * of the selection by the user, which opens it in {@link OpenMode#SELECTION}; Enter selects the first hit and opens it
- * in either mode, the focus staying in the field. Without a hit both pass on. Without a search, in an empty field or
- * one of whitespace only, Arrow down moves the focus to the tree, on its selected entry, and Enter passes on. Escape
- * empties the field, the field's own key.
+ * during a search, Arrow down and Enter take the first hit without children in the order of the rows, past a folder
+ * whose own name matches too, and the first hit only when every hit has children. Arrow down moves the focus to the
+ * tree and selects that hit, a change of the selection by the user, which opens it in {@link OpenMode#SELECTION};
+ * Enter selects it and opens it in either mode, the focus staying in the field. Without a hit both pass on. Without a
+ * search, in an empty field or one of whitespace only, Arrow down moves the focus to the tree, on its selected entry,
+ * and Enter passes on. Escape empties the field, the field's own key.
  *
  * <p><b>Opening.</b> The {@linkplain #openModeProperty() open mode} decides how the user opens an entry, the
  * {@linkplain #onOpenProperty() open handler} receives the entry's value, the application's own, never a copy:
@@ -969,11 +970,11 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
     }
 
     /**
-     * Arrow down and Enter in the search field, without a modifier. During a search, on the first hit in the order
-     * of the rows: Arrow down moves the focus to the tree and selects the hit, a change of the selection by the user,
-     * which opens it in selection mode; Enter selects the hit and opens it, the focus staying in the field. Without
-     * a hit both pass on. Without a search Arrow down moves the focus to the tree, on its selected entry, and Enter
-     * passes on.
+     * Arrow down and Enter in the search field, without a modifier. During a search, on the first hit (see
+     * {@link #firstHit()}): Arrow down moves the focus to the tree and selects the hit, a change of the selection by
+     * the user, which opens it in selection mode; Enter selects the hit and opens it, the focus staying in the field.
+     * Without a hit both pass on. Without a search Arrow down moves the focus to the tree, on its selected entry, and
+     * Enter passes on.
      */
     private void searchKeyPressed(KeyEvent event) {
         boolean arrowDown = ARROW_DOWN.match(event);
@@ -987,7 +988,7 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
             }
             return;
         }
-        TreeItem<T> firstHit = hits.isEmpty() ? null : copy.copyOf(hits.getFirst());
+        TreeItem<T> firstHit = firstHit();
         if (firstHit == null) {
             return;
         }
@@ -999,6 +1000,26 @@ public class NavigationTree<T> extends VBox implements SideBarContent {
             open(firstHit.getValue());
         }
         event.consume();
+    }
+
+    /**
+     * The hit Arrow down and Enter in the search field take, as an item of the copy: the first hit without children
+     * in the order of the rows, what the user most likely looks for, rather than a folder above it whose name happens
+     * to match too; only when every hit has children, the first hit. The hits are in the order of the rows, as every
+     * folder of the copy is unfolded. Null without a hit.
+     */
+    private TreeItem<T> firstHit() {
+        if (hits.isEmpty()) {
+            return null;
+        }
+        TreeItem<T> first = hits.getFirst();
+        for (TreeItem<T> hit : hits) {
+            if (hit.isLeaf()) {
+                first = hit;
+                break;
+            }
+        }
+        return copy.copyOf(first);
     }
 
     /** Whether an item lies below a root, the root itself not counted. */
