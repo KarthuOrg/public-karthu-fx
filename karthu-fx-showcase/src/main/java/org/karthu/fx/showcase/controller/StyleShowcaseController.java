@@ -107,6 +107,12 @@ public class StyleShowcaseController {
         navigation.getSearchInput().setPromptText("Search pages");
 
         // Ctrl+F anywhere in the window. Inside the navigation the tree takes it itself, to the same end.
+        // A handler on the scene, not a command of a CommandRegistry, which is where an application's keys belong
+        // otherwise: a scene has one registry, and in the showcase's window that one is the Shortcuts page's, which
+        // builds its example application's registry on the window's scene, with a Find of its own on Ctrl+F. A
+        // registry of the window's own would leave the page none. So the window adds no registry and its side bar
+        // registers no commands; this handler hears Ctrl+F only where neither the focused node nor a page took it
+        // (see addFindHandler).
         sideBar.sceneProperty().addListener((obs, oldScene, newScene) -> addFindHandler(newScene));
         addFindHandler(sideBar.getScene());
 

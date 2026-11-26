@@ -4028,9 +4028,9 @@ Text {
 /* ===================================================================
  * Navigation tree (NavigationTree, package org.karthu.fx.sidebar) — a
  * tree of the application's entries that lies on the panel around it:
- * no border and no background of its own, under its search field. Rows
- * like the showcase's navigation: the hover colour, the selected row in
- * the selection colour with a 2px accent bar on its left, its icon and
+ * no border and no background of its own, under its search field. Flat
+ * rows: the hover colour under the pointer, the selected row in the
+ * selection colour with a 2px accent bar on its left, its icon and
  * text in the accent colour, the text bold. The header buttons (Expand All,
  * Collapse All) sit wherever the application or a side bar puts them,
  * so their rules do not depend on the tree. The style classes are a

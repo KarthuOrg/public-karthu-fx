@@ -1130,14 +1130,15 @@ public class SideBar extends HBox {
     }
 
     /**
-     * A stripe button's tooltip: the tab's title, and the key of the tab's command in brackets while it has one, such
-     * as <i>Files (Alt+1)</i>.
+     * A tooltip that names the key of a command: the text, and the key in brackets while there is one, such as a
+     * stripe button's <i>Files (Alt+1)</i>, the tab's title and the key of its command, or the hide button's
+     * <i>Hide (Shift+Escape)</i>, the hide text and the key of Hide Side Bar; the key alone for an empty text.
      */
-    private static String tooltipText(String title, String key) {
+    private static String tooltipText(String text, String key) {
         if (key.isEmpty()) {
-            return title;
+            return text;
         }
-        return title == null || title.isEmpty() ? key : title + " (" + key + ")";
+        return text == null || text.isEmpty() ? key : text + " (" + key + ")";
     }
 
     /**

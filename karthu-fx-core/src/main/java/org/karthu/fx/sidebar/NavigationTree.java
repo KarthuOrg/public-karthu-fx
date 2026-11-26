@@ -141,9 +141,9 @@ import java.util.function.Supplier;
  * Down) stay as JavaFX provides them.
  *
  * <p><b>Style classes</b>, a public contract: renaming one is a breaking change. The theme draws the tree without
- * border and without a background of its own, so it lies on the panel around it, and its rows like the navigation of
- * karthu-fx's showcase: the hover colour, the selected row in the selection colour with a 2 px accent bar on its
- * left, its icon and text in the accent colour, the text bold. A mark of the search shows bold in the accent colour,
+ * border and without a background of its own, so it lies on the panel around it, and its rows flat: a row under the
+ * pointer in the hover colour, the selected row in the selection colour with a 2 px accent bar on its left, its icon
+ * and text in the accent colour, the text bold. A mark of the search shows bold in the accent colour,
  * on the selected row underlined.
  * <ul>
  *   <li>{@code navigation-tree}: the tree, a {@link VBox}</li>

@@ -70,11 +70,13 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   *More*, *Hide*, the tooltips of *Expand All* and *Collapse All*, *No matches*, and the names of
   the commands and of their context (`showTabCommandFormat`, `hideCommandName`,
   `searchCommandName`, `commandContextName`). The theme draws the stripe on the surface with the
-  open tab's icon in the accent colour, and the tree without border or own background, with the
-  rows of the showcase's navigation. STYLEGUIDE.md lists the style classes and the rule for the
-  panel's header: actions first, view options next, settings last, and only buttons more than 5 %
-  of the users need. The module now requires `org.kordamp.ikonli.core` transitively, as a tab's
-  icon and the tree's icon function are its `Ikon`.
+  open tab's icon in the accent colour, and the tree without border or own background, a row in
+  the hover colour under the pointer, the selected row in the selection colour with a 2 px accent
+  bar on its left and its icon and text in the accent colour. The side bar carries the
+  pseudo-class `:left` or `:right` of its side. STYLEGUIDE.md lists the style classes and the
+  rule for the panel's header: actions first, view options next, settings last, and only buttons
+  more than 5 % of the users need. The module now requires `org.kordamp.ikonli.core`
+  transitively, as a tab's icon and the tree's icon function are its `Ikon`.
 
   The showcase's *Side Bar* page, in the group *Components*, is an example window with a side bar
   of three tabs: a project's files in a navigation tree that opens a file on a double click or
@@ -256,24 +258,22 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
 
 ### Changed
 
-- The showcase's navigation is a tree of three sections: *JavaFX* with the standard controls in
-  the groups *Inputs*, *Selection*, *Data Display*, *Layout* and *Navigation*, *karthu-fx* with
-  its own components in *Form Inputs*, *Components* and *Dialogs*, and *Examples* with the *Job
-  Scheduler*; a page that would be alone in a group sits directly under its section. A click on a
-  section or group expands or collapses it and leaves the open page open. A search field above the
-  tree, karthu-fx's `SearchInput`, narrows it to the pages whose name, group or section matches,
-  by karthu-fx's search rule, and shows *No matches* when none does. Ctrl+F puts the focus into
-  the search, Esc clears it, Arrow down moves to the first hit and Enter opens it, also on a page
-  row. Every page looks and works as before.
-- The showcase's navigation lies in a side bar at the window's left edge: its one tab,
-  *Components*, holds a `NavigationTree` of the sections, groups and pages, which opens a page as
-  soon as it is selected, while a section or group opens no page and folds with a click. The side
-  bar collapses to its stripe to give the page the room. The search keeps finding a page by its
-  own, its group's and its section's names, a section or group that matches keeps all its pages,
-  the counter counts the matching sections and groups too, and clearing the search gives the tree
-  back folded as it was. Ctrl+F anywhere in the window expands the side bar and puts the focus
-  into the search; the Shortcuts page keeps its own Ctrl+F. The column's *COMPONENTS* heading
-  and the showcase's own navigation stylesheet are gone.
+- The showcase's navigation is a side bar at the window's left edge, which collapses to its
+  stripe to give the page the room. Its one tab, *Components*, holds a `NavigationTree` of three
+  sections: *JavaFX* with the standard controls in the groups *Inputs*, *Selection*, *Data
+  Display*, *Layout* and *Navigation*, *karthu-fx* with its own components in *Form Inputs*,
+  *Components* and *Dialogs*, and *Examples* with the *Job Scheduler*; a page that would be alone
+  in a group sits directly under its section. A page opens as soon as it is selected; a click on
+  a section or group folds or unfolds it, opens no page and leaves the open page open. The search
+  field above the tree narrows it to the pages whose name, group or section matches, by
+  karthu-fx's search rule: a section or group that matches keeps all its pages, the matches are
+  marked, the counter counts the matching sections and groups too, and *No matches* shows when
+  nothing does. Clearing the search gives the tree back folded as the user left it. The open page
+  stays open while a search hides its row, and its row is selected again as soon as the tree
+  shows it. Ctrl+F anywhere in the window expands the side bar and puts the focus into the search
+  (the Shortcuts page keeps its own Ctrl+F), Esc clears it, Arrow down moves to the first page
+  among the hits and Enter opens it. Every page looks and works as before; the column's
+  *COMPONENTS* heading and the showcase's own navigation stylesheet are gone.
 - The theme has a third stylesheet, `light.css`, beside `base.css` and `dark.css`. A native image
   that names the resources it includes one by one names `light.css` too, or the theme has no
   colours to load for Light.

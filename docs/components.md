@@ -438,7 +438,8 @@ dependency.
   a click while collapsed expands it again; the hide button in the panel's header and *Hide* in its
   menu collapse it too. One tab is open at a time, its button marked in the accent colour, and
   everything happens at once, without animation. `side` is `LEFT` (the default) or `RIGHT`,
-  mirrored; two side bars, one on each side, are two instances.
+  mirrored, and the side bar carries the pseudo-class `:left` or `:right` of its side for rules
+  of the application's own; two side bars, one on each side, are two instances.
 - **Tabs.** A `SideBarTab` has an id, stable for its life, a title, an Ikonli icon, any node as
   its content, a visible flag, and its own header buttons and menu items. `getTabs()` holds them in
   the order of their stripe buttons. The application adds, removes and hides tabs at any time; a
@@ -521,7 +522,9 @@ dependency.
   and read-outs name what was opened and the state an application would keep. The showcase's
   window has no command registry of its own, so the page's side bar registers no commands. The
   window's own navigation is a side bar as well: its one tab, *Components*, is a navigation tree
-  of the showcase's sections, groups and pages that opens a page as soon as it is selected.
+  of the showcase's sections, groups and pages that opens a page as soon as it is selected. When a
+  search hides the open page's row, which clears the tree's selection, the showcase selects the
+  row again as soon as the tree shows it, during the search or after it, without opening anything.
 
 ## Icons
 
