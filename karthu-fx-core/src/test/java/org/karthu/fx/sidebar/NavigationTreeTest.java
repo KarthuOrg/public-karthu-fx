@@ -820,6 +820,32 @@ class NavigationTreeTest {
     }
 
     @Test
+    @DisplayName("a change of the text function or of the search text function during a search searches again at once")
+    void changedFunctionsDuringASearch() {
+        Sample sample = new Sample();
+        NavigationTree<Food> tree = sample.tree();
+        laidOut(tree);
+        Node noMatches = tree.lookup(".navigation-tree-no-matches");
+        search(tree, "pomme");
+        assertEquals(List.of(), rows(tree));
+
+        tree.setTextFunction(food -> food == sample.appleValue ? "Pomme" : food.name());
+        assertEquals(List.of("Fruits", "Pomme"), rows(tree), "the shown text is the search text");
+        assertEquals("[Pomme]", marked(rowCell(tree, "Pomme")));
+        assertEquals("1 of 8", counter(tree));
+        assertFalse(shows(tree, noMatches));
+
+        tree.setSearchTextFunction(food -> food.name());
+        assertEquals(List.of(), rows(tree), "the search text is the name again");
+        assertEquals("0 of 8", counter(tree));
+        assertTrue(shows(tree, noMatches));
+
+        tree.setSearchTextFunction(food -> food == sample.waterValue ? "Pomme d'eau" : food.name());
+        assertEquals(List.of("Water"), rows(tree));
+        assertEquals("1 of 8", counter(tree));
+    }
+
+    @Test
     @DisplayName("cells of the application's own receive its values during a search and mark hits with the same helper")
     void ownCellsDuringASearch() {
         Sample sample = new Sample();
