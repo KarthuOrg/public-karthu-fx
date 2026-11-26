@@ -10,6 +10,8 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -32,10 +34,14 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
+import org.karthu.fx.command.Command;
+import org.karthu.fx.command.CommandGroup;
+import org.karthu.fx.command.CommandRegistry;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.bootstrapicons.BootstrapIcons;
 import org.kordamp.ikonli.javafx.FontIcon;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -59,8 +65,9 @@ import java.util.Set;
  *
  * <p><b>Tabs.</b> {@link #getTabs()} holds the tabs in the order of their stripe buttons; the application adds,
  * removes and hides tabs at any time, the user does not reorder them. Each visible tab has a stripe button that shows
- * its icon, its title as tooltip and as accessible text, so that a screen reader names the icon. The stripe is no stop
- * of the Tab key, and a click on it leaves the focus where opening a tab puts it.
+ * its icon, its title as tooltip and as accessible text, so that a screen reader names the icon; once the side bar's
+ * commands are registered, the tooltip names the key of the tab's command too, such as <i>Files (Alt+1)</i>. The
+ * stripe is no stop of the Tab key, and a click on it leaves the focus where opening a tab puts it.
  *
  * <p><b>Open tab and collapsing.</b> The {@linkplain #selectedTabProperty() selected tab} is the one the panel shows,
  * and the {@linkplain #collapsedProperty() collapsed} flag hides the panel, so that only the stripe shows. At most one
@@ -72,9 +79,18 @@ import java.util.Set;
  * animation, and the panel always lies beside the content, which becomes narrower, never under the panel. The panel
  * is 260 px wide, for every tab.
  *
- * <p><b>Focus.</b> Opening a tab by a click on its stripe button puts the keyboard focus into its content, where the
- * user starts: a content that implements {@link SideBarContent} takes it as it says (a {@link NavigationTree} in its
- * tree, on the selected entry), any other content node takes it itself. A tab the application selects moves no focus.
+ * <p><b>Focus.</b> Opening a tab by a click on its stripe button or by its command puts the keyboard focus into its
+ * content, where the user starts: a content that implements {@link SideBarContent} takes it as it says (a
+ * {@link NavigationTree} in its tree, on the selected entry), any other content node takes it itself. A tab the
+ * application selects moves no focus. When the panel hides while the focus is in it, however it hides, the focus goes
+ * back to where it last was outside the side bar, such as the application's content the user worked in before, while
+ * that node is still in the scene, shown and enabled.
+ *
+ * <p><b>Commands.</b> An application that has a {@link CommandRegistry} hands it to the side bar with
+ * {@link #registerCommands(CommandRegistry, CommandGroup, String) registerCommands}: then a command per tab opens the
+ * tab (Alt+1 to Alt+9 for the first nine), <i>Hide Side Bar</i> collapses the side bar on Shift+Escape while the focus
+ * is in it, and <i>Search in Side Bar</i> puts the focus into the selected tab's search; the commands join the
+ * application's list of shortcuts, where the user changes their keys. Without a registry there are no commands.
  *
  * <p><b>Header.</b> The panel's header is one row: the tab's title on the left, then on the right the tab's own
  * {@linkplain SideBarTab#getHeaderButtons() header buttons}, the content's {@linkplain SideBarContent#getHeaderButtons()
@@ -97,7 +113,8 @@ import java.util.Set;
  *
  * <p><b>Texts.</b> The tooltips and accessible texts of the menu button ({@linkplain #moreTextProperty() More}) and
  * the hide button, which is also the text of the menu's item ({@linkplain #hideTextProperty() Hide}), are properties
- * with English defaults, so that an application can translate them.
+ * with English defaults, so that an application can translate them, and so are the names of the commands and their
+ * context (see {@link #registerCommands(CommandRegistry, CommandGroup, String, boolean)}).
  *
  * <p><b>Style classes</b>, a public contract: renaming one is a breaking change. The theme draws the stripe on the
  * surface with a 1 px line towards the panel, its buttons flat and square with the icon 16 px in the secondary text
@@ -179,6 +196,24 @@ public class SideBar extends HBox {
     /** Held weakly by the panel's tab, so that a tab outliving the side bar never keeps it alive. */
     private final WeakInvalidationListener weakPanelTabChanged = new WeakInvalidationListener(panelTabChanged);
 
+    // The names of the commands and their context. Line comments, as each property's documentation is its method's.
+    private final StringProperty showTabCommandFormat =
+            new SimpleStringProperty(this, "showTabCommandFormat", "Show {0}");
+    private final StringProperty hideCommandName = new SimpleStringProperty(this, "hideCommandName", "Hide Side Bar");
+    private final StringProperty searchCommandName =
+            new SimpleStringProperty(this, "searchCommandName", "Search in Side Bar");
+    private final StringProperty commandContextName = new SimpleStringProperty(this, "commandContextName", "Side Bar");
+    /** The side bar's commands in the application's registry; null until they are registered. */
+    private SideBarCommands commands;
+    /**
+     * Where the focus last was outside the side bar, where it goes back when the panel hides with the focus in it;
+     * held weakly, so that a node the application dropped is not kept alive.
+     */
+    private WeakReference<Node> focusOutside;
+    /** Follows the focus of the side bar's scene, while the side bar is in it. */
+    private final ChangeListener<Node> focusOwnerChanged =
+            (observable, oldOwner, newOwner) -> rememberFocusOutside(newOwner);
+
     /**
      * Creates a side bar on the left without tabs: it shows an empty stripe until the application adds tabs, and the
      * panel once a tab is selected.
@@ -209,6 +244,7 @@ public class SideBar extends HBox {
         selectedTab.addListener(observable -> updatePanel());
         collapsed.addListener(observable -> updatePanel());
         updatePanel();
+        sceneProperty().addListener(this::sceneChanged);
     }
 
     /**
@@ -403,6 +439,204 @@ public class SideBar extends HBox {
         return menu;
     }
 
+    // --- Commands ------------------------------------------------------------------------------------
+
+    /**
+     * Registers the side bar's commands with the application's registry, with their suggested keys: Alt+1 to Alt+9
+     * for the tabs and Shift+Escape for <i>Hide Side Bar</i>. See
+     * {@link #registerCommands(CommandRegistry, CommandGroup, String, boolean)}.
+     *
+     * @param registry the command registry of the side bar's window
+     * @param group    the group the commands are shown in, one of the registry's, such as <i>View</i>
+     * @param idPrefix the start of the commands' ids, such as {@code sidebar}
+     * @throws NullPointerException     when the registry, the group or the prefix is null
+     * @throws IllegalArgumentException when the prefix is blank, the group is not one of the registry's, or the
+     *                                  registry has a context or a command with one of the side bar's ids already, or
+     *                                  a context of the side bar's node
+     * @throws IllegalStateException    when the side bar's commands are registered already
+     * @since 1.1.0-RC2
+     */
+    public final void registerCommands(CommandRegistry registry, CommandGroup group, String idPrefix) {
+        registerCommands(registry, group, idPrefix, true);
+    }
+
+    /**
+     * Registers the side bar's commands with the application's registry, so that the user opens its tabs with keys,
+     * finds the commands in the application's list of shortcuts and changes their keys there. The ids start with the
+     * prefix, which keeps two side bars apart:
+     * <ul>
+     *   <li><i>Show</i> and the tab's title, {@code <prefix>.show.<tab id>}, one per tab id, in the window's
+     *       {@linkplain CommandRegistry#getWindowContext() context}: it selects the tab, expands the side bar and puts
+     *       the focus into the tab's content, as a click on the tab's stripe button does, and collapses the side bar
+     *       when the tab is open already. The first nine tabs suggest the keys Alt+1 to Alt+9 in the order of the
+     *       tabs, a hidden tab keeping its place. A tab added later gets its command when it is added, with the first
+     *       of Alt+1 to Alt+9 that no other tab of the side bar suggests. As the registry removes no command, a tab's
+     *       command stays when the tab is removed or hidden, disabled, so that its key goes on to the window's other
+     *       commands, until a visible tab with that id is among the tabs again.</li>
+     *   <li><i>Hide Side Bar</i>, {@code <prefix>.hide}, suggesting Shift+Escape, in a context of the side bar's own
+     *       node with the id {@code <prefix>}, named <i>Side Bar</i>: while the focus is in the side bar, its key
+     *       collapses it.</li>
+     *   <li><i>Search in Side Bar</i>, {@code <prefix>.search}, without a key: it expands the side bar and puts the
+     *       focus into the selected tab's search ({@link SideBarContent#focusSearch()}), or into its content when the
+     *       content has no search. It selects no tab, and is disabled while no visible tab is selected.</li>
+     * </ul>
+     * <p>Without suggested keys the commands come without keys, for a second side bar whose keys would clash with the
+     * first's: the user records keys for them. The registry's rules hold as for any command: one registry per window,
+     * a suggested key that another command of the same context suggests too is logged, and the keys the user changed
+     * come back through {@link CommandRegistry#setChangedShortcuts(java.util.Map)}, after the side bar's commands are
+     * registered. A stripe button's tooltip names its tab's key, such as <i>Files (Alt+1)</i>, and follows its every
+     * change.
+     *
+     * <p>The commands' names follow the side bar's texts {@linkplain #showTabCommandFormatProperty() Show {0}},
+     * {@linkplain #hideCommandNameProperty() Hide Side Bar} and {@linkplain #searchCommandNameProperty() Search in Side
+     * Bar}, and the context's its {@linkplain #commandContextNameProperty() Side Bar}: an application translates those,
+     * as the names are bound to them. A side bar registers its commands once.
+     *
+     * @param registry      the command registry of the side bar's window
+     * @param group         the group the commands are shown in, one of the registry's, such as <i>View</i>
+     * @param idPrefix      the start of the commands' ids, such as {@code sidebar}
+     * @param suggestedKeys whether the commands come with their suggested keys; false leaves them without keys
+     * @throws NullPointerException     when the registry, the group or the prefix is null
+     * @throws IllegalArgumentException when the prefix is blank, the group is not one of the registry's, or the
+     *                                  registry has a context or a command with one of the side bar's ids already, or
+     *                                  a context of the side bar's node; nothing is registered then
+     * @throws IllegalStateException    when the side bar's commands are registered already
+     * @since 1.1.0-RC2
+     */
+    public final void registerCommands(CommandRegistry registry, CommandGroup group, String idPrefix,
+                                       boolean suggestedKeys) {
+        if (commands != null) {
+            throw new IllegalStateException("the side bar's commands are registered already");
+        }
+        commands = new SideBarCommands(this, registry, group, idPrefix, suggestedKeys);
+        updateCommands();
+    }
+
+    /**
+     * The name of a tab's command (default <i>Show {0}</i>), a format in which {@code {0}} stands for the tab's title,
+     * or its id while it has none, so that an application can translate it: <i>{0} anzeigen</i>.
+     *
+     * @return the show tab command format property
+     * @since 1.1.0-RC2
+     */
+    public final StringProperty showTabCommandFormatProperty() {
+        return showTabCommandFormat;
+    }
+
+    /**
+     * Returns the format of the name of a tab's command.
+     *
+     * @return the format, {@code {0}} standing for the tab's title
+     * @since 1.1.0-RC2
+     */
+    public final String getShowTabCommandFormat() {
+        return showTabCommandFormat.get();
+    }
+
+    /**
+     * Sets the format of the name of a tab's command.
+     *
+     * @param format the format, {@code {0}} standing for the tab's title
+     * @since 1.1.0-RC2
+     */
+    public final void setShowTabCommandFormat(String format) {
+        showTabCommandFormat.set(format);
+    }
+
+    /**
+     * The name of the command that collapses the side bar (default <i>Hide Side Bar</i>), a property so that an
+     * application can translate it, or tell a second side bar's command apart.
+     *
+     * @return the hide command name property
+     * @since 1.1.0-RC2
+     */
+    public final StringProperty hideCommandNameProperty() {
+        return hideCommandName;
+    }
+
+    /**
+     * Returns the name of the command that collapses the side bar.
+     *
+     * @return the name
+     * @since 1.1.0-RC2
+     */
+    public final String getHideCommandName() {
+        return hideCommandName.get();
+    }
+
+    /**
+     * Sets the name of the command that collapses the side bar.
+     *
+     * @param name the name
+     * @since 1.1.0-RC2
+     */
+    public final void setHideCommandName(String name) {
+        hideCommandName.set(name);
+    }
+
+    /**
+     * The name of the command that puts the focus into the selected tab's search (default <i>Search in Side Bar</i>),
+     * a property so that an application can translate it, or tell a second side bar's command apart.
+     *
+     * @return the search command name property
+     * @since 1.1.0-RC2
+     */
+    public final StringProperty searchCommandNameProperty() {
+        return searchCommandName;
+    }
+
+    /**
+     * Returns the name of the command that puts the focus into the selected tab's search.
+     *
+     * @return the name
+     * @since 1.1.0-RC2
+     */
+    public final String getSearchCommandName() {
+        return searchCommandName.get();
+    }
+
+    /**
+     * Sets the name of the command that puts the focus into the selected tab's search.
+     *
+     * @param name the name
+     * @since 1.1.0-RC2
+     */
+    public final void setSearchCommandName(String name) {
+        searchCommandName.set(name);
+    }
+
+    /**
+     * The name of the side bar's command context (default <i>Side Bar</i>), which the list of shortcuts shows beside
+     * <i>Hide Side Bar</i> to tell where its key holds; a property so that an application can translate it, or tell a
+     * second side bar apart.
+     *
+     * @return the command context name property
+     * @since 1.1.0-RC2
+     */
+    public final StringProperty commandContextNameProperty() {
+        return commandContextName;
+    }
+
+    /**
+     * Returns the name of the side bar's command context.
+     *
+     * @return the name
+     * @since 1.1.0-RC2
+     */
+    public final String getCommandContextName() {
+        return commandContextName.get();
+    }
+
+    /**
+     * Sets the name of the side bar's command context.
+     *
+     * @param name the name
+     * @since 1.1.0-RC2
+     */
+    public final void setCommandContextName(String name) {
+        commandContextName.set(name);
+    }
+
     // --- Inside --------------------------------------------------------------------------------------
 
     /**
@@ -486,6 +720,7 @@ public class SideBar extends HBox {
      */
     private void updatePanel() {
         SideBarTab shown = shownTab();
+        boolean heldFocus = holdsFocus();
         panel.setVisible(shown != null);
         panel.setManaged(shown != null);
         SideBarTab selected = selectedTab.get();
@@ -500,6 +735,10 @@ public class SideBar extends HBox {
         for (Map.Entry<SideBarTab, StripeButton> entry : stripeButtons.entrySet()) {
             entry.getValue().setSelected(entry.getKey() == shown);
         }
+        if (heldFocus && shown == null) {
+            returnFocus();
+        }
+        updateCommands();
     }
 
     /**
@@ -593,6 +832,107 @@ public class SideBar extends HBox {
         }
     }
 
+    /** The side bar entered another scene, or left its scene: it follows the focus of the scene it is in. */
+    private void sceneChanged(ObservableValue<? extends Scene> observable, Scene oldScene, Scene newScene) {
+        if (oldScene != null) {
+            oldScene.focusOwnerProperty().removeListener(focusOwnerChanged);
+        }
+        if (newScene != null) {
+            newScene.focusOwnerProperty().addListener(focusOwnerChanged);
+            rememberFocusOutside(newScene.getFocusOwner());
+        }
+    }
+
+    /** Remembers the focus owner when it lies outside the side bar: where the focus goes back to on hiding. */
+    private void rememberFocusOutside(Node owner) {
+        if (owner != null && !isInside(owner)) {
+            focusOutside = new WeakReference<>(owner);
+        }
+    }
+
+    /** Whether the focus owner of the side bar's scene lies in the side bar. */
+    private boolean holdsFocus() {
+        Scene scene = getScene();
+        return scene != null && scene.getFocusOwner() != null && isInside(scene.getFocusOwner());
+    }
+
+    /** Whether a node is the side bar or lies in it. */
+    private boolean isInside(Node node) {
+        for (Node at = node; at != null; at = at.getParent()) {
+            if (at == this) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The panel hid while the focus was in it, which leaves the focus on a hidden node: it goes back to where it last
+     * was outside the side bar, such as the application's content the user worked in before opening the panel, while
+     * that node is still in the scene, shown and enabled. Else JavaFX moves it on.
+     */
+    private void returnFocus() {
+        Node target = focusOutside == null ? null : focusOutside.get();
+        if (target == null || target.getScene() != getScene() || target.isDisabled()) {
+            return;
+        }
+        for (Node at = target; at != null; at = at.getParent()) {
+            if (!at.isVisible()) {
+                return;
+            }
+        }
+        target.requestFocus();
+    }
+
+    /**
+     * Keeps the side bar's commands in line with its tabs, once they are registered: a command for every tab id, each
+     * enabled while a visible tab has its id, the search while a visible tab is selected.
+     */
+    private void updateCommands() {
+        if (commands == null) {
+            return;
+        }
+        SideBarTab selected = selectedTab.get();
+        commands.update(tabs, selected != null && selected.isVisible() && tabs.contains(selected));
+        for (Map.Entry<SideBarTab, StripeButton> entry : stripeButtons.entrySet()) {
+            entry.getValue().showShortcutOf(commands.tabCommand(entry.getKey().getId()));
+        }
+    }
+
+    /**
+     * The command of a tab id: the first visible tab with that id opens, or the side bar collapses when that tab is
+     * open, as a click on its stripe button does.
+     */
+    void showTab(String tabId) {
+        for (SideBarTab tab : tabs) {
+            if (tab.isVisible() && tab.getId().equals(tabId)) {
+                stripeButtonFired(tab);
+                return;
+            }
+        }
+    }
+
+    /** The command Hide Side Bar: the side bar collapses. */
+    void hide() {
+        collapsed.set(true);
+    }
+
+    /**
+     * The command of the search: the side bar expands and the selected tab's content focuses its search, or takes the
+     * focus itself when it has none. Without a visible selected tab nothing happens.
+     */
+    void searchSelectedTab() {
+        SideBarTab selected = selectedTab.get();
+        if (selected == null || !selected.isVisible() || !tabs.contains(selected)) {
+            return;
+        }
+        collapsed.set(false);
+        boolean searching = selected.getContent() instanceof SideBarContent content && content.focusSearch();
+        if (!searching) {
+            focusContent(selected);
+        }
+    }
+
     /** The menu button: the open tab's menu, under the button. */
     private void menuButtonFired() {
         if (panelTab != null) {
@@ -663,8 +1003,27 @@ public class SideBar extends HBox {
         return button;
     }
 
-    /** A tab's button on the stripe: its icon, its title as tooltip and accessible text. */
+    /**
+     * A stripe button's tooltip: the tab's title, and the key of the tab's command in brackets while it has one, such
+     * as <i>Files (Alt+1)</i>.
+     */
+    private static String tooltipText(String title, String key) {
+        if (key.isEmpty()) {
+            return title;
+        }
+        return title == null || title.isEmpty() ? key : title + " (" + key + ")";
+    }
+
+    /**
+     * A tab's button on the stripe: its icon, its title as tooltip and accessible text, the tooltip with the key of the
+     * tab's command.
+     */
     private final class StripeButton extends ToggleButton {
+
+        /** The display text of the current key of the tab's command; empty while there is none. */
+        private final StringProperty shortcutText = new SimpleStringProperty(this, "shortcutText", "");
+        /** The command whose key the tooltip names; null for none. */
+        private Command shortcutCommand;
 
         private StripeButton(SideBarTab tab) {
             getStyleClass().add("side-bar-tab");
@@ -673,7 +1032,8 @@ public class SideBar extends HBox {
             setFocusTraversable(false);
             graphicProperty().bind(Bindings.createObjectBinding(() -> iconNode(tab.getIcon()), tab.iconProperty()));
             Tooltip tooltip = new Tooltip();
-            tooltip.textProperty().bind(tab.titleProperty());
+            tooltip.textProperty().bind(Bindings.createStringBinding(
+                    () -> tooltipText(tab.getTitle(), shortcutText.get()), tab.titleProperty(), shortcutText));
             setTooltip(tooltip);
             accessibleTextProperty().bind(tab.titleProperty());
             setOnAction(event -> stripeButtonFired(tab));
@@ -681,6 +1041,20 @@ public class SideBar extends HBox {
                 openMenu(tab, this, event);
                 event.consume();
             });
+        }
+
+        /** Names a command's key in the tooltip, following its every change; null names none. */
+        private void showShortcutOf(Command command) {
+            if (command == shortcutCommand) {
+                return;
+            }
+            shortcutCommand = command;
+            if (command == null) {
+                shortcutText.unbind();
+                shortcutText.set("");
+            } else {
+                shortcutText.bind(command.shortcutDisplayTextProperty());
+            }
         }
     }
 }

@@ -46,6 +46,18 @@ someone who uses the library. The sections follow [Keep a Changelog](https://kee
   stores and sets again; removing or hiding the selected tab collapses the side bar and selects
   no tab. The texts *More* and *Hide* are properties. The theme draws the stripe on the surface
   with the open tab's icon in the accent colour.
+  `registerCommands(registry, group, idPrefix)` hands the side bar the application's
+  `CommandRegistry`: per tab a command *Show* and its title (`<prefix>.show.<tab id>`) opens the
+  tab with the focus in its content, or collapses the side bar when the tab is open, on Alt+1 to
+  Alt+9 for the first nine tabs; *Hide Side Bar* (`<prefix>.hide`) collapses it on Shift+Escape
+  while the focus is in it, in a text field of the panel too; *Search in Side Bar*
+  (`<prefix>.search`), without a key, expands it and focuses the selected tab's search. A tab
+  added later gets its command, a removed or hidden tab's is disabled, and a second side bar
+  registers with `registerCommands(registry, group, idPrefix, false)`, its keys left to the user.
+  The stripe's tooltips name a tab's key ("Files (Alt+1)"), and the names of the commands and of
+  their context are properties (`showTabCommandFormat`, `hideCommandName`, `searchCommandName`,
+  `commandContextName`). When the panel hides with the focus in it, the focus goes back to where
+  it last was outside the side bar.
 - `MarkdownView` colours PowerShell: a code block of the language `powershell`, `pwsh` or `ps1`
   shows comments (also `<# ... #>`), strings and here-strings, variables (`$env:PATH`, `${...}`,
   splatted `@args`), `$true`, `$false` and `$null` as literals, keywords in any case, the

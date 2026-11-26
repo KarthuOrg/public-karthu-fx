@@ -68,7 +68,10 @@ public class SideBarTab {
     }
 
     /**
-     * Returns the tab's id, which never changes: an application stores it to open the same tab after a restart.
+     * Returns the tab's id, which never changes: an application stores it to open the same tab after a restart, and
+     * the id of the tab's command is made from it
+     * ({@link SideBar#registerCommands(org.karthu.fx.command.CommandRegistry, org.karthu.fx.command.CommandGroup,
+     * String, boolean) registerCommands}), so the tabs of one side bar have different ids.
      *
      * @return the id
      * @since 1.1.0-RC2
